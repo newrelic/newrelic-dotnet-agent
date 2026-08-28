@@ -157,8 +157,7 @@ public class ThreadProfilingService : ConfigurationBasedService, IThreadProfilin
             return;
         _disposed = true;
 
-        // Stop() signals+joins the worker and suppresses the report send (shutdown path), so disposal
-        // never blocks CLR exit on a synchronous collector POST.
+        // Stop() already suppresses the report send, so disposal never blocks CLR exit.
         Stop();
 
         base.Dispose();
@@ -184,14 +183,7 @@ public class ThreadProfilingService : ConfigurationBasedService, IThreadProfilin
     public bool StartThreadProfilingSession(int profileSessionId, uint frequencyInMsec, uint durationInMsec)
     {
         // Forward mutual-exclusion guard: refuse to start while continuous profiling is active.
-        // Serialized against ContinuousProfilingService's reverse guard (ThreadProfilingStatus.
-        // IsThreadProfilingActive) via ProfilingMutualExclusionGate.Lock, the same lock CP's StartLocked
-        // takes around its own guard-check-and-arm -- so at most one profiler can decide "the other isn't
-        // active" and arm itself at a time; the earlier narrow concurrent-start window this used to
-        // describe (checking/arming under different, unsynchronized state) is closed. The native
-        // SuspendMutex (Profiler/ContinuousProfiler/SuspendMutex.h) remains the backstop against
-        // concurrent suspend/walk, which this lock does not replace -- it only makes the two profilers'
-        // *liveness* mutually exclusive as well.
+        // See ProfilingMutualExclusionGate for the full handshake with CP's reverse guard.
         lock (ProfilingMutualExclusionGate.Lock)
         {
             if (_continuousProfilingSessionControl?.IsActive == true)
@@ -210,7 +202,6 @@ public class ThreadProfilingService : ConfigurationBasedService, IThreadProfilin
                     _sampler = new ThreadProfilingSampler(_nativeMethods);
                 }
 
-                // Remove existing data in tree and cache buffers
                 ResetCache();
 
                 _reportData = true;

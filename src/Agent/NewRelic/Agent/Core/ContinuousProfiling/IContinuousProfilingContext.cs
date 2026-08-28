@@ -11,38 +11,17 @@ namespace NewRelic.Agent.Core.ContinuousProfiling;
 /// </summary>
 public interface IContinuousProfilingContext
 {
-    /// <summary>
-    /// Cheap gate for the hot path: a single field read that is <c>false</c> while continuous profiling is
-    /// off, so the wrapper pipeline pays essentially nothing (no decompose, no native call) when disabled.
-    /// </summary>
+    /// <summary>Cheap gate for the hot path: <c>false</c> while continuous profiling is off.</summary>
     bool IsEnabled { get; }
 
-    /// <summary>
-    /// Records the calling thread's current distributed-tracing context in the native profiler by decomposing
-    /// the W3C-style hex ids into the (high, low, span) longs the native side and <see cref="OtlpProfileBuilder"/>
-    /// expect. A no-op while disabled. Never throws into the application.
-    /// </summary>
     /// <param name="traceId">32-char (16-byte) lowercase-or-uppercase hex trace id, or null when there is no trace.</param>
     /// <param name="spanId">16-char (8-byte) hex span id, or null when there is no span.</param>
     void PushTraceContext(string traceId, string spanId);
 
-    /// <summary>
-    /// Clears the calling thread's distributed-tracing context in the native profiler. A no-op while disabled.
-    /// Never throws into the application.
-    /// </summary>
     void ResetTraceContext();
 
-    /// <summary>
-    /// Marks the calling thread one level deeper into agent-owned background dispatch in the native
-    /// profiler, so the sampler can tag its samples by thread identity instead of frame text (follow-up
-    /// #16). A no-op while disabled. Never throws into the application. Nesting-safe; must be paired 1:1
-    /// with <see cref="ResetAgentWork"/>.
-    /// </summary>
+    /// <summary>Nesting-safe; must be paired 1:1 with <see cref="ResetAgentWork"/>.</summary>
     void SetAgentWork();
 
-    /// <summary>
-    /// Marks the calling thread one level shallower. A no-op while disabled. Never throws into the
-    /// application. Must be paired 1:1 with <see cref="SetAgentWork"/>.
-    /// </summary>
     void ResetAgentWork();
 }

@@ -6,11 +6,9 @@ using NewRelic.Agent.ContainerIntegrationTests.Applications;
 namespace NewRelic.Agent.ContainerIntegrationTests.Fixtures;
 
 /// <summary>
-/// Fixture base for the continuous-profiling Linux container tests. Builds the SmokeTestApp with the
-/// continuous-profiling Dockerfile (CP enabled via NEW_RELIC_CONTINUOUS_PROFILING_* env) and exercises the
-/// CPU-burn endpoint synchronously on the request (traced) thread so the native Linux sampler captures a
-/// thread with an active trace/span. Each drain POSTs the built profile to the configured OTLP endpoint,
-/// but the test validates the native sampler purely from the agent log (log-based only).
+/// Fixture base for the continuous-profiling Linux container tests (CP enabled via
+/// NEW_RELIC_CONTINUOUS_PROFILING_* env in the Dockerfile). See ContinuousProfilingContainerTest for why
+/// the CPU-burn endpoint and log-based-only assertions are used.
 /// </summary>
 public abstract class ContinuousProfilingContainerTestFixtureBase : ContainerTestFixtureBase
 {

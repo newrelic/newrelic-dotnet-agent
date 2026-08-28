@@ -74,15 +74,13 @@ namespace NewRelic { namespace Profiler {
 
     private:
         std::atomic<int> _referenceCount;
-        // Proxy engagement counter: total JIT compilation events seen by this callback.
-        // Logged every 5000 events alongside helper_invocations to confirm
-        // AppDomainFallbackCache injection code path is engaged. See Section 6 of the
-        // NR-184027 spike doc. A nonzero helper_invocations confirms helper IL injection
-        // fired during JIT; zero means injection has not yet occurred or MethodRewriter
-        // was refreshed after injection (see Instrumentors.h note on refresh-reset).
+        // Proxy engagement counter: total JIT compilation events seen by this callback. Logged every
+        // 5000 events alongside helper_invocations -- a nonzero helper_invocations confirms helper IL
+        // injection fired during JIT; zero means injection hasn't occurred yet, or MethodRewriter was
+        // refreshed after injection (see Instrumentors.h note on refresh-reset).
         std::atomic<uint64_t> _totalJitCount{0};
 
-        // (F) counts corelib injection-failure downgrades to Reflection (native signal; no managed metric).
+        // Counts corelib injection-failure downgrades to Reflection (native signal; no managed metric).
         std::atomic<uint64_t> _injectionDowngradeCount{0};
 
     public:
@@ -252,7 +250,6 @@ namespace NewRelic { namespace Profiler {
 
                 //Init does not start threads or requires cleanup. RequestProfile will create the threads for the TP.
                 _threadProfiler.Init(_corProfilerInfo4);
-                //Init does not start threads or allocate. Start() will lazily create the CP sampling thread.
                 //_isCoreClr (set above by SetClrType) decides whether CP stops the world via
                 //SuspendRuntime/ResumeRuntime -- CoreCLR on every OS, matching OTel's ClrRuntimeCapture.
                 _continuousProfiler.Init(_corProfilerInfo4, _isCoreClr);
@@ -365,13 +362,12 @@ namespace NewRelic { namespace Profiler {
                 injectionResult = E_FAIL;
             }
 
-            // (F) safety net: after injecting into the core library, confirm both the helper type
-            // AND the helper methods actually took (InjectIntoModule reports the latter via its
-            // return value; VerifyNRHelperTypeInjected re-reads metadata for the former). If not,
-            // downgrade the whole process to Reflection (the corelib is the first module loaded, so
-            // this precedes essentially every app-method JIT). This check runs even when injection
-            // above threw, so a corelib injection failure is never silently ignored. Runtime-agnostic
-            // seam decides.
+            // Safety net: after injecting into the core library, confirm both the helper type AND the
+            // helper methods actually took (InjectIntoModule's return value covers the latter;
+            // VerifyNRHelperTypeInjected re-reads metadata for the former). If not, downgrade the whole
+            // process to Reflection -- corelib is the first module loaded, so this precedes essentially
+            // every app-method JIT. Runs even when injection above threw, so a corelib injection
+            // failure is never silently ignored.
             if (module->GetIsThisTheCoreLibAssembly())
             {
                 const bool injected = injectionSucceeded && module->VerifyNRHelperTypeInjected();

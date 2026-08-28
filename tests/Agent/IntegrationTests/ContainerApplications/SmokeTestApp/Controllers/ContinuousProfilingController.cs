@@ -10,13 +10,9 @@ using NewRelic.Api.Agent;
 namespace ContainerizedAspNetCoreApp.Controllers;
 
 /// <summary>
-/// Drives the continuous-profiling correlation path for the Linux container test. The MVC action is
-/// auto-instrumented, so it runs inside a WebTransaction and the agent pushes the calling thread's
-/// trace/span context to the native sampler at the wrapper boundary. BurnCpu then does synchronous CPU
-/// work ON THAT SAME request thread (never handed off to a worker) for the requested number of seconds,
-/// spanning several sampling intervals -- so the continuous-profiling sampler reliably captures this
-/// thread while a transaction/span is active and renders a non-zero trace/span link. This mirrors the
-/// host-run ContinuousProfilingExerciser.RunCorrelatedBusyWork used by the Windows tests.
+/// Drives the continuous-profiling correlation path for the Linux container test: BurnCpu does synchronous
+/// CPU work on the same (traced) request thread, never handed off to a worker, so the sampler reliably
+/// captures an active trace/span for correlation. See ContinuousProfilingContainerTest for why.
 /// </summary>
 [ApiController]
 [Route("[controller]")]

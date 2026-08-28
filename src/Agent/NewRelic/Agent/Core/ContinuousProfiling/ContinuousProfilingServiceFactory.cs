@@ -13,15 +13,11 @@ namespace NewRelic.Agent.Core.ContinuousProfiling;
 
 /// <summary>
 /// Builds the continuous-profiling object graph for <see cref="AgentManager"/>. Construction is always
-/// attempted regardless of configuration, matching the convention every other native-adjacent service in
-/// the agent follows (<c>ThreadProfilingService</c>, <c>SamplerFactory</c>, the GC/CPU/memory samplers,
-/// <c>MeterListenerBridge</c>): construct unconditionally, defer the risky/expensive work to a method
-/// invoked later, and react to live config via <c>ConfigurationBasedService.OnConfigurationUpdated</c>.
-/// Nothing built here touches native code -- <see cref="NativeContinuousProfilerSampleSource"/>'s ctor
-/// just stores an <see cref="INativeMethods"/> reference, and .NET does not bind a P/Invoke's native
-/// entry point until the method is actually called, which only happens inside
-/// <see cref="ContinuousProfilingService"/>'s own try/catch around <c>_native.Start</c>. The try/catch
-/// below is cheap insurance around construction, not a safety net for a known risk.
+/// attempted regardless of configuration, matching every other native-adjacent service in the agent:
+/// construct unconditionally, defer risky/expensive work to a method invoked later. Nothing built here
+/// touches native code -- .NET does not bind a P/Invoke's native entry point until the method is
+/// actually called, which only happens inside <see cref="ContinuousProfilingService"/>'s own try/catch
+/// around <c>_native.Start</c>.
 /// </summary>
 public static class ContinuousProfilingServiceFactory
 {
@@ -34,12 +30,10 @@ public static class ContinuousProfilingServiceFactory
     {
         try
         {
-            // Plan B wires the native sampler-backed source, which both drives the native lifecycle
-            // (INativeContinuousProfiler) and drains its buffers (ISampleSource) -- one object, passed for
-            // both seams. The OTLP/HTTP dispatch is wired REAL (api-key protobuf POST); no endpoint is
-            // known yet -- it's resolved from the collector's connection once the agent connects
-            // (ContinuousProfilingService.OnAgentConnected); drains before that point are dropped without
-            // doing any work (see DrainOnce).
+            // The native sampler-backed source drives both the native lifecycle (INativeContinuousProfiler)
+            // and buffer draining (ISampleSource) -- one object, passed for both seams. The OTLP endpoint
+            // isn't known yet; it's resolved from the collector connection once the agent connects, and
+            // drains before that point are dropped without doing any work (see DrainOnce).
             var nativeMethods = container.Resolve<INativeMethods>();
             var profilesDispatcher = new OtlpProfilesHttpDispatcher(configuration);
             var profilesTransport = new ProfilesTransport(profilesDispatcher.Post, null, agentHealthReporter);

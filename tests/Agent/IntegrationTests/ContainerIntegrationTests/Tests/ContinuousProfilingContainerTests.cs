@@ -11,17 +11,12 @@ using Xunit;
 namespace NewRelic.Agent.ContainerIntegrationTests.Tests;
 
 /// <summary>
-/// Linux-container end-to-end coverage for continuous profiling -- the counterpart to the host-run
-/// (Windows) ContinuousProfilingTests, exercising the NATIVE LINUX sampler (SuspendRuntime/DoStackSnapshot
-/// + /proc thread-name resolution) which the host-run tests never touch.
-///
-/// Each drain now POSTs the built profile to the configured OTLP endpoint, but these container tests remain
-/// LOG-BASED ONLY: they assert the built-profile summary line and the protobuf-JSON payload dump (both
-/// Debug), not a received payload at the collector. Continuous profiling is enabled by configuration
-/// (NEW_RELIC_CONTINUOUS_PROFILING_* env in Dockerfile.continuousprofiling) and the session starts at agent
-/// init with no collector command. The fixture drives a synchronous CPU-burn endpoint on the request
-/// (traced) thread so the sampler captures a thread with an active trace/span, which lets us assert
-/// end-to-end trace/span correlation on Linux from the Debug JSON dump's linkTable.
+/// Linux-container coverage for continuous profiling, exercising the native Linux sampler
+/// (SuspendRuntime/DoStackSnapshot + /proc thread-name resolution) that host-run tests never touch.
+/// Assertions are log-based only (built-profile summary + protobuf-JSON dump), not a received payload,
+/// since the drain POSTs to OTLP but nothing here checks the collector side. The fixture burns CPU
+/// synchronously on the request thread so the sampler reliably captures an active trace/span for
+/// correlation assertions against the JSON dump's linkTable.
 /// </summary>
 public abstract class ContinuousProfilingContainerTest<T> : NewRelicIntegrationTest<T> where T : ContinuousProfilingContainerTestFixtureBase
 {

@@ -163,14 +163,10 @@ public sealed class AgentManager : IAgentManager, IDisposable
 
         EventBus<KillAgentEvent>.Subscribe(OnShutdownAgent);
 
-        // Everything below starts background work that must be torn down if startup fails partway:
-        // the continuous-profiling native sampler thread, the thread profiler, the connection manager,
-        // and every other service resolved from the container. This whole instance is being constructed
-        // inside AgentSingleton.CreateInstance -- whose catch swaps in the DisabledAgentManager but never
-        // gets a reference to this half-built manager, so it cannot clean any of that up. Guard the
-        // startup sequence here and route a failure through the same Shutdown(false) the config-validation
-        // and shutdown-event paths use, so a throw stops/disposes whatever already started before the
-        // exception falls through to the DisabledAgentManager fallback.
+        // AgentSingleton.CreateInstance's catch swaps in the DisabledAgentManager but never gets a
+        // reference to this half-built manager, so it can't clean up whatever background work already
+        // started below. Guard the startup sequence and route any failure through the same Shutdown(false)
+        // the other teardown paths use, so a throw here still stops/disposes what's already running.
         try
         {
             //Initialize the extensions loader with extensions folder based on the the install path
@@ -200,24 +196,15 @@ public sealed class AgentManager : IAgentManager, IDisposable
                 }
             }
 
-            // Continuous profiling must be constructed -- and therefore subscribed to AgentConnectedEvent --
-            // BEFORE AttemptAutoStart() below. ConnectionManager.Start() schedules the actual connect
-            // asynchronously (IScheduler.ExecuteOnce, TimeSpan.Zero) rather than connecting synchronously, so
-            // a fast connect can publish AgentConnectedEvent before a later-constructed subscriber ever
-            // attaches; EventBus does not replay missed events, so that subscriber would silently and
-            // permanently miss its connected state with no error logged. Same reason the MeterListenerBridge
-            // is resolved above, before this point. The factory swallows any construction failure, returning
-            // null -- see ContinuousProfilingServiceFactory for why that matters here. Mutual exclusion with
-            // the thread profiler is wired later in Initialize(), once ThreadProfilingService also exists.
+            // Must be constructed -- and therefore subscribed to AgentConnectedEvent -- BEFORE
+            // AttemptAutoStart() below: ConnectionManager.Start() schedules the actual connect
+            // asynchronously, so a fast connect can publish AgentConnectedEvent before a later-constructed
+            // subscriber ever attaches, and EventBus does not replay missed events.
             //
-            // Mirrors the MeterListenerBridge guard above: never construct in serverless mode. In serverless,
-            // AttemptAutoStart() never runs (below) -- the connect that flips _isConnected comes solely from
-            // ConnectionHandler's per-invocation path -- so a constructed-and-started CP would run full
-            // stop-the-world sampling sweeps on every tick with every drain permanently no-op'ing on
-            // !_isConnected until (if ever) that connect arrives: pure overhead, no data ever shipped. Also
-            // forecloses CP's StartFromCommand/StopFromCommand agent commands in serverless (registered only
-            // when _continuousProfilingService != null, below) -- deliberate: this guard blocks the feature
-            // entirely in serverless, not just its default-on path.
+            // Never construct in serverless mode: AttemptAutoStart() never runs there, so a constructed CP
+            // would run full stop-the-world sampling sweeps every tick with every drain permanently
+            // no-op'ing on !_isConnected -- pure overhead, no data ever shipped. This also forecloses CP's
+            // agent commands in serverless (registered only when _continuousProfilingService != null).
             if (!bootstrapConfig.ServerlessModeEnabled)
             {
                 _continuousProfilingService = ContinuousProfilingServiceFactory.TryCreate(_container, Configuration, _agentHealthReporter);
@@ -271,20 +258,12 @@ public sealed class AgentManager : IAgentManager, IDisposable
 
         _threadProfilingService = new ThreadProfilingService(_container.Resolve<IDataTransportService>(), nativeMethods);
 
-        // Mutually exclude the two profilers. ContinuousProfilingService was already constructed (and
-        // started, and subscribed to AgentConnectedEvent) earlier in Start(), before AttemptAutoStart() --
-        // see the comment there for why. The references point both ways, so we wire them here,
-        // post-construction, rather than through constructors -- mutual constructor injection would be a
-        // construction cycle. The thread profiler refuses to start while continuous profiling is active;
-        // continuous profiling defers its start while a thread-profiling session is in-flight.
-        // ContinuousProfilingService is always constructed now (a disabled instance is simply inactive,
-        // mirroring how its own IsActive/IsThreadProfilingActive guards already key off state rather than
-        // null-ness) -- a failed construction still leaves the field null, which the thread profiler's
-        // forward guard already treats as "no continuous profiling running."
+        // Mutually exclude the two profilers: the thread profiler refuses to start while continuous
+        // profiling is active, and continuous profiling defers its start while a thread-profiling session
+        // is in-flight. Wired here, post-construction (both were already constructed earlier in Start()),
+        // rather than through constructors, since mutual constructor injection would be a cycle. A failed
+        // CP construction leaves the field null, which both sides' guards already treat as "not running."
         _threadProfilingService.SetContinuousProfilingSessionControl(_continuousProfilingService);
-        // ContinuousProfilingServiceFactory.TryCreate can still return null if construction itself threw
-        // (its own catch-log-return-null block) -- a disabled instance is always constructed now, but a
-        // *failed* construction is not, and must not crash agent startup over a feature nobody asked for.
         if (_continuousProfilingService != null)
             _continuousProfilingService.ThreadProfilingStatus = _threadProfilingService;
 
@@ -299,14 +278,8 @@ public sealed class AgentManager : IAgentManager, IDisposable
                 new InstrumentationUpdateCommand(instrumentationService)
             );
 
-            // _continuousProfilingService is null only if its own construction threw (see
-            // ContinuousProfilingServiceFactory.TryCreate) -- in that case there is nothing to start/stop,
-            // so the commands are simply not registered; CommandService.ProcessCommands already handles an
-            // unknown command name gracefully (logs + returns an error dictionary) if one arrives anyway.
-            //
-            // Wired to the plain-ack formatter for now -- the DACI's only DECIDED response requirement.
-            // Swap to DetailedContinuousProfilerResponseFormatter here once the DACI's (still-open)
-            // detailed-response section is confirmed; nothing else in this call chain needs to change.
+            // Null only if construction itself threw; the commands are simply not registered in that
+            // case (CommandService.ProcessCommands handles an unknown command name gracefully).
             if (_continuousProfilingService != null)
             {
                 var continuousProfilerResponseFormatter = new AckOnlyContinuousProfilerResponseFormatter();

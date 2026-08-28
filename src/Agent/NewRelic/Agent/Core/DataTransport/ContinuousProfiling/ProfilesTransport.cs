@@ -23,20 +23,18 @@ namespace NewRelic.Agent.Core.DataTransport.ContinuousProfiling;
 /// </summary>
 public class ProfilesTransport : IProfilesTransport
 {
-    // Collector "method" token for the payload log lines, so CP reads like every other collector payload
-    // (HttpCollectorWire's `Invoked "<method>"`). No real collector method exists for an OTLP POST; this is
-    // the stable identifier tools grep on -- the integration test matches this literal.
+    // Collector "method" token for the payload log lines, so CP reads like every other collector payload.
+    // No real collector method exists for an OTLP POST; this is the stable identifier the integration test
+    // greps for.
     private const string ProfilesMethodName = "continuous_profiling";
 
     // Destination/area for ReportSupportabilityDataUsage -- mirrors OtlpAuditHandler's ("OTLP", "Metrics")
-    // for the Meter bridge, CP's closest sibling (same OTLP send shape). Produces a parallel
-    // Supportability/DotNET/OTLP/Profiles/Output/Bytes metric alongside the existing .../OTLP/Metrics one.
+    // for the Meter bridge, CP's closest sibling.
     private const string DataUsageApi = "OTLP";
     private const string DataUsageArea = "Profiles";
 
-    // A 401/403 (bad/expired license key) fails identically every drain (every 1-60s) until an operator
-    // fixes the key -- logging it at Warn on every drain would flood the log for as long as the key stays
-    // bad. Rate-limit to once per window; every occurrence in between still logs at Debug (line below).
+    // A 401/403 (bad/expired license key) fails identically every drain until an operator fixes the key --
+    // rate-limit the Warn to once per window so a permanently bad key doesn't flood the log.
     private static readonly long AuthFailureWarnIntervalStopwatchTicks = (long)(TimeSpan.FromMinutes(5).TotalSeconds * Stopwatch.Frequency);
 
     // Compact, single-line protobuf-JSON (proto3 rules: bytes -> base64, enums -> names; default values emitted
@@ -81,13 +79,10 @@ public class ProfilesTransport : IProfilesTransport
         var profile = request.ResourceProfiles?.Count > 0 ? "built" : "empty";
         Log.Debug("[ContinuousProfiling] Posting profile ({0}); {1} bytes to {2}.", profile, bytes.Length, _endpoint);
 
-        // Log + audit the send exactly like HttpCollectorWire.SendData so CP payloads are observable like
-        // every other collector payload (tools scrape these lines): Finest "Invoking" before the send, the
-        // payload and response at Debug, and the audit log for Sent/Received. One requestGuid threads them.
+        // Log + audit exactly like HttpCollectorWire.SendData so CP payloads are observable the same way.
         Log.Finest("Request({0}): Invoking \"{1}\"", requestGuid, ProfilesMethodName);
 
-        // Serialized-payload analog of HttpCollectorWire's serializedData, built once for the Debug line and
-        // the audit log -- and only when a sink is listening (the JSON render is not free).
+        // Built once, only when a sink is listening -- the JSON render is not free.
         var payloadJson = (Log.IsDebugEnabled || AuditLog.IsAuditLogEnabled) ? ToDiagnosticJson(request) : null;
 
         var result = _httpPost(bytes, _endpoint);
@@ -107,17 +102,14 @@ public class ProfilesTransport : IProfilesTransport
 
         DataTransportAuditLogger.Log(DataTransportAuditLogger.AuditLogDirection.Received, DataTransportAuditLogger.AuditLogSource.Collector, result.ResponseContent);
 
-        // Diagnostics only -- an OTLP partial_success does not change Accepted (see ProfilesSendResult's
-        // type doc). Finest, not Debug/Warn: this is best-effort visibility into a signal the agent already
-        // treats as non-fatal, not an operator-facing warning.
+        // Diagnostics only -- an OTLP partial_success does not change Accepted (see ProfilesSendResult).
         if (result.RejectedProfiles > 0 || !string.IsNullOrEmpty(result.PartialSuccessErrorMessage))
         {
             Log.Finest("Request({0}): Invocation of \"{1}\" reported a partial success: {2} rejected profile(s); {3}",
                 requestGuid, ProfilesMethodName, result.RejectedProfiles, result.PartialSuccessErrorMessage);
         }
 
-        // Data-usage supportability metric, same as every other OTLP/collector send (HttpCollectorWire.
-        // SendData, OtlpAuditHandler) -- reported on acceptance only, matching both of those.
+        // Data-usage supportability metric, same as every other OTLP/collector send -- acceptance only.
         if (result.Accepted)
         {
             var bytesReceived = Encoding.UTF8.GetByteCount(result.ResponseContent ?? string.Empty);
@@ -127,9 +119,9 @@ public class ProfilesTransport : IProfilesTransport
         return result.Accepted;
     }
 
-    // Rate-limited so a permanently bad license key produces one Warn per window, not one per drain
-    // (drains run every 1-60s). CompareExchange, not a plain read-then-write, so two callers racing on the
-    // boundary can't both pass the staleness check and double-log -- exactly one wins the swap and warns.
+    // See AuthFailureWarnIntervalStopwatchTicks for the rate-limit rationale. CompareExchange, not a plain
+    // read-then-write, so two callers racing on the window boundary can't both pass the staleness check
+    // and double-log -- exactly one wins the swap and warns.
     private void WarnOnAuthFailureRateLimited(int statusCode)
     {
         var now = Stopwatch.GetTimestamp();

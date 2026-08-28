@@ -4,11 +4,8 @@
 namespace NewRelic.Agent.Core.ContinuousProfiling;
 
 /// <summary>
-/// Plan-B sample source: a thin adapter over <see cref="INativeMethods"/> that both drives the native
-/// continuous-profiler lifecycle (<see cref="INativeContinuousProfiler"/>) and drains its filled sample
-/// buffers (<see cref="ISampleSource"/>). Every member delegates straight to the matching
-/// <c>ContinuousProfiler*</c> P/Invoke; there is no state of its own. Replaces <see cref="NoOpSampleSource"/>
-/// at runtime while that placeholder stays for tests/fallback.
+/// Thin adapter over <see cref="INativeMethods"/>: every member delegates straight to the matching
+/// <c>ContinuousProfiler*</c> P/Invoke, with no state of its own.
 /// </summary>
 public class NativeContinuousProfilerSampleSource : ISampleSource, INativeContinuousProfiler
 {

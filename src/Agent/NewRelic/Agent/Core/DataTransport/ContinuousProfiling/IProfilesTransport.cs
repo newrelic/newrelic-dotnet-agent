@@ -10,11 +10,7 @@ namespace NewRelic.Agent.Core.DataTransport.ContinuousProfiling;
 /// </summary>
 public interface IProfilesTransport
 {
-    /// <summary>Sends the request. Returns whether it was accepted, so callers can react to failures.</summary>
     bool Send(ExportProfilesServiceRequest request);
 
-    /// <summary>
-    /// Swaps the endpoint subsequent <see cref="Send"/> calls POST to. No-op for a null/empty value.
-    /// </summary>
     void UpdateEndpoint(string endpoint);
 }

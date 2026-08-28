@@ -8,9 +8,8 @@ using NewRelic.Agent.Extensions.Logging;
 namespace NewRelic.Agent.Core.ContinuousProfiling;
 
 /// <summary>
-/// Pushes the current New Relic trace/span context down to the native continuous profiler so CPU samples
-/// correlate to transactions. Runs on the application thread (the caller is the wrapper pipeline), so this
-/// must stay cheap and never throw into the customer's app.
+/// Pushes the current trace/span context to the native continuous profiler for CPU-sample correlation.
+/// Runs on the application's hot path, so must stay cheap and never throw.
 ///
 /// <para>Decomposition contract (must match <see cref="OtlpProfileBuilder"/> exactly so correlation
 /// round-trips): the 16-byte trace id is a 32-char hex string; its first 16 hex chars form the high 8 bytes
@@ -25,9 +24,8 @@ public class ContinuousProfilingContext : IContinuousProfilingContext
     private const int SpanIdHexLength = 16;   // 8 bytes
     private const int HexCharsPerLong = 16;
 
-    // Process-wide seam the hot path reads through. Defaults to an inert (disabled) instance so the wrapper
-    // pipeline pays only a single volatile field read + an IsEnabled==false branch when CP is off. The
-    // continuous-profiling session assigns a live, enabled instance here on start and swaps it back on stop.
+    // Process-wide seam the hot path reads through; defaults to an inert (disabled) instance so CP-off
+    // costs only one volatile read + a false branch. The CP session swaps in a live instance on start.
     private static volatile IContinuousProfilingContext _instance = new ContinuousProfilingContext();
 
     public static IContinuousProfilingContext Instance
@@ -78,8 +76,8 @@ public class ContinuousProfilingContext : IContinuousProfilingContext
         if (native == null)
             return;
 
-        // Change-detection: skip when this thread already pushed the same (traceId, spanId) instances under
-        // the current native session. Cheap: two reference compares + an int compare, no allocation.
+        // Skip if this thread already pushed the same (traceId, spanId) instances this epoch --
+        // two reference compares + an int compare, no allocation.
         var epoch = Volatile.Read(ref _epoch);
         if (epoch == _lastPushedEpoch
             && ReferenceEquals(traceId, _lastPushedTraceId)
@@ -94,8 +92,7 @@ public class ContinuousProfilingContext : IContinuousProfilingContext
             var span = DecomposeId(spanId, SpanIdHexLength);
             native.SetTraceContext(high, low, span);
 
-            // Record what we pushed so an identical follow-up push on this thread is skipped. Only updated
-            // on success, so a failed push is retried rather than silently suppressed.
+            // Only recorded on success, so a failed push is retried rather than silently suppressed.
             _lastPushedTraceId = traceId;
             _lastPushedSpanId = spanId;
             _lastPushedEpoch = epoch;
@@ -117,8 +114,7 @@ public class ContinuousProfilingContext : IContinuousProfilingContext
         {
             native.ResetTraceContext();
 
-            // The native map no longer holds this thread's context, so clear the guard: an identical push
-            // after a reset must go through rather than be suppressed as "unchanged".
+            // Clear the guard: after a reset, an identical push must go through, not be suppressed as unchanged.
             _lastPushedTraceId = null;
             _lastPushedSpanId = null;
         }

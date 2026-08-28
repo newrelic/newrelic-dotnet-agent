@@ -209,13 +209,9 @@ public class WrapperService : IWrapperService
                         }
                         finally
                         {
-                            // Re-push the now-current context (the wrapped call ended, so CurrentSegment has
-                            // popped back to the parent). This keeps the native TLS tracking the segment that is
-                            // actually executing on this thread rather than leaving it pointing at the child.
-                            // Gate the _agent.CurrentTransaction lookup itself behind IsEnabled: that argument is
-                            // evaluated before PushContinuousProfilingContext runs, so without this check every
-                            // instrumented method completion would pay for a transaction-context lookup even when
-                            // continuous profiling is off.
+                            // Re-push now that CurrentSegment has popped back to the parent, so native TLS
+                            // tracks the segment actually executing on this thread. Gate the CurrentTransaction
+                            // lookup itself behind IsEnabled -- it's otherwise evaluated eagerly as a call argument.
                             if (ContinuousProfilingContext.Instance.IsEnabled)
                             {
                                 PushContinuousProfilingContext(_agent.CurrentTransaction);

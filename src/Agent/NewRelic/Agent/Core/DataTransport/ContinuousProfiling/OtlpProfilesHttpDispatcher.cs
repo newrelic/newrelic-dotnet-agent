@@ -24,9 +24,7 @@ namespace NewRelic.Agent.Core.DataTransport.ContinuousProfiling;
 /// <c>api-key</c> (license key) header. Entity association (service.name / resource attributes) is
 /// already stamped on the request body by <see cref="NewRelic.Agent.Core.ContinuousProfiling.OtlpProfileBuilder"/>.
 ///
-/// It is wired as the <c>httpPost</c> delegate of <see cref="ProfilesTransport"/>, whose no-send guard
-/// has been removed, so this dispatch is invoked on every drain. The semantics are best-effort: the real
-/// send path retries transient failures a bounded number of times via
+/// Best-effort: the real send path retries transient failures a bounded number of times via
 /// <see cref="NewRelic.Agent.Core.DataTransport.CustomRetryHandler"/>, but once that budget is exhausted
 /// (or for a non-retryable outcome) the failure is logged and the batch is dropped, returning
 /// <c>false</c>; it never throws.
@@ -44,26 +42,17 @@ public class OtlpProfilesHttpDispatcher
     private const string ContentType = "application/x-protobuf";
     private const string ApiKeyHeader = "api-key";
 
-    // Per-attempt connect bound (SocketsHttpHandler.ConnectTimeout). Renamed from the old SendTimeout:
-    // this now bounds only ONE attempt's TCP connect, not the whole multi-attempt send -- see
-    // TotalSendTimeoutWithRetries for the budget that covers the full CustomRetryHandler sequence.
+    // Per-attempt connect bound (SocketsHttpHandler.ConnectTimeout) -- bounds only ONE attempt's TCP
+    // connect. See TotalSendTimeoutWithRetries for the budget covering the full retry sequence.
     public static readonly TimeSpan AttemptConnectTimeout = TimeSpan.FromSeconds(15);
 
-    // HttpClient.Timeout bounds every retry attempt and every inter-attempt backoff delay
-    // CustomRetryHandler injects -- not just one attempt. Sized for CustomRetryHandler's MaxRetries=3 *
-    // AttemptConnectTimeout worst case, plus its own backoff/jitter (~1s + ~2s across the two
-    // inter-attempt gaps, capped well below 30s each in practice), rounded up with margin.
-    // CreateRealSend uses HttpCompletionOption.ResponseHeadersRead, so this bounds attempts + backoff +
-    // headers only -- NOT the body read, which HttpClient.Timeout stops covering once headers-only
-    // completion is requested. The body read has its own deadline, BodyReadTimeout. Kept comfortably
-    // under ContinuousProfilingService.DrainShutdownWaitTimeout (60s), with BodyReadTimeout added on
-    // top, so the combined bounded wait always covers a send that is legitimately still working, not
-    // just one that's hung.
+    // HttpClient.Timeout bounds every retry attempt and inter-attempt backoff CustomRetryHandler injects,
+    // through headers-only completion (CreateRealSend uses ResponseHeadersRead) -- NOT the body read,
+    // which has its own deadline, BodyReadTimeout. The two together (45s + 10s = 55s) stay under
+    // ContinuousProfilingService.DrainShutdownWaitTimeout (60s).
     public static readonly TimeSpan TotalSendTimeoutWithRetries = TimeSpan.FromSeconds(45);
 
     // Deadline for reading the response body once headers have arrived (see ReadResponseBodyBounded).
-    // TotalSendTimeoutWithRetries (45s, headers-only) + BodyReadTimeout (10s) = 55s, comfortably under
-    // ContinuousProfilingService.DrainShutdownWaitTimeout (60s).
     public static readonly TimeSpan BodyReadTimeout = TimeSpan.FromSeconds(10);
 
     // Cap on how much of the response body is ever read into memory. Diagnostics-only data (a real OTLP
@@ -133,12 +122,9 @@ public class OtlpProfilesHttpDispatcher
     }
 
     /// <summary>
-    /// Diagnostics only -- never affects <see cref="ProfilesSendResult.Accepted"/> (see the type doc: the
-    /// OTLP spec treats partial success as informational, not a delivery failure, so acceptance stays
-    /// HTTP-status-only, matching every other send path). Only attempts the protobuf parse when the
-    /// response declares protobuf content; a proxy/error page (HTML, plain text) is not OTLP and parsing
-    /// it as one would risk misreading garbage bytes as a rejection count. Never throws: a malformed body
-    /// on a declared-protobuf response just yields no partial-success info.
+    /// Diagnostics only -- never affects <see cref="ProfilesSendResult.Accepted"/>. Only attempts the
+    /// protobuf parse when the response declares protobuf content (skips proxy/HTML error pages); never
+    /// throws.
     /// </summary>
     private static (long rejectedProfiles, string errorMessage) TryParsePartialSuccess(HttpResponseMessage response, byte[] contentBytes)
     {
@@ -161,10 +147,8 @@ public class OtlpProfilesHttpDispatcher
 
     /// <summary>
     /// Reads the response body into memory, capped at <see cref="MaxResponseBodyBytes"/> regardless of
-    /// what (if anything) <c>Content-Length</c> claims -- covers chunked/absent-length responses the
-    /// same as a declared-oversized one. Bounded by <see cref="BodyReadTimeout"/>; a stalled/slow-drip
-    /// body throws <see cref="OperationCanceledException"/>, which the caller's existing catch already
-    /// logs and drops like any other transport failure.
+    /// what <c>Content-Length</c> claims -- covers chunked/absent-length responses too. Bounded by
+    /// <see cref="BodyReadTimeout"/>; a stalled body throws <see cref="OperationCanceledException"/>.
     /// </summary>
     private static (byte[] bytes, bool truncated) ReadResponseBodyBounded(HttpContent content)
     {

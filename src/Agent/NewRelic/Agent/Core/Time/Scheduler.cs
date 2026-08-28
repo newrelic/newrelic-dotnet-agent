@@ -100,7 +100,7 @@ public class Scheduler : IScheduler, IDisposable
     /// </summary>
     /// <param name="action">The action to execute</param>
     /// <param name="timeUntilExecution">The delay until execution. Must be non-negative.</param>
-    /// <param name="trackAsAgentWork">See <see cref="IScheduler.ExecuteOnce"/>.</param>
+    /// <param name="trackAsAgentWork">Whether to mark the execution as agent work for continuous profiling.</param>
     public static Timer CreateExecuteOnceTimer(Action action, TimeSpan timeUntilExecution, bool trackAsAgentWork = true)
     {
         if (timeUntilExecution < TimeSpan.Zero)
@@ -137,7 +137,7 @@ public class Scheduler : IScheduler, IDisposable
     /// <param name="action">The action to execute</param>
     /// <param name="timeBetweenExecutions">The delay until execution and between executions. Must be non-negative.</param>
     /// <param name="optionalInitialDelay">A specific time delay before the first execution. Must be non-negative. Defaults to <paramref name="timeBetweenExecutions"/> if unspecified.</param>
-    /// <param name="trackAsAgentWork">See <see cref="IScheduler.ExecuteEvery"/>.</param>
+    /// <param name="trackAsAgentWork">Whether to mark each execution as agent work for continuous profiling.</param>
     public static Timer CreateExecuteEveryTimer(Action action, TimeSpan timeBetweenExecutions, TimeSpan? optionalInitialDelay = null, bool trackAsAgentWork = true)
     {
         var initialDelay = optionalInitialDelay ?? timeBetweenExecutions;
@@ -171,8 +171,6 @@ public class Scheduler : IScheduler, IDisposable
 
                 try
                 {
-                    // Change timer in finally so its enabled even if there was an exception
-                    // while executing Action.
                     timer.Change(timeBetweenExecutions, DisablePeriodicExecution);
                 }
                 catch (ObjectDisposedException)
