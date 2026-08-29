@@ -55,6 +55,9 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
     // (_backoffIndex == 0); an already-escalated streak re-trips on a single failure.
     private const int SendFailureGraceCount = 2;
 
+    // 1970-01-01T00:00:00Z in DateTime ticks; netstandard2.0 has no DateTime.UnixEpoch.
+    private static readonly long UnixEpochTicks = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).Ticks;
+
     private readonly ISampleSource _sampleSource;
     private readonly INativeContinuousProfiler _native;
     private readonly IProfilesTransport _transport;
@@ -726,6 +729,17 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
                 // Exclude the agent's own threads/frames unless the undocumented appSettings opt-in is set.
                 var request = OtlpProfileBuilder.Build(samples, startUnixNano, durationNano, ServiceName, _configuration.EntityGuid, _configuration.UtilizationHostName, periodNanos, _configuration.ContinuousProfilingIncludeAgentCode);
 
+                // includeAgentCode:false can filter every sample this sweep caught (e.g. an all-agent-work
+                // tick), leaving zero Profiles under the built ScopeProfiles -- don't POST an empty request.
+                // Gated on periodNanos > 0 (the same condition OtlpProfileBuilder itself gates profile
+                // emission on) so this only catches the filtering case, not a periodNanos==0 caller.
+                if (periodNanos > 0 && (request.ResourceProfiles.Count == 0 || request.ResourceProfiles[0].ScopeProfiles.Count == 0
+                    || request.ResourceProfiles[0].ScopeProfiles[0].Profiles.Count == 0))
+                {
+                    Log.Debug("[ContinuousProfiling] All {0} sample(s) this sweep were filtered (agent code excluded); nothing to send.", samples.Count);
+                    return;
+                }
+
                 bool sent;
                 try
                 {
@@ -928,9 +942,6 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
     }
 
     private string ServiceName => _configuration.ApplicationNames?.FirstOrDefault() ?? string.Empty;
-
-    // 1970-01-01T00:00:00Z in DateTime ticks; netstandard2.0 has no DateTime.UnixEpoch.
-    private static readonly long UnixEpochTicks = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).Ticks;
 
     private static long ToUnixNano(DateTime utc) =>
         (utc.Ticks - UnixEpochTicks) * 100L; // 1 tick == 100 ns

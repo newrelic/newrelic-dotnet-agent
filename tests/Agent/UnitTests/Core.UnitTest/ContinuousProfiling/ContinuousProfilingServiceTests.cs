@@ -1151,6 +1151,28 @@ public class ContinuousProfilingServiceTests
     }
 
     [Test]
+    public void DrainOnce_skips_Send_when_every_sample_is_filtered_as_agent_code()
+    {
+        // ContinuousProfilingIncludeAgentCode:false (NewConnectedService's default) filters every sample
+        // whose leaf frame is agent-owned. When that empties the whole batch, OtlpProfileBuilder still
+        // returns a request with zero Profiles under its ScopeProfiles -- DrainOnce must not POST that (P8).
+        var (service, transport) = NewConnectedService();
+        using var _ = service;
+        EnableAndStart(service);
+
+        var batch = OneSampleBatch("worker-1", 1, 0, 0, 0, new[] { "NewRelic.Agent.Core.SomeAgentMethod()" });
+        Mock.Arrange(() => _source.ReadBatch(Arg.IsAny<byte[]>())).Returns((byte[] dest) =>
+        {
+            Array.Copy(batch, dest, batch.Length);
+            return batch.Length;
+        });
+
+        service.DrainOnce();
+
+        Mock.Assert(() => transport.Send(Arg.IsAny<ExportProfilesRequest>()), Occurs.Never(), "an all-filtered batch must not be sent");
+    }
+
+    [Test]
     public void Repeated_trips_without_success_follow_the_full_backoff_sequence_and_clamp_at_the_cap()
     {
         var (service, transport) = NewConnectedService();

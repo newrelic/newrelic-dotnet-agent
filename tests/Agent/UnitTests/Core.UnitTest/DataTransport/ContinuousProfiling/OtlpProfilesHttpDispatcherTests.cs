@@ -25,7 +25,7 @@ namespace NewRelic.Agent.Core.UnitTest.DataTransport.ContinuousProfiling;
 public class OtlpProfilesHttpDispatcherTests
 {
     private const string Endpoint = "https://otlp.nr-data.net/v1/profiles";
-    private const string LicenseKey = "0123456789abcdef0123456789abcdef01234567";
+    private const string FakeLicenseKey = "0123456789abcdef0123456789abcdef01234567";
 
     private IConfiguration _configuration;
 
@@ -33,7 +33,7 @@ public class OtlpProfilesHttpDispatcherTests
     public void SetUp()
     {
         _configuration = Mock.Create<IConfiguration>();
-        Mock.Arrange(() => _configuration.AgentLicenseKey).Returns(LicenseKey);
+        Mock.Arrange(() => _configuration.AgentLicenseKey).Returns(FakeLicenseKey);
         Mock.Arrange(() => _configuration.CollectorTimeout).Returns(60000);
         Mock.Arrange(() => _configuration.ProxyHost).Returns((string)null);
     }
@@ -96,7 +96,7 @@ public class OtlpProfilesHttpDispatcherTests
 
         using var message = dispatcher.BuildRequestMessage(new byte[] { 1, 2, 3 }, Endpoint);
 
-        Assert.That(message.Headers.GetValues("api-key").Single(), Is.EqualTo(LicenseKey));
+        Assert.That(message.Headers.GetValues("api-key").Single(), Is.EqualTo(FakeLicenseKey));
     }
 
     [Test]
@@ -191,7 +191,7 @@ public class OtlpProfilesHttpDispatcherTests
             Assert.That(captured.Method, Is.EqualTo(HttpMethod.Post));
             Assert.That(captured.RequestUri, Is.EqualTo(new Uri(Endpoint)));
             Assert.That(captured.Content.Headers.ContentType.MediaType, Is.EqualTo("application/x-protobuf"));
-            Assert.That(captured.Headers.GetValues("api-key").Single(), Is.EqualTo(LicenseKey));
+            Assert.That(captured.Headers.GetValues("api-key").Single(), Is.EqualTo(FakeLicenseKey));
         });
     }
 

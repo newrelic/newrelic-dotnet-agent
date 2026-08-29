@@ -148,6 +148,10 @@ public class ProfilesTransport : IProfilesTransport
     // (e.g. "HLmyKnv9Qz0p3N/hGrf+Jw=="), which is unsearchable against the W3C-hex ids used everywhere else in
     // the logs. We rewrite the linkTable ids to lowercase hex (-> "1cb9b22a...") so the log is greppable. The
     // real wire payload is unaffected (raw bytes); a STANDARD OTLP JSON would keep these base64.
+    // Cap on the rendered diagnostic JSON -- a full request (every frame/thread name in the batch) can
+    // reach multiple MB; this bounds the allocation and what gets written to the Debug/audit logs.
+    public const int MaxDiagnosticJsonLength = 64 * 1024;
+
     public static string ToDiagnosticJson(ExportProfilesServiceRequest request)
     {
         var root = JToken.Parse(DiagnosticJsonFormatter.Format(request));
@@ -161,7 +165,11 @@ public class ProfilesTransport : IProfilesTransport
             }
         }
 
-        return root.ToString(Formatting.None);
+        var json = root.ToString(Formatting.None);
+        if (json.Length > MaxDiagnosticJsonLength)
+            json = json.Substring(0, MaxDiagnosticJsonLength) + $"...(truncated, {json.Length} chars total)";
+
+        return json;
     }
 
     // In-place: if the named property is a base64 string (proto3 `bytes` rendering), replace it with

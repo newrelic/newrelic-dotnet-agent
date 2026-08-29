@@ -169,7 +169,6 @@ public abstract class ConsoleDynamicMethodFixtureCoreSpecificVersion : ConsoleDy
 /// <summary>
 /// Windows x86 (32-bit) CoreCLR. Forces a win-x86 self-contained publish so the process is genuinely 32-bit,
 /// regardless of the host machine's actual architecture -- for Continuous Profiling x86-Windows coverage.
-/// See claude-brain investigations/ContinuousProfiling/CP-x86-windows-support.md.
 /// </summary>
 public class ConsoleDynamicMethodFixtureCoreLatestX86 : ConsoleDynamicMethodFixtureCoreSpecificVersion
 {

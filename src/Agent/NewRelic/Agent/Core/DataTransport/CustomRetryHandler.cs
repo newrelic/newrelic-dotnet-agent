@@ -23,7 +23,9 @@ public class CustomRetryHandler : DelegatingHandler
     private const int MaxJitterMs = 500;   // Max jitter of 500ms
     private const int MinDelayMs = 100;    // Floor for any retry delay, server-requested or computed
 
-    // Use simple Random for retry jitter - thread safety handled at call site
+    // Plain, unsynchronized Random for retry jitter. NOT thread-safe -- correct only because every
+    // current caller (CP's drain, the metrics exporter's periodic read) invokes SendAsync from a
+    // single thread at a time. A second concurrent caller would need a lock or ThreadLocal<Random>.
     private static readonly Random Random = new Random();
 
     private static readonly TimeSpan DefaultRetryAfterBailCeiling = TimeSpan.FromSeconds(5);
@@ -294,7 +296,7 @@ public class CustomRetryHandler : DelegatingHandler
     /// </summary>
     private static int CalculateRetryDelay(int attempt)
     {
-        // Use thread-safe Random for better performance in concurrent scenarios
+        // Random is not thread-safe -- see the field comment. Fine today: single-threaded callers only.
         // Exponential backoff: BaseDelay * 2^(attempt-1) + random jitter
         var exponentialDelay = BaseDelayMs * Math.Pow(2, attempt - 1);
         var jitter = Random.Next(0, MaxJitterMs);

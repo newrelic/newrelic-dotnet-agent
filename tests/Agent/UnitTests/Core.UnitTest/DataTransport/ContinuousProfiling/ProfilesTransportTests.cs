@@ -290,6 +290,24 @@ public class ProfilesTransportTests
     }
 
     [Test]
+    public void ToDiagnosticJson_truncates_output_beyond_the_configured_cap()
+    {
+        // L10: a large batch's rendered JSON must not be logged/allocated unbounded.
+        var dictionary = new ProfilesDictionary();
+        for (var i = 0; i < 10_000; i++)
+            dictionary.StringTable.Add($"NewRelic.Agent.Core.SomeClass.SomeVeryLongMethodNameForPadding_{i}()");
+        var request = new ExportProfilesServiceRequest { Dictionary = dictionary };
+
+        var json = ProfilesTransport.ToDiagnosticJson(request);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(json.Length, Is.LessThanOrEqualTo(ProfilesTransport.MaxDiagnosticJsonLength + 64), "Truncated output plus marker should stay close to the cap.");
+            Assert.That(json, Does.Contain("truncated"), "A truncation marker should be present.");
+        });
+    }
+
+    [Test]
     public void ToDiagnosticJson_renders_link_ids_as_lowercase_hex_not_base64()
     {
         // trace_id/span_id are proto `bytes` -> proto3 JSON base64. The diagnostic log rewrites them to
