@@ -213,7 +213,11 @@ public class Segment : IInternalSpan, ISegmentDataState, IHybridAgentSegment
         }
     }
 
-    public string TryGetActivityTraceId() => _activity?.TraceId;
+    private string _activityTraceId;
+    // Cached like SpanId above -- _activity.TraceId is stable for the activity's lifetime, and
+    // without caching this defeats the ReferenceEquals skip in ContinuousProfilingContext.PushTraceContext
+    // (a fresh string every call means every instrumented entry/exit pays full hex-decompose + P/Invoke).
+    public string TryGetActivityTraceId() => _activityTraceId ?? (_activityTraceId = _activity?.TraceId);
 
     public void End()
     {

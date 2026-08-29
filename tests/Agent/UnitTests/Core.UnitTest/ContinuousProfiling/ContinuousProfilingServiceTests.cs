@@ -1275,6 +1275,35 @@ public class ContinuousProfilingServiceTests
     }
 
     [Test]
+    public void IsActive_reports_false_while_backing_off_and_true_again_once_resumed()
+    {
+        // IsActive is consumed by ThreadProfilingService's mutual-exclusion guard (L6): while CP is
+        // paused-and-probing after repeated send failures, native sampling is stopped, so IsActive
+        // must report false so a start_profiler command isn't refused for the whole backoff window.
+        var (service, transport) = NewConnectedService();
+        using var _ = service;
+        EnableAndStart(service);
+        ArrangeReadableBatch();
+
+        Action probe = null;
+        Mock.Arrange(() => _scheduler.ExecuteOnce(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>()))
+            .DoInstead((Action action, TimeSpan delay) => probe = action);
+        Mock.Arrange(() => transport.Send(Arg.IsAny<ExportProfilesRequest>())).Returns(false);
+
+        Assert.That(service.IsActive, Is.True);
+
+        service.DrainOnce();
+        service.DrainOnce(); // trips backoff, schedules a probe
+
+        Assert.That(service.IsActive, Is.False, "backing off must report inactive to the thread-profiling guard");
+
+        Mock.Arrange(() => transport.Send(Arg.IsAny<ExportProfilesRequest>())).Returns(true);
+        probe.Invoke(); // resumes sampling
+
+        Assert.That(service.IsActive, Is.True, "resuming after the probe must report active again");
+    }
+
+    [Test]
     public void A_probe_firing_after_dispose_does_not_resurrect_native_sampling()
     {
         // Regression test: AgentManager disposes the CP service before the container-owned Scheduler, so a

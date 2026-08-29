@@ -173,6 +173,40 @@ public class SegmentTests
     }
 
     [Test]
+    public void TryGetActivityTraceId_ReturnsSameReference_OnRepeatedCalls()
+    {
+        // Arrange
+        var transactionSegmentState = Mock.Create<ITransactionSegmentState>();
+        Mock.Arrange(() => transactionSegmentState.CurrentManagedThreadId).Returns(1);
+        Mock.Arrange(() => transactionSegmentState.GetRelativeTime()).Returns(TimeSpan.Zero);
+        Mock.Arrange(() => transactionSegmentState.ParentSegmentId()).Returns((int?)null);
+        Mock.Arrange(() => transactionSegmentState.CallStackPush(Arg.IsAny<Segment>())).Returns(1);
+
+        var methodCallData = new MethodCallData("Type", "Method", 1);
+        var segment = new Segment(transactionSegmentState, methodCallData);
+
+        var callCount = 0;
+        var mockActivity = Mock.Create<INewRelicActivity>();
+        Mock.Arrange(() => mockActivity.TraceId).Returns(() =>
+        {
+            callCount++;
+            return "trace-id-" + callCount;
+        });
+
+        segment.SetActivity(mockActivity);
+
+        // Act
+        var first = segment.TryGetActivityTraceId();
+        var second = segment.TryGetActivityTraceId();
+
+        // Assert -- the underlying activity accessor is only read once; the cached string is
+        // returned on subsequent calls (this is what restores the ReferenceEquals fast-path skip
+        // in ContinuousProfilingContext.PushTraceContext).
+        Assert.That(callCount, Is.EqualTo(1));
+        Assert.That(ReferenceEquals(first, second), Is.True);
+    }
+
+    [Test]
     public void SpanId_ReturnsExistingSpanId_IfAlreadySet()
     {
         // Arrange

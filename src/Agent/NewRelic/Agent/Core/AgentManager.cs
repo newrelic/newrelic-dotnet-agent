@@ -238,7 +238,9 @@ public sealed class AgentManager : IAgentManager, IDisposable
 
             try
             {
-                Shutdown(false);
+                // closeLogging: false -- AgentSingleton swaps in the DisabledAgentManager right after
+                // this rethrows, and its later logging needs a live Serilog sink to reach anyone.
+                Shutdown(false, closeLogging: false);
             }
             catch
             {
@@ -458,7 +460,7 @@ public sealed class AgentManager : IAgentManager, IDisposable
         Shutdown(true);
     }
 
-    private void Shutdown(bool cleanShutdown)
+    private void Shutdown(bool cleanShutdown, bool closeLogging = true)
     {
         Agent.IsAgentShuttingDown = true;
 
@@ -496,7 +498,9 @@ public sealed class AgentManager : IAgentManager, IDisposable
             Dispose();
 
             Log.Info("The New Relic .NET Agent v{Version} has shutdown (pid {pid}) on app domain '{appDomain}'", AgentInstallConfiguration.AgentVersion, AgentInstallConfiguration.ProcessId, AgentInstallConfiguration.AppDomainAppVirtualPath ?? AgentInstallConfiguration.AppDomainName);
-            Serilog.Log.CloseAndFlush();
+
+            if (closeLogging)
+                Serilog.Log.CloseAndFlush();
         }
     }
 

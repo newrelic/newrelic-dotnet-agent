@@ -177,7 +177,12 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
     // EndBackoffProbeIfCurrent/ResumeAfterReconnect, so a plain read/write could tear on 32-bit.
     private long _lastDrainTimestamp;
 
-    public bool IsActive => _isActive;
+    // While backing off from repeated send failures, native sampling is stopped (see
+    // TripBackoffAndScheduleProbeLocked) so CP is not really consuming the suspend-mutex resource --
+    // report false here so the thread-profiler's mutual-exclusion guard doesn't refuse a
+    // start_profiler command for the full backoff window (up to SendBackoffSequence's max) while CP
+    // produces nothing. Internal logic that needs "session is armed" reads the raw _isActive field.
+    public bool IsActive => _isActive && !_sendBackoffActive;
 
     /// <summary>
     /// Thread profiler's session state, wired post-construction by <c>AgentManager</c> (settable to
