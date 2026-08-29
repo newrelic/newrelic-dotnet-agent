@@ -452,7 +452,7 @@ jobs:
               Where-Object { $x86Projects -contains $_.BaseName } |
               ForEach-Object {
                 Write-Host "Pre-publishing $($_.Name) for $x86Tfm/$x86Runtime"
-                $output = dotnet publish --configuration Release --runtime $x86Runtime --framework $x86Tfm $_.FullName 2>&1
+                $output = dotnet publish --configuration Release --runtime $x86Runtime --framework $x86Tfm --self-contained true $_.FullName 2>&1
                 if ($LASTEXITCODE -ne 0) {
                   Write-Warning "Failed to pre-publish $($_.Name) for $x86Tfm/$x86Runtime"
                   $output | Where-Object { $_ -match "error" } | ForEach-Object { Write-Host "  $_" }
@@ -463,6 +463,9 @@ jobs:
               }
           }
           Write-Host "x86 pre-publish complete: $x86Published succeeded, $x86Failed failed"
+          if ($x86Failed -gt 0) {
+            throw "x86 pre-publish failed for $x86Failed project(s); see warnings above."
+          }
 
           # Clean up intermediate RID-specific build artifacts to reduce artifact size.
           # dotnet publish --runtime creates large intermediate files alongside the publish/

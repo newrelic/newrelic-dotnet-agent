@@ -83,7 +83,7 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
         {
             try
             {
-                _intervalMs.store(intervalMs);
+                _intervalMs.store(std::max<uint32_t>(intervalMs, MinIntervalMs));
 
                 // Publish under _mtx_wake and notify: an idle worker waits on _cv_wake with no timeout,
                 // so it only resumes if the flag change is visible to its predicate and it is signalled.
@@ -247,6 +247,11 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
 
         // A guess at how many threads we will see; used to reserve the per-tick capture vector.
         static constexpr size_t ThreadCountForReservation = 100;
+
+        // Defense-in-depth floor for Start()'s interval -- managed already clamps to [1000, 60000]
+        // before calling here, but Start(0) would otherwise put the worker into a tight suspend loop
+        // (effectively an app-level DoS) if that clamp were ever bypassed or a caller changed.
+        static constexpr uint32_t MinIntervalMs = 100;
 
         // Upper bound on a captured method-signature blob. Signatures larger than this fall back to a
         // name-only frame (no parameter list) rather than allocating in the snapshot callback.
@@ -566,7 +571,15 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
 
                 if (_isCoreClr)
                 {
-                    _corProfilerInfo10->ResumeRuntime();
+                    // Safe to log here (unlike the try/catch above): the runtime is resumed the instant
+                    // this call returns, so we're past the deadlock-hazard part of the suspend window even
+                    // though suspendLock hasn't been released yet.
+                    const HRESULT resumeHr = _corProfilerInfo10->ResumeRuntime();
+                    if (FAILED(resumeHr))
+                    {
+                        LogWarn(L"CP: ResumeRuntime failed: ", std::hex, std::showbase, resumeHr,
+                            std::resetiosflags(std::ios_base::basefield | std::ios_base::showbase));
+                    }
                 }
             }
 
