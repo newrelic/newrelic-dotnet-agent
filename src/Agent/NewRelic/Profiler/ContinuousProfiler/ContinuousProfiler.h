@@ -643,13 +643,16 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
                 writer.WriteStartBatch(batchTimestamp);
 
                 int32_t totalFrames = 0;
+                int32_t emittedCount = 0;
                 for (size_t i = 0; i < _capturedCount; ++i)
                 {
                     const auto& thread = _capture[i];
 
                     // Estimate this sample's size and skip it if it would overflow the fixed buffer,
                     // rather than growing without bound. A truncated batch is still valid to the parser.
-                    if (!writer.WillFit(EstimateSampleBytes(thread)))
+                    // Reserve TrailerBytes so the WriteBatchStats/WriteEndBatch call below always has
+                    // room, even when this sample is the last one that fits.
+                    if (!writer.WillFit(EstimateSampleBytes(thread) + TrailerBytes))
                     {
                         LogTrace(L"CP: sample buffer full mid-batch; truncating remaining threads");
                         break;
@@ -669,9 +672,12 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
                         ++totalFrames;
                     }
                     writer.WriteFrameListTerminator();
+                    ++emittedCount;
                 }
 
-                writer.WriteBatchStats(microsSuspended, static_cast<int32_t>(_capturedCount), totalFrames,
+                // threadCount reports samples actually emitted, not _capturedCount, so a mid-batch
+                // truncation above doesn't overcount.
+                writer.WriteBatchStats(microsSuspended, emittedCount, totalFrames,
                     static_cast<int32_t>(failedSnapshotCount));
                 writer.WriteEndBatch();
 
@@ -1435,6 +1441,11 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
         // Hard ceiling on a single encoded batch (fixed max buffer size). A batch that would exceed this
         // is truncated + stat-counted rather than growing without bound.
         static constexpr size_t MaxBufferBytes = 4 * 1024 * 1024;
+
+        // Fixed size of the trailer EncodeAndPublish always writes after the per-sample loop: one
+        // BatchStats opcode (1 + int64 + int32 + int32 + int32 = 21 bytes) + one EndBatch opcode (1 byte).
+        // Reserved in the per-sample WillFit check so a maxed-out batch can't overshoot MaxBufferBytes.
+        static constexpr size_t TrailerBytes = 22;
 
         // Two-slot FIFO double-buffer (mirror OTel cpu_buffer_a/b): after resume the producer publishes
         // this tick's batch into a free slot; the managed reader drains the OLDEST filled slot. When both

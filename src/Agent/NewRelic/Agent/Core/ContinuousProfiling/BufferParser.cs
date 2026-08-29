@@ -164,11 +164,23 @@ public static class BufferParser
 
     private static string ReadString(byte[] b, ref int pos, int length)
     {
-        var charCount = ReadShort(b, ref pos, length);
+        // Length prefix is unsigned (0..65535 chars) -- unlike ReadShort's callers in ReadSample, where
+        // the sign carries the interned-vs-inline distinction, so this can't reuse ReadShort directly.
+        // Reading it as signed would make a >32767-char string (or a version/format-skewed writer)
+        // decode a negative charCount, which GetString then throws on.
+        var charCount = ReadUShort(b, ref pos, length);
         var byteCount = charCount * 2;
         RequireBound(pos, byteCount, length);
         var s = Encoding.Unicode.GetString(b, pos, byteCount);
         pos += byteCount;
         return s;
+    }
+
+    private static ushort ReadUShort(byte[] b, ref int pos, int length)
+    {
+        RequireBound(pos, 2, length);
+        var v = (ushort)((b[pos] << 8) | b[pos + 1]);
+        pos += 2;
+        return v;
     }
 }

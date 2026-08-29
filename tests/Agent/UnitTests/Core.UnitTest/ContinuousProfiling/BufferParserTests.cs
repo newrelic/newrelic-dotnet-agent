@@ -107,6 +107,21 @@ public class BufferParserTests
     }
 
     [Test]
+    public void Parse_string_longer_than_short_MaxValue_decodes_correctly()
+    {
+        // Regression test: ReadString's length prefix used to be read as a signed short, so a
+        // charCount at or above 32768 decoded negative and threw (caught + batch truncated). A
+        // ushort read must handle the full 0..65535 range.
+        var longName = new string('x', 32769);
+        var buf = OneSampleBatch(longName, 1, 0, 0, 0, new[] { "F()" });
+
+        var samples = BufferParser.Parse(buf, buf.Length);
+
+        Assert.That(samples, Has.Count.EqualTo(1));
+        Assert.That(samples[0].ThreadName, Is.EqualTo(longName));
+    }
+
+    [Test]
     public void Parse_empty_buffer_returns_empty()
     {
         Assert.That(BufferParser.Parse(new byte[0], 0), Is.Empty);
