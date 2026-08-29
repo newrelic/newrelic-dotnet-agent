@@ -40,6 +40,22 @@ public class ProfilesEndpointResolverTests
     }
 
     [Test]
+    public void ResolveFromConnectionInfo_brackets_an_ipv6_literal_host()
+    {
+        // L11: UriBuilder brackets a raw IPv6 literal automatically -- documents the current
+        // (correct) behavior rather than changing it. Real risk here is near-zero anyway: host is
+        // always the NR-controlled redirect_host DNS name, never a raw IP.
+        var connectionInfo = Mock.Create<IConnectionInfo>();
+        Mock.Arrange(() => connectionInfo.HttpProtocol).Returns("https");
+        Mock.Arrange(() => connectionInfo.Host).Returns("::1");
+        Mock.Arrange(() => connectionInfo.Port).Returns(443);
+
+        var endpoint = ProfilesEndpointResolver.ResolveFromConnectionInfo(connectionInfo);
+
+        Assert.That(endpoint, Is.EqualTo("https://[::1]/v1/profiles"));
+    }
+
+    [Test]
     public void ResolveFromConnectionInfo_returns_null_for_a_null_connection_info()
     {
         Assert.That(ProfilesEndpointResolver.ResolveFromConnectionInfo(null), Is.Null);

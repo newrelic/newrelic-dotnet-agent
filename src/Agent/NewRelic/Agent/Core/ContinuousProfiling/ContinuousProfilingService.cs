@@ -504,8 +504,13 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
                 _isActive = true;
 
                 _native.Start(intervalMs);
-                // trackAsAgentWork: false -- this action IS the CP drain itself; marking it would poison
-                // its own read of the native sample pipeline this flag annotates.
+                // trackAsAgentWork: false -- _drainAction is only `() => Task.Run(DrainOnce)` (see field
+                // decl below), so this flag would tag the scheduler-thread dispatch, not the pool thread
+                // that actually runs DrainOnce; it can't cover the drain body regardless of its value.
+                // Most of DrainOnce's own CPU is covered anyway: OtlpProfileBuilder's frame-text filter
+                // (IsAgentThreadSample) excludes NewRelic.Agent.Core.* frames from the profile whether or
+                // not the sampling thread is tagged as agent work. The residual, accepted gap is the
+                // window parked inside Send -- off-CPU, BCL-only frames, invisible to the frame-text filter.
                 _scheduler.ExecuteEvery(_drainAction, TimeSpan.FromMilliseconds(intervalMs), trackAsAgentWork: false);
                 _activeIntervalMs = intervalMs;
                 Interlocked.Exchange(ref _lastDrainTimestamp, Stopwatch.GetTimestamp());
