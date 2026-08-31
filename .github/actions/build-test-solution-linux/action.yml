@@ -70,7 +70,13 @@ runs:
             for skip in ${{ inputs.skip-projects }}; do
               if [ "$skip" = "$name" ]; then skipped=$((skipped + 1)); continue 2; fi
             done
-            tfms="$(grep -oE '<TargetFrameworks?>[^<]*' "$project" | head -1 | sed 's/.*>//')"
+            # A legacy Framework csproj has TargetFrameworkVersion, not
+            # TargetFramework, so grep matches nothing. Under this shell's
+            # -e -o pipefail that would abort the whole step.
+            tfms="$(grep -oE '<TargetFrameworks?>[^<]*' "$project" | head -1 | sed 's/.*>//' || true)"
+            if [ -z "$tfms" ]; then
+              skipped=$((skipped + 1)); continue
+            fi
             for tfm in $(echo "$tfms" | tr ';' ' '); do
               case "$tfm" in
                 net[0-9]*.[0-9]*)
@@ -79,7 +85,7 @@ runs:
                     published=$((published + 1))
                   else
                     echo "::warning::Failed to pre-publish $name for $tfm/$runtime"
-                    grep -i 'error' /tmp/pub.log | head -10
+                    grep -i 'error' /tmp/pub.log | head -10 || true
                     failed=$((failed + 1))
                   fi
                   ;;
