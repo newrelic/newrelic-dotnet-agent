@@ -172,6 +172,15 @@ public abstract class AgentLogBase
         throw new Exception(message);
     }
 
+    /// <summary>
+    /// Builds an expression that matches the log_event_data harvest whose payload carries the given
+    /// log message. Use it to wait for a specific log event to reach the collector.
+    /// </summary>
+    public static string LogDataLogLineRegexFor(string logMessage)
+    {
+        return LogDataLogLineRegex + Regex.Escape(logMessage);
+    }
+
     public IEnumerable<Metric> WaitForMetricAggregateCallCount(string metricName, int minimumCallCount, TimeSpan timeout)
     {
         var deadline = DateTime.Now + timeout;

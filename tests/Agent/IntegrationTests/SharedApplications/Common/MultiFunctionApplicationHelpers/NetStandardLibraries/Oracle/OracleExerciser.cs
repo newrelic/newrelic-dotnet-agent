@@ -155,6 +155,8 @@ public class OracleExerciser : IDisposable
 
     private void CreateTable()
     {
+        DropTableIfExists();
+
         var createTable = string.Format(CreateHotelTableOracleSql, _tableName);
 
         var connectionString = OracleConfiguration.OracleConnectionString;
@@ -180,6 +182,17 @@ public class OracleExerciser : IDisposable
         }
     }
 
+    private void DropTableIfExists()
+    {
+        try
+        {
+            DropTable();
+        }
+        catch (OracleException ex) when (ex.Number == 942)
+        {
+        }
+    }
+
     public void Dispose()
     {
         DropTable();
@@ -188,7 +201,7 @@ public class OracleExerciser : IDisposable
         _storedProcedureName = null;
     }
 
-    private readonly string createProcedureStatement = @"CREATE PROCEDURE {0} ({1}) IS BEGIN NULL; END {0};";
+    private readonly string createProcedureStatement = @"CREATE OR REPLACE PROCEDURE {0} ({1}) IS BEGIN NULL; END {0};";
     private readonly string dropProcedureStatement = @"DROP PROCEDURE {0}";
 
     private void CreateProcedure()

@@ -22,6 +22,7 @@ public class AwsSdkDynamoDBTest : NewRelicIntegrationTest<AwsSdkContainerDynamoD
     private readonly string _year = "1990";
 
     private const string _accountId = "520056171328"; // matches the account ID parsed from the fake access key used in AwsSdkDynamoDBExerciser
+    private const string _region = "us-east-2"; // matches AuthenticationRegion in AwsSdkDynamoDBExerciser
 
     public AwsSdkDynamoDBTest(AwsSdkContainerDynamoDBTestFixture fixture, ITestOutputHelper output) : base(fixture)
     {
@@ -105,7 +106,7 @@ public class AwsSdkDynamoDBTest : NewRelicIntegrationTest<AwsSdkContainerDynamoD
         var expectedOperations = new[] { "create_table", "put_item", "get_item", "update_item", "delete_item", "query", "scan", "delete_table" };
         var expectedOperationsCount = expectedOperations.Length;
 
-        string expectedArn = $"arn:aws:dynamodb:(unknown):{_accountId}:table/{_tableName}";
+        string expectedArn = $"arn:aws:dynamodb:{_region}:{_accountId}:table/{_tableName}";
         var expectedAwsAgentAttributes = new string[]
         {
             "aws.operation", "aws.requestId", "aws.region", "cloud.resource_id",

@@ -26,7 +26,7 @@ public class AwsSdkDynamoDBExerciser : IDisposable
         AmazonDynamoDBConfig clientConfig = new AmazonDynamoDBConfig
         {
             // Set the endpoint URL
-            ServiceURL = "http://dynamodb:8000", // port must match what is set in docker compose
+            ServiceURL = "http://floci:4566", // host and port must match what is set in docker compose
             AuthenticationRegion = "us-east-2"
             //RegionEndpoint = RegionEndpoint.USEast2 **DO NOT* specify RegionEndpoint for local tests
         };
@@ -213,7 +213,8 @@ public class AwsSdkDynamoDBExerciser : IDisposable
         var request = new QueryRequest
         {
             TableName = tableName,
-            KeyConditionExpression = "#title = :title and #year = :year",
+            // partition key (year) must come first: the floci emulator only reads the leading condition
+            KeyConditionExpression = "#year = :year and #title = :title",
             ExpressionAttributeNames = new Dictionary<string, string>()
             {
                 {"#title", "title" },

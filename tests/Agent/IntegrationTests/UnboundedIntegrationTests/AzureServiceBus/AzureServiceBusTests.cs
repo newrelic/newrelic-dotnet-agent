@@ -6,17 +6,19 @@ using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
+using NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
 using Xunit;
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.AzureServiceBus;
 
-public abstract class AzureServiceBusTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
+public abstract class AzureServiceBusTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>, IDisposable
     where TFixture : ConsoleDynamicMethodFixture
 {
     private readonly TFixture _fixture;
     private readonly string _queueOrTopicName;
     private readonly string _destinationType;
+    private ServiceBusEntityScope _entityScope;
 
     protected AzureServiceBusTestsBase(TFixture fixture, string destinationType, ITestOutputHelper output) :
         base(fixture)
@@ -25,24 +27,27 @@ public abstract class AzureServiceBusTestsBase<TFixture> : NewRelicIntegrationTe
         _fixture.SetTimeout(TimeSpan.FromMinutes(1));
         _fixture.TestLogger = output;
 
-        _queueOrTopicName = $"test-queue-{Guid.NewGuid()}";
         _destinationType = destinationType;
+        _queueOrTopicName = $"test-{_destinationType.ToLowerInvariant()}-{Guid.NewGuid()}";
 
-        _fixture.AddCommand($"AzureServiceBusExerciser Initialize{_destinationType} {_queueOrTopicName}");
         _fixture.AddCommand($"AzureServiceBusExerciser ExerciseMultipleReceiveOperationsOnAMessageFor{_destinationType} {_queueOrTopicName}");
         _fixture.AddCommand($"AzureServiceBusExerciser ScheduleAndCancelAMessage {_queueOrTopicName}");
         if (_destinationType == "Queue")
         {
             _fixture.AddCommand($"AzureServiceBusExerciser ReceiveAndDeadLetterAMessageForQueue {_queueOrTopicName}");
         }
-            
+
         _fixture.AddCommand($"AzureServiceBusExerciser ReceiveAndAbandonAMessageFor{_destinationType} {_queueOrTopicName}");
-        _fixture.AddCommand($"AzureServiceBusExerciser Delete{_destinationType} {_queueOrTopicName}");
 
         _fixture.AddActions
         (
             setupConfiguration: () =>
             {
+                // The fixture owns the entity, not the application under test. Recreating it per attempt
+                // keeps a retry from seeing messages the previous attempt left behind.
+                _entityScope?.Dispose();
+                _entityScope = ServiceBusEntityScope.Create(_destinationType, _queueOrTopicName);
+
                 var configModifier = new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath);
 
                 configModifier
@@ -59,6 +64,11 @@ public abstract class AzureServiceBusTestsBase<TFixture> : NewRelicIntegrationTe
 
     private readonly string _metricScopeBase =
         "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.AzureServiceBus.AzureServiceBusExerciser";
+
+    public void Dispose()
+    {
+        _entityScope?.Dispose();
+    }
 
     [Fact]
     public void Test()

@@ -110,7 +110,6 @@ namespace NewRelic { namespace Profiler
             mdFieldDef dataFieldToken;
             ThrowOnError(_metaDataEmit->DefineField, nrHelperType, _X("_agentMethodFunc"), dataFieldAttributes, dataFieldSignature.data(), (uint32_t)dataFieldSignature.size(), 0, nullptr, 0, &dataFieldToken);
             ThrowOnError(_metaDataEmit->DefineField, nrHelperType, _X("_agentShimFunc"), dataFieldAttributes, dataFieldSignature.data(), (uint32_t)dataFieldSignature.size(), 0, nullptr, 0, &dataFieldToken);
-            ThrowOnError(_metaDataEmit->DefineField, nrHelperType, _X("_agentShimMethodInfo"), dataFieldAttributes, dataFieldSignature.data(), (uint32_t)dataFieldSignature.size(), 0, nullptr, 0, &dataFieldToken);
         }
 
         virtual bool VerifyNRHelperTypeInjected() override

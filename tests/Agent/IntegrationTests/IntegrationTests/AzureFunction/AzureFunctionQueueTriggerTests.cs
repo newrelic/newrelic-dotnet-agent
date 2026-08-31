@@ -35,6 +35,13 @@ public abstract class AzureFunctionQueueTriggerTestsBase<TFixture> : NewRelicInt
                 _fixture.PostToAzureFuncTool("QueueTriggerFunction", "test message");
 
                 _fixture.AgentLog.WaitForLogLines(AgentLogBase.TransactionSampleLogLineRegex, TimeSpan.FromMinutes(2));
+
+                // The test asserts on metrics, so wait for the metric the trigger function records rather than for
+                // any metric harvest. A harvest that fired before the function ran does not contain these metrics.
+                if (_fixture.AzureFunctionModeEnabled)
+                {
+                    _fixture.AgentLog.WaitForMetricAggregateCallCount("Supportability/Dotnet/AzureFunction/Trigger/Queue", 1, TimeSpan.FromMinutes(2));
+                }
             }
         );
 

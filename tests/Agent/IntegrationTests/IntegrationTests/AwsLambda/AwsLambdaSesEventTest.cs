@@ -27,7 +27,7 @@ public abstract class AwsLambdaSesEventTest<T> : NewRelicIntegrationTest<T> wher
             exerciseApplication: () =>
             {
                 _fixture.EnqueueEvent();
-                _fixture.AgentLog.WaitForLogLines(AgentLogBase.ServerlessPayloadLogLineRegex, TimeSpan.FromMinutes(1), 2);
+                _fixture.AgentLog.WaitForLogLines(AgentLogBase.ServerlessPayloadLogLineRegex, TimeSpan.FromMinutes(1), 1);
             }
         );
         _fixture.Initialize();

@@ -4,6 +4,7 @@
 using System;
 #endif
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Amazon;
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
@@ -16,6 +17,7 @@ public class InvokeLambdaExerciser
 {
     [LibraryMethod]
     [Transaction]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
     public void InvokeLambdaSync(string function, string payload)
     {
 #if NETFRAMEWORK
@@ -42,6 +44,7 @@ public class InvokeLambdaExerciser
 
     [LibraryMethod]
     [Transaction]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
     public async Task<string> InvokeLambdaAsync(string function, string payload)
     {
         var client = new Amazon.Lambda.AmazonLambdaClient(RegionEndpoint.USWest2);
@@ -68,6 +71,7 @@ public class InvokeLambdaExerciser
 
     [LibraryMethod]
     [Transaction]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
     public async Task<string> InvokeLambdaAsyncWithQualifier(string function, string qualifier, string payload)
     {
         var client = new Amazon.Lambda.AmazonLambdaClient(RegionEndpoint.USWest2);

@@ -21,6 +21,8 @@ public class AwsSdkKinesisTest : NewRelicIntegrationTest<AwsSdkContainerKinesisT
     private readonly string _consumerName = $"TestConsumer-{Guid.NewGuid()}";
     private readonly string _recordData = "MyRecordData";
 
+    private const string _region = "us-west-2"; // matches AuthenticationRegion in AwsSdkKinesisExerciser
+
     public AwsSdkKinesisTest(AwsSdkContainerKinesisTestFixture fixture, ITestOutputHelper output) : base(fixture)
     {
         _fixture = fixture;
@@ -100,9 +102,8 @@ public class AwsSdkKinesisTest : NewRelicIntegrationTest<AwsSdkContainerKinesisT
 
         };
 
-        // working with Kinesis in LocalStack, some ARNs match one pattern (region unknown but a real account id) and
-        // others match another pattern (region is us-west-2 but account ID is all zeros) so we have to resort to regex matching
-        string expectedArnRegex = "arn:aws:kinesis:(.+?):([0-9]{12}):stream/" + _streamName;
+        // account id varies: some ARNs come from the emulator response, others are built by the agent
+        string expectedArnRegex = $"arn:aws:kinesis:{_region}:([0-9]{{12}}):stream/" + _streamName;
         var expectedAwsAgentAttributes = new string[]
         {
             "aws.operation", "aws.region", "cloud.resource_id", "cloud.platform"

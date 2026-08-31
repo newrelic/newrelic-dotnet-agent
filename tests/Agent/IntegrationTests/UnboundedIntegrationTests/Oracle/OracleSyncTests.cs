@@ -49,7 +49,7 @@ public abstract class OracleSyncTestsBase<TFixture> : NewRelicIntegrationTest<TF
             exerciseApplication: () =>
             {
                 _fixture.AgentLog.WaitForLogLine(AgentLogBase.AgentConnectedLogLineRegex, TimeSpan.FromMinutes(1));
-                _fixture.AgentLog.WaitForLogLine(AgentLogBase.ShutdownLogLineRegex, TimeSpan.FromMinutes(1));
+                _fixture.AgentLog.WaitForMetricAggregateCallCount("Datastore/all", 4, TimeSpan.FromMinutes(2));
             }
         );
 

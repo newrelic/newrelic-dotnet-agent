@@ -142,12 +142,10 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
                 function->GetFunctionName() != _X("LoadAssemblyOrThrow") &&
                 function->GetFunctionName() != _X("GetTypeViaReflectionOrThrow") &&
                 function->GetFunctionName() != _X("GetMethodViaReflectionOrThrow") &&
-                function->GetFunctionName() != _X("GetMethodFromAppDomainStorage") &&
-                function->GetFunctionName() != _X("GetMethodFromAppDomainStorageOrReflectionOrThrow") &&
-                function->GetFunctionName() != _X("GetAgentShimMethodFromAppDomainStorageOrReflectionOrThrow") &&
                 function->GetFunctionName() != _X("StoreMethodInAppDomainStorageOrThrow") &&
                 function->GetFunctionName() != _X("GetAgentShimFinishTracerDelegateFunc") &&
                 function->GetFunctionName() != _X("StoreAgentShimFinishTracerDelegateFunc") &&
+                function->GetFunctionName() != _X("InvokeAgentShimFinishTracerDelegateFunc") &&
                 function->GetFunctionName() != _X("InvokeAgentMethodInvokerFunc") &&
                 function->GetFunctionName() != _X("GetAgentMethodInvokerObject") &&
                 function->GetFunctionName() != _X("StoreAgentMethodInvokerFunc") &&

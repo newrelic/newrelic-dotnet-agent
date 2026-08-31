@@ -20,6 +20,7 @@ public abstract class LinuxContainerTest<T> : NewRelicIntegrationTest<T> where T
         _fixture.Actions(setupConfiguration: () =>
             {
                 var configModifier = new NewRelicConfigModifier(_fixture.DestinationNewRelicConfigFilePath);
+                configModifier.SetLogLevel("finest");
                 configModifier.ConfigureFasterMetricsHarvestCycle(10);
             },
             exerciseApplication: () =>

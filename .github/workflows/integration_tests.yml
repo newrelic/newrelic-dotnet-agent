@@ -1,0 +1,322 @@
+name: Integration Tests
+
+on:
+  workflow_call:
+    inputs:
+      namespaces:
+        description: 'JSON array of integration test namespaces to run, e.g. ["Api","Errors"]'
+        type: string
+        required: true
+      aggregate_payload_data:
+        description: 'Collect and upload payload data artifacts for later aggregation'
+        type: boolean
+        required: false
+        default: false
+      parallelize:
+        description: 'Enable parallel test execution within each namespace'
+        type: boolean
+        required: false
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build IntegrationTests
+    runs-on: windows-2025-vs2026
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          filter: blob:none
+
+      - name: Build test solution
+        uses: ./.github/actions/build-test-solution
+        with:
+          solution-path: ${{ github.workspace }}\tests\Agent\IntegrationTests\IntegrationTests.sln
+          search-paths: Applications SharedApplications
+          skip-projects: AzureFunctionApplication AzureFunctionInProcApplication
+          x86-projects: ConsoleMultiFunctionApplicationCore
+          artifact-name: integrationtests
+
+  run-integration-tests:
+    needs: build
+    name: Run IntegrationTests
+    runs-on: windows-2025-vs2026
+    permissions:
+      contents: read   # required: a job-level block replaces the workflow-level one
+      id-token: write  # required for OIDC role assumption (LLM namespace only)
+    strategy:
+      matrix:
+        namespace: ${{ fromJson(inputs.namespaces) }}
+      fail-fast: false # we don't want one test failure in one namespace to kill the other runs
+
+    env:
+      integration_tests_shared_project: ${{ github.workspace }}/tests/Agent/IntegrationTests/Shared
+      integration_tests_path: ${{ github.workspace }}/tests/Agent/IntegrationTests/IntegrationTests/bin/Release/net10.0
+      # Make this variable true to enable extra data-gathering and logging to help troubleshoot test failures, at the cost of additional time and resources
+      enhanced_logging: false
+      NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY: 1
+      NR_DOTNET_TEST_PREBUILT_APPS: 1 # use pre-published test app output instead of dotnet publish at runtime
+      azure_func_exe_path: C:\ProgramData\chocolatey\lib\azure-functions-core-tools\tools\func.exe
+      NEW_RELIC_AZURE_FUNCTION_LOG_LEVEL_OVERRIDE: 1 # enables profiler debug logs when testing an azure function
+      # Set an environment variable that the tests will use to set the application name.
+      CI_NEW_RELIC_APP_NAME: ${{ github.event_name == 'schedule' && 'DotNetIngestTracking' || '' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          filter: blob:none
+
+      - name: Disable TLS 1.3
+        run: |
+          $registryPath = "HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS 1.3\Client"
+          if(!(Test-Path $registryPath)) {
+            New-Item -Path $registryPath -Force
+          }
+          New-ItemProperty -Path $registryPath -Name "DisabledByDefault" -Value "1" -PropertyType DWORD -Force
+          New-ItemProperty -Path $registryPath -Name "Enabled" -Value "0" -PropertyType DWORD -Force
+        shell: powershell
+
+      - name: Create and trust .NET development SSL certificate
+        run: |
+          dotnet dev-certs https --clean
+          dotnet dev-certs https --export-path ./devcert.pfx --password "password1"
+          $pwd = ConvertTo-SecureString -String "password1" -Force -AsPlainText
+          Import-PfxCertificate -FilePath ./devcert.pfx -CertStoreLocation Cert:\LocalMachine\Root -Password $pwd
+          dotnet dev-certs https --check --trust
+        shell: powershell
+
+      - name: Set up secrets
+        env:
+          INTEGRATION_TEST_SECRETS: ${{ secrets.TEST_SECRETS }}
+        run: |
+          "$Env:INTEGRATION_TEST_SECRETS" | dotnet user-secrets set --project ${{ env.integration_tests_shared_project }}
+        shell: pwsh #this doesn't work with normal powershell due to UTF-8 BOM handling
+
+      # Bedrock tests authenticate via short-lived OIDC credentials rather than a
+      # long-lived access key (NR-601301).  Gated to the LLM namespace so that no
+      # other matrix job ever holds AWS credentials in its environment.
+      - name: Configure AWS credentials for Bedrock
+        if: matrix.namespace == 'LLM'
+        uses: aws-actions/configure-aws-credentials@e6de054238d6b7531b4efff3b6587d9aade6a06c # v6.2.3
+        with:
+          role-to-assume: ${{ secrets.AWS_BEDROCK_TEST_ROLE_ARN }}
+          role-duration-seconds: 900
+          # Must match DefaultSetting.AwsRegion in TEST_SECRETS.  A mismatch fails
+          # confusingly: STS succeeds in one region while the SDK calls Bedrock in
+          # another.
+          aws-region: us-west-2
+
+      - name: Download Agent Home Folders
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: homefolders
+          path: src/Agent
+
+      - name: Download Integration Test Artifacts
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: integrationtests
+          # Should not need a path because the integration test artifacts are archived with the full directory structure
+
+      - name: Install HostableWebCore Feature
+        if: | # only install for the required namespaces
+          matrix.namespace == 'AgentFeatures' || matrix.namespace == 'AgentLogs' || matrix.namespace == 'AgentMetrics' || matrix.namespace == 'BasicInstrumentation' || 
+          matrix.namespace == 'CatInbound' || matrix.namespace == 'CatOutbound' || matrix.namespace == 'CodeLevelMetrics' ||
+          matrix.namespace == 'CustomAttributes' || matrix.namespace == 'CustomInstrumentation' || matrix.namespace == 'DataTransmission' || 
+          matrix.namespace == 'DistributedTracing' || matrix.namespace == 'Errors' || matrix.namespace == 'HSM' || matrix.namespace == 'HttpClientInstrumentation' || matrix.namespace == 'HybridHttpContextStorage' ||
+          matrix.namespace == 'LLM' || matrix.namespace == 'MultiAppDomain' || matrix.namespace == 'Rejit.NetFramework' || matrix.namespace == 'RequestHandling' || matrix.namespace == 'RequestHeadersCapture.AspNet' ||
+          matrix.namespace == 'RequestHeadersCapture.AspNetCore' || matrix.namespace == 'RequestHeadersCapture.EnvironmentVariables' ||
+          matrix.namespace == 'RequestHeadersCapture.WCF' || matrix.namespace == 'WCF.Client.IIS.ASPDisabled' ||
+          matrix.namespace == 'WCF.Client.IIS.ASPEnabled' || matrix.namespace == 'WCF.Service.IIS.ASPDisabled' ||
+          matrix.namespace == 'WCF.Service.IIS.ASPEnabled'
+        run: |
+          Enable-WindowsOptionalFeature -Online -FeatureName IIS-HostableWebCore
+        shell: powershell
+
+      - name: Install Azure Functions Core Tools
+        if: matrix.namespace == 'AzureFunction'
+        run: |
+          choco install azure-functions-core-tools -y --params "'/x64'"
+        shell: powershell
+
+      - name: Install latest .NET 10 SDK
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: '10.0.x'
+          dotnet-quality: 'ga'
+
+      - name: Run Integration Tests
+        run: |
+          if ($Env:enhanced_logging -eq $True) {
+            Write-Host "List ports in use"
+            netstat -no
+          }
+
+          Write-Host "Run tests"
+
+          # Most integration tests can run in parallel with pre-built test apps.
+          # Some namespaces must remain serial because they use shared external tools
+          # that don't support concurrent instances (e.g., Azure Functions Core Tools
+          # func.exe crashes when multiple instances launch simultaneously due to shared
+          # state in storage emulator/lock files). To parallelize these, the shared tool
+          # contention would need to be resolved.
+          $noParallelNamespaces = @("AzureFunction")
+          $parallelize = [System.Convert]::ToBoolean("${{ inputs.parallelize }}")
+          if ($noParallelNamespaces -contains "${{ matrix.namespace }}") { $parallelize = $false }
+          $json = Get-Content "${{ env.integration_tests_path }}/xunit.runner.json" | ConvertFrom-Json
+          $json | Add-Member -Name "parallelizeAssembly" -Value $parallelize -MemberType NoteProperty
+          $json | Add-Member -Name "parallelizeTestCollections" -Value $parallelize -MemberType NoteProperty
+          $json | ConvertTo-Json | Out-File "${{ env.integration_tests_path }}/xunit.runner.json"
+
+          # Retry once on failure to absorb transient infrastructure blips (e.g. port
+          # contention, SSL cert / tooling startup races, or a flaky test-app launch) that
+          # can surface as a spurious failure while the code under test is healthy. A
+          # retried-but-passing job still emits a ::warning:: so genuine regressions /
+          # flake churn stay visible in the UI.
+          $maxAttempts = 2
+          $attempt = 1
+          while ($true) {
+            & "${{ env.integration_tests_path }}/NewRelic.Agent.IntegrationTests.exe" -namespace NewRelic.Agent.IntegrationTests.${{ matrix.namespace }} -trx "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.trx"
+            $exitCode = $LASTEXITCODE
+            if ($exitCode -eq 0) {
+              if ($attempt -gt 1) {
+                Write-Host "::warning::Integration tests for ${{ matrix.namespace }} passed on attempt $attempt after a transient failure. Investigate if this recurs."
+                # Record the flaky retry to a marker file under RUNNER_TEMP, which the
+                # failure-artifact upload globs never collect. Reporting runs in the separate
+                # step below so that no secret is in scope for this step: HostedWebCore and
+                # other test hosts launched here write their environment to the console, and
+                # that console output is captured into the test results.
+                $marker = "$Env:RUNNER_TEMP\flaky-retry-${{ matrix.namespace }}.json"
+                @{ testType = "integrationTests"; testGroup = "${{ matrix.namespace }}" } | ConvertTo-Json | Out-File -FilePath $marker -Encoding UTF8
+              }
+              break
+            }
+            if ($attempt -ge $maxAttempts) {
+              Write-Host "Integration tests for ${{ matrix.namespace }} failed after $attempt attempt(s) (exit code $exitCode)."
+              exit $exitCode
+            }
+            Write-Host "Integration tests for ${{ matrix.namespace }} failed on attempt $attempt (exit code $exitCode); retrying once to absorb a possible transient blip..."
+            $attempt++
+            Start-Sleep -Seconds 10
+          }
+
+          if ($Env:enhanced_logging -eq $True) {
+            Write-Host "Get HostableWebCore errors (if any)"
+            Get-EventLog -LogName Application -Source HostableWebCore -ErrorAction:Ignore
+
+            Write-Host "Get .NET Runtime errors (if any)"
+            Get-EventLog -LogName Application -Source ".NET Runtime" -EntryType "Error","Warning" -ErrorAction:Ignore
+          }
+        shell: powershell
+
+      - name: Report flaky retry telemetry
+        if: always()
+        continue-on-error: true
+        env:
+          NR_CI_INGEST_KEY: ${{ secrets.NR_CI_INGEST_KEY }}
+          NR_CI_ACCOUNT_ID: ${{ secrets.NR_CI_ACCOUNT_ID }}
+          CI_BRANCH: ${{ github.ref_name }}
+          CI_COMMIT: ${{ github.sha }}
+          CI_RUN_ID: ${{ github.run_id }}
+          CI_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          CI_TRIGGER: ${{ github.event_name }}
+        run: |
+          $marker = "$Env:RUNNER_TEMP\flaky-retry-${{ matrix.namespace }}.json"
+          if (Test-Path $marker) {
+            $info = Get-Content $marker | ConvertFrom-Json
+            $Env:RETRY_TEST_TYPE = $info.testType
+            $Env:RETRY_TEST_GROUP = $info.testGroup
+            & bash build/Scripts/report-flaky-retry.sh
+            Remove-Item $marker -Force -ErrorAction Ignore
+          }
+        shell: powershell
+
+      - name: Extract payload bytes log from TRX
+        if: inputs.aggregate_payload_data == true || github.event_name == 'schedule'
+        run: |
+          $trxFile = "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.trx"
+          $payloadLog = "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_payload_bytes.json"
+          $countLog = "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_test_count.json"
+
+          Write-Host "Checking for TRX file at: $trxFile"
+
+          $executedTests = 0
+
+          if (Test-Path $trxFile) {
+            $fileSize = (Get-Item $trxFile).Length
+            Write-Host "TRX file found. Size: $fileSize bytes"
+
+            # Read TRX file and extract lines containing payload information from Message elements
+            [xml]$trxContent = Get-Content $trxFile
+            $messageElements = $trxContent.SelectNodes("//*[local-name()='Output']/*[local-name()='TextMessages']/*[local-name()='Message']")
+
+            $payloadData = @{}
+            foreach ($message in $messageElements) {
+              foreach ($line in ($message.InnerText -split "\r?\n")) {
+                if ($line -match '^\s*(.+?):\s+([a-z0-9_]+):\s+(\d+)\s+bytes\s*$') {
+                  $className = $Matches[1].Trim()
+                  $category  = $Matches[2]
+                  $byteCount = [int]$Matches[3]
+                  if (-not $payloadData.ContainsKey($className)) { $payloadData[$className] = @{} }
+                  if ($payloadData[$className].ContainsKey($category)) {
+                    $payloadData[$className][$category] += $byteCount
+                  } else {
+                    $payloadData[$className][$category] = $byteCount
+                  }
+                }
+              }
+            }
+
+            Write-Host "Found $($payloadData.Count) payload log entries"
+
+            if ($payloadData.Count -gt 0) {
+              $payloadData | ConvertTo-Json -Depth 5 | Out-File -FilePath $payloadLog -Encoding UTF8
+              Write-Host "Extracted payload logs to $payloadLog"
+              Write-Host "Content:"
+              Get-Content $payloadLog | ForEach-Object { Write-Host $_ }
+            } else {
+              Write-Host "No payload byte logs found in TRX file"
+              @{} | ConvertTo-Json | Out-File -FilePath $payloadLog -Encoding UTF8
+            }
+
+            # Extract the executed-test count from the TRX ResultSummary/Counters (VSTest
+            # schema, emitted by the xUnit v3 runner). 'executed' counts tests that ran
+            # (any outcome), excluding skipped / not-executed.
+            $counters = $trxContent.SelectSingleNode("//*[local-name()='ResultSummary']/*[local-name()='Counters']")
+            if ($counters -ne $null -and $counters.executed) { $executedTests = [int]$counters.executed }
+          } else {
+            Write-Host "TRX file not found"
+            @{} | ConvertTo-Json | Out-File -FilePath $payloadLog -Encoding UTF8
+          }
+
+          Write-Host "Executed test count: $executedTests"
+          @{ executedTests = $executedTests } | ConvertTo-Json | Out-File -FilePath $countLog -Encoding UTF8
+        shell: powershell
+
+      - name: Upload payload bytes log
+        if: inputs.aggregate_payload_data == true || github.event_name == 'schedule'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: integration-payload-bytes-${{ matrix.namespace }}
+          path: |
+            C:\IntegrationTestWorkingDirectory\TestResults\*_payload_bytes.json
+            C:\IntegrationTestWorkingDirectory\TestResults\*_test_count.json
+          if-no-files-found: warn
+
+      - name: Archive integration test results on failure
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: integration-test-results-${{ matrix.namespace }}
+          path: |
+            C:\IntegrationTestWorkingDirectory\**\*.log
+            C:\IntegrationTestWorkingDirectory\TestResults\**\*TestResults.trx
+          if-no-files-found: error
+

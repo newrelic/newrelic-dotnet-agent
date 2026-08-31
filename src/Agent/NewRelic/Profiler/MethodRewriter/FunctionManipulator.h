@@ -318,41 +318,12 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
         }
 
         // Load the MethodInfo instance for the given class and method onto the stack.
-        // The MethodInfo will be cached or not based on the configured agentCallStrategy.
-        // The function id is used as a tie-breaker for overloaded methods when computing the key name for the cache.
-        void LoadMethodInfo(xstring_t assemblyPath, xstring_t className, xstring_t methodName, uintptr_t functionId, std::function<void()> argumentTypesLambda)
+        // Reflection only: it is the graceful-degradation path, so it resolves the target with
+        // self-contained IL and never calls an injected core library helper. AppDomainFallbackCache
+        // dispatches through cached delegates instead and never resolves a MethodInfo per call.
+        void LoadMethodInfo(xstring_t assemblyPath, xstring_t className, xstring_t methodName, std::function<void()> argumentTypesLambda)
         {
-            if (_agentCallStrategy == AgentCallStyle::Strategy::AppDomainFallbackCache)
-            {
-                auto keyName = className + _X(".") + methodName + _X("_") + to_xstring((unsigned long)functionId);
-                _instructions->AppendString(keyName);
-                _instructions->AppendString(assemblyPath);
-                _instructions->AppendString(className);
-                _instructions->AppendString(methodName);
-                if (argumentTypesLambda == NULL)
-                {
-                    _instructions->Append(CEE_LDNULL);
-                }
-                else
-                {
-                    argumentTypesLambda();
-                }
-
-                // Retained deliberately. The generic branch below is the emission path for
-                // any future non-AgentShim caller. As of NR-602576 the Agent API path
-                // dispatches through InvokeAgentMethodInvokerFunc instead of resolving a
-                // MethodInfo here, so AgentShim is the only className that reaches this
-                // fork today.
-                if (Strings::AreEqualCaseInsensitive(className, _X("NewRelic.Agent.Core.AgentShim")))
-                {
-                    _instructions->Append(CEE_CALL, _X("class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Reflection.MethodInfo [") + _instructions->GetCoreLibAssemblyName() + _X("]System.CannotUnloadAppDomainException::GetAgentShimMethodFromAppDomainStorageOrReflectionOrThrow(string,string,string,string,class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Type[])"));
-                }
-                else
-                {
-                    _instructions->Append(CEE_CALL, _X("class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Reflection.MethodInfo [") + _instructions->GetCoreLibAssemblyName() + _X("]System.CannotUnloadAppDomainException::GetMethodFromAppDomainStorageOrReflectionOrThrow(string,string,string,string,class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Type[])"));
-                }
-            }
-            else if (_agentCallStrategy == AgentCallStyle::Strategy::Reflection)
+            if (_agentCallStrategy == AgentCallStyle::Strategy::Reflection)
             {
                 LoadType(assemblyPath, className);
                 LoadMethodInfoFromType(methodName, argumentTypesLambda);
