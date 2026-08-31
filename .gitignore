@@ -92,3 +92,7 @@ build/Linux/keys
 
 # Codegraph database (local only)
 .codegraph
+
+# Python
+__pycache__/
+*.pyc
