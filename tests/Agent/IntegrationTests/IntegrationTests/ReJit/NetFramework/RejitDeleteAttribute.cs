@@ -17,6 +17,7 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetFramework;
 /// Logging: finest
 /// Files: Integration.Testing.DeleteAttributeTest.xml
 /// </summary>
+[Trait("Runtime", "Framework")]
 public class RejitDeleteAttribute : NewRelicIntegrationTest<AspNetFrameworkReJitMvcApplicationFixture>
 {
     private readonly AspNetFrameworkReJitMvcApplicationFixture _fixture;

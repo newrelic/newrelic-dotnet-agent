@@ -13,6 +13,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation;
 
+[Trait("Runtime", "Framework")]
 public class NetStandardLibraryInstrumentationFW : NetStandardLibraryInstrumentation<ConsoleDynamicMethodFixtureFWLatest>
 {
     public NetStandardLibraryInstrumentationFW(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
@@ -20,6 +21,7 @@ public class NetStandardLibraryInstrumentationFW : NetStandardLibraryInstrumenta
     }
 }
 
+[Trait("Runtime", "Core")]
 public class NetStandardLibraryInstrumentationNetCoreOldest : NetStandardLibraryInstrumentation<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public NetStandardLibraryInstrumentationNetCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output) : base(fixture, output)
@@ -27,6 +29,7 @@ public class NetStandardLibraryInstrumentationNetCoreOldest : NetStandardLibrary
     }
 }
 
+[Trait("Runtime", "Core")]
 public class NetStandardLibraryInstrumentationNetCoreLatest : NetStandardLibraryInstrumentation<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public NetStandardLibraryInstrumentationNetCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)

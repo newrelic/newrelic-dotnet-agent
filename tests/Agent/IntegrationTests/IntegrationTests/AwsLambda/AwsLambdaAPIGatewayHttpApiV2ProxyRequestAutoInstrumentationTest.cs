@@ -75,6 +75,7 @@ public abstract class AwsLambdaAPIGatewayHttpApiV2ProxyRequestAutoInstrumentatio
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AwsLambdaAPIGatewayHttpApiV2ProxyRequestAutoInstrumentationTestCoreOldest : AwsLambdaAPIGatewayHttpApiV2ProxyRequestAutoInstrumentationTest<LambdaAPIGatewayHttpApiV2ProxyRequestAutoInstrumentationTriggerFixtureCoreOldest>
 {
     public AwsLambdaAPIGatewayHttpApiV2ProxyRequestAutoInstrumentationTestCoreOldest(LambdaAPIGatewayHttpApiV2ProxyRequestAutoInstrumentationTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -83,6 +84,7 @@ public class AwsLambdaAPIGatewayHttpApiV2ProxyRequestAutoInstrumentationTestCore
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AwsLambdaAPIGatewayHttpApiV2ProxyRequestAutoInstrumentationTestCoreLatest : AwsLambdaAPIGatewayHttpApiV2ProxyRequestAutoInstrumentationTest<LambdaAPIGatewayHttpApiV2ProxyRequestAutoInstrumentationTriggerFixtureCoreLatest>
 {
     public AwsLambdaAPIGatewayHttpApiV2ProxyRequestAutoInstrumentationTestCoreLatest(LambdaAPIGatewayHttpApiV2ProxyRequestAutoInstrumentationTriggerFixtureCoreLatest fixture, ITestOutputHelper output)

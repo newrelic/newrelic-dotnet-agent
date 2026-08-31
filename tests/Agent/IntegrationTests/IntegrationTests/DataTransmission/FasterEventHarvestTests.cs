@@ -10,6 +10,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.DataTransmission;
 
+[Trait("Runtime", "Framework")]
 public class FasterEventHarvestNetFrameworkTests : FasterEventHarvestTests<ConsoleDynamicMethodFixtureFWLatest>
 {
     public FasterEventHarvestNetFrameworkTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
@@ -17,6 +18,7 @@ public class FasterEventHarvestNetFrameworkTests : FasterEventHarvestTests<Conso
     }
 }
 
+[Trait("Runtime", "Core")]
 public class FasterEventHarvestNetCoreTests : FasterEventHarvestTests<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public FasterEventHarvestNetCoreTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output) : base(fixture, output)

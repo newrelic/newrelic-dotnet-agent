@@ -335,6 +335,7 @@ public abstract class MetricsAndForwardingTestsBase<TFixture> : NewRelicIntegrat
 
 #region log4net
 
+[Trait("Runtime", "Framework")]
 public class Log4NetMetricsAndForwardingTestsFWLatestTests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public Log4NetMetricsAndForwardingTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -343,6 +344,7 @@ public class Log4NetMetricsAndForwardingTestsFWLatestTests : MetricsAndForwardin
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class Log4NetMetricsAndForwardingTestsFW471Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     public Log4NetMetricsAndForwardingTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -351,6 +353,7 @@ public class Log4NetMetricsAndForwardingTestsFW471Tests : MetricsAndForwardingTe
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class Log4NetMetricsAndForwardingTestsFW462Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public Log4NetMetricsAndForwardingTestsFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -359,6 +362,7 @@ public class Log4NetMetricsAndForwardingTestsFW462Tests : MetricsAndForwardingTe
     }
 }
 
+[Trait("Runtime", "Core")]
 public class Log4NetMetricsAndForwardingTestsNetCoreLatestTests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public Log4NetMetricsAndForwardingTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -367,6 +371,7 @@ public class Log4NetMetricsAndForwardingTestsNetCoreLatestTests : MetricsAndForw
     }
 }
 
+[Trait("Runtime", "Core")]
 public class Log4NetMetricsAndForwardingTestsNetCoreOldestTests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public Log4NetMetricsAndForwardingTestsNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -378,6 +383,7 @@ public class Log4NetMetricsAndForwardingTestsNetCoreOldestTests : MetricsAndForw
 
 #region MEL
 
+[Trait("Runtime", "Core")]
 public class MELMetricsAndForwardingTestsNetCoreLatestTests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public MELMetricsAndForwardingTestsNetCoreLatestTests(
@@ -387,6 +393,7 @@ public class MELMetricsAndForwardingTestsNetCoreLatestTests : MetricsAndForwardi
     }
 }
 
+[Trait("Runtime", "Core")]
 public class
     MELMetricsAndForwardingTestsNetCoreOldestTests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
@@ -397,6 +404,7 @@ public class
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class
     MELMetricsAndForwardingTestsFWLatestTests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
@@ -411,6 +419,7 @@ public class
 
 #region Serilog
 
+[Trait("Runtime", "Framework")]
 public class
     SerilogMetricsAndForwardingTestsFWLatestTests : MetricsAndForwardingTestsBase<
     ConsoleDynamicMethodFixtureFWLatest>
@@ -422,6 +431,7 @@ public class
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class
     SerilogMetricsAndForwardingTestsFW471Tests : MetricsAndForwardingTestsBase<
     ConsoleDynamicMethodFixtureFW471>
@@ -433,6 +443,7 @@ public class
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class
     SerilogMetricsAndForwardingTestsFW462Tests : MetricsAndForwardingTestsBase<
     ConsoleDynamicMethodFixtureFW462>
@@ -444,6 +455,7 @@ public class
     }
 }
 
+[Trait("Runtime", "Core")]
 public class
     SerilogMetricsAndForwardingTestsNetCoreLatestTests : MetricsAndForwardingTestsBase<
     ConsoleDynamicMethodFixtureCoreLatest>
@@ -455,6 +467,7 @@ public class
     }
 }
 
+[Trait("Runtime", "Core")]
 public class
     SerilogMetricsAndForwardingTestsNetCoreOldestTests : MetricsAndForwardingTestsBase<
     ConsoleDynamicMethodFixtureCoreOldest>
@@ -470,6 +483,7 @@ public class
 
 #region NLog
 
+[Trait("Runtime", "Framework")]
 public class
     NLogMetricsAndForwardingTestsFWLatestTests : MetricsAndForwardingTestsBase<
     ConsoleDynamicMethodFixtureFWLatest>
@@ -481,6 +495,7 @@ public class
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class
     NLogMetricsAndForwardingTestsFW471Tests : MetricsAndForwardingTestsBase<
     ConsoleDynamicMethodFixtureFW471>
@@ -492,6 +507,7 @@ public class
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class
     NLogMetricsAndForwardingTestsFW462Tests : MetricsAndForwardingTestsBase<
     ConsoleDynamicMethodFixtureFW462>
@@ -503,6 +519,7 @@ public class
     }
 }
 
+[Trait("Runtime", "Core")]
 public class
     NLogMetricsAndForwardingTestsNetCoreLatestTests : MetricsAndForwardingTestsBase<
     ConsoleDynamicMethodFixtureCoreLatest>
@@ -514,6 +531,7 @@ public class
     }
 }
 
+[Trait("Runtime", "Core")]
 public class
     NLogMetricsAndForwardingTestsNetCoreOldestTests : MetricsAndForwardingTestsBase<
     ConsoleDynamicMethodFixtureCoreOldest>

@@ -11,6 +11,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.AspNetCore;
 
+[Trait("Runtime", "Core")]
 public class AllowAllHeadersDisabledTests : NewRelicIntegrationTest<RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture>
 {
     private readonly RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture _fixture;

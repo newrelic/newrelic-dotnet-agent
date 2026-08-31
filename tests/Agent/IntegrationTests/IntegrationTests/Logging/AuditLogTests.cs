@@ -8,6 +8,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.Logging.AuditLog;
 
+[Trait("Runtime", "Core")]
 public class AuditLogTests : NewRelicIntegrationTest<RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture>
 {
     private readonly RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture _fixture;

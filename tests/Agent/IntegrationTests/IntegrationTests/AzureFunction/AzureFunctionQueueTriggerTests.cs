@@ -131,6 +131,7 @@ public abstract class AzureFunctionQueueTriggerTestsBase<TFixture> : NewRelicInt
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AzureFunctionQueueTriggerTestsCoreOldest : AzureFunctionQueueTriggerTestsBase<AzureFunctionApplicationFixtureQueueTriggerCoreOldest>
 {
     public AzureFunctionQueueTriggerTestsCoreOldest(AzureFunctionApplicationFixtureQueueTriggerCoreOldest fixture, ITestOutputHelper output)
@@ -139,6 +140,7 @@ public class AzureFunctionQueueTriggerTestsCoreOldest : AzureFunctionQueueTrigge
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AzureFunctionQueueTriggerTestsCoreLatest : AzureFunctionQueueTriggerTestsBase<AzureFunctionApplicationFixtureQueueTriggerCoreLatest>
 {
     public AzureFunctionQueueTriggerTestsCoreLatest(AzureFunctionApplicationFixtureQueueTriggerCoreLatest fixture, ITestOutputHelper output)

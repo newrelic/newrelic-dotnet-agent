@@ -153,6 +153,7 @@ public abstract class OpenAITestsBase<TFixture> : NewRelicIntegrationTest<TFixtu
     }
 }
 
+[Trait("Runtime", "Core")]
 public class OpenAITests_CoreLatest : OpenAITestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public OpenAITests_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -161,6 +162,7 @@ public class OpenAITests_CoreLatest : OpenAITestsBase<ConsoleDynamicMethodFixtur
     }
 }
 
+[Trait("Runtime", "Core")]
 public class OpenAITests_CoreOldest : OpenAITestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public OpenAITests_CoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -169,6 +171,7 @@ public class OpenAITests_CoreOldest : OpenAITestsBase<ConsoleDynamicMethodFixtur
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class OpenAITests_FWLatest : OpenAITestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public OpenAITests_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)

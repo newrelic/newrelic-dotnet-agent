@@ -12,6 +12,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.CustomAttributes;
 
+[Trait("Runtime", "Framework")]
 public class CustomAttributesWebApi : NewRelicIntegrationTest<RemoteServiceFixtures.CustomAttributesWebApi>
 {
     private readonly RemoteServiceFixtures.CustomAttributesWebApi _fixture;

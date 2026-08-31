@@ -91,6 +91,7 @@ public abstract class RestSharpInstrumentationTaskResultCATBase<TFixture> : NewR
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class RestSharpInstrumentationTaskResultCATFWLatest : RestSharpInstrumentationTaskResultCATBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public RestSharpInstrumentationTaskResultCATFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -99,6 +100,7 @@ public class RestSharpInstrumentationTaskResultCATFWLatest : RestSharpInstrument
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class RestSharpInstrumentationTaskResultCATFW48 : RestSharpInstrumentationTaskResultCATBase<ConsoleDynamicMethodFixtureFW48>
 {
     public RestSharpInstrumentationTaskResultCATFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
@@ -107,6 +109,7 @@ public class RestSharpInstrumentationTaskResultCATFW48 : RestSharpInstrumentatio
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class RestSharpInstrumentationTaskResultCATFW471 : RestSharpInstrumentationTaskResultCATBase<ConsoleDynamicMethodFixtureFW471>
 {
     public RestSharpInstrumentationTaskResultCATFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -115,6 +118,7 @@ public class RestSharpInstrumentationTaskResultCATFW471 : RestSharpInstrumentati
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class RestSharpInstrumentationTaskResultCATFW462 : RestSharpInstrumentationTaskResultCATBase<ConsoleDynamicMethodFixtureFW462>
 {
     public RestSharpInstrumentationTaskResultCATFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)

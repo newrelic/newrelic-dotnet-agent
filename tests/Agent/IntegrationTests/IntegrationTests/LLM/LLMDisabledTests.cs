@@ -69,6 +69,7 @@ public abstract class LlmDisabledTestsBase<TFixture> : NewRelicIntegrationTest<T
 
     }
 }
+[Trait("Runtime", "Core")]
 public class LlmDisabledTest_CoreLatest : LlmDisabledTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public LlmDisabledTest_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -77,6 +78,7 @@ public class LlmDisabledTest_CoreLatest : LlmDisabledTestsBase<ConsoleDynamicMet
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class LlmDisabledTest_FWLatest : LlmDisabledTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public LlmDisabledTest_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)

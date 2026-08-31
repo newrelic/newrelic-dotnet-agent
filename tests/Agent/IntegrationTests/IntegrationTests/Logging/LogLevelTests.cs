@@ -77,6 +77,7 @@ public abstract class LogLevelTestsBase<TFixture> : NewRelicIntegrationTest<TFix
 
 #region log4net
 
+[Trait("Runtime", "Framework")]
 public class Log4netLogLevelFWLatestTests : LogLevelTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public Log4netLogLevelFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -85,6 +86,7 @@ public class Log4netLogLevelFWLatestTests : LogLevelTestsBase<ConsoleDynamicMeth
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class Log4netLogLevelFW471Tests : LogLevelTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     public Log4netLogLevelFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -93,6 +95,7 @@ public class Log4netLogLevelFW471Tests : LogLevelTestsBase<ConsoleDynamicMethodF
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class Log4netLogLevelFW462Tests : LogLevelTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public Log4netLogLevelFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -101,6 +104,7 @@ public class Log4netLogLevelFW462Tests : LogLevelTestsBase<ConsoleDynamicMethodF
     }
 }
 
+[Trait("Runtime", "Core")]
 public class Log4netLogLevelNetCoreLatestTests : LogLevelTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public Log4netLogLevelNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -109,6 +113,7 @@ public class Log4netLogLevelNetCoreLatestTests : LogLevelTestsBase<ConsoleDynami
     }
 }
 
+[Trait("Runtime", "Core")]
 public class Log4netLogLevelTestsNetCoreOldestTests : LogLevelTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public Log4netLogLevelTestsNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -121,6 +126,7 @@ public class Log4netLogLevelTestsNetCoreOldestTests : LogLevelTestsBase<ConsoleD
 
 #region MicrosoftLogging
 
+[Trait("Runtime", "Core")]
 public class MicrosoftLoggingLogLevelTestsNetCoreLatestTests : LogLevelTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public MicrosoftLoggingLogLevelTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -129,6 +135,7 @@ public class MicrosoftLoggingLogLevelTestsNetCoreLatestTests : LogLevelTestsBase
     }
 }
 
+[Trait("Runtime", "Core")]
 public class MicrosoftLoggingLogLevelTestsNetCoreOldestTests : LogLevelTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public MicrosoftLoggingLogLevelTestsNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -137,6 +144,7 @@ public class MicrosoftLoggingLogLevelTestsNetCoreOldestTests : LogLevelTestsBase
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class MicrosoftLoggingLogLevelTestsFWLatestTests : LogLevelTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public MicrosoftLoggingLogLevelTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -149,6 +157,7 @@ public class MicrosoftLoggingLogLevelTestsFWLatestTests : LogLevelTestsBase<Cons
 
 #region Serilog
 
+[Trait("Runtime", "Framework")]
 public class SerilogLogLevelTestsFWLatestTests : LogLevelTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public SerilogLogLevelTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -157,6 +166,7 @@ public class SerilogLogLevelTestsFWLatestTests : LogLevelTestsBase<ConsoleDynami
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class SerilogLogLevelTestsFW471Tests : LogLevelTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     public SerilogLogLevelTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -165,6 +175,7 @@ public class SerilogLogLevelTestsFW471Tests : LogLevelTestsBase<ConsoleDynamicMe
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class SerilogLogLevelTestsFW462Tests : LogLevelTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public SerilogLogLevelTestsFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -173,6 +184,7 @@ public class SerilogLogLevelTestsFW462Tests : LogLevelTestsBase<ConsoleDynamicMe
     }
 }
 
+[Trait("Runtime", "Core")]
 public class SerilogLogLevelTestsNetCoreLatestTests : LogLevelTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public SerilogLogLevelTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -181,6 +193,7 @@ public class SerilogLogLevelTestsNetCoreLatestTests : LogLevelTestsBase<ConsoleD
     }
 }
 
+[Trait("Runtime", "Core")]
 public class SerilogLogLevelTestsNetCoreOldestTests : LogLevelTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public SerilogLogLevelTestsNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -192,6 +205,7 @@ public class SerilogLogLevelTestsNetCoreOldestTests : LogLevelTestsBase<ConsoleD
 
 #region NLog
 
+[Trait("Runtime", "Framework")]
 public class NLogLogLevelTestsFWLatestTests : LogLevelTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public NLogLogLevelTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -200,6 +214,7 @@ public class NLogLogLevelTestsFWLatestTests : LogLevelTestsBase<ConsoleDynamicMe
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class NLogLogLevelTestsFW471Tests : LogLevelTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     public NLogLogLevelTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -208,6 +223,7 @@ public class NLogLogLevelTestsFW471Tests : LogLevelTestsBase<ConsoleDynamicMetho
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class NLogLogLevelTestsFW462Tests : LogLevelTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public NLogLogLevelTestsFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -216,6 +232,7 @@ public class NLogLogLevelTestsFW462Tests : LogLevelTestsBase<ConsoleDynamicMetho
     }
 }
 
+[Trait("Runtime", "Core")]
 public class NLogLogLevelTestsNetCoreLatestTests : LogLevelTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public NLogLogLevelTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -224,6 +241,7 @@ public class NLogLogLevelTestsNetCoreLatestTests : LogLevelTestsBase<ConsoleDyna
     }
 }
 
+[Trait("Runtime", "Core")]
 public class NLogLogLevelTestsNetCoreOldestTests : LogLevelTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public NLogLogLevelTestsNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -236,6 +254,7 @@ public class NLogLogLevelTestsNetCoreOldestTests : LogLevelTestsBase<ConsoleDyna
 
 #region Sitecore
 
+[Trait("Runtime", "Framework")]
 public class SitecoreLogLevelTestsFWLatestTests : LogLevelTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public SitecoreLogLevelTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -244,6 +263,7 @@ public class SitecoreLogLevelTestsFWLatestTests : LogLevelTestsBase<ConsoleDynam
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class SitecoreLogLevelTestsFW480Tests : LogLevelTestsBase<ConsoleDynamicMethodFixtureFW48>
 {
     public SitecoreLogLevelTestsFW480Tests(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)

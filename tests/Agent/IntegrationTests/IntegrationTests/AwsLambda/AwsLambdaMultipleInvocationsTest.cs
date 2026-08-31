@@ -66,6 +66,7 @@ public abstract class AwsLambdaMultipleInvocationsTest<T> : NewRelicIntegrationT
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AwsLambdaMultipleInvocationsTestCoreOldest : AwsLambdaMultipleInvocationsTest<LambdaCustomEventsTriggerFixtureCoreOldest>
 {
     public AwsLambdaMultipleInvocationsTestCoreOldest(LambdaCustomEventsTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -74,6 +75,7 @@ public class AwsLambdaMultipleInvocationsTestCoreOldest : AwsLambdaMultipleInvoc
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AwsLambdaMultipleInvocationsTestCoreLatest : AwsLambdaMultipleInvocationsTest<LambdaCustomEventsTriggerFixtureCoreLatest>
 {
     public AwsLambdaMultipleInvocationsTestCoreLatest(LambdaCustomEventsTriggerFixtureCoreLatest fixture, ITestOutputHelper output)

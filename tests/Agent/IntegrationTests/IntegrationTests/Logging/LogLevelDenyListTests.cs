@@ -84,6 +84,7 @@ public abstract class LogLevelDenyListTestsBase<TFixture> : NewRelicIntegrationT
 }
 #region log4net
 
+[Trait("Runtime", "Framework")]
 public class Log4NetLogLevelDenyListTestsFWLatestTests : LogLevelDenyListTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public Log4NetLogLevelDenyListTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -92,6 +93,7 @@ public class Log4NetLogLevelDenyListTestsFWLatestTests : LogLevelDenyListTestsBa
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class Log4NetLogLevelDenyListTestsFW471Tests : LogLevelDenyListTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     public Log4NetLogLevelDenyListTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -100,6 +102,7 @@ public class Log4NetLogLevelDenyListTestsFW471Tests : LogLevelDenyListTestsBase<
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class Log4NetLogLevelDenyListTestsFW462Tests : LogLevelDenyListTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public Log4NetLogLevelDenyListTestsFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -108,6 +111,7 @@ public class Log4NetLogLevelDenyListTestsFW462Tests : LogLevelDenyListTestsBase<
     }
 }
 
+[Trait("Runtime", "Core")]
 public class Log4NetLogLevelDenyListTestsNetCoreLatestTests : LogLevelDenyListTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public Log4NetLogLevelDenyListTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -116,6 +120,7 @@ public class Log4NetLogLevelDenyListTestsNetCoreLatestTests : LogLevelDenyListTe
     }
 }
 
+[Trait("Runtime", "Core")]
 public class Log4NetLogLevelDenyListTestsNetCoreOldestTests : LogLevelDenyListTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public Log4NetLogLevelDenyListTestsNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -127,6 +132,7 @@ public class Log4NetLogLevelDenyListTestsNetCoreOldestTests : LogLevelDenyListTe
 
 #region MEL
 
+[Trait("Runtime", "Core")]
 public class MELLogLevelDenyListTestsNetCoreLatestTests : LogLevelDenyListTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public MELLogLevelDenyListTestsNetCoreLatestTests(
@@ -136,6 +142,7 @@ public class MELLogLevelDenyListTestsNetCoreLatestTests : LogLevelDenyListTestsB
     }
 }
 
+[Trait("Runtime", "Core")]
 public class
     MELLogLevelDenyListTestsNetCoreOldestTests : LogLevelDenyListTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
@@ -146,6 +153,7 @@ public class
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class
     MELLogLevelDenyListTestsFWLatestTests : LogLevelDenyListTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
@@ -160,6 +168,7 @@ public class
 
 #region Serilog
 
+[Trait("Runtime", "Framework")]
 public class
     SerilogLogLevelDenyListTestsFWLatestTests : LogLevelDenyListTestsBase<
     ConsoleDynamicMethodFixtureFWLatest>
@@ -171,6 +180,7 @@ public class
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class
     SerilogLogLevelDenyListTestsFW471Tests : LogLevelDenyListTestsBase<
     ConsoleDynamicMethodFixtureFW471>
@@ -182,6 +192,7 @@ public class
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class
     SerilogLogLevelDenyListTestsFW462Tests : LogLevelDenyListTestsBase<
     ConsoleDynamicMethodFixtureFW462>
@@ -193,6 +204,7 @@ public class
     }
 }
 
+[Trait("Runtime", "Core")]
 public class
     SerilogLogLevelDenyListTestsNetCoreLatestTests : LogLevelDenyListTestsBase<
     ConsoleDynamicMethodFixtureCoreLatest>
@@ -204,6 +216,7 @@ public class
     }
 }
 
+[Trait("Runtime", "Core")]
 public class
     SerilogLogLevelDenyListTestsNetCoreOldestTests : LogLevelDenyListTestsBase<
     ConsoleDynamicMethodFixtureCoreOldest>
@@ -219,6 +232,7 @@ public class
 
 #region NLog
 
+[Trait("Runtime", "Framework")]
 public class
     NLogLogLevelDenyListTestsFWLatestTests : LogLevelDenyListTestsBase<
     ConsoleDynamicMethodFixtureFWLatest>
@@ -230,6 +244,7 @@ public class
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class
     NLogLogLevelDenyListTestsFW471Tests : LogLevelDenyListTestsBase<
     ConsoleDynamicMethodFixtureFW471>
@@ -241,6 +256,7 @@ public class
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class
     NLogLogLevelDenyListTestsFW462Tests : LogLevelDenyListTestsBase<
     ConsoleDynamicMethodFixtureFW462>
@@ -252,6 +268,7 @@ public class
     }
 }
 
+[Trait("Runtime", "Core")]
 public class
     NLogLogLevelDenyListTestsNetCoreLatestTests : LogLevelDenyListTestsBase<
     ConsoleDynamicMethodFixtureCoreLatest>
@@ -263,6 +280,7 @@ public class
     }
 }
 
+[Trait("Runtime", "Core")]
 public class
     NLogLogLevelDenyListTestsNetCoreOldestTests : LogLevelDenyListTestsBase<
     ConsoleDynamicMethodFixtureCoreOldest>

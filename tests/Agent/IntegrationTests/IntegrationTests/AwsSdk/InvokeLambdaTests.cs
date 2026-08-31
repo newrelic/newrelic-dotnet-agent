@@ -99,6 +99,7 @@ public abstract class InvokeLambdaTestBase<TFixture> : NewRelicIntegrationTest<T
         }
     }
 }
+[Trait("Runtime", "Framework")]
 public class InvokeLambdaTest_Sync_FW462 : InvokeLambdaTestBase<ConsoleDynamicMethodFixtureFW462>
 {
     public InvokeLambdaTest_Sync_FW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -106,6 +107,7 @@ public class InvokeLambdaTest_Sync_FW462 : InvokeLambdaTestBase<ConsoleDynamicMe
     {
     }
 }
+[Trait("Runtime", "Framework")]
 public class InvokeLambdaTest_Sync_FWLatest : InvokeLambdaTestBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public InvokeLambdaTest_Sync_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -113,6 +115,7 @@ public class InvokeLambdaTest_Sync_FWLatest : InvokeLambdaTestBase<ConsoleDynami
     {
     }
 }
+[Trait("Runtime", "Core")]
 public class InvokeLambdaTest_Async_CoreOldest : InvokeLambdaTestBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public InvokeLambdaTest_Async_CoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -121,6 +124,7 @@ public class InvokeLambdaTest_Async_CoreOldest : InvokeLambdaTestBase<ConsoleDyn
     }
 }
 
+[Trait("Runtime", "Core")]
 public class InvokeLambdaTest_Async_CoreLatest : InvokeLambdaTestBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public InvokeLambdaTest_Async_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)

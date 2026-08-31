@@ -41,6 +41,7 @@ public abstract class AwsLambdaContextOnlyParameterTest<T> : NewRelicIntegration
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AwsLambdaContextOnlyParameterTestCoreOldest : AwsLambdaContextOnlyParameterTest<LambdaContextOnlyParameterFixtureCoreOldest>
 {
     public AwsLambdaContextOnlyParameterTestCoreOldest(LambdaContextOnlyParameterFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -49,6 +50,7 @@ public class AwsLambdaContextOnlyParameterTestCoreOldest : AwsLambdaContextOnlyP
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AwsLambdaContextOnlyParameterTestCoreLatest : AwsLambdaContextOnlyParameterTest<LambdaContextOnlyParameterFixtureCoreLatest>
 {
     public AwsLambdaContextOnlyParameterTestCoreLatest(LambdaContextOnlyParameterFixtureCoreLatest fixture, ITestOutputHelper output)

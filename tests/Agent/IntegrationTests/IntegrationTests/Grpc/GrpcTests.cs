@@ -135,6 +135,7 @@ public abstract class GrpcTestsBase<TFixture> : NewRelicIntegrationTest<TFixture
     }
 }
 
+[Trait("Runtime", "Core")]
 public class GrpcTests_NetCoreOldest : GrpcTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public GrpcTests_NetCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -143,6 +144,7 @@ public class GrpcTests_NetCoreOldest : GrpcTestsBase<ConsoleDynamicMethodFixture
     }
 }
 
+[Trait("Runtime", "Core")]
 public class GrpcTests_NetCoreLatest : GrpcTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public GrpcTests_NetCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)

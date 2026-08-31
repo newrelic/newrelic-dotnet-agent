@@ -17,6 +17,7 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing.W3CInstrumentationT
 /// Test W3C support when chaining multiple requests by using WebRequest.
 /// Instrumentations occur in this test are AspNetCore and HttpClient.
 /// </summary>
+[Trait("Runtime", "Core")]
 public class HttpWebRequestW3CTestsNetCore : NewRelicIntegrationTest<AspNetCoreDistTraceRequestChainFixture>
 {
     private readonly AspNetCoreDistTraceRequestChainFixture _fixture;

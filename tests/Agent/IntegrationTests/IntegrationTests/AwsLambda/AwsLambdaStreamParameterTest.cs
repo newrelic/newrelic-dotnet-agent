@@ -74,6 +74,7 @@ public abstract class AwsLambdaStreamParameterTest<T> : NewRelicIntegrationTest<
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AwsLambdaStreamParameterTestCoreOldest : AwsLambdaStreamParameterTest<LambdaStreamParameterFixtureCoreOldest>
 {
     public AwsLambdaStreamParameterTestCoreOldest(LambdaStreamParameterFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -82,6 +83,7 @@ public class AwsLambdaStreamParameterTestCoreOldest : AwsLambdaStreamParameterTe
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AwsLambdaStreamParameterTestCoreLatest : AwsLambdaStreamParameterTest<LambdaStreamParameterFixtureCoreLatest>
 {
     public AwsLambdaStreamParameterTestCoreLatest(LambdaStreamParameterFixtureCoreLatest fixture, ITestOutputHelper output)

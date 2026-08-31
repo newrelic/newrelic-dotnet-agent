@@ -8,6 +8,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.RequestHandling;
 
+[Trait("Runtime", "Framework")]
 public class WebApi2NotFoundAndOptionsTests : NotFoundAndOptionsTests<WebApiAsyncFixture>
 {
     public WebApi2NotFoundAndOptionsTests(WebApiAsyncFixture fixture, ITestOutputHelper output)

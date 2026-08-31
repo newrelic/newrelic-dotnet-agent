@@ -10,6 +10,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation;
 
+[Trait("Runtime", "Framework")]
 public class ServiceStackApplicationTests : NewRelicIntegrationTest<ServiceStackApplicationFixture>
 {
 

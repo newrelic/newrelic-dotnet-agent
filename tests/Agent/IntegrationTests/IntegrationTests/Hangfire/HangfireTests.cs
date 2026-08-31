@@ -108,6 +108,7 @@ public abstract class HangfireTestsBase<TFixture> : NewRelicIntegrationTest<TFix
     }
 }
 
+[Trait("Runtime", "Core")]
 public class HangfireTests_CoreOldest : HangfireTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public HangfireTests_CoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output) : base(fixture, output, new Version(1,7))
@@ -115,6 +116,7 @@ public class HangfireTests_CoreOldest : HangfireTestsBase<ConsoleDynamicMethodFi
     }
 }
 
+[Trait("Runtime", "Core")]
 public class HangfireTests_CoreLatest : HangfireTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public HangfireTests_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output, new Version(1, 8))
@@ -122,6 +124,7 @@ public class HangfireTests_CoreLatest : HangfireTestsBase<ConsoleDynamicMethodFi
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class HangfireTests_FWOldest : HangfireTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public HangfireTests_FWOldest(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output, new Version(1, 7))
@@ -129,6 +132,7 @@ public class HangfireTests_FWOldest : HangfireTestsBase<ConsoleDynamicMethodFixt
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class HangfireTests_FWLatest : HangfireTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public HangfireTests_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output, new Version(1, 8))

@@ -78,6 +78,7 @@ public abstract class AwsLambdaApplicationLoadBalancerRequestAutoInstrumentation
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AwsLambdaApplicationLoadBalancerRequestAutoInstrumentationTestCoreOldest : AwsLambdaApplicationLoadBalancerRequestAutoInstrumentationTest<LambdaApplicationLoadBalancerRequestAutoInstrumentationTriggerFixtureCoreOldest>
 {
     public AwsLambdaApplicationLoadBalancerRequestAutoInstrumentationTestCoreOldest(LambdaApplicationLoadBalancerRequestAutoInstrumentationTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -86,6 +87,7 @@ public class AwsLambdaApplicationLoadBalancerRequestAutoInstrumentationTestCoreO
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AwsLambdaApplicationLoadBalancerRequestAutoInstrumentationTestCoreLatest : AwsLambdaApplicationLoadBalancerRequestAutoInstrumentationTest<LambdaApplicationLoadBalancerRequestAutoInstrumentationTriggerFixtureCoreLatest>
 {
     public AwsLambdaApplicationLoadBalancerRequestAutoInstrumentationTestCoreLatest(LambdaApplicationLoadBalancerRequestAutoInstrumentationTriggerFixtureCoreLatest fixture, ITestOutputHelper output)

@@ -66,6 +66,7 @@ public abstract class InfiniteTracingTestsBase<TFixture> : NewRelicIntegrationTe
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class InfiniteTracingFWLatestTests : InfiniteTracingTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public InfiniteTracingFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -75,6 +76,7 @@ public class InfiniteTracingFWLatestTests : InfiniteTracingTestsBase<ConsoleDyna
 }
 
 
+[Trait("Runtime", "Framework")]
 public class InfiniteTracingFW471Tests : InfiniteTracingTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     public InfiniteTracingFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -83,6 +85,7 @@ public class InfiniteTracingFW471Tests : InfiniteTracingTestsBase<ConsoleDynamic
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class InfiniteTracingFW462Tests : InfiniteTracingTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public InfiniteTracingFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -91,6 +94,7 @@ public class InfiniteTracingFW462Tests : InfiniteTracingTestsBase<ConsoleDynamic
     }
 }
 
+[Trait("Runtime", "Core")]
 public class InfiniteTracingNetCoreLatestTests : InfiniteTracingTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public InfiniteTracingNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -99,6 +103,7 @@ public class InfiniteTracingNetCoreLatestTests : InfiniteTracingTestsBase<Consol
     }
 }
 
+[Trait("Runtime", "Core")]
 public class InfiniteTracingNetCoreOldestTests : InfiniteTracingTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public InfiniteTracingNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)

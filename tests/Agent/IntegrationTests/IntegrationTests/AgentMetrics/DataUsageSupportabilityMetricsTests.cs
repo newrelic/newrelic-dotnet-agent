@@ -10,6 +10,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.AgentMetrics;
 
+[Trait("Runtime", "Framework")]
 public class DataUsageSupportabilityMetricsTestsFW : DataUsageSupportabilityMetricsTests<ConsoleDynamicMethodFixtureFWLatest>
 {
     public DataUsageSupportabilityMetricsTestsFW(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -18,6 +19,7 @@ public class DataUsageSupportabilityMetricsTestsFW : DataUsageSupportabilityMetr
     }
 }
 
+[Trait("Runtime", "Core")]
 public class DataUsageSupportabilityMetricsTestsCoreOldest : DataUsageSupportabilityMetricsTests<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public DataUsageSupportabilityMetricsTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -26,6 +28,7 @@ public class DataUsageSupportabilityMetricsTestsCoreOldest : DataUsageSupportabi
     }
 }
 
+[Trait("Runtime", "Core")]
 public class DataUsageSupportabilityMetricsTestsCoreLatest : DataUsageSupportabilityMetricsTests<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public DataUsageSupportabilityMetricsTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)

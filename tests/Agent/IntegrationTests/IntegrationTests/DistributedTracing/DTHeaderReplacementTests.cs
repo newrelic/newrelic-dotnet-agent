@@ -17,6 +17,7 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing;
 /// and by the existing HttpClientW3CTests for regression. The Owin self-hosted fixture has infrastructure
 /// issues that prevent a standalone existing-headers test.
 /// </summary>
+[Trait("Runtime", "Framework")]
 public class HttpWebRequestDTHeaderReplacementTest : NewRelicIntegrationTest<FrameworkTracingChainFixture>
 {
     private readonly FrameworkTracingChainFixture _fixture;
@@ -73,6 +74,7 @@ public class HttpWebRequestDTHeaderReplacementTest : NewRelicIntegrationTest<Fra
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class RestSharpDTHeaderReplacementTest : NewRelicIntegrationTest<FrameworkTracingChainFixture>
 {
     private readonly FrameworkTracingChainFixture _fixture;

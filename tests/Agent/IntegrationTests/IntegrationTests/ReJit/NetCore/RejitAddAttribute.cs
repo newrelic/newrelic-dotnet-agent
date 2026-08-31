@@ -97,6 +97,7 @@ public abstract class RejitAddAttributeBase<TFixture> : NewRelicIntegrationTest<
     }
 }
 
+[Trait("Runtime", "Core")]
 public class RejitAddAttribute : RejitAddAttributeBase<AspNetCoreReJitMvcApplicationFixture>
 {
     public RejitAddAttribute(AspNetCoreReJitMvcApplicationFixture fixture, ITestOutputHelper output)
@@ -105,6 +106,7 @@ public class RejitAddAttribute : RejitAddAttributeBase<AspNetCoreReJitMvcApplica
     }
 }
 
+[Trait("Runtime", "Core")]
 public class RejitAddAttributeWithTieredCompilation : RejitAddAttributeBase<AspNetCoreReJitMvcApplicationFixtureWithTieredCompilation>
 {
     public RejitAddAttributeWithTieredCompilation(AspNetCoreReJitMvcApplicationFixtureWithTieredCompilation fixture, ITestOutputHelper output)

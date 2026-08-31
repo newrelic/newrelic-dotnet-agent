@@ -9,6 +9,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.AgentFeatures;
 
+[Trait("Runtime", "Framework")]
 public class InstrumentationLoaderTests : NewRelicIntegrationTest<RemoteServiceFixtures.ConsoleInstrumentationLoaderFixture>
 {
     private readonly RemoteServiceFixtures.ConsoleInstrumentationLoaderFixture _fixture;
@@ -56,6 +57,7 @@ public class InstrumentationLoaderTests : NewRelicIntegrationTest<RemoteServiceF
     }
 }
 
+[Trait("Runtime", "Core")]
 public class InstrumentationLoaderTestsCore : NewRelicIntegrationTest<RemoteServiceFixtures.ConsoleInstrumentationLoaderFixtureCore>
 {
     private readonly RemoteServiceFixtures.ConsoleInstrumentationLoaderFixtureCore _fixture;

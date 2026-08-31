@@ -78,6 +78,7 @@ public abstract class HttpWebRequestBodyDTTestsBase : NewRelicIntegrationTest<Fr
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class HttpWebRequestPostSyncDTTests : HttpWebRequestBodyDTTestsBase
 {
     public HttpWebRequestPostSyncDTTests(FrameworkTracingChainFixture fixture, ITestOutputHelper output) : base(fixture, output)
@@ -88,6 +89,7 @@ public class HttpWebRequestPostSyncDTTests : HttpWebRequestBodyDTTestsBase
         fixture.ExecuteTraceRequestChainHttpWebRequestBodySync("POST");
 }
 
+[Trait("Runtime", "Framework")]
 public class HttpWebRequestPutSyncDTTests : HttpWebRequestBodyDTTestsBase
 {
     public HttpWebRequestPutSyncDTTests(FrameworkTracingChainFixture fixture, ITestOutputHelper output) : base(fixture, output)
@@ -98,6 +100,7 @@ public class HttpWebRequestPutSyncDTTests : HttpWebRequestBodyDTTestsBase
         fixture.ExecuteTraceRequestChainHttpWebRequestBodySync("PUT");
 }
 
+[Trait("Runtime", "Framework")]
 public class HttpWebRequestPostAsyncDTTests : HttpWebRequestBodyDTTestsBase
 {
     public HttpWebRequestPostAsyncDTTests(FrameworkTracingChainFixture fixture, ITestOutputHelper output) : base(fixture, output)
@@ -108,6 +111,7 @@ public class HttpWebRequestPostAsyncDTTests : HttpWebRequestBodyDTTestsBase
         fixture.ExecuteTraceRequestChainHttpWebRequestBodyAsync("POST", "tap");
 }
 
+[Trait("Runtime", "Framework")]
 public class HttpWebRequestPutAsyncDTTests : HttpWebRequestBodyDTTestsBase
 {
     public HttpWebRequestPutAsyncDTTests(FrameworkTracingChainFixture fixture, ITestOutputHelper output) : base(fixture, output)
@@ -118,6 +122,7 @@ public class HttpWebRequestPutAsyncDTTests : HttpWebRequestBodyDTTestsBase
         fixture.ExecuteTraceRequestChainHttpWebRequestBodyAsync("PUT", "tap");
 }
 
+[Trait("Runtime", "Framework")]
 public class HttpWebRequestPostBeginEndDTTests : HttpWebRequestBodyDTTestsBase
 {
     public HttpWebRequestPostBeginEndDTTests(FrameworkTracingChainFixture fixture, ITestOutputHelper output) : base(fixture, output)
@@ -132,6 +137,7 @@ public class HttpWebRequestPostBeginEndDTTests : HttpWebRequestBodyDTTestsBase
 // stream and therefore no handoff for the response wrapper to reuse, so this exercises whether the
 // async GET path injects distributed-trace headers at all. Asserts the same receiver-side outcome
 // as the body cases (Accept/Success + parentId).
+[Trait("Runtime", "Framework")]
 public class HttpWebRequestGetAsyncDTTests : HttpWebRequestBodyDTTestsBase
 {
     public HttpWebRequestGetAsyncDTTests(FrameworkTracingChainFixture fixture, ITestOutputHelper output) : base(fixture, output)
@@ -145,6 +151,7 @@ public class HttpWebRequestGetAsyncDTTests : HttpWebRequestBodyDTTestsBase
 // POST body request whose response is an HTTP 500, so GetResponse throws WebException and the
 // external segment's onFailure path runs. The request still carries the distributed-trace headers,
 // so the receiver records the trace (Accept/Success + parentId).
+[Trait("Runtime", "Framework")]
 public class HttpWebRequestBodyErrorDTTests : HttpWebRequestBodyDTTestsBase
 {
     public HttpWebRequestBodyErrorDTTests(FrameworkTracingChainFixture fixture, ITestOutputHelper output) : base(fixture, output)

@@ -67,6 +67,7 @@ public abstract class HSMDisablesForwardingTestsBase<TFixture> : NewRelicIntegra
 
 #region log4net
 
+[Trait("Runtime", "Framework")]
 public class Log4netHSMDisablesForwardingTestsFWLatestTests : HSMDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureFWLatestHSM>
 {
     public Log4netHSMDisablesForwardingTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatestHSM fixture, ITestOutputHelper output)
@@ -75,6 +76,7 @@ public class Log4netHSMDisablesForwardingTestsFWLatestTests : HSMDisablesForward
     }
 }
 
+[Trait("Runtime", "Core")]
 public class Log4netHSMDisablesForwardingTestsNetCoreLatestTests : HSMDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatestHSM>
 {
     public Log4netHSMDisablesForwardingTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatestHSM fixture, ITestOutputHelper output)
@@ -87,6 +89,7 @@ public class Log4netHSMDisablesForwardingTestsNetCoreLatestTests : HSMDisablesFo
 
 #region MicrosoftLogging
 
+[Trait("Runtime", "Core")]
 public class MicrosoftLoggingHSMDisablesForwardingTestsNetCoreLatestTests : HSMDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatestHSM>
 {
     public MicrosoftLoggingHSMDisablesForwardingTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatestHSM fixture, ITestOutputHelper output)
@@ -99,6 +102,7 @@ public class MicrosoftLoggingHSMDisablesForwardingTestsNetCoreLatestTests : HSMD
 
 #region Serilog
 
+[Trait("Runtime", "Framework")]
 public class SerilogHSMDisablesForwardingTestsFWLatestTests : HSMDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureFWLatestHSM>
 {
     public SerilogHSMDisablesForwardingTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatestHSM fixture, ITestOutputHelper output)
@@ -107,6 +111,7 @@ public class SerilogHSMDisablesForwardingTestsFWLatestTests : HSMDisablesForward
     }
 }
 
+[Trait("Runtime", "Core")]
 public class SerilogHSMDisablesForwardingTestsNetCoreLatestTests : HSMDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatestHSM>
 {
     public SerilogHSMDisablesForwardingTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatestHSM fixture, ITestOutputHelper output)
@@ -119,6 +124,7 @@ public class SerilogHSMDisablesForwardingTestsNetCoreLatestTests : HSMDisablesFo
 
 #region NLog
 
+[Trait("Runtime", "Framework")]
 public class NLogHSMDisablesForwardingTestsFWLatestTests : HSMDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureFWLatestHSM>
 {
     public NLogHSMDisablesForwardingTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatestHSM fixture, ITestOutputHelper output)
@@ -127,6 +133,7 @@ public class NLogHSMDisablesForwardingTestsFWLatestTests : HSMDisablesForwarding
     }
 }
 
+[Trait("Runtime", "Core")]
 public class NLogHSMDisablesForwardingTestsNetCoreLatestTests : HSMDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatestHSM>
 {
     public NLogHSMDisablesForwardingTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatestHSM fixture, ITestOutputHelper output)
@@ -139,6 +146,7 @@ public class NLogHSMDisablesForwardingTestsNetCoreLatestTests : HSMDisablesForwa
 
 #region Sitecore
 
+[Trait("Runtime", "Framework")]
 public class SitecoreHSMDisablesForwardingTestsFWLatestTests : HSMDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureFWLatestHSM>
 {
     public SitecoreHSMDisablesForwardingTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatestHSM fixture, ITestOutputHelper output)

@@ -11,6 +11,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation;
 
+[Trait("Runtime", "Framework")]
 public class OtherTransaction : NewRelicIntegrationTest<RemoteServiceFixtures.AgentApiExecutor>
 {
     private readonly RemoteServiceFixtures.AgentApiExecutor _fixture;

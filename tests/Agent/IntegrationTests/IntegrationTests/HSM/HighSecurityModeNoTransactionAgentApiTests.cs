@@ -11,6 +11,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.HSM;
 
+[Trait("Runtime", "Framework")]
 public class HighSecurityModeNoTransactionAgentApiTests : NewRelicIntegrationTest<RemoteServiceFixtures.HSMAgentApiExecutor>
 {
 

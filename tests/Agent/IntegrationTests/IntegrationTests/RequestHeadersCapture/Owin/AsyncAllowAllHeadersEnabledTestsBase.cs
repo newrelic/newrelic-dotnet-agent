@@ -93,6 +93,7 @@ public abstract class AsyncAllowAllHeadersEnabledTestsBase<TFixture> : NewRelicI
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class OwinWebApiAsyncAllowAllHeadersEnabledTest : AsyncAllowAllHeadersEnabledTestsBase<RemoteServiceFixtures.OwinWebApiFixture>
 {
     public OwinWebApiAsyncAllowAllHeadersEnabledTest(RemoteServiceFixtures.OwinWebApiFixture fixture, ITestOutputHelper output)
@@ -101,6 +102,7 @@ public class OwinWebApiAsyncAllowAllHeadersEnabledTest : AsyncAllowAllHeadersEna
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class Owin3WebApiAsyncAllowAllHeadersEnabledTest : AsyncAllowAllHeadersEnabledTestsBase<RemoteServiceFixtures.Owin3WebApiFixture>
 {
     public Owin3WebApiAsyncAllowAllHeadersEnabledTest(RemoteServiceFixtures.Owin3WebApiFixture fixture, ITestOutputHelper output)
@@ -109,6 +111,7 @@ public class Owin3WebApiAsyncAllowAllHeadersEnabledTest : AsyncAllowAllHeadersEn
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class Owin4WebApiAsyncAllowAllHeadersEnabledTest : AsyncAllowAllHeadersEnabledTestsBase<RemoteServiceFixtures.Owin4WebApiFixture>
 {
     public Owin4WebApiAsyncAllowAllHeadersEnabledTest(RemoteServiceFixtures.Owin4WebApiFixture fixture, ITestOutputHelper output)

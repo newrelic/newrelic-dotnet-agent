@@ -82,6 +82,7 @@ public abstract class RejitDeleteAttributeBase<TFixture> : NewRelicIntegrationTe
     }
 }
 
+[Trait("Runtime", "Core")]
 public class RejitDeleteAttribute : RejitDeleteAttributeBase<AspNetCoreReJitMvcApplicationFixture>
 {
     public RejitDeleteAttribute(AspNetCoreReJitMvcApplicationFixture fixture, ITestOutputHelper output)
@@ -90,6 +91,7 @@ public class RejitDeleteAttribute : RejitDeleteAttributeBase<AspNetCoreReJitMvcA
     }
 }
 
+[Trait("Runtime", "Core")]
 public class RejitDeleteAttributeWithTieredCompilation : RejitDeleteAttributeBase<AspNetCoreReJitMvcApplicationFixtureWithTieredCompilation>
 {
     public RejitDeleteAttributeWithTieredCompilation(AspNetCoreReJitMvcApplicationFixtureWithTieredCompilation fixture, ITestOutputHelper output)

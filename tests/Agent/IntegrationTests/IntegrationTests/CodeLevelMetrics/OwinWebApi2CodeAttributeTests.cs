@@ -80,6 +80,7 @@ public abstract class OwinWebApi2CodeAttributeTestsBase<TFixture> : NewRelicInte
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class OwinWebApi2CodeAttributeTests : OwinWebApi2CodeAttributeTestsBase<RemoteServiceFixtures.OwinWebApiFixture>
 {
     public OwinWebApi2CodeAttributeTests(RemoteServiceFixtures.OwinWebApiFixture fixture, ITestOutputHelper output)
@@ -88,6 +89,7 @@ public class OwinWebApi2CodeAttributeTests : OwinWebApi2CodeAttributeTestsBase<R
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class Owin3WebApi2CodeAttributeTests : OwinWebApi2CodeAttributeTestsBase<RemoteServiceFixtures.Owin3WebApiFixture>
 {
     public Owin3WebApi2CodeAttributeTests(RemoteServiceFixtures.Owin3WebApiFixture fixture, ITestOutputHelper output)
@@ -96,6 +98,7 @@ public class Owin3WebApi2CodeAttributeTests : OwinWebApi2CodeAttributeTestsBase<
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class Owin4WebApi2CodeAttributeTests : OwinWebApi2CodeAttributeTestsBase<RemoteServiceFixtures.Owin4WebApiFixture>
 {
     public Owin4WebApi2CodeAttributeTests(RemoteServiceFixtures.Owin4WebApiFixture fixture, ITestOutputHelper output)

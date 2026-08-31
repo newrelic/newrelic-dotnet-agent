@@ -11,6 +11,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation;
 
+[Trait("Runtime", "Framework")]
 public class GloballyForceNewTransactionEnabledTestsFW462 : GloballyForceNewTransactionTests<ConsoleDynamicMethodFixtureFW462>
 {
     public GloballyForceNewTransactionEnabledTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -19,6 +20,7 @@ public class GloballyForceNewTransactionEnabledTestsFW462 : GloballyForceNewTran
     }
 }
 
+[Trait("Runtime", "Core")]
 public class GloballyForceNewTransactionEnabledTestsCoreOldest : GloballyForceNewTransactionTests<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public GloballyForceNewTransactionEnabledTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -27,6 +29,7 @@ public class GloballyForceNewTransactionEnabledTestsCoreOldest : GloballyForceNe
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class GloballyForceNewTransactionDisabledTestsFW462 : GloballyForceNewTransactionTests<ConsoleDynamicMethodFixtureFW462>
 {
     public GloballyForceNewTransactionDisabledTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -35,6 +38,7 @@ public class GloballyForceNewTransactionDisabledTestsFW462 : GloballyForceNewTra
     }
 }
 
+[Trait("Runtime", "Core")]
 public class GloballyForceNewTransactionDisabledTestsCoreOldest : GloballyForceNewTransactionTests<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public GloballyForceNewTransactionDisabledTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)

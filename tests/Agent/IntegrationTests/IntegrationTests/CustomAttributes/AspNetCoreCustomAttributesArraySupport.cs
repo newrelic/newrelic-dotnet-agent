@@ -11,6 +11,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.CustomAttributes;
 
+[Trait("Runtime", "Core")]
 public class AspNetCoreCustomAttributesArraySupport : NewRelicIntegrationTest<RemoteServiceFixtures.AspNetCoreWebApiCustomAttributesFixture>
 {
     private readonly RemoteServiceFixtures.AspNetCoreWebApiCustomAttributesFixture _fixture;

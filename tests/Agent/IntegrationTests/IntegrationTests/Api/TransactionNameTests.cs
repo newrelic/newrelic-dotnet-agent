@@ -50,6 +50,7 @@ public abstract class TransactionNameTests<TFixture> : NewRelicIntegrationTest<T
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class TransactionNameTestsFW : TransactionNameTests<ConsoleDynamicMethodFixtureFWLatest>
 {
     public TransactionNameTestsFW(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -58,6 +59,7 @@ public class TransactionNameTestsFW : TransactionNameTests<ConsoleDynamicMethodF
     }
 }
 
+[Trait("Runtime", "Core")]
 public class TransactionNameTestsCore : TransactionNameTests<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public TransactionNameTestsCore(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)

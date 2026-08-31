@@ -38,18 +38,21 @@ public abstract class AllowAllHeadersEnabledTests : AllowAllHeadersDisabledTests
 
 #region IIS
 
+[Trait("Runtime", "Framework")]
 public class IIS_Basic_AllowAllHeadersEnabledTests : AllowAllHeadersEnabledTests
 {
     public IIS_Basic_AllowAllHeadersEnabledTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
         : base(fixture, output, HostingModel.IIS, WCFBindingType.BasicHttp) { }
 }
 
+[Trait("Runtime", "Framework")]
 public class IIS_Web_AllowAllHeadersEnabledTests : AllowAllHeadersEnabledTests
 {
     public IIS_Web_AllowAllHeadersEnabledTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
         : base(fixture, output, HostingModel.IIS, WCFBindingType.WebHttp) { }
 }
 
+[Trait("Runtime", "Framework")]
 public class IIS_WS_AllowAllHeadersEnabledTests : AllowAllHeadersEnabledTests
 {
     public IIS_WS_AllowAllHeadersEnabledTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -60,12 +63,14 @@ public class IIS_WS_AllowAllHeadersEnabledTests : AllowAllHeadersEnabledTests
 
 #region IISNoAsp
 
+[Trait("Runtime", "Framework")]
 public class IISNoAsp_Basic_AllowAllHeadersEnabledTests : AllowAllHeadersEnabledTests
 {
     public IISNoAsp_Basic_AllowAllHeadersEnabledTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
         : base(fixture, output, HostingModel.IISNoAsp, WCFBindingType.BasicHttp) { }
 }
 
+[Trait("Runtime", "Framework")]
 public class IISNoAsp_Web_AllowAllHeadersEnabledTests : AllowAllHeadersEnabledTests
 {
     public IISNoAsp_Web_AllowAllHeadersEnabledTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -73,6 +78,7 @@ public class IISNoAsp_Web_AllowAllHeadersEnabledTests : AllowAllHeadersEnabledTe
 }
 
 
+[Trait("Runtime", "Framework")]
 public class IISNoAsp_WS_AllowAllHeadersEnabledTests : AllowAllHeadersEnabledTests
 {
     public IISNoAsp_WS_AllowAllHeadersEnabledTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -83,18 +89,21 @@ public class IISNoAsp_WS_AllowAllHeadersEnabledTests : AllowAllHeadersEnabledTes
 
 #region Self
 
+[Trait("Runtime", "Framework")]
 public class Self_Basic_AllowAllHeadersEnabledTests : AllowAllHeadersEnabledTests
 {
     public Self_Basic_AllowAllHeadersEnabledTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
         : base(fixture, output, HostingModel.Self, WCFBindingType.BasicHttp) { }
 }
 
+[Trait("Runtime", "Framework")]
 public class Self_Web_AllowAllHeadersEnabledTests : AllowAllHeadersEnabledTests
 {
     public Self_Web_AllowAllHeadersEnabledTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
         : base(fixture, output, HostingModel.Self, WCFBindingType.WebHttp) { }
 }
 
+[Trait("Runtime", "Framework")]
 public class Self_WS_AllowAllHeadersEnabledTests : AllowAllHeadersEnabledTests
 {
     public Self_WS_AllowAllHeadersEnabledTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)

@@ -56,6 +56,7 @@ public abstract class ConnectSetApplicationNameTestsBase<TFixture> : NewRelicInt
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class ConnectSetApplicationNameFWLatestTests : ConnectSetApplicationNameTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public ConnectSetApplicationNameFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -64,6 +65,7 @@ public class ConnectSetApplicationNameFWLatestTests : ConnectSetApplicationNameT
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class ConnectSetApplicationNameFW462Tests : ConnectSetApplicationNameTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public ConnectSetApplicationNameFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -72,6 +74,7 @@ public class ConnectSetApplicationNameFW462Tests : ConnectSetApplicationNameTest
     }
 }
 
+[Trait("Runtime", "Core")]
 public class ConnectSetApplicationNameCoreLatestTests : ConnectSetApplicationNameTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public ConnectSetApplicationNameCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -80,6 +83,7 @@ public class ConnectSetApplicationNameCoreLatestTests : ConnectSetApplicationNam
     }
 }
 
+[Trait("Runtime", "Core")]
 public class ConnectSetApplicationNameCoreOldestTests : ConnectSetApplicationNameTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public ConnectSetApplicationNameCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)

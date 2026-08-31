@@ -83,6 +83,7 @@ public abstract class LlmErrorTestsBase<TFixture> : NewRelicIntegrationTest<TFix
         Assert.NotNull(transactionEvent);
     }
 }
+[Trait("Runtime", "Core")]
 public class LlmErrorTests_CoreLatest : LlmErrorTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public LlmErrorTests_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -91,6 +92,7 @@ public class LlmErrorTests_CoreLatest : LlmErrorTestsBase<ConsoleDynamicMethodFi
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class LlmErrorTests_FWLatest : LlmErrorTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public LlmErrorTests_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)

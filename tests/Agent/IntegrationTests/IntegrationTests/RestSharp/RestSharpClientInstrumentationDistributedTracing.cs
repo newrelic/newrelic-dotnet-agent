@@ -113,6 +113,7 @@ public abstract class RestSharpInstrumentationDistributedTracingBase<TFixture> :
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class RestSharpInstrumentationDistributedTracingFWLatest : RestSharpInstrumentationDistributedTracingBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public RestSharpInstrumentationDistributedTracingFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -121,6 +122,7 @@ public class RestSharpInstrumentationDistributedTracingFWLatest : RestSharpInstr
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class RestSharpInstrumentationDistributedTracingFW48 : RestSharpInstrumentationDistributedTracingBase<ConsoleDynamicMethodFixtureFW48>
 {
     public RestSharpInstrumentationDistributedTracingFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
@@ -129,6 +131,7 @@ public class RestSharpInstrumentationDistributedTracingFW48 : RestSharpInstrumen
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class RestSharpInstrumentationDistributedTracingFW471 : RestSharpInstrumentationDistributedTracingBase<ConsoleDynamicMethodFixtureFW471>
 {
     public RestSharpInstrumentationDistributedTracingFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -137,6 +140,7 @@ public class RestSharpInstrumentationDistributedTracingFW471 : RestSharpInstrume
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class RestSharpInstrumentationDistributedTracingFW462 : RestSharpInstrumentationDistributedTracingBase<ConsoleDynamicMethodFixtureFW462>
 {
     public RestSharpInstrumentationDistributedTracingFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)

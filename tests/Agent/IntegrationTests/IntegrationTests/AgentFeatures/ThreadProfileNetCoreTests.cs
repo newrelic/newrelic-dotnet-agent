@@ -118,6 +118,7 @@ public abstract class ThreadProfileNetCoreTestsBase<TFixture> : NewRelicIntegrat
     }
 }
 
+[Trait("Runtime", "Core")]
 public class ThreadProfileNetCoreLatestTests : ThreadProfileNetCoreTestsBase<AspNetCoreWebApiWithCollectorFixture>
 {
     public ThreadProfileNetCoreLatestTests(AspNetCoreWebApiWithCollectorFixture fixture, ITestOutputHelper output)

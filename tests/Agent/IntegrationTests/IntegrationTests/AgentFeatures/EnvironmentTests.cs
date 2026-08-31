@@ -79,6 +79,7 @@ public abstract class EnvironmentTests<T> : NewRelicIntegrationTest<T> where T :
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class EnvironmentFrameworkTests : EnvironmentTests<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
 {
     public EnvironmentFrameworkTests(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output)
@@ -90,6 +91,7 @@ public class EnvironmentFrameworkTests : EnvironmentTests<RemoteServiceFixtures.
     protected override void ExerciseApplication() => _fixture.Get();
 }
 
+[Trait("Runtime", "Core")]
 public class EnvironmentCoreTests : EnvironmentTests<RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture>
 {
     public EnvironmentCoreTests(RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture fixture, ITestOutputHelper output)

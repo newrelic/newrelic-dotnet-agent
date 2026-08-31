@@ -45,6 +45,7 @@ public abstract class AwsLambdaCustomEventsTest<T> : NewRelicIntegrationTest<T> 
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AwsLambdaCustomEventsTestCoreOldest : AwsLambdaCustomEventsTest<LambdaCustomEventsTriggerFixtureCoreOldest>
 {
     public AwsLambdaCustomEventsTestCoreOldest(LambdaCustomEventsTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -53,6 +54,7 @@ public class AwsLambdaCustomEventsTestCoreOldest : AwsLambdaCustomEventsTest<Lam
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AwsLambdaCustomEventsTestCoreLatest : AwsLambdaCustomEventsTest<LambdaCustomEventsTriggerFixtureCoreLatest>
 {
     public AwsLambdaCustomEventsTestCoreLatest(LambdaCustomEventsTriggerFixtureCoreLatest fixture, ITestOutputHelper output)

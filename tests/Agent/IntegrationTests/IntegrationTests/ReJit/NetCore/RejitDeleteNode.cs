@@ -96,6 +96,7 @@ public abstract class RejitDeleteNodeBase<TFixture> : NewRelicIntegrationTest<TF
     }
 }
 
+[Trait("Runtime", "Core")]
 public class RejitDeleteNode : RejitDeleteNodeBase<AspNetCoreReJitMvcApplicationFixture>
 {
     public RejitDeleteNode(AspNetCoreReJitMvcApplicationFixture fixture, ITestOutputHelper output)
@@ -104,6 +105,7 @@ public class RejitDeleteNode : RejitDeleteNodeBase<AspNetCoreReJitMvcApplication
     }
 }
 
+[Trait("Runtime", "Core")]
 public class RejitDeleteNodeWithTieredCompilation : RejitDeleteNodeBase<AspNetCoreReJitMvcApplicationFixtureWithTieredCompilation>
 {
     public RejitDeleteNodeWithTieredCompilation(AspNetCoreReJitMvcApplicationFixtureWithTieredCompilation fixture, ITestOutputHelper output)

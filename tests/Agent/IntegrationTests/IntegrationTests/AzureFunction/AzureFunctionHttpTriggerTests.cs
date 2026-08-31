@@ -459,6 +459,7 @@ public abstract class AzureFunctionHttpTriggerTestsBase<TFixture> : NewRelicInte
 
 #region Isolated model tests
 // the CoreOldest target builds the function app without the aspnetcore pipeline package included
+[Trait("Runtime", "Core")]
 public class AzureFunctionHttpTriggerTestsCoreOldest : AzureFunctionHttpTriggerTestsBase<AzureFunctionApplicationFixtureHttpTriggerCoreOldest>
 {
     public AzureFunctionHttpTriggerTestsCoreOldest(AzureFunctionApplicationFixtureHttpTriggerCoreOldest fixture, ITestOutputHelper output)
@@ -468,6 +469,7 @@ public class AzureFunctionHttpTriggerTestsCoreOldest : AzureFunctionHttpTriggerT
 }
 
 // the CoreLatest target builds the function app with the aspnetcore pipeline package
+[Trait("Runtime", "Core")]
 public class AzureFunctionHttpTriggerTestsCoreLatest : AzureFunctionHttpTriggerTestsBase<AzureFunctionApplicationFixtureHttpTriggerCoreLatest>
 {
     public AzureFunctionHttpTriggerTestsCoreLatest(AzureFunctionApplicationFixtureHttpTriggerCoreLatest fixture, ITestOutputHelper output)
@@ -476,6 +478,7 @@ public class AzureFunctionHttpTriggerTestsCoreLatest : AzureFunctionHttpTriggerT
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class AzureFunctionHttpTriggerTestsFWLatest : AzureFunctionHttpTriggerTestsBase<AzureFunctionApplicationFixtureHttpTriggerFWLatest>
 {
     public AzureFunctionHttpTriggerTestsFWLatest(AzureFunctionApplicationFixtureHttpTriggerFWLatest fixture, ITestOutputHelper output)
@@ -486,6 +489,7 @@ public class AzureFunctionHttpTriggerTestsFWLatest : AzureFunctionHttpTriggerTes
 #endregion
 
 #region InProc model tests
+[Trait("Runtime", "Core")]
 public class AzureFunctionHttpTriggerTestsInProcCoreOldest : AzureFunctionHttpTriggerTestsBase<AzureFunctionApplicationFixtureHttpTriggerInProcCoreOldest>
 {
     public AzureFunctionHttpTriggerTestsInProcCoreOldest(AzureFunctionApplicationFixtureHttpTriggerInProcCoreOldest fixture, ITestOutputHelper output)

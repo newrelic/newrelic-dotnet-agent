@@ -130,6 +130,7 @@ public abstract class AppDomainCachingTestsBase<TFixture> : NewRelicIntegrationT
 }
 
 #region Enabled (not disabled) tests
+[Trait("Runtime", "Framework")]
 public class AppDomainCachingEnabledTestsFWLatestTests : AppDomainCachingTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public AppDomainCachingEnabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -138,6 +139,7 @@ public class AppDomainCachingEnabledTestsFWLatestTests : AppDomainCachingTestsBa
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AppDomainCachingEnabledTestsNetCoreLatestTests : AppDomainCachingTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public AppDomainCachingEnabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -148,6 +150,7 @@ public class AppDomainCachingEnabledTestsNetCoreLatestTests : AppDomainCachingTe
 #endregion
 
 #region Disabled tests
+[Trait("Runtime", "Framework")]
 public class AppDomainCachingDisabledTestsFWLatestTests : AppDomainCachingTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public AppDomainCachingDisabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -156,6 +159,7 @@ public class AppDomainCachingDisabledTestsFWLatestTests : AppDomainCachingTestsB
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AppDomainCachingDisabledTestsNetCoreLatestTests : AppDomainCachingTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public AppDomainCachingDisabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)

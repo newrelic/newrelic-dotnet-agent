@@ -13,6 +13,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation;
 
+[Trait("Runtime", "Framework")]
 public class ConsoleAsyncTests : NewRelicIntegrationTest<ConsoleAsyncFixture>
 {
     private readonly ConsoleAsyncFixture _fixture;

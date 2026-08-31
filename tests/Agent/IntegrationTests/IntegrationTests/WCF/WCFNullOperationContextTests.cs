@@ -32,6 +32,7 @@ namespace NewRelic.Agent.IntegrationTests.WCF.Service.Self;
 /// SyncMethodInvoker.Invoke - permanently losing WebTransaction/WCF naming for
 /// the life of the process.
 /// </summary>
+[Trait("Runtime", "Framework")]
 public class WCFService_Self_NullOperationContext : NewRelicIntegrationTest<ConsoleDynamicMethodFixtureFWLatest>
 {
     // Must exceed WrapperExceptionLimit (default 5) so that an unfixed agent

@@ -89,6 +89,7 @@ public abstract class AwsLambdaAPIGatewayRequestAutoInstrumentationTest<T> : New
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AwsLambdaAPIGatewayRequestAutoInstrumentationTestCoreOldest : AwsLambdaAPIGatewayRequestAutoInstrumentationTest<LambdaAPIGatewayProxyRequestAutoInstrumentationTriggerFixtureCoreOldest>
 {
     public AwsLambdaAPIGatewayRequestAutoInstrumentationTestCoreOldest(LambdaAPIGatewayProxyRequestAutoInstrumentationTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -97,6 +98,7 @@ public class AwsLambdaAPIGatewayRequestAutoInstrumentationTestCoreOldest : AwsLa
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AwsLambdaAPIGatewayRequestAutoInstrumentationTestCoreLatest : AwsLambdaAPIGatewayRequestAutoInstrumentationTest<LambdaAPIGatewayProxyRequestAutoInstrumentationTriggerFixtureCoreLatest>
 {
     public AwsLambdaAPIGatewayRequestAutoInstrumentationTestCoreLatest(LambdaAPIGatewayProxyRequestAutoInstrumentationTriggerFixtureCoreLatest fixture, ITestOutputHelper output)

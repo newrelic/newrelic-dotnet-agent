@@ -78,6 +78,7 @@ public abstract class AwsLambdaSesEventTest<T> : NewRelicIntegrationTest<T> wher
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AwsLambdaSesEventTestCoreOldest : AwsLambdaSesEventTest<LambdaSesEventTriggerFixtureCoreOldest>
 {
     public AwsLambdaSesEventTestCoreOldest(LambdaSesEventTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -86,6 +87,7 @@ public class AwsLambdaSesEventTestCoreOldest : AwsLambdaSesEventTest<LambdaSesEv
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AwsLambdaAsyncSesEventTestCoreOldest : AwsLambdaSesEventTest<AsyncLambdaSesEventTriggerFixtureCoreOldest>
 {
     public AwsLambdaAsyncSesEventTestCoreOldest(AsyncLambdaSesEventTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -94,6 +96,7 @@ public class AwsLambdaAsyncSesEventTestCoreOldest : AwsLambdaSesEventTest<AsyncL
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AwsLambdaSesEventTestCoreLatest : AwsLambdaSesEventTest<LambdaSesEventTriggerFixtureCoreLatest>
 {
     public AwsLambdaSesEventTestCoreLatest(LambdaSesEventTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -102,6 +105,7 @@ public class AwsLambdaSesEventTestCoreLatest : AwsLambdaSesEventTest<LambdaSesEv
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AwsLambdaAsyncSesEventTestCoreLatest : AwsLambdaSesEventTest<AsyncLambdaSesEventTriggerFixtureCoreLatest>
 {
     public AwsLambdaAsyncSesEventTestCoreLatest(AsyncLambdaSesEventTriggerFixtureCoreLatest fixture, ITestOutputHelper output)

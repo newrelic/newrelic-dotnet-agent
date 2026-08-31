@@ -61,6 +61,7 @@ public abstract class TransactionUserIdTests<TFixture> : NewRelicIntegrationTest
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class TransactionUserIdTestsFW : TransactionUserIdTests<ConsoleDynamicMethodFixtureFWLatest>
 {
     public TransactionUserIdTestsFW(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -69,6 +70,7 @@ public class TransactionUserIdTestsFW : TransactionUserIdTests<ConsoleDynamicMet
     }
 }
 
+[Trait("Runtime", "Core")]
 public class TransactionUserIdTestsCore : TransactionUserIdTests<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public TransactionUserIdTestsCore(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)

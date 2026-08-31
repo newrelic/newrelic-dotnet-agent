@@ -10,6 +10,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.DistributedTracing.W3CInstrumentationTests;
 
+[Trait("Runtime", "Core")]
 public class TraceIdTests : NewRelicIntegrationTest<AspNetCoreBasicWebApiApplicationFixture>
 {
     private readonly AspNetCoreBasicWebApiApplicationFixture _fixture;

@@ -130,6 +130,7 @@ public abstract class AwsLambdaApplicationLoadBalancerRequestTest<T> : NewRelicI
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AwsLambdaApplicationLoadBalancerRequestTestCoreOldest : AwsLambdaApplicationLoadBalancerRequestTest<LambdaApplicationLoadBalancerRequestTriggerFixtureCoreOldest>
 {
     public AwsLambdaApplicationLoadBalancerRequestTestCoreOldest(LambdaApplicationLoadBalancerRequestTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -138,6 +139,7 @@ public class AwsLambdaApplicationLoadBalancerRequestTestCoreOldest : AwsLambdaAp
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AwsLambdaApplicationLoadBalancerRequestTestCoreLatest : AwsLambdaApplicationLoadBalancerRequestTest<LambdaApplicationLoadBalancerRequestTriggerFixtureCoreLatest>
 {
     public AwsLambdaApplicationLoadBalancerRequestTestCoreLatest(LambdaApplicationLoadBalancerRequestTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -146,6 +148,7 @@ public class AwsLambdaApplicationLoadBalancerRequestTestCoreLatest : AwsLambdaAp
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AwsLambdaApplicationLoadBalancerRequestAsyncTestCoreOldest : AwsLambdaApplicationLoadBalancerRequestTest<AsyncLambdaApplicationLoadBalancerRequestTriggerFixtureCoreOldest>
 {
     public AwsLambdaApplicationLoadBalancerRequestAsyncTestCoreOldest(AsyncLambdaApplicationLoadBalancerRequestTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -154,6 +157,7 @@ public class AwsLambdaApplicationLoadBalancerRequestAsyncTestCoreOldest : AwsLam
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AwsLambdaApplicationLoadBalancerRequestAsyncTestCoreLatest : AwsLambdaApplicationLoadBalancerRequestTest<AsyncLambdaApplicationLoadBalancerRequestTriggerFixtureCoreLatest>
 {
     public AwsLambdaApplicationLoadBalancerRequestAsyncTestCoreLatest(AsyncLambdaApplicationLoadBalancerRequestTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -162,6 +166,7 @@ public class AwsLambdaApplicationLoadBalancerRequestAsyncTestCoreLatest : AwsLam
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AwsLambdaApplicationLoadBalancerRequestReturnsStreamTestCoreOldest : AwsLambdaApplicationLoadBalancerRequestTest<LambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureCoreOldest>
 {
     public AwsLambdaApplicationLoadBalancerRequestReturnsStreamTestCoreOldest(LambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -170,6 +175,7 @@ public class AwsLambdaApplicationLoadBalancerRequestReturnsStreamTestCoreOldest 
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AwsLambdaApplicationLoadBalancerRequestReturnsStreamTestCoreLatest : AwsLambdaApplicationLoadBalancerRequestTest<LambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureCoreLatest>
 {
     public AwsLambdaApplicationLoadBalancerRequestReturnsStreamTestCoreLatest(LambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -178,6 +184,7 @@ public class AwsLambdaApplicationLoadBalancerRequestReturnsStreamTestCoreLatest 
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AwsLambdaApplicationLoadBalancerRequestReturnsStreamAsyncTestCoreOldest : AwsLambdaApplicationLoadBalancerRequestTest<AsyncLambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureCoreOldest>
 {
     public AwsLambdaApplicationLoadBalancerRequestReturnsStreamAsyncTestCoreOldest(AsyncLambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -186,6 +193,7 @@ public class AwsLambdaApplicationLoadBalancerRequestReturnsStreamAsyncTestCoreOl
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AwsLambdaApplicationLoadBalancerRequestReturnsStreamAsyncTestCoreLatest : AwsLambdaApplicationLoadBalancerRequestTest<AsyncLambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureCoreLatest>
 {
     public AwsLambdaApplicationLoadBalancerRequestReturnsStreamAsyncTestCoreLatest(AsyncLambdaApplicationLoadBalancerRequestReturnsStreamTriggerFixtureCoreLatest fixture, ITestOutputHelper output)

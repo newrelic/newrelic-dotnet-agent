@@ -13,6 +13,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation;
 
+[Trait("Runtime", "Framework")]
 public class WebApiAsyncForceNewTransactionTests_Instrumented : WebApiAsyncForceNewTransactionTests
 {
     private const decimal ExpectedWebTransactionCount = 6;
@@ -107,6 +108,7 @@ public class WebApiAsyncForceNewTransactionTests_Instrumented : WebApiAsyncForce
 
 }
 
+[Trait("Runtime", "Framework")]
 public class WebApiAsyncForceNewTransactionTests_NotInstrumented : WebApiAsyncForceNewTransactionTests
 {
     private const decimal ExpectedWebTransactionCount = 6;

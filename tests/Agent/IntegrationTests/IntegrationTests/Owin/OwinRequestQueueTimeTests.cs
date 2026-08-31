@@ -69,6 +69,7 @@ public abstract class OwinRequestQueueTimeTestsBase<TFixture> : NewRelicIntegrat
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class Owin2RequestQueueTimeTests : OwinRequestQueueTimeTestsBase<RemoteServiceFixtures.OwinWebApiFixture>
 {
     public Owin2RequestQueueTimeTests(RemoteServiceFixtures.OwinWebApiFixture fixture, ITestOutputHelper output)
@@ -77,6 +78,7 @@ public class Owin2RequestQueueTimeTests : OwinRequestQueueTimeTestsBase<RemoteSe
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class Owin3RequestQueueTimeTests : OwinRequestQueueTimeTestsBase<RemoteServiceFixtures.Owin3WebApiFixture>
 {
     public Owin3RequestQueueTimeTests(RemoteServiceFixtures.Owin3WebApiFixture fixture, ITestOutputHelper output)
@@ -85,6 +87,7 @@ public class Owin3RequestQueueTimeTests : OwinRequestQueueTimeTestsBase<RemoteSe
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class Owin4RequestQueueTimeTests : OwinRequestQueueTimeTestsBase<RemoteServiceFixtures.Owin4WebApiFixture>
 {
     public Owin4RequestQueueTimeTests(RemoteServiceFixtures.Owin4WebApiFixture fixture, ITestOutputHelper output)

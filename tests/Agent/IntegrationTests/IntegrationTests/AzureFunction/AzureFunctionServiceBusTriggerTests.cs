@@ -164,6 +164,7 @@ public abstract class AzureFunctionServiceBusTriggerTestsBase<TFixture> : NewRel
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AzureFunctionServiceBusTriggerTestInProcCoreOldest : AzureFunctionServiceBusTriggerTestsBase<AzureFunctionApplicationFixtureServiceBusTriggerInProcCoreOldest>
 {
     public AzureFunctionServiceBusTriggerTestInProcCoreOldest(AzureFunctionApplicationFixtureServiceBusTriggerInProcCoreOldest fixture, ITestOutputHelper output)

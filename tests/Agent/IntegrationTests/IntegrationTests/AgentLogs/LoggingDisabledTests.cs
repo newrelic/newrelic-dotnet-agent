@@ -50,6 +50,7 @@ public abstract class LoggingDisabledTestsBase<TFixture> : NewRelicIntegrationTe
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class LoggingDisabledFWLatestTests : LoggingDisabledTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public LoggingDisabledFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -58,6 +59,7 @@ public class LoggingDisabledFWLatestTests : LoggingDisabledTestsBase<ConsoleDyna
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class LoggingDisabledFW462Tests : LoggingDisabledTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public LoggingDisabledFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -66,6 +68,7 @@ public class LoggingDisabledFW462Tests : LoggingDisabledTestsBase<ConsoleDynamic
     }
 }
 
+[Trait("Runtime", "Core")]
 public class LoggingDisabledCoreLatestTests : LoggingDisabledTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public LoggingDisabledCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -74,6 +77,7 @@ public class LoggingDisabledCoreLatestTests : LoggingDisabledTestsBase<ConsoleDy
     }
 }
 
+[Trait("Runtime", "Core")]
 public class LoggingDisabledCoreOldestTests : LoggingDisabledTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public LoggingDisabledCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)

@@ -28,6 +28,7 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures;
 // one about response bytes being dropped. Before the fix the response came back starting with
 // "</head><script ...NREUM.info..." - the first write's bytes were gone and the script had
 // been injected against the second write's <body> anchor instead.
+[Trait("Runtime", "Core")]
 public class BrowserAgentAutoInjectionSplitHead : NewRelicIntegrationTest<BasicAspNetCoreRazorApplicationFixture>
 {
     private const string FirstWriteContent = "<html><head>";

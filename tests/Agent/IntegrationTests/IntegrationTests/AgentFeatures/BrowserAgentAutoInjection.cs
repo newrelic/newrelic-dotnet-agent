@@ -59,6 +59,7 @@ public abstract class BrowserAgentAutoInjectionBase : NewRelicIntegrationTest<Re
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class BrowserAgentAutoInjectionDefault : BrowserAgentAutoInjectionBase
 {
     public BrowserAgentAutoInjectionDefault(BasicMvcApplicationTestFixture fixture, ITestOutputHelper output)
@@ -67,6 +68,7 @@ public class BrowserAgentAutoInjectionDefault : BrowserAgentAutoInjectionBase
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class BrowserAgentAutoInjectionRum : BrowserAgentAutoInjectionBase
 {
     public BrowserAgentAutoInjectionRum(BasicMvcApplicationTestFixture fixture, ITestOutputHelper output)
@@ -75,6 +77,7 @@ public class BrowserAgentAutoInjectionRum : BrowserAgentAutoInjectionBase
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class BrowserAgentAutoInjectionFull : BrowserAgentAutoInjectionBase
 {
     public BrowserAgentAutoInjectionFull(BasicMvcApplicationTestFixture fixture, ITestOutputHelper output)
@@ -83,6 +86,7 @@ public class BrowserAgentAutoInjectionFull : BrowserAgentAutoInjectionBase
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class BrowserAgentAutoInjectionSpa : BrowserAgentAutoInjectionBase
 {
     public BrowserAgentAutoInjectionSpa(BasicMvcApplicationTestFixture fixture, ITestOutputHelper output)

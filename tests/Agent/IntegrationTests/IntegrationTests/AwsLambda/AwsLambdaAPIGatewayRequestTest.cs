@@ -175,6 +175,7 @@ public abstract class AwsLambdaAPIGatewayProxyRequestTest<T> : NewRelicIntegrati
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AwsLambdaAPIGatewayProxyRequestTestCoreOldest : AwsLambdaAPIGatewayProxyRequestTest<LambdaAPIGatewayProxyRequestTriggerFixtureCoreOldest>
 {
     public AwsLambdaAPIGatewayProxyRequestTestCoreOldest(LambdaAPIGatewayProxyRequestTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -183,6 +184,7 @@ public class AwsLambdaAPIGatewayProxyRequestTestCoreOldest : AwsLambdaAPIGateway
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AwsLambdaAPIGatewayProxyRequestTestCoreLatest : AwsLambdaAPIGatewayProxyRequestTest<LambdaAPIGatewayProxyRequestTriggerFixtureCoreLatest>
 {
     public AwsLambdaAPIGatewayProxyRequestTestCoreLatest(LambdaAPIGatewayProxyRequestTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -191,6 +193,7 @@ public class AwsLambdaAPIGatewayProxyRequestTestCoreLatest : AwsLambdaAPIGateway
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AwsLambdaAPIGatewayProxyRequestTestAsyncCoreOldest : AwsLambdaAPIGatewayProxyRequestTest<AsyncLambdaAPIGatewayProxyRequestTriggerFixtureCoreOldest>
 {
     public AwsLambdaAPIGatewayProxyRequestTestAsyncCoreOldest(AsyncLambdaAPIGatewayProxyRequestTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -199,6 +202,7 @@ public class AwsLambdaAPIGatewayProxyRequestTestAsyncCoreOldest : AwsLambdaAPIGa
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AwsLambdaAPIGatewayProxyRequestTestAsyncCoreLatest : AwsLambdaAPIGatewayProxyRequestTest<AsyncLambdaAPIGatewayProxyRequestTriggerFixtureCoreLatest>
 {
     public AwsLambdaAPIGatewayProxyRequestTestAsyncCoreLatest(AsyncLambdaAPIGatewayProxyRequestTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -207,6 +211,7 @@ public class AwsLambdaAPIGatewayProxyRequestTestAsyncCoreLatest : AwsLambdaAPIGa
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AwsLambdaAPIGatewayProxyRequestReturnsStreamTestCoreOldest : AwsLambdaAPIGatewayProxyRequestTest<LambdaAPIGatewayProxyRequestReturnsStreamTriggerFixtureCoreOldest>
 {
     public AwsLambdaAPIGatewayProxyRequestReturnsStreamTestCoreOldest(LambdaAPIGatewayProxyRequestReturnsStreamTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -215,6 +220,7 @@ public class AwsLambdaAPIGatewayProxyRequestReturnsStreamTestCoreOldest : AwsLam
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AwsLambdaAPIGatewayProxyRequestReturnsStreamTestCoreLatest : AwsLambdaAPIGatewayProxyRequestTest<LambdaAPIGatewayProxyRequestReturnsStreamTriggerFixtureCoreLatest>
 {
     public AwsLambdaAPIGatewayProxyRequestReturnsStreamTestCoreLatest(LambdaAPIGatewayProxyRequestReturnsStreamTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -223,6 +229,7 @@ public class AwsLambdaAPIGatewayProxyRequestReturnsStreamTestCoreLatest : AwsLam
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AwsLambdaAPIGatewayProxyRequestReturnsStreamTestAsyncCoreOldest : AwsLambdaAPIGatewayProxyRequestTest<AsyncLambdaAPIGatewayProxyRequestReturnsStreamTriggerFixtureCoreOldest>
 {
     public AwsLambdaAPIGatewayProxyRequestReturnsStreamTestAsyncCoreOldest(AsyncLambdaAPIGatewayProxyRequestReturnsStreamTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -231,6 +238,7 @@ public class AwsLambdaAPIGatewayProxyRequestReturnsStreamTestAsyncCoreOldest : A
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AwsLambdaAPIGatewayProxyRequestReturnsStreamTestAsyncCoreLatest : AwsLambdaAPIGatewayProxyRequestTest<AsyncLambdaAPIGatewayProxyRequestReturnsStreamTriggerFixtureCoreLatest>
 {
     public AwsLambdaAPIGatewayProxyRequestReturnsStreamTestAsyncCoreLatest(AsyncLambdaAPIGatewayProxyRequestReturnsStreamTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
