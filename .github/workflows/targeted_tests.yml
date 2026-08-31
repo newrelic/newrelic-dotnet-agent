@@ -23,6 +23,11 @@ on:
         type: boolean
         required: false
         default: true
+      aggregate_payload_data:
+        description: 'Collect payload and executed-count artifacts for parity checking'
+        type: boolean
+        required: false
+        default: false
 
 permissions: {}
 
@@ -67,6 +72,7 @@ jobs:
       linux_namespaces: ${{ needs.resolve.outputs.integration-linux-namespaces }}
       smoke_namespaces: ${{ needs.resolve.outputs.integration-smoke-namespaces }}
       parallelize: ${{ inputs.parallelize_integration_tests }}
+      aggregate_payload_data: ${{ inputs.aggregate_payload_data }}
 
   unbounded:
     name: Run Unbounded Tests

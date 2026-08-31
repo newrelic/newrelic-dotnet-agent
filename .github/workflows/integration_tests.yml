@@ -393,6 +393,87 @@ jobs:
             rm -f "$marker"
           fi
 
+      - name: Extract payload bytes log from TRX
+        if: inputs.aggregate_payload_data == true || github.event_name == 'schedule'
+        shell: bash
+        run: |
+          TRX_FILE="${{ env.test_results_path }}/${{ matrix.namespace }}_testResults.trx" \
+          PAYLOAD_LOG="${{ env.test_results_path }}/${{ matrix.namespace }}_linux_payload_bytes.json" \
+          COUNT_LOG="${{ env.test_results_path }}/${{ matrix.namespace }}_linux_test_count.json" \
+          python3 - <<'PY'
+          import json
+          import os
+          import re
+          import xml.etree.ElementTree as ET
+
+          trx_file = os.environ["TRX_FILE"]
+          payload_log = os.environ["PAYLOAD_LOG"]
+          count_log = os.environ["COUNT_LOG"]
+
+          print(f"Checking for TRX file at: {trx_file}")
+
+          executed_tests = 0
+          payload_data = {}
+          pattern = re.compile(r'^\s*(.+?):\s+([a-z0-9_]+):\s+(\d+)\s+bytes\s*$')
+
+
+          def local_name(tag):
+              return tag.rsplit('}', 1)[-1]
+
+
+          def children(parent, name):
+              return (e for e in parent if local_name(e.tag) == name)
+
+
+          def descendants(parent, name):
+              return (e for e in parent.iter() if local_name(e.tag) == name)
+
+
+          if os.path.isfile(trx_file):
+              print(f"TRX file found. Size: {os.path.getsize(trx_file)} bytes")
+              root = ET.parse(trx_file).getroot()
+
+              for output in descendants(root, 'Output'):
+                  for text_messages in children(output, 'TextMessages'):
+                      for message in children(text_messages, 'Message'):
+                          for line in re.split(r'\r?\n', message.text or ""):
+                              m = pattern.match(line)
+                              if not m:
+                                  continue
+                              bucket = payload_data.setdefault(m.group(1).strip(), {})
+                              category = m.group(2)
+                              bucket[category] = bucket.get(category, 0) + int(m.group(3))
+
+              print(f"Found {len(payload_data)} payload log entries")
+
+              counters = next(
+                  (c for s in descendants(root, 'ResultSummary') for c in children(s, 'Counters')),
+                  None,
+              )
+              if counters is not None and counters.get('executed'):
+                  executed_tests = int(counters.get('executed'))
+          else:
+              print("TRX file not found")
+
+          print(f"Executed test count: {executed_tests}")
+
+          with open(payload_log, "w", encoding="utf-8", newline="\n") as f:
+              json.dump(payload_data, f)
+
+          with open(count_log, "w", encoding="utf-8", newline="\n") as f:
+              json.dump({"executedTests": executed_tests}, f)
+          PY
+
+      - name: Upload payload bytes log
+        if: inputs.aggregate_payload_data == true || github.event_name == 'schedule'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: integration-payload-bytes-linux-${{ matrix.namespace }}
+          path: |
+            ${{ env.test_results_path }}/*_payload_bytes.json
+            ${{ env.test_results_path }}/*_test_count.json
+          if-no-files-found: warn
+
       - name: Archive integration test results on failure
         if: ${{ failure() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
