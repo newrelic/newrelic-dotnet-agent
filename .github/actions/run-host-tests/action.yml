@@ -121,10 +121,14 @@ runs:
         attempt=1
         while true; do
           set +e
+          # Redirect rather than pipe to tee. A test app that outlives the test
+          # host, such as the Lambda test tool, inherits the pipe's write end, so
+          # tee never sees EOF and the step hangs after the run has finished.
           dotnet "$tests_path/${{ inputs.assembly-name }}.dll" \
-            -namespace "$namespace" "${trait_args[@]}" -trx "$trx" 2>&1 | tee "$run_log"
-          exit_code=${PIPESTATUS[0]}
+            -namespace "$namespace" "${trait_args[@]}" -trx "$trx" > "$run_log" 2>&1
+          exit_code=$?
           set -e
+          cat "$run_log"
           if [ "$exit_code" -eq 0 ]; then
             if [ "$attempt" -gt 1 ]; then
               echo "::warning::${{ inputs.test-type }} for ${{ inputs.namespace }} passed on attempt $attempt after a transient failure. Investigate if this recurs."
