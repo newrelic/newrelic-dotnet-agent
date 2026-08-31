@@ -189,7 +189,9 @@ jobs:
       id-token: write
     secrets: inherit
     with:
-      namespaces: ${{ needs.get-test-namespaces.outputs.integration-namespaces }}
+      namespaces: ${{ needs.get-test-namespaces.outputs.integration-windows-namespaces }}
+      linux_namespaces: ${{ needs.get-test-namespaces.outputs.integration-linux-namespaces }}
+      smoke_namespaces: ${{ needs.get-test-namespaces.outputs.integration-smoke-namespaces }}
       aggregate_payload_data: ${{ inputs.aggregate_payload_data == true || github.event_name == 'schedule' }}
       parallelize: ${{ inputs.parallelize_integration_tests == true || github.event_name != 'workflow_dispatch' }}
 

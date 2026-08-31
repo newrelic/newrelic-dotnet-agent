@@ -1,0 +1,104 @@
+name: Build Test Solution (Linux)
+description: >
+  Restores and builds a NetCore test solution on Linux in Release, pre-publishes
+  its .NET Core test applications for linux-x64 so fixtures copy pre-built
+  output, and uploads the result as a named artifact. The caller must check out
+  the repository first.
+
+inputs:
+  solution-path:
+    description: 'Path to the NetCore solution to build, relative to the workspace.'
+    required: true
+  search-paths:
+    description: 'Space-separated directory names under the integration tests root to scan for test apps.'
+    required: true
+  skip-projects:
+    description: 'Space-separated project base names to skip during pre-publish. Empty means skip nothing.'
+    required: false
+    default: ''
+  artifact-name:
+    description: 'Name of the uploaded artifact.'
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Cache NuGet packages
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/Directory.Packages.props') }}
+        restore-keys: ${{ runner.os }}-nuget-
+
+    - name: Install .NET SDKs and runtimes
+      uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+      with:
+        dotnet-version: |
+          8.0.x
+          10.0.x
+        dotnet-quality: 'ga'
+
+    - name: List SDKs and runtimes
+      shell: bash
+      run: |
+        dotnet --list-sdks
+        dotnet --list-runtimes
+
+    - name: Build test solution
+      shell: bash
+      run: |
+        dotnet nuget list source
+        dotnet build "${{ inputs.solution-path }}" -c Release
+
+    - name: Pre-publish .NET Core test apps for linux-x64
+      shell: bash
+      run: |
+        # Pre-publish so RemoteService.TryCopyPrebuiltPublishOutput copies rather
+        # than publishing at test time. The path it reads is
+        # bin/Release/{framework}/{runtime}/publish, which is dotnet publish's
+        # own default layout, so no -o is needed.
+        runtime=linux-x64
+        base="tests/Agent/IntegrationTests"
+        published=0; skipped=0; failed=0
+        for search_path in ${{ inputs.search-paths }}; do
+          [ -d "$base/$search_path" ] || continue
+          while IFS= read -r project; do
+            name="$(basename "$project" .csproj)"
+            if grep -qE '<OutputType>[[:space:]]*Library[[:space:]]*</OutputType>' "$project"; then
+              skipped=$((skipped + 1)); continue
+            fi
+            for skip in ${{ inputs.skip-projects }}; do
+              if [ "$skip" = "$name" ]; then skipped=$((skipped + 1)); continue 2; fi
+            done
+            tfms="$(grep -oE '<TargetFrameworks?>[^<]*' "$project" | head -1 | sed 's/.*>//')"
+            for tfm in $(echo "$tfms" | tr ';' ' '); do
+              case "$tfm" in
+                net[0-9]*.[0-9]*)
+                  echo "Pre-publishing $name for $tfm/$runtime"
+                  if dotnet publish --configuration Release --runtime "$runtime" --framework "$tfm" "$project" > /tmp/pub.log 2>&1; then
+                    published=$((published + 1))
+                  else
+                    echo "::warning::Failed to pre-publish $name for $tfm/$runtime"
+                    grep -i 'error' /tmp/pub.log | head -10
+                    failed=$((failed + 1))
+                  fi
+                  ;;
+              esac
+            done
+          done < <(find "$base/$search_path" -name '*.csproj')
+        done
+        echo "Pre-publish complete: $published succeeded, $skipped skipped, $failed failed"
+        if [ "$published" -eq 0 ]; then
+          echo "::error::Pre-publish produced nothing. Every test app would publish at test time."
+          exit 1
+        fi
+
+    - name: Archive Artifacts
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      with:
+        name: ${{ inputs.artifact-name }}
+        path: |
+          test.runsettings
+          tests/Agent/IntegrationTests/**/bin/**/*
+          !tests/Agent/IntegrationTests/**/obj/**/*
+        if-no-files-found: error

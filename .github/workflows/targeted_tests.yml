@@ -63,7 +63,9 @@ jobs:
       id-token: write
     secrets: inherit
     with:
-      namespaces: ${{ needs.resolve.outputs.integration-namespaces }}
+      namespaces: ${{ needs.resolve.outputs.integration-windows-namespaces }}
+      linux_namespaces: ${{ needs.resolve.outputs.integration-linux-namespaces }}
+      smoke_namespaces: ${{ needs.resolve.outputs.integration-smoke-namespaces }}
       parallelize: ${{ inputs.parallelize_integration_tests }}
 
   unbounded:
