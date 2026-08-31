@@ -6,7 +6,7 @@
     <PackageVersion Include="Grpc.Core" Version="2.46.6" />
     <PackageVersion Include="Grpc.Net.Client" Version="2.83.0" />
     <PackageVersion Include="Grpc.Tools" Version="2.83.0" />
-    <PackageVersion Include="ILRepack" Version="2.0.46" />
+    <PackageVersion Include="ILRepack" Version="2.0.47" />
     <PackageVersion Include="JustMock" Version="2026.2.519.512" />
     <PackageVersion Include="Microsoft.CSharp" Version="4.7.0" />
     <PackageVersion Include="Microsoft.Data.SqlClient" Version="5.1.1" />
