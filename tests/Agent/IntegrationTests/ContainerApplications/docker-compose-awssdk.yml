@@ -3,48 +3,34 @@
 # See docker-compose-base.yml for common required variables.
 # CONTAINER_NAME       The name for the container
 # AWSSDK_INITCOLLECTIONS
-# LOCALSTACK_VOLUME_DIR
 #
 # To build and run, execute `docker compose -f <path to docker-compose.yml> up`
 # Alternatively, set COMPOSE_FILE environment variable to the path and omit the -f parameter
 
 services:
-    localstack:
-        image: localstack/localstack:4.14.0@sha256:3ebc37595918b8accb852f8048fef2aff047d465167edd655528065b07bc364a
+    floci:
+        # AWS emulator. All services (SQS, Kinesis, Firehose, S3, STS, DynamoDB) are enabled by
+        # default and served on one port, so no SERVICES list and no separate DynamoDB container.
+        image: floci/floci:1.7.0@sha256:bec9b9f749322444a57fb0f00d3e007ffd49015162361aab84ccecd9b4f5f8ed
         expose: # ports are only available internal to the service, not external so there's no chance for conflicts
-            - "4566"      # LocalStack Gateway
-            - "4559" # external services port range
+            - "4566"
         environment:
-            # LocalStack configuration: https://docs.localstack.cloud/references/configuration/
+            # floci configuration: https://floci.io/floci/ - floci maps DEBUG to its own log level
             - DEBUG=${DEBUG:-0}
-            # firehose depends on s3 and sts
-            - SERVICES=sqs,sns,ses,kinesis,firehose,s3,sts # http://localhost:4566/_localstack/health to see the entire list of possible services and their status
-        volumes:
-            - "${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack"
-            - "/var/run/docker.sock:/var/run/docker.sock"
         healthcheck:
-            test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+            test: ["CMD", "curl", "-f", "http://localhost:4566/_floci/health"]
             interval: 5s
             timeout: 5s
             retries: 10
             start_period: 10s
-
-    dynamodb:
-        command: "-jar DynamoDBLocal.jar -inMemory"
-        image: "amazon/dynamodb-local:latest"
-        expose: # ports are only available internal to the service, not external so there's no chance for conflicts
-            - "8000"
-        working_dir: /home/dynamodblocal
 
     awssdktestapp:
         extends:
             file: docker-compose-base.yml
             service: base-app
         depends_on:
-            localstack:
+            floci:
                 condition: service_healthy
-            dynamodb:
-                condition: service_started
         container_name: ${CONTAINER_NAME}
         image: ${CONTAINER_NAME}
         platform: ${PLATFORM}

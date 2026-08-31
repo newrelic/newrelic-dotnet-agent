@@ -70,10 +70,6 @@ build/Linux/keys
 # ignore Docker environment files
 *.env
 
-# Container Integration Tests
-/tests/Agent/IntegrationTests/LocalStack/volume
-/tests/Agent/IntegrationTests/ContainerApplications/volume/cache
-
 # Performance tests
 /tests/Agent/PerformanceTests/agent-home
 /tests/Agent/PerformanceTests/results

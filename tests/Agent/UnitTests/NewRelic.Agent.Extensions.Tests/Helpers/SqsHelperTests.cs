@@ -211,7 +211,7 @@ namespace Agent.Extensions.Tests.Helpers
             var action = MessageBrokerAction.Produce;
 
             // Act
-            var segment = SqsHelper.GenerateSegment(_mockTransaction, methodCall, url, action);
+            var segment = SqsHelper.GenerateSegment(_mockTransaction, methodCall, url, action, null);
 
             // Assert
             Mock.Assert(() => _mockTransaction.StartMessageBrokerSegment(
@@ -241,7 +241,7 @@ namespace Agent.Extensions.Tests.Helpers
             var action = MessageBrokerAction.Produce;
 
             // Act
-            var segment = SqsHelper.GenerateSegment(_mockTransaction, methodCall, url, action);
+            var segment = SqsHelper.GenerateSegment(_mockTransaction, methodCall, url, action, null);
 
             // Assert
             // Verifies that a segment is still created, but with null or default values for the SQS-specific attributes
@@ -254,6 +254,75 @@ namespace Agent.Extensions.Tests.Helpers
                 SqsHelper.MessagingSystemName,
                 null,
                 null,
+                Arg.IsAny<string>(),
+                Arg.IsAny<int?>(),
+                Arg.IsAny<string>()), Occurs.Once());
+        }
+
+        // AWS-standard, FIPS and dual-stack hosts carry the region as the second label.
+        [TestCase("https://sqs.us-east-2.amazonaws.com/123456789012/MyQueue", null, "us-east-2", "123456789012", "MyQueue")]
+        [TestCase("https://sqs-fips.us-east-2.amazonaws.com/123456789012/MyQueue", null, "us-east-2", "123456789012", "MyQueue")]
+        [TestCase("https://sqs.us-east-2.api.aws/123456789012/MyQueue", null, "us-east-2", "123456789012", "MyQueue")]
+        [TestCase("https://sqs.cn-north-1.amazonaws.com.cn/123456789012/MyQueue", null, "cn-north-1", "123456789012", "MyQueue")]
+        // A region parsed from the URL wins over the client config region.
+        [TestCase("https://sqs.us-east-2.amazonaws.com/123456789012/MyQueue", "eu-west-1", "us-east-2", "123456789012", "MyQueue")]
+        // AWS legacy endpoints: the second label is not the region, so it must not be reported as one.
+        [TestCase("https://us-east-2.queue.amazonaws.com/123456789012/MyQueue", null, null, "123456789012", "MyQueue")]
+        [TestCase("https://us-east-2.queue.amazonaws.com/123456789012/MyQueue", "us-east-2", "us-east-2", "123456789012", "MyQueue")]
+        [TestCase("https://queue.amazonaws.com/123456789012/MyQueue", null, null, "123456789012", "MyQueue")]
+        [TestCase("https://queue.amazonaws.com/123456789012/MyQueue", "us-east-1", "us-east-1", "123456789012", "MyQueue")]
+        // Hosts with a single label yield no region, so the client config region is used when present.
+        [TestCase("http://my-emulator:4566/000000000000/MyQueue", "us-west-2", "us-west-2", "000000000000", "MyQueue")]
+        [TestCase("http://my-emulator:4566/000000000000/MyQueue", null, null, "000000000000", "MyQueue")]
+        // ArnBuilder reports an unknown region as this literal; it must not reach the attribute.
+        [TestCase("http://my-emulator:4566/000000000000/MyQueue", "(unknown)", null, "000000000000", "MyQueue")]
+        [TestCase("https://us-east-2.queue.amazonaws.com/123456789012/MyQueue", "(unknown)", null, "123456789012", "MyQueue")]
+        public void GenerateSegment_ReportsRegionOnlyWhenItIsRegionShaped(string url, string fallbackRegion, string expectedRegion, string expectedAccountId, string expectedQueueName)
+        {
+            var method = new Method(typeof(SqsHelperTests), "MethodName", "ParameterTypeNames");
+            var methodCall = new MethodCall(method, null, new object[0], false);
+            var action = MessageBrokerAction.Produce;
+
+            SqsHelper.GenerateSegment(_mockTransaction, methodCall, url, action, fallbackRegion);
+
+            Mock.Assert(() => _mockTransaction.StartMessageBrokerSegment(
+                methodCall,
+                MessageBrokerDestinationType.Queue,
+                action,
+                MessageBrokerVendorConstants.SQS,
+                expectedQueueName,
+                SqsHelper.MessagingSystemName,
+                expectedAccountId,
+                expectedRegion,
+                Arg.IsAny<string>(),
+                Arg.IsAny<int?>(),
+                Arg.IsAny<string>()), Occurs.Once());
+        }
+
+        // A URL too short to parse yields no queue name or account id, but a valid client config
+        // region is still reported.
+        [TestCase(null, "us-west-2", "us-west-2")]
+        [TestCase("", "us-west-2", "us-west-2")]
+        [TestCase("invalid-url", "us-west-2", "us-west-2")]
+        [TestCase("invalid-url", null, null)]
+        [TestCase("invalid-url", "(unknown)", null)]
+        public void GenerateSegment_FallsBackToClientRegion_WhenUrlCannotBeParsed(string url, string fallbackRegion, string expectedRegion)
+        {
+            var method = new Method(typeof(SqsHelperTests), "MethodName", "ParameterTypeNames");
+            var methodCall = new MethodCall(method, null, new object[0], false);
+            var action = MessageBrokerAction.Consume;
+
+            SqsHelper.GenerateSegment(_mockTransaction, methodCall, url, action, fallbackRegion);
+
+            Mock.Assert(() => _mockTransaction.StartMessageBrokerSegment(
+                methodCall,
+                MessageBrokerDestinationType.Queue,
+                action,
+                MessageBrokerVendorConstants.SQS,
+                null,
+                SqsHelper.MessagingSystemName,
+                null,
+                expectedRegion,
                 Arg.IsAny<string>(),
                 Arg.IsAny<int?>(),
                 Arg.IsAny<string>()), Occurs.Once());

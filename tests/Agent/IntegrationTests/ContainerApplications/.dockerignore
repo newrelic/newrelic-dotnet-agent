@@ -2,10 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 # Exclude transient / large / generated content from image build contexts.
 
-# LocalStack / Kinesis / other emulated AWS service state
+# Emulator state and other transient directories
 volume/
-**/localstack/
-**/kinesis-local*/
 
 # Node modules (if any JS tooling leaks in)
 **/node_modules/

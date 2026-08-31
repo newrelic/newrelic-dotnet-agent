@@ -21,6 +21,8 @@ public class AwsSdkFirehoseTest : NewRelicIntegrationTest<AwsSdkContainerFirehos
     private readonly string _bucketName = $"test-bucket-{Guid.NewGuid()}"; // s3 bucket names can't have capital letters
     private readonly string _recordData = "EtaoinShrdlu";
 
+    private const string _region = "us-west-2"; // matches AuthenticationRegion in AwsSdkFirehoseExerciser
+
     public AwsSdkFirehoseTest(AwsSdkContainerFirehoseTestFixture fixture, ITestOutputHelper output) : base(fixture)
     {
         _fixture = fixture;
@@ -85,9 +87,8 @@ public class AwsSdkFirehoseTest : NewRelicIntegrationTest<AwsSdkContainerFirehos
 
         };
 
-        // working with Kinesis in LocalStack, some ARNs match one pattern (region unknown but a real account id) and
-        // others match another pattern (region is us-west-2 but account ID is all zeros) so we have to resort to regex matching
-        string expectedArnRegex = "arn:aws:firehose:(.+?):([0-9]{12}):deliverystream/" + _streamName;
+        // account id varies: some ARNs come from the emulator response, others are built by the agent
+        string expectedArnRegex = $"arn:aws:firehose:{_region}:([0-9]{{12}}):deliverystream/" + _streamName;
         var expectedAwsAgentAttributes = new string[]
         {
             "aws.operation", "aws.region", "cloud.resource_id", "cloud.platform"

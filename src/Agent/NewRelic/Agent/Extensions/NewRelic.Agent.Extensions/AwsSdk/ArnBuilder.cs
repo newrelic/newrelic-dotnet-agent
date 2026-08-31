@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System.Linq;
-using System.Text.RegularExpressions;
 
 namespace NewRelic.Agent.Extensions.AwsSdk;
 
@@ -14,7 +13,7 @@ public class ArnBuilder
 
     public ArnBuilder(string partition, string region, string accountId)
     {
-        Partition = string.IsNullOrEmpty(partition) ? "aws" : partition;
+        Partition = string.IsNullOrEmpty(partition) ? GetPartitionForRegion(region) : partition;
         Region = string.IsNullOrEmpty(region) ? "(unknown)" : region;
         AccountId = accountId ?? "";
     }
@@ -136,9 +135,33 @@ public class ArnBuilder
         return $"Partition: {Partition}, Region: {Region}, AccountId: {idPresent}";
     }
 
-    private static Regex RegionRegex = new Regex(@"^[a-z]{2}((-gov)|(-iso([a-z]?)))?-[a-z]+-\d{1}$", RegexOptions.Compiled);
-    private static bool LooksLikeARegion(string text) => RegionRegex.IsMatch(text);
+    private static bool LooksLikeARegion(string text) => AwsRegionValidator.LooksLikeARegion(text);
     private static bool LooksLikeAnAccountId(string text) => (text.Length == 12) && text.All(c => c >= '0' && c <= '9');
+
+    private static string GetPartitionForRegion(string region)
+    {
+        if (string.IsNullOrEmpty(region))
+        {
+            return "aws";
+        }
+
+        var labels = region.Split('-');
+        if (labels[0] == "cn")
+        {
+            return "aws-cn";
+        }
+        if (labels.Length > 1 && labels[1] == "gov")
+        {
+            return "aws-us-gov";
+        }
+        if (labels.Length > 1 && labels[1].StartsWith("iso"))
+        {
+            var suffix = labels[1].Substring(3);
+            return string.IsNullOrEmpty(suffix) ? "aws-iso" : $"aws-iso-{suffix}";
+        }
+
+        return "aws";
+    }
 
     private string ConstructArn(string partition, string service, string region, string accountId, string resource)
     {
