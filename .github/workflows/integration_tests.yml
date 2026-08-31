@@ -351,6 +351,22 @@ jobs:
         with:
           name: integrationtests-linux
 
+      - name: Restore executable bits lost by the artifact round trip
+        shell: bash
+        run: |
+          # upload-artifact zips without Unix modes, so every apphost arrives
+          # non-executable and Process.Start fails with EACCES.
+          count=0
+          while IFS= read -r file; do
+            chmod +x "$file"
+            count=$((count + 1))
+          done < <(find tests/Agent/IntegrationTests -type f \( ! -name '*.*' -o -name '*.sh' \) -not -path '*/obj/*')
+          echo "Marked $count file(s) executable"
+          if [ "$count" -eq 0 ]; then
+            echo "::error::No apphost files found. Every Linux test app would fail to start with EACCES."
+            exit 1
+          fi
+
       - name: Install .NET SDKs and runtimes
         uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
