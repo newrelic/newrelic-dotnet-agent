@@ -1,0 +1,145 @@
+name: Run Host Tests
+description: >
+  Runs a self-executing xunit v3 host-run test assembly for one namespace and
+  one runtime lane, retries once to absorb transient blips, then fails the lane
+  on a zero-match filter or a pre-built publish miss. The caller must have
+  downloaded the test artifacts and the agent home folders first.
+
+inputs:
+  tests-path:
+    description: 'Absolute directory holding the built test assembly.'
+    required: true
+  assembly-name:
+    description: 'Test assembly file name without extension.'
+    required: true
+  namespace-prefix:
+    description: 'Root namespace of the suite, without the shard name.'
+    required: true
+  namespace:
+    description: 'Shard name appended to the namespace prefix.'
+    required: true
+  trait:
+    description: 'Runtime lane filter as name=value. Empty runs every lane in the shard.'
+    required: false
+    default: ''
+  trx-path:
+    description: 'Absolute path for the TRX output.'
+    required: true
+  parallelize:
+    description: 'Whether to parallelize the assembly and its test collections.'
+    required: false
+    default: 'true'
+  no-parallel-namespaces:
+    description: 'Space-separated shard names that must run serially.'
+    required: false
+    default: ''
+  test-type:
+    description: 'Label used in flaky-retry telemetry.'
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Run tests (Windows)
+      if: runner.os == 'Windows'
+      shell: powershell
+      run: |
+        $ErrorActionPreference = "Continue"
+        $testsPath = "${{ inputs.tests-path }}"
+        $namespace = "${{ inputs.namespace-prefix }}.${{ inputs.namespace }}"
+        $trx       = "${{ inputs.trx-path }}"
+
+        $serial = @("${{ inputs.no-parallel-namespaces }}" -split ' ' | Where-Object { $_ })
+        $parallelize = [System.Convert]::ToBoolean("${{ inputs.parallelize }}")
+        if ($serial -contains "${{ inputs.namespace }}") { $parallelize = $false }
+        $json = Get-Content "$testsPath/xunit.runner.json" | ConvertFrom-Json
+        $json | Add-Member -Name "parallelizeAssembly" -Value $parallelize -MemberType NoteProperty -Force
+        $json | Add-Member -Name "parallelizeTestCollections" -Value $parallelize -MemberType NoteProperty -Force
+        $json | ConvertTo-Json | Out-File "$testsPath/xunit.runner.json"
+
+        $traitArgs = @()
+        if ("${{ inputs.trait }}" -ne "") { $traitArgs = @("-trait", "${{ inputs.trait }}") }
+
+        New-Item -ItemType Directory -Force -Path (Split-Path $trx) | Out-Null
+        $runLog = "$Env:RUNNER_TEMP\run-${{ inputs.namespace }}.log"
+
+        $maxAttempts = 2
+        $attempt = 1
+        while ($true) {
+          & "$testsPath/${{ inputs.assembly-name }}.exe" -namespace $namespace @traitArgs -trx $trx 2>&1 |
+            Tee-Object -FilePath $runLog
+          $exitCode = $LASTEXITCODE
+          if ($exitCode -eq 0) {
+            if ($attempt -gt 1) {
+              Write-Host "::warning::${{ inputs.test-type }} for ${{ inputs.namespace }} passed on attempt $attempt after a transient failure. Investigate if this recurs."
+              $marker = "$Env:RUNNER_TEMP\flaky-retry-${{ inputs.namespace }}.json"
+              @{ testType = "${{ inputs.test-type }}"; testGroup = "${{ inputs.namespace }}" } | ConvertTo-Json | Out-File -FilePath $marker -Encoding UTF8
+            }
+            break
+          }
+          if ($attempt -ge $maxAttempts) {
+            Write-Host "${{ inputs.test-type }} for ${{ inputs.namespace }} failed after $attempt attempt(s) (exit code $exitCode)."
+            exit $exitCode
+          }
+          Write-Host "${{ inputs.test-type }} for ${{ inputs.namespace }} failed on attempt $attempt (exit code $exitCode); retrying once to absorb a possible transient blip..."
+          $attempt++
+          Start-Sleep -Seconds 10
+        }
+
+        & bash "$Env:GITHUB_WORKSPACE/build/Scripts/check-test-run.sh" "$trx" "$runLog"
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+    - name: Run tests (Linux)
+      if: runner.os != 'Windows'
+      shell: bash
+      run: |
+        tests_path="${{ inputs.tests-path }}"
+        namespace="${{ inputs.namespace-prefix }}.${{ inputs.namespace }}"
+        trx="${{ inputs.trx-path }}"
+        run_log="$RUNNER_TEMP/run-${{ inputs.namespace }}.log"
+
+        parallelize="${{ inputs.parallelize }}"
+        for serial in ${{ inputs.no-parallel-namespaces }}; do
+          if [ "$serial" = "${{ inputs.namespace }}" ]; then parallelize=false; fi
+        done
+        python3 - "$tests_path/xunit.runner.json" "$parallelize" <<'PY'
+        import json, sys
+        path, flag = sys.argv[1], sys.argv[2] == 'true'
+        with open(path) as fh:
+            doc = json.load(fh)
+        doc['parallelizeAssembly'] = flag
+        doc['parallelizeTestCollections'] = flag
+        with open(path, 'w') as fh:
+            json.dump(doc, fh, indent=2)
+        PY
+
+        trait_args=()
+        if [ -n "${{ inputs.trait }}" ]; then trait_args=(-trait "${{ inputs.trait }}"); fi
+
+        mkdir -p "$(dirname "$trx")"
+        max_attempts=2
+        attempt=1
+        while true; do
+          set +e
+          dotnet "$tests_path/${{ inputs.assembly-name }}.dll" \
+            -namespace "$namespace" "${trait_args[@]}" -trx "$trx" 2>&1 | tee "$run_log"
+          exit_code=${PIPESTATUS[0]}
+          set -e
+          if [ "$exit_code" -eq 0 ]; then
+            if [ "$attempt" -gt 1 ]; then
+              echo "::warning::${{ inputs.test-type }} for ${{ inputs.namespace }} passed on attempt $attempt after a transient failure. Investigate if this recurs."
+              jq -cn --arg tt "${{ inputs.test-type }}" --arg tg "${{ inputs.namespace }}" \
+                '{testType: $tt, testGroup: $tg}' > "$RUNNER_TEMP/flaky-retry-${{ inputs.namespace }}.json"
+            fi
+            break
+          fi
+          if [ "$attempt" -ge "$max_attempts" ]; then
+            echo "${{ inputs.test-type }} for ${{ inputs.namespace }} failed after $attempt attempt(s) (exit code $exit_code)."
+            exit "$exit_code"
+          fi
+          echo "${{ inputs.test-type }} for ${{ inputs.namespace }} failed on attempt $attempt (exit code $exit_code); retrying once to absorb a possible transient blip..."
+          attempt=$((attempt + 1))
+          sleep 10
+        done
+
+        bash "$GITHUB_WORKSPACE/build/Scripts/check-test-run.sh" "$trx" "$run_log"

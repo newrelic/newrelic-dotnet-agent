@@ -57,8 +57,6 @@ jobs:
     env:
       integration_tests_shared_project: ${{ github.workspace }}/tests/Agent/IntegrationTests/Shared
       integration_tests_path: ${{ github.workspace }}/tests/Agent/IntegrationTests/IntegrationTests/bin/Release/net10.0
-      # Make this variable true to enable extra data-gathering and logging to help troubleshoot test failures, at the cost of additional time and resources
-      enhanced_logging: false
       NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY: 1
       NR_DOTNET_TEST_PREBUILT_APPS: 1 # use pre-published test app output instead of dotnet publish at runtime
       azure_func_exe_path: C:\ProgramData\chocolatey\lib\azure-functions-core-tools\tools\func.exe
@@ -152,68 +150,17 @@ jobs:
           dotnet-quality: 'ga'
 
       - name: Run Integration Tests
-        run: |
-          if ($Env:enhanced_logging -eq $True) {
-            Write-Host "List ports in use"
-            netstat -no
-          }
-
-          Write-Host "Run tests"
-
-          # Most integration tests can run in parallel with pre-built test apps.
-          # Some namespaces must remain serial because they use shared external tools
-          # that don't support concurrent instances (e.g., Azure Functions Core Tools
-          # func.exe crashes when multiple instances launch simultaneously due to shared
-          # state in storage emulator/lock files). To parallelize these, the shared tool
-          # contention would need to be resolved.
-          $noParallelNamespaces = @("AzureFunction")
-          $parallelize = [System.Convert]::ToBoolean("${{ inputs.parallelize }}")
-          if ($noParallelNamespaces -contains "${{ matrix.namespace }}") { $parallelize = $false }
-          $json = Get-Content "${{ env.integration_tests_path }}/xunit.runner.json" | ConvertFrom-Json
-          $json | Add-Member -Name "parallelizeAssembly" -Value $parallelize -MemberType NoteProperty
-          $json | Add-Member -Name "parallelizeTestCollections" -Value $parallelize -MemberType NoteProperty
-          $json | ConvertTo-Json | Out-File "${{ env.integration_tests_path }}/xunit.runner.json"
-
-          # Retry once on failure to absorb transient infrastructure blips (e.g. port
-          # contention, SSL cert / tooling startup races, or a flaky test-app launch) that
-          # can surface as a spurious failure while the code under test is healthy. A
-          # retried-but-passing job still emits a ::warning:: so genuine regressions /
-          # flake churn stay visible in the UI.
-          $maxAttempts = 2
-          $attempt = 1
-          while ($true) {
-            & "${{ env.integration_tests_path }}/NewRelic.Agent.IntegrationTests.exe" -namespace NewRelic.Agent.IntegrationTests.${{ matrix.namespace }} -trx "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.trx"
-            $exitCode = $LASTEXITCODE
-            if ($exitCode -eq 0) {
-              if ($attempt -gt 1) {
-                Write-Host "::warning::Integration tests for ${{ matrix.namespace }} passed on attempt $attempt after a transient failure. Investigate if this recurs."
-                # Record the flaky retry to a marker file under RUNNER_TEMP, which the
-                # failure-artifact upload globs never collect. Reporting runs in the separate
-                # step below so that no secret is in scope for this step: HostedWebCore and
-                # other test hosts launched here write their environment to the console, and
-                # that console output is captured into the test results.
-                $marker = "$Env:RUNNER_TEMP\flaky-retry-${{ matrix.namespace }}.json"
-                @{ testType = "integrationTests"; testGroup = "${{ matrix.namespace }}" } | ConvertTo-Json | Out-File -FilePath $marker -Encoding UTF8
-              }
-              break
-            }
-            if ($attempt -ge $maxAttempts) {
-              Write-Host "Integration tests for ${{ matrix.namespace }} failed after $attempt attempt(s) (exit code $exitCode)."
-              exit $exitCode
-            }
-            Write-Host "Integration tests for ${{ matrix.namespace }} failed on attempt $attempt (exit code $exitCode); retrying once to absorb a possible transient blip..."
-            $attempt++
-            Start-Sleep -Seconds 10
-          }
-
-          if ($Env:enhanced_logging -eq $True) {
-            Write-Host "Get HostableWebCore errors (if any)"
-            Get-EventLog -LogName Application -Source HostableWebCore -ErrorAction:Ignore
-
-            Write-Host "Get .NET Runtime errors (if any)"
-            Get-EventLog -LogName Application -Source ".NET Runtime" -EntryType "Error","Warning" -ErrorAction:Ignore
-          }
-        shell: powershell
+        uses: ./.github/actions/run-host-tests
+        with:
+          tests-path: ${{ env.integration_tests_path }}
+          assembly-name: NewRelic.Agent.IntegrationTests
+          namespace-prefix: NewRelic.Agent.IntegrationTests
+          namespace: ${{ matrix.namespace }}
+          trait: Runtime=Framework
+          trx-path: C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.trx
+          parallelize: ${{ inputs.parallelize }}
+          no-parallel-namespaces: AzureFunction
+          test-type: integrationTests
 
       - name: Report flaky retry telemetry
         if: always()
