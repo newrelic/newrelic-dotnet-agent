@@ -33,6 +33,18 @@ on:
       container-groups:
         description: 'Comma-separated container groups to run. Empty means all of them.'
         value: ${{ jobs.compute.outputs.containers }}
+      integration-linux-namespaces:
+        description: 'JSON array of integration namespaces for the Linux-Core lane.'
+        value: ${{ jobs.compute.outputs.integration_linux }}
+      integration-smoke-namespaces:
+        description: 'JSON array of integration namespaces for the Windows-Core smoke lane.'
+        value: ${{ jobs.compute.outputs.integration_smoke }}
+      unbounded-linux-namespaces:
+        description: 'JSON array of unbounded namespaces for the Linux-Core lane.'
+        value: ${{ jobs.compute.outputs.unbounded_linux }}
+      unbounded-smoke-namespaces:
+        description: 'JSON array of unbounded namespaces for the Windows-Core smoke lane.'
+        value: ${{ jobs.compute.outputs.unbounded_smoke }}
 
 permissions: {}
 
@@ -45,6 +57,10 @@ jobs:
       integration: ${{ steps.compute.outputs.integration }}
       unbounded: ${{ steps.compute.outputs.unbounded }}
       containers: ${{ steps.compute.outputs.containers }}
+      integration_linux: ${{ steps.compute.outputs.integration_linux }}
+      integration_smoke: ${{ steps.compute.outputs.integration_smoke }}
+      unbounded_linux: ${{ steps.compute.outputs.unbounded_linux }}
+      unbounded_smoke: ${{ steps.compute.outputs.unbounded_smoke }}
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
@@ -168,6 +184,45 @@ jobs:
             "Datastore/amd64"
           ]'
 
+          # Lane membership, derived from the canonical lists above and
+          # validated against them by .github/scripts/check-workflows.py.
+          # windows_only: shards with no Runtime=Core tests at all.
+          integration_windows_only='[
+            "CatInbound",
+            "CatOutbound",
+            "HybridHttpContextStorage",
+            "MultiAppDomain",
+            "Owin",
+            "ReJit.NetFramework",
+            "RequestHandling",
+            "RequestHeadersCapture.AspNet",
+            "RequestHeadersCapture.Owin",
+            "RequestHeadersCapture.WCF",
+            "RestSharp",
+            "WCF.Client.IIS.ASPDisabled",
+            "WCF.Client.IIS.ASPEnabled",
+            "WCF.Client.Self",
+            "WCF.Service.IIS.ASPDisabled",
+            "WCF.Service.IIS.ASPEnabled",
+            "WCF.Service.Self"
+          ]'
+
+          # core_smoke: Core shards that also run on Windows, because their
+          # coverage is Windows-specific. Additive -- the Linux lane keeps them.
+          integration_core_smoke='[
+            "AgentFeatures",
+            "AspNetCore"
+          ]'
+
+          unbounded_windows_only='[
+            "Msmq",
+            "NServiceBus5"
+          ]'
+
+          unbounded_core_smoke='[
+            "MsSql"
+          ]'
+
           if [ "$MODE" = "all" ]; then
             # ── Read exclusion variables (default to empty array) ─────────
             integration_exclude="${INTEGRATION_EXCLUDE:-[]}"
@@ -176,7 +231,15 @@ jobs:
             # ── Apply exclusions ──────────────────────────────────────────
             integration=$(jq -c '. - $ex' --argjson ex "$integration_exclude" <<< "$integration_all")
             unbounded=$(jq -c '. - $ex' --argjson ex "$unbounded_exclude" <<< "$unbounded_all")
-  
+
+            # Linux lane: everything Core-capable. Smoke shards stay in, by design.
+            integration_linux=$(jq -c '. - $wo' --argjson wo "$integration_windows_only" <<< "$integration")
+            unbounded_linux=$(jq -c '. - $wo' --argjson wo "$unbounded_windows_only" <<< "$unbounded")
+
+            # Windows-Core smoke lane: the allowlist, minus anything excluded.
+            integration_smoke=$(jq -c --argjson sm "$integration_core_smoke" '. - (. - $sm)' <<< "$integration")
+            unbounded_smoke=$(jq -c --argjson sm "$unbounded_core_smoke" '. - (. - $sm)' <<< "$unbounded")
+
             # ── Log what was excluded ─────────────────────────────────────
             int_removed=$(jq -c '. as $all | $all - ($all - $ex)' --argjson ex "$integration_exclude" <<< "$integration_all")
             unb_removed=$(jq -c '. as $all | $all - ($all - $ex)' --argjson ex "$unbounded_exclude" <<< "$unbounded_all")
@@ -190,9 +253,20 @@ jobs:
             echo "Excluded: $unb_removed"
             echo "Running:  $unbounded"
             echo "::endgroup::"
-  
+
+            echo "::group::Test lanes"
+            echo "Integration Linux-Core:      $integration_linux"
+            echo "Integration Windows-Core:    $integration_smoke"
+            echo "Unbounded Linux-Core:        $unbounded_linux"
+            echo "Unbounded Windows-Core:      $unbounded_smoke"
+            echo "::endgroup::"
+
             echo "integration=$integration" >> "$GITHUB_OUTPUT"
             echo "unbounded=$unbounded" >> "$GITHUB_OUTPUT"
+            echo "integration_linux=$integration_linux" >> "$GITHUB_OUTPUT"
+            echo "integration_smoke=$integration_smoke" >> "$GITHUB_OUTPUT"
+            echo "unbounded_linux=$unbounded_linux" >> "$GITHUB_OUTPUT"
+            echo "unbounded_smoke=$unbounded_smoke" >> "$GITHUB_OUTPUT"
             containers=""
             echo "containers=$containers" >> "$GITHUB_OUTPUT"
             exit 0
@@ -256,6 +330,10 @@ jobs:
           # Intersect in canonical order, so the matrix leg order is stable.
           integration=$(jq -c --argjson req "$integration_req" '. - (. - $req)' <<< "$integration_all")
           unbounded=$(jq -c --argjson req "$unbounded_req" '. - (. - $req)' <<< "$unbounded_all")
+          integration_linux=$(jq -c '. - $wo' --argjson wo "$integration_windows_only" <<< "$integration")
+          unbounded_linux=$(jq -c '. - $wo' --argjson wo "$unbounded_windows_only" <<< "$unbounded")
+          integration_smoke=$(jq -c --argjson sm "$integration_core_smoke" '. - (. - $sm)' <<< "$integration")
+          unbounded_smoke=$(jq -c --argjson sm "$unbounded_core_smoke" '. - (. - $sm)' <<< "$unbounded")
           containers=$(jq -r --argjson req "$container_req" '. - (. - $req) | join(",")' <<< "$container_all")
 
           if [ "$integration" = "[]" ] && [ "$unbounded" = "[]" ] && [ -z "$containers" ]; then
@@ -272,4 +350,8 @@ jobs:
           echo "integration=$integration" >> "$GITHUB_OUTPUT"
           echo "unbounded=$unbounded" >> "$GITHUB_OUTPUT"
           echo "containers=$containers" >> "$GITHUB_OUTPUT"
+          echo "integration_linux=$integration_linux" >> "$GITHUB_OUTPUT"
+          echo "integration_smoke=$integration_smoke" >> "$GITHUB_OUTPUT"
+          echo "unbounded_linux=$unbounded_linux" >> "$GITHUB_OUTPUT"
+          echo "unbounded_smoke=$unbounded_smoke" >> "$GITHUB_OUTPUT"
         shell: bash
