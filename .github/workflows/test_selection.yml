@@ -45,6 +45,12 @@ on:
       unbounded-smoke-namespaces:
         description: 'JSON array of unbounded namespaces for the Windows-Core smoke lane.'
         value: ${{ jobs.compute.outputs.unbounded_smoke }}
+      integration-windows-namespaces:
+        description: 'JSON array of integration namespaces for the Windows-Framework lane.'
+        value: ${{ jobs.compute.outputs.integration_windows }}
+      unbounded-windows-namespaces:
+        description: 'JSON array of unbounded namespaces for the Windows-Framework lane.'
+        value: ${{ jobs.compute.outputs.unbounded_windows }}
 
 permissions: {}
 
@@ -61,6 +67,8 @@ jobs:
       integration_smoke: ${{ steps.compute.outputs.integration_smoke }}
       unbounded_linux: ${{ steps.compute.outputs.unbounded_linux }}
       unbounded_smoke: ${{ steps.compute.outputs.unbounded_smoke }}
+      integration_windows: ${{ steps.compute.outputs.integration_windows }}
+      unbounded_windows: ${{ steps.compute.outputs.unbounded_windows }}
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
@@ -196,6 +204,7 @@ jobs:
             "ReJit.NetFramework",
             "RequestHandling",
             "RequestHeadersCapture.AspNet",
+            "RequestHeadersCapture.EnvironmentVariables",
             "RequestHeadersCapture.Owin",
             "RequestHeadersCapture.WCF",
             "RestSharp",
@@ -214,6 +223,27 @@ jobs:
             "AspNetCore"
           ]'
 
+          # linux_only: shards with no Runtime=Framework tests. Excluded from
+          # the Windows-Framework lane, which would otherwise match zero tests.
+          integration_linux_only='[
+            "AwsLambda.AutoInstrumentation",
+            "AwsLambda.CloudWatch",
+            "AwsLambda.Custom",
+            "AwsLambda.DynamoDb",
+            "AwsLambda.General",
+            "AwsLambda.Kinesis",
+            "AwsLambda.S3",
+            "AwsLambda.Ses",
+            "AwsLambda.Sns",
+            "AwsLambda.Sqs",
+            "AwsLambda.WebRequest",
+            "Blazor",
+            "Grpc",
+            "Logging.AuditLog",
+            "ReJit.NetCore",
+            "RequestHeadersCapture.AspNetCore"
+          ]'
+
           unbounded_windows_only='[
             "Msmq",
             "NServiceBus5"
@@ -222,6 +252,10 @@ jobs:
           unbounded_core_smoke='[
             "MsSql"
           ]'
+
+          # Empty until Task 15 measures the unbounded suite's lanes. Empty
+          # means the Windows lane keeps every unbounded shard, as it does today.
+          unbounded_linux_only='[]'
 
           if [ "$MODE" = "all" ]; then
             # ── Read exclusion variables (default to empty array) ─────────
@@ -235,6 +269,10 @@ jobs:
             # Linux lane: everything Core-capable. Smoke shards stay in, by design.
             integration_linux=$(jq -c '. - $wo' --argjson wo "$integration_windows_only" <<< "$integration")
             unbounded_linux=$(jq -c '. - $wo' --argjson wo "$unbounded_windows_only" <<< "$unbounded")
+
+            # Windows-Framework lane: everything with Framework tests.
+            integration_windows=$(jq -c '. - $lo' --argjson lo "$integration_linux_only" <<< "$integration")
+            unbounded_windows=$(jq -c '. - $lo' --argjson lo "$unbounded_linux_only" <<< "$unbounded")
 
             # Windows-Core smoke lane: the allowlist, minus anything excluded.
             integration_smoke=$(jq -c --argjson sm "$integration_core_smoke" '. - (. - $sm)' <<< "$integration")
@@ -255,10 +293,12 @@ jobs:
             echo "::endgroup::"
 
             echo "::group::Test lanes"
-            echo "Integration Linux-Core:      $integration_linux"
-            echo "Integration Windows-Core:    $integration_smoke"
-            echo "Unbounded Linux-Core:        $unbounded_linux"
-            echo "Unbounded Windows-Core:      $unbounded_smoke"
+            echo "Integration Linux-Core:        $integration_linux"
+            echo "Integration Windows-Framework: $integration_windows"
+            echo "Integration Windows-Core:      $integration_smoke"
+            echo "Unbounded Linux-Core:          $unbounded_linux"
+            echo "Unbounded Windows-Framework:   $unbounded_windows"
+            echo "Unbounded Windows-Core:        $unbounded_smoke"
             echo "::endgroup::"
 
             echo "integration=$integration" >> "$GITHUB_OUTPUT"
@@ -267,6 +307,8 @@ jobs:
             echo "integration_smoke=$integration_smoke" >> "$GITHUB_OUTPUT"
             echo "unbounded_linux=$unbounded_linux" >> "$GITHUB_OUTPUT"
             echo "unbounded_smoke=$unbounded_smoke" >> "$GITHUB_OUTPUT"
+            echo "integration_windows=$integration_windows" >> "$GITHUB_OUTPUT"
+            echo "unbounded_windows=$unbounded_windows" >> "$GITHUB_OUTPUT"
             containers=""
             echo "containers=$containers" >> "$GITHUB_OUTPUT"
             exit 0
@@ -332,6 +374,8 @@ jobs:
           unbounded=$(jq -c --argjson req "$unbounded_req" '. - (. - $req)' <<< "$unbounded_all")
           integration_linux=$(jq -c '. - $wo' --argjson wo "$integration_windows_only" <<< "$integration")
           unbounded_linux=$(jq -c '. - $wo' --argjson wo "$unbounded_windows_only" <<< "$unbounded")
+          integration_windows=$(jq -c '. - $lo' --argjson lo "$integration_linux_only" <<< "$integration")
+          unbounded_windows=$(jq -c '. - $lo' --argjson lo "$unbounded_linux_only" <<< "$unbounded")
           integration_smoke=$(jq -c --argjson sm "$integration_core_smoke" '. - (. - $sm)' <<< "$integration")
           unbounded_smoke=$(jq -c --argjson sm "$unbounded_core_smoke" '. - (. - $sm)' <<< "$unbounded")
           containers=$(jq -r --argjson req "$container_req" '. - (. - $req) | join(",")' <<< "$container_all")
@@ -354,4 +398,6 @@ jobs:
           echo "integration_smoke=$integration_smoke" >> "$GITHUB_OUTPUT"
           echo "unbounded_linux=$unbounded_linux" >> "$GITHUB_OUTPUT"
           echo "unbounded_smoke=$unbounded_smoke" >> "$GITHUB_OUTPUT"
+          echo "integration_windows=$integration_windows" >> "$GITHUB_OUTPUT"
+          echo "unbounded_windows=$unbounded_windows" >> "$GITHUB_OUTPUT"
         shell: bash

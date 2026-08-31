@@ -226,10 +226,11 @@ def check_lane_lists():
         all_shards = extract_list_literal("%s_all" % suite)
         windows_only = extract_list_literal("%s_windows_only" % suite)
         smoke = extract_list_literal("%s_core_smoke" % suite)
-        if all_shards is None or windows_only is None or smoke is None:
+        linux_only = extract_list_literal("%s_linux_only" % suite)
+        if all_shards is None or windows_only is None or smoke is None or linux_only is None:
             continue
 
-        for label, lane in (("windows_only", windows_only), ("core_smoke", smoke)):
+        for label, lane in (("windows_only", windows_only), ("core_smoke", smoke), ("linux_only", linux_only)):
             stale = sorted(set(lane) - set(all_shards))
             if stale:
                 fail(
@@ -245,6 +246,15 @@ def check_lane_lists():
                 "%s shard(s) %s are in both %s_windows_only and %s_core_smoke. windows_only means the shard has "
                 "no Core tests; core_smoke means it has Core tests worth running on Windows. It cannot be both"
                 % (suite, both, suite, suite),
+            )
+
+        neither = sorted(set(windows_only) & set(linux_only))
+        if neither:
+            fail(
+                "lane-lists",
+                "%s shard(s) %s are in both %s_windows_only and %s_linux_only, which claims they have neither "
+                "Core nor Framework tests. Such a shard has no tests and runs on no lane"
+                % (suite, neither, suite, suite),
             )
 
 
