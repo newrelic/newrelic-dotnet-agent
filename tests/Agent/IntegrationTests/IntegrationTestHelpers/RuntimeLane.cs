@@ -33,6 +33,24 @@ public sealed class RuntimeLaneResolver
 
     private static readonly ConcurrentDictionary<Type, RuntimeLane> FixtureLaneCache = new ConcurrentDictionary<Type, RuntimeLane>();
 
+    /// <summary>
+    /// Fixture types that must never be constructed for classification, because
+    /// their constructor does real work (starts a process, copies files, opens a
+    /// network connection) instead of only composing paths. Each value is the
+    /// lane that construction would have reported, checked by reading what the
+    /// fixture passes to its base RemoteApplication / RemoteService, not guessed
+    /// from the fixture's own name.
+    /// </summary>
+    private static readonly Dictionary<string, RuntimeLane> DoNotConstruct = new Dictionary<string, RuntimeLane>(StringComparer.Ordinal)
+    {
+        // Constructor eagerly calls OwinRemotingServerApplication.CopyToRemote() and Start().
+        ["OwinRemotingFixture"] = RuntimeLane.Framework,
+        // Constructor eagerly starts a ChromeDriverService and a headless Chrome process (new ChromeDriver(...)).
+        ["BasicAspWebServiceFixture"] = RuntimeLane.Framework,
+        // Constructor eagerly starts a ChromeDriverService and a headless Chrome process (new ChromeDriver(...)).
+        ["BlazorSignalRApplicationFixture"] = RuntimeLane.Core,
+    };
+
     private readonly IReadOnlyDictionary<string, RuntimeLane> _classOverrides;
 
     public RuntimeLaneResolver(IReadOnlyDictionary<string, RuntimeLane> classOverrides)
@@ -82,9 +100,10 @@ public sealed class RuntimeLaneResolver
     }
 
     /// <summary>
-    /// The console fixture family states its runtime in its name. Every other
-    /// fixture is asked directly: construct it once and read IsCoreApp. Both
-    /// constructors only compose paths, so this starts nothing.
+    /// The console fixture family states its runtime in its name. Most other
+    /// fixtures compose paths only, so they are asked directly: construct once
+    /// and read IsCoreApp. A fixture in DoNotConstruct does real work in its
+    /// constructor and is never instantiated; its recorded lane is used instead.
     /// </summary>
     public RuntimeLane ResolveFromFixtureType(Type fixtureType)
     {
@@ -104,6 +123,11 @@ public sealed class RuntimeLaneResolver
             if (name.StartsWith("ConsoleDynamicMethodFixtureCore", StringComparison.Ordinal))
             {
                 return RuntimeLane.Core;
+            }
+
+            if (DoNotConstruct.TryGetValue(name, out var knownLane))
+            {
+                return knownLane;
             }
 
             try
