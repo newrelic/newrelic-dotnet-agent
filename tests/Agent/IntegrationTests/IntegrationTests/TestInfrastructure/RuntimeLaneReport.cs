@@ -53,7 +53,9 @@ public class RuntimeLaneReport
                 unknown++;
             }
 
-            builder.Append(type.FullName).Append('\t').Append(lane).Append('\n');
+            var fixtureType = RuntimeLaneResolver.GetFixtureType(type);
+            builder.Append(type.FullName).Append('\t').Append(lane).Append('\t')
+                   .Append(fixtureType == null ? "-" : fixtureType.FullName).Append('\n');
         }
 
         File.WriteAllText(path, builder.ToString(), new UTF8Encoding(false));
