@@ -438,32 +438,8 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             Assert::AreEqual((uint64_t)1, instr.GetHelperFireCount());
         }
 
-        TEST_METHOD(helper_GetMethodFromAppDomainStorage_fires_and_returns_false)
-        {
-            HelperInstrumentor instr;
-            auto func = MakeHelperFunc(L"GetMethodFromAppDomainStorage");
-            bool result = instr.Instrument(func, nullptr, false, AgentCallStyle::Strategy::AppDomainFallbackCache);
-            Assert::IsFalse(result);
-            Assert::AreEqual((uint64_t)1, instr.GetHelperFireCount());
-        }
 
-        TEST_METHOD(helper_GetMethodFromAppDomainStorageOrReflectionOrThrow_fires_and_returns_false)
-        {
-            HelperInstrumentor instr;
-            auto func = MakeHelperFunc(L"GetMethodFromAppDomainStorageOrReflectionOrThrow");
-            bool result = instr.Instrument(func, nullptr, false, AgentCallStyle::Strategy::AppDomainFallbackCache);
-            Assert::IsFalse(result);
-            Assert::AreEqual((uint64_t)1, instr.GetHelperFireCount());
-        }
 
-        TEST_METHOD(helper_GetAgentShimMethodFromAppDomainStorageOrReflectionOrThrow_fires_and_returns_false)
-        {
-            HelperInstrumentor instr;
-            auto func = MakeHelperFunc(L"GetAgentShimMethodFromAppDomainStorageOrReflectionOrThrow");
-            bool result = instr.Instrument(func, nullptr, false, AgentCallStyle::Strategy::AppDomainFallbackCache);
-            Assert::IsFalse(result);
-            Assert::AreEqual((uint64_t)1, instr.GetHelperFireCount());
-        }
 
         TEST_METHOD(helper_StoreMethodInAppDomainStorageOrThrow_fires_and_returns_false)
         {
@@ -487,6 +463,15 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
         {
             HelperInstrumentor instr;
             auto func = MakeHelperFunc(L"StoreAgentShimFinishTracerDelegateFunc");
+            bool result = instr.Instrument(func, nullptr, false, AgentCallStyle::Strategy::AppDomainFallbackCache);
+            Assert::IsFalse(result);
+            Assert::AreEqual((uint64_t)1, instr.GetHelperFireCount());
+        }
+
+        TEST_METHOD(helper_InvokeAgentShimFinishTracerDelegateFunc_fires_and_returns_false)
+        {
+            HelperInstrumentor instr;
+            auto func = MakeHelperFunc(L"InvokeAgentShimFinishTracerDelegateFunc");
             bool result = instr.Instrument(func, nullptr, false, AgentCallStyle::Strategy::AppDomainFallbackCache);
             Assert::IsFalse(result);
             Assert::AreEqual((uint64_t)1, instr.GetHelperFireCount());
