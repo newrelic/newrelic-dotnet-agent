@@ -201,6 +201,53 @@ def extract_pairs_container_matrix(docs):
     return None
 
 
+def extract_list_literal(name):
+    """Pull a bash single-quoted JSON array literal out of test_selection.yml."""
+    text = (WORKFLOWS / "test_selection.yml").read_text(encoding="utf-8")
+    match = re.search(r"%s='(\[[^']*\])'" % re.escape(name), text)
+    if not match:
+        fail("lane-lists", "could not extract %s='[...]' from test_selection.yml; the anchor changed" % name)
+        return None
+    try:
+        return json.loads(match.group(1))
+    except (ValueError, json.JSONDecodeError) as exc:
+        fail("lane-lists", "%s in test_selection.yml is not valid JSON: %s" % (name, exc))
+        return None
+
+
+def check_lane_lists():
+    """Each suite's lane lists must stay consistent with its canonical list.
+
+    Selection is by inclusion, so a shard in no lane runs nowhere and reports
+    green, and a stale entry names a shard that no longer exists. Neither shows
+    up at run time.
+    """
+    for suite in ("integration", "unbounded"):
+        all_shards = extract_list_literal("%s_all" % suite)
+        windows_only = extract_list_literal("%s_windows_only" % suite)
+        smoke = extract_list_literal("%s_core_smoke" % suite)
+        if all_shards is None or windows_only is None or smoke is None:
+            continue
+
+        for label, lane in (("windows_only", windows_only), ("core_smoke", smoke)):
+            stale = sorted(set(lane) - set(all_shards))
+            if stale:
+                fail(
+                    "lane-lists",
+                    "%s_%s names shard(s) absent from %s_all: %s. A renamed or deleted shard leaves a "
+                    "stale lane entry that never fires" % (suite, label, suite, stale),
+                )
+
+        both = sorted(set(windows_only) & set(smoke))
+        if both:
+            fail(
+                "lane-lists",
+                "%s shard(s) %s are in both %s_windows_only and %s_core_smoke. windows_only means the shard has "
+                "no Core tests; core_smoke means it has Core tests worth running on Windows. It cannot be both"
+                % (suite, both, suite, suite),
+            )
+
+
 def check_container_lists_match(docs):
     left = extract_pairs_test_selection()
     right = extract_pairs_container_matrix(docs)
@@ -272,6 +319,7 @@ def main():
     check_required_checks_are_bare_jobs(docs)
     check_permission_ceilings(docs)
     check_container_lists_match(docs)
+    check_lane_lists()
     check_no_concurrency_in_called_workflows(docs)
     check_no_expressions_in_action_metadata()
 
@@ -282,7 +330,7 @@ def main():
         return 1
     print(
         "check-workflows: all checks passed (needs-resolution, required-checks, "
-        "permissions, container-lists, called-workflow-concurrency, action-metadata)"
+        "permissions, container-lists, lane-lists, called-workflow-concurrency, action-metadata)"
     )
     return 0
 
