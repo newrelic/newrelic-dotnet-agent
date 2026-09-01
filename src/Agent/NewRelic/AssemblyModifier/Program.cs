@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using Mono.Cecil;
+using Mono.Cecil.Cil;
 
 if (args.Length == 0)
 {
@@ -27,10 +28,15 @@ try
         resolver.AddSearchDirectory(args[1]);
     }
 
+    string pdbPath = Path.ChangeExtension(assemblyPath, ".pdb");
+    bool hasSymbols = File.Exists(pdbPath);
+
     var parameters = new ReaderParameters
     {
         AssemblyResolver = resolver,
-        ReadWrite = true
+        ReadWrite = true,
+        ReadSymbols = hasSymbols,
+        SymbolReaderProvider = hasSymbols ? new PortablePdbReaderProvider() : null
     };
 
     using ModuleDefinition module = ModuleDefinition.ReadModule(assemblyPath, parameters);
@@ -47,8 +53,12 @@ try
         }
     }
 
-    // Save the modified assembly
-    module.Write();
+    // Save the modified assembly, preserving debug symbols if the module was read with them
+    module.Write(new WriterParameters
+    {
+        WriteSymbols = hasSymbols,
+        SymbolWriterProvider = hasSymbols ? new PortablePdbWriterProvider() : null
+    });
 }
 catch (Exception ex)
 {
