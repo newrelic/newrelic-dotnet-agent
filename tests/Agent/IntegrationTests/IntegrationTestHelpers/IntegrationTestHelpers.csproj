@@ -11,8 +11,8 @@
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="SharpZipLib" Version="1.4.2" />
-    <PackageReference Include="xunit.v3.assert" Version="3.2.2" />
-    <PackageReference Include="xunit.v3.extensibility.core" Version="3.2.2" />
+    <PackageReference Include="xunit.v3.assert" Version="4.0.0" />
+    <PackageReference Include="xunit.v3.extensibility.core" Version="4.0.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Shared\TestSerializationHelpers\TestSerializationHelpers.csproj" />
