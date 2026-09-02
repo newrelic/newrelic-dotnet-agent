@@ -210,56 +210,28 @@ jobs:
           dotnet-version: '10.0.x'
           dotnet-quality: 'ga'
   
-      - name: Run Unbounded Integration Tests
+      - name: List ports in use (enhanced logging)
         run: |
           if ($Env:enhanced_logging -eq $True) {
             Write-Host "List ports in use"
             netstat -no
           }
+        shell: powershell
 
-          # Most unbounded tests can run in parallel with pre-built test apps.
-          # Some namespaces must remain serial because they use shared external infrastructure
-          # with hard-coded object names (e.g., NServiceBus5 tests share MSMQ queues). To
-          # parallelize these, each test fixture would need isolated resources
-          # (per-test databases/tables/queues).
-          $noParallelNamespaces = @("NServiceBus", "NServiceBus5")
-          $parallelize = $noParallelNamespaces -notcontains "${{ matrix.namespace }}"
-          $json = Get-Content "${{ env.unbounded_tests_path }}/xunit.runner.json" | ConvertFrom-Json
-          $json | Add-Member -Name "parallelizeAssembly" -Value $parallelize -MemberType NoteProperty
-          $json | Add-Member -Name "parallelizeTestCollections" -Value $parallelize -MemberType NoteProperty
-          $json | ConvertTo-Json | Out-File "${{ env.unbounded_tests_path }}/xunit.runner.json"
+      - name: Run Unbounded Integration Tests
+        uses: ./.github/actions/run-host-tests
+        with:
+          tests-path: ${{ env.unbounded_tests_path }}
+          assembly-name: NewRelic.Agent.UnboundedIntegrationTests
+          namespace-prefix: NewRelic.Agent.UnboundedIntegrationTests
+          namespace: ${{ matrix.namespace }}
+          trait: Runtime=Framework
+          trx-path: C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.trx
+          no-parallel-namespaces: NServiceBus NServiceBus5
+          test-type: unboundedTests
 
-          # Retry once on failure to absorb transient WAN/infra blips between the GitHub-hosted
-          # runner and the Azure-hosted unbounded services (e.g. brief packet loss surfacing as a
-          # client command timeout while the service itself is healthy). A retried-but-passing job
-          # still emits a ::warning:: so genuine regressions / flake churn stay visible in the UI.
-          $maxAttempts = 2
-          $attempt = 1
-          while ($true) {
-            & "${{ env.unbounded_tests_path }}/NewRelic.Agent.UnboundedIntegrationTests.exe" -namespace NewRelic.Agent.UnboundedIntegrationTests.${{ matrix.namespace }} -trx "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.trx"
-            $exitCode = $LASTEXITCODE
-            if ($exitCode -eq 0) {
-              if ($attempt -gt 1) {
-                Write-Host "::warning::Unbounded tests for ${{ matrix.namespace }} passed on attempt $attempt after a transient failure. Investigate if this recurs."
-                # Record the flaky retry to a marker file under RUNNER_TEMP, which the
-                # failure-artifact upload globs never collect. Reporting runs in the separate
-                # step below so that no secret is in scope for this step: HostedWebCore and
-                # other test hosts launched here write their environment to the console, and
-                # that console output is captured into the test results.
-                $marker = "$Env:RUNNER_TEMP\flaky-retry-${{ matrix.namespace }}.json"
-                @{ testType = "unboundedTests"; testGroup = "${{ matrix.namespace }}" } | ConvertTo-Json | Out-File -FilePath $marker -Encoding UTF8
-              }
-              break
-            }
-            if ($attempt -ge $maxAttempts) {
-              Write-Host "Unbounded tests for ${{ matrix.namespace }} failed after $attempt attempt(s) (exit code $exitCode)."
-              exit $exitCode
-            }
-            Write-Host "Unbounded tests for ${{ matrix.namespace }} failed on attempt $attempt (exit code $exitCode); retrying once to absorb a possible transient blip..."
-            $attempt++
-            Start-Sleep -Seconds 10
-          }
-
+      - name: Check event log for errors (enhanced logging)
+        run: |
           if ($Env:enhanced_logging -eq $True) {
             Write-Host "Get HostableWebCore errors (if any)"
             Get-EventLog -LogName Application -Source HostableWebCore -ErrorAction:Ignore
