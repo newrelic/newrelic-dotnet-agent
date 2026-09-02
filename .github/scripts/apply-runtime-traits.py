@@ -23,10 +23,11 @@ BOM = b'\xef\xbb\xbf'
 
 def parse_report(path):
     entries = []
-    for line in Path(path).read_text(encoding='ascii').splitlines():
+    for line in Path(path).read_text(encoding='utf-8').splitlines():
         if not line.strip():
             continue
-        full_name, lane = line.split('\t')
+        # The report's third column is the fixture type, which this script ignores.
+        full_name, lane = line.split('\t')[:2]
         if lane in ('Core', 'Framework'):
             entries.append((full_name, lane))
     return entries
