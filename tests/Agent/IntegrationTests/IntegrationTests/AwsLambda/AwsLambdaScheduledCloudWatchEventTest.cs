@@ -52,7 +52,9 @@ public abstract class AwsLambdaScheduledCloudWatchEventTest<T> : NewRelicIntegra
         var expectedAgentAttributes = new[]
         {
             "aws.lambda.arn",
-            "aws.requestId"
+            "aws.requestId",
+            // presence only: the agent renders this with the machine's culture and timezone
+            "aws.lambda.eventSource.time"
         };
 
         var expectedAgentAttributeValues = new Dictionary<string, object>
@@ -62,8 +64,7 @@ public abstract class AwsLambdaScheduledCloudWatchEventTest<T> : NewRelicIntegra
             { "aws.lambda.eventSource.account", "123456789012" },
             { "aws.lambda.eventSource.id", "cdc73f9d-aea9-11e3-9d5a-835b769c0d9c" },
             { "aws.lambda.eventSource.region", "us-east-2" },
-            { "aws.lambda.eventSource.resource", "arn:aws:events:us-east-2:123456789012:rule/my-schedule" },
-            { "aws.lambda.eventSource.time", "3/1/2019 1:23:45 AM" }
+            { "aws.lambda.eventSource.resource", "arn:aws:events:us-east-2:123456789012:rule/my-schedule" }
         };
 
         Assert.Equal(_expectedTransactionName, transactionEvent.IntrinsicAttributes["name"]);

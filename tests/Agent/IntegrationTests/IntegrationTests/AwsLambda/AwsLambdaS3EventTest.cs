@@ -54,7 +54,9 @@ public abstract class AwsLambdaS3EventTest<T> : NewRelicIntegrationTest<T> where
         var expectedAgentAttributes = new[]
         {
             "aws.lambda.arn",
-            "aws.requestId"
+            "aws.requestId",
+            // presence only: the agent renders this with the machine's culture and timezone
+            "aws.lambda.eventSource.eventTime"
         };
 
         var expectedAgentAttributeValues = new Dictionary<string, object>
@@ -64,7 +66,6 @@ public abstract class AwsLambdaS3EventTest<T> : NewRelicIntegrationTest<T> where
             { "aws.lambda.eventSource.eventName", expectPutEvent ? "ObjectCreated:Put" : "ObjectRemoved:Delete"},
             { "aws.lambda.eventSource.length", 1 },
             { "aws.lambda.eventSource.region", "{region}" },
-            { "aws.lambda.eventSource.eventTime", "1/1/1970 12:00:00 AM" },
             { "aws.lambda.eventSource.xAmzId2", "EXAMPLE123/5678abcdefghijklambdaisawesome/mnopqrstuvwxyzABCDEFGH" },
             { "aws.lambda.eventSource.bucketName", "sourcebucket" },
             { "aws.lambda.eventSource.objectKey", "HappyFace.jpg" },
