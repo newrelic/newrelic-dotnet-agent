@@ -32,7 +32,7 @@ public abstract class GuidConfigurationTest<TFixture> : NewRelicIntegrationTest<
             {
                 // Intentionally use 'incorrect' GUID
                 _fixture.RemoteApplication.ProfilerGuidOverride = IsCore ? FRAMEWORK_GUID : CORE_GUID;
-                _fixture.RemoteApplication.NewRelicConfig.SetLogLevel("trace");
+                _fixture.RemoteApplication.NewRelicConfig.SetLogLevel("finest");
             }
         );
 
