@@ -23,16 +23,34 @@ public class XUnitTestLogger : ITestLogger
 
     public void WriteLine(string message)
     {
-        _xunitOutput?.WriteLine($"[{DateTime.UtcNow:yyyy-MM-ddTHH:mm:ss.fffZ}] {message}");
+        WriteSafe(Stamp(message));
     }
 
     public void WriteLine(string format, params object[] args)
     {
-        _xunitOutput?.WriteLine($"[{DateTime.UtcNow:yyyy-MM-ddTHH:mm:ss.fffZ}] {format}", args);
+        WriteSafe(string.Format(Stamp(format), args));
     }
 
     public void WriteFormattedOutput(string formattedOutput)
     {
-        _xunitOutput?.WriteLine(formattedOutput);
+        WriteSafe(formattedOutput);
+    }
+
+    private static string Stamp(string message)
+    {
+        return $"[{DateTime.UtcNow:yyyy-MM-ddTHH:mm:ss.fffZ}] {message}";
+    }
+
+    // xunit v3 throws once the test has ended, so fixture Dispose hits it.
+    private void WriteSafe(string message)
+    {
+        try
+        {
+            _xunitOutput?.WriteLine(message);
+        }
+        catch (InvalidOperationException)
+        {
+            Console.WriteLine(message);
+        }
     }
 }
