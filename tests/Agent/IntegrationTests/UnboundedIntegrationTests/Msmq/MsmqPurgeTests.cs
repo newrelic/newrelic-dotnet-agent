@@ -78,6 +78,7 @@ public abstract class MsmqPurgeTestsBase<TFixture> : NewRelicIntegrationTest<TFi
 
 }
 
+[Trait("Runtime", "Framework")]
 public class MsmqPurgeTestsFW462 : MsmqPurgeTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public MsmqPurgeTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -86,6 +87,7 @@ public class MsmqPurgeTestsFW462 : MsmqPurgeTestsBase<ConsoleDynamicMethodFixtur
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class MsmqPurgeTestsFW471 : MsmqPurgeTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     public MsmqPurgeTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -94,6 +96,7 @@ public class MsmqPurgeTestsFW471 : MsmqPurgeTestsBase<ConsoleDynamicMethodFixtur
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class MsmqPurgeTestsFW48 : MsmqPurgeTestsBase<ConsoleDynamicMethodFixtureFW48>
 {
     public MsmqPurgeTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -102,6 +105,7 @@ public class MsmqPurgeTestsFW48 : MsmqPurgeTestsBase<ConsoleDynamicMethodFixture
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class MsmqPurgeTestsFWLatest : MsmqPurgeTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public MsmqPurgeTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)

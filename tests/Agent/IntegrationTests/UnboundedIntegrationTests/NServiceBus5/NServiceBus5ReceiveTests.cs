@@ -92,6 +92,7 @@ public abstract class NServiceBus5ReceiveTestsBase<TFixture> : NewRelicIntegrati
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class NServiceBus5ReceiveOnFW462Tests : NServiceBus5ReceiveTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public NServiceBus5ReceiveOnFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)

@@ -78,6 +78,7 @@ public abstract class MsmqPeekTestsBase<TFixture> : NewRelicIntegrationTest<TFix
 
 }
 
+[Trait("Runtime", "Framework")]
 public class MsmqPeekTestsFW462 : MsmqPeekTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public MsmqPeekTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -86,6 +87,7 @@ public class MsmqPeekTestsFW462 : MsmqPeekTestsBase<ConsoleDynamicMethodFixtureF
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class MsmqPeekTestsFW471 : MsmqPeekTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     public MsmqPeekTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -94,6 +96,7 @@ public class MsmqPeekTestsFW471 : MsmqPeekTestsBase<ConsoleDynamicMethodFixtureF
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class MsmqPeekTestsFW48 : MsmqPeekTestsBase<ConsoleDynamicMethodFixtureFW48>
 {
     public MsmqPeekTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -102,6 +105,7 @@ public class MsmqPeekTestsFW48 : MsmqPeekTestsBase<ConsoleDynamicMethodFixtureFW
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class MsmqPeekTestsFWLatest : MsmqPeekTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public MsmqPeekTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)

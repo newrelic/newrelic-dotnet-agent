@@ -135,6 +135,7 @@ public abstract class MsSqlStoredProcedureUsingOdbcDriverTestsBase<TFixture> : N
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class MsSqlStoredProcedureUsingOdbcDriverTests_FWLatest : MsSqlStoredProcedureUsingOdbcDriverTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public MsSqlStoredProcedureUsingOdbcDriverTests_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -146,6 +147,7 @@ public class MsSqlStoredProcedureUsingOdbcDriverTests_FWLatest : MsSqlStoredProc
     }
 }
 
+[Trait("Runtime", "Core")]
 public class MsSqlStoredProcedureUsingOdbcDriverTests_CoreLatest : MsSqlStoredProcedureUsingOdbcDriverTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public MsSqlStoredProcedureUsingOdbcDriverTests_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)

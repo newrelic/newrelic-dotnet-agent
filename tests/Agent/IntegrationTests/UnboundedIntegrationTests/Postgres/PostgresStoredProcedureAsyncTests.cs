@@ -107,6 +107,7 @@ public abstract class PostgresSqlStoredProcedureAsyncTestsBase<TFixture> : NewRe
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class PostgresSqlStoredProcedureAsyncTestsFW462 : PostgresSqlStoredProcedureAsyncTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public PostgresSqlStoredProcedureAsyncTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -115,6 +116,7 @@ public class PostgresSqlStoredProcedureAsyncTestsFW462 : PostgresSqlStoredProced
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class PostgresSqlStoredProcedureAsyncTestsFWLatest : PostgresSqlStoredProcedureAsyncTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public PostgresSqlStoredProcedureAsyncTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
@@ -123,6 +125,7 @@ public class PostgresSqlStoredProcedureAsyncTestsFWLatest : PostgresSqlStoredPro
     }
 }
 
+[Trait("Runtime", "Core")]
 public class PostgresSqlStoredProcedureAsyncTestsCoreOldest : PostgresSqlStoredProcedureAsyncTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public PostgresSqlStoredProcedureAsyncTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output) : base(fixture, output)
@@ -131,6 +134,7 @@ public class PostgresSqlStoredProcedureAsyncTestsCoreOldest : PostgresSqlStoredP
     }
 }
 
+[Trait("Runtime", "Core")]
 public class PostgresSqlStoredProcedureAsyncTestsCoreLatest : PostgresSqlStoredProcedureAsyncTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public PostgresSqlStoredProcedureAsyncTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)

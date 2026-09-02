@@ -170,6 +170,7 @@ public abstract class OracleAsyncTestsBase<TFixture> : NewRelicIntegrationTest<T
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class OracleAsyncTestsFramework462 : OracleAsyncTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public OracleAsyncTestsFramework462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -177,6 +178,7 @@ public class OracleAsyncTestsFramework462 : OracleAsyncTestsBase<ConsoleDynamicM
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class OracleAsyncTestsFramework471 : OracleAsyncTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     public OracleAsyncTestsFramework471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -184,6 +186,7 @@ public class OracleAsyncTestsFramework471 : OracleAsyncTestsBase<ConsoleDynamicM
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class OracleAsyncTestsFrameworkLatest : OracleAsyncTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public OracleAsyncTestsFrameworkLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
@@ -191,6 +194,7 @@ public class OracleAsyncTestsFrameworkLatest : OracleAsyncTestsBase<ConsoleDynam
     }
 }
 
+[Trait("Runtime", "Core")]
 public class OracleAsyncTestsCoreLatest : OracleAsyncTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public OracleAsyncTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)

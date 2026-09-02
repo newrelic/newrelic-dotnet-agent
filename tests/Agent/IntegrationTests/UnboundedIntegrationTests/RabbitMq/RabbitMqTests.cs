@@ -199,6 +199,7 @@ public abstract class RabbitMqTestsBase<TFixture> : NewRelicIntegrationTest<TFix
     }
 }
 
+[Trait("Runtime", "Core")]
 public class RabbitMqTestsCoreLatest : RabbitMqTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public RabbitMqTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)

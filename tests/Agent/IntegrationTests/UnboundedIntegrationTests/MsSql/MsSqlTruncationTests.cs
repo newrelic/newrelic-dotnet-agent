@@ -70,6 +70,7 @@ public abstract class MsSqlTruncationTestsBase<TFixture> : NewRelicIntegrationTe
 
 #region System.Data.SqlClient
 
+[Trait("Runtime", "Core")]
 public class MsSqlTruncationTests_MicrosoftDataSqlClient_CoreLatest : MsSqlTruncationTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public MsSqlTruncationTests_MicrosoftDataSqlClient_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)

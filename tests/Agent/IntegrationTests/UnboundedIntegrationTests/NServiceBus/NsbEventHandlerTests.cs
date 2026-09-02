@@ -85,6 +85,7 @@ public abstract class NsbEventHandlerTestsBase<TFixture> : NewRelicIntegrationTe
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class NsbEventHandlerTestsFW471 : NsbEventHandlerTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     public NsbEventHandlerTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -93,6 +94,7 @@ public class NsbEventHandlerTestsFW471 : NsbEventHandlerTestsBase<ConsoleDynamic
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class NsbEventHandlerTestsFW48 : NsbEventHandlerTestsBase<ConsoleDynamicMethodFixtureFW48>
 {
     public NsbEventHandlerTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
@@ -101,6 +103,7 @@ public class NsbEventHandlerTestsFW48 : NsbEventHandlerTestsBase<ConsoleDynamicM
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class NsbEventHandlerTestsFWLatest : NsbEventHandlerTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public NsbEventHandlerTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -109,6 +112,7 @@ public class NsbEventHandlerTestsFWLatest : NsbEventHandlerTestsBase<ConsoleDyna
     }
 }
 
+[Trait("Runtime", "Core")]
 public class NsbEventHandlerTestsCoreOldest : NsbEventHandlerTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public NsbEventHandlerTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -117,6 +121,7 @@ public class NsbEventHandlerTestsCoreOldest : NsbEventHandlerTestsBase<ConsoleDy
     }
 }
 
+[Trait("Runtime", "Core")]
 public class NsbEventHandlerTestsCoreLatest : NsbEventHandlerTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public NsbEventHandlerTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)

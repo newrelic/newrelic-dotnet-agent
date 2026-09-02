@@ -35,6 +35,7 @@ public abstract class RabbitMqLegacyW3cTracingTests : NewRelicIntegrationTest<Co
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class RabbitMqLegacyW3cTracingBasicTest : RabbitMqLegacyW3cTracingTests
 {
     private ConsoleDynamicMethodFixtureFW471 _fixture;
@@ -91,6 +92,7 @@ public class RabbitMqLegacyW3cTracingBasicTest : RabbitMqLegacyW3cTracingTests
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class RabbitMqLegacyW3cTracingEventingConsumerTest : RabbitMqLegacyW3cTracingTests
 {
     private ConsoleDynamicMethodFixtureFW471 _fixture;

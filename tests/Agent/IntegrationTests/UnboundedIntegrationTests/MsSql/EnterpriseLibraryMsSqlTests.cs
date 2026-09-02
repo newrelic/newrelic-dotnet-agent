@@ -15,6 +15,7 @@ using Xunit;
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql;
 
+[Trait("Runtime", "Framework")]
 public class EnterpriseLibraryMsSqlTests : NewRelicIntegrationTest<ConsoleDynamicMethodFixtureFW462>
 {
     private readonly ConsoleDynamicMethodFixture _fixture;

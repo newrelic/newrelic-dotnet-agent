@@ -122,6 +122,7 @@ public abstract class PostgresSqlSimpleQueryAsyncTestsBase<TFixture> : NewRelicI
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class PostgresSqlSimpleQueryAsyncTestsFW462 : PostgresSqlSimpleQueryAsyncTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public PostgresSqlSimpleQueryAsyncTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -130,6 +131,7 @@ public class PostgresSqlSimpleQueryAsyncTestsFW462 : PostgresSqlSimpleQueryAsync
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class PostgresSqlSimpleQueryAsyncTestsFWLatest : PostgresSqlSimpleQueryAsyncTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public PostgresSqlSimpleQueryAsyncTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
@@ -138,6 +140,7 @@ public class PostgresSqlSimpleQueryAsyncTestsFWLatest : PostgresSqlSimpleQueryAs
     }
 }
 
+[Trait("Runtime", "Core")]
 public class PostgresSqlSimpleQueryAsyncTestsCoreOldest : PostgresSqlSimpleQueryAsyncTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public PostgresSqlSimpleQueryAsyncTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output) : base(fixture, output)
@@ -146,6 +149,7 @@ public class PostgresSqlSimpleQueryAsyncTestsCoreOldest : PostgresSqlSimpleQuery
     }
 }
 
+[Trait("Runtime", "Core")]
 public class PostgresSqlSimpleQueryAsyncTestsCoreLatest : PostgresSqlSimpleQueryAsyncTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public PostgresSqlSimpleQueryAsyncTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)

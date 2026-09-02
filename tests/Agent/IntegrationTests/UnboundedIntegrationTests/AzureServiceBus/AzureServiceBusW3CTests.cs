@@ -149,6 +149,7 @@ public abstract class AzureServiceBusW3CTestsBase<TFixture> : NewRelicIntegratio
 
 #region Queue Tests
 
+[Trait("Runtime", "Framework")]
 public class AzureServiceBusW3CQueueTestsFWLatest : AzureServiceBusW3CTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public AzureServiceBusW3CQueueTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture,
@@ -157,6 +158,7 @@ public class AzureServiceBusW3CQueueTestsFWLatest : AzureServiceBusW3CTestsBase<
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class AzureServiceBusW3CQueueTestsFW462 : AzureServiceBusW3CTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public AzureServiceBusW3CQueueTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) :
@@ -165,6 +167,7 @@ public class AzureServiceBusW3CQueueTestsFW462 : AzureServiceBusW3CTestsBase<Con
     }
 }
 
+[Trait("Runtime", "Core")]
 public class
     AzureServiceBusW3CQueueTestsCoreOldest : AzureServiceBusW3CTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
@@ -174,6 +177,7 @@ public class
     }
 }
 
+[Trait("Runtime", "Core")]
 public class
     AzureServiceBusW3CQueueTestsCoreLatest : AzureServiceBusW3CTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
@@ -187,6 +191,7 @@ public class
 
 #region Topic Tests
 
+[Trait("Runtime", "Framework")]
 public class AzureServiceBusW3CTopicTestsFWLatest : AzureServiceBusW3CTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public AzureServiceBusW3CTopicTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture,
@@ -195,6 +200,7 @@ public class AzureServiceBusW3CTopicTestsFWLatest : AzureServiceBusW3CTestsBase<
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class AzureServiceBusW3CTopicTestsFW462 : AzureServiceBusW3CTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public AzureServiceBusW3CTopicTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) :
@@ -203,6 +209,7 @@ public class AzureServiceBusW3CTopicTestsFW462 : AzureServiceBusW3CTestsBase<Con
     }
 }
 
+[Trait("Runtime", "Core")]
 public class
     AzureServiceBusW3CTopicTestsCoreOldest : AzureServiceBusW3CTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
@@ -212,6 +219,7 @@ public class
     }
 }
 
+[Trait("Runtime", "Core")]
 public class
     AzureServiceBusW3CTopicTestsCoreLatest : AzureServiceBusW3CTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
@@ -302,6 +310,7 @@ public abstract class AzureServiceBusW3CDTHeaderReplacementTestsBase<TFixture> :
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AzureServiceBusW3CDTHeaderReplacementTestsCoreLatest : AzureServiceBusW3CDTHeaderReplacementTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public AzureServiceBusW3CDTHeaderReplacementTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture,

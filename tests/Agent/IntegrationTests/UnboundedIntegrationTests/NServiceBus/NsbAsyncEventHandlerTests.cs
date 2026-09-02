@@ -85,6 +85,7 @@ public abstract class NsbAsyncEventHandlerTestsBase<TFixture> : NewRelicIntegrat
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class NsbAsyncEventHandlerTestsFW471 : NsbAsyncEventHandlerTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     public NsbAsyncEventHandlerTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -93,6 +94,7 @@ public class NsbAsyncEventHandlerTestsFW471 : NsbAsyncEventHandlerTestsBase<Cons
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class NsbAsyncEventHandlerTestsFW48 : NsbAsyncEventHandlerTestsBase<ConsoleDynamicMethodFixtureFW48>
 {
     public NsbAsyncEventHandlerTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
@@ -101,6 +103,7 @@ public class NsbAsyncEventHandlerTestsFW48 : NsbAsyncEventHandlerTestsBase<Conso
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class NsbAsyncEventHandlerTestsFWLatest : NsbAsyncEventHandlerTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public NsbAsyncEventHandlerTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -109,6 +112,7 @@ public class NsbAsyncEventHandlerTestsFWLatest : NsbAsyncEventHandlerTestsBase<C
     }
 }
 
+[Trait("Runtime", "Core")]
 public class NsbAsyncEventHandlerTestsCoreOldest : NsbAsyncEventHandlerTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public NsbAsyncEventHandlerTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -117,6 +121,7 @@ public class NsbAsyncEventHandlerTestsCoreOldest : NsbAsyncEventHandlerTestsBase
     }
 }
 
+[Trait("Runtime", "Core")]
 public class NsbAsyncEventHandlerTestsCoreLatest : NsbAsyncEventHandlerTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public NsbAsyncEventHandlerTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)

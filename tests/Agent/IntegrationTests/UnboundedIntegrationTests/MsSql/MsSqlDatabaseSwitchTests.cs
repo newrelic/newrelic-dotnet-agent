@@ -30,6 +30,7 @@ public abstract class MsSqlDatabaseSwitchTestsBase<TFixture> : DatabaseSwitchTes
 
 #region ChangeDatabase
 
+[Trait("Runtime", "Framework")]
 public class MsSqlDatabaseSwitchTests_FWLatest : MsSqlDatabaseSwitchTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public MsSqlDatabaseSwitchTests_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -38,6 +39,7 @@ public class MsSqlDatabaseSwitchTests_FWLatest : MsSqlDatabaseSwitchTestsBase<Co
     }
 }
 
+[Trait("Runtime", "Core")]
 public class MsSqlDatabaseSwitchTests_CoreLatest : MsSqlDatabaseSwitchTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public MsSqlDatabaseSwitchTests_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -50,6 +52,7 @@ public class MsSqlDatabaseSwitchTests_CoreLatest : MsSqlDatabaseSwitchTestsBase<
 
 #region USE statement
 
+[Trait("Runtime", "Framework")]
 public class MsSqlDatabaseSwitchViaUseStatementTests_FWLatest : MsSqlDatabaseSwitchTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public MsSqlDatabaseSwitchViaUseStatementTests_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -58,6 +61,7 @@ public class MsSqlDatabaseSwitchViaUseStatementTests_FWLatest : MsSqlDatabaseSwi
     }
 }
 
+[Trait("Runtime", "Core")]
 public class MsSqlDatabaseSwitchViaUseStatementTests_CoreLatest : MsSqlDatabaseSwitchTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public MsSqlDatabaseSwitchViaUseStatementTests_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -70,6 +74,7 @@ public class MsSqlDatabaseSwitchViaUseStatementTests_CoreLatest : MsSqlDatabaseS
 
 #region ChangeDatabaseAsync (Core only - the API does not exist on .NET Framework)
 
+[Trait("Runtime", "Core")]
 public class MsSqlDatabaseSwitchAsyncTests_CoreLatest : MsSqlDatabaseSwitchTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public MsSqlDatabaseSwitchAsyncTests_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)

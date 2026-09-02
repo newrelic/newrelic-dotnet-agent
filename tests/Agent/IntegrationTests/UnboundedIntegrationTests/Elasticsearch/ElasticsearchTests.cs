@@ -266,6 +266,7 @@ public abstract class ElasticsearchTestsBase<TFixture> : NewRelicIntegrationTest
 }
 
 #region NEST
+[Trait("Runtime", "Framework")]
 public class ElasticsearchNestTestsFWLatest : ElasticsearchTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public ElasticsearchNestTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -274,6 +275,7 @@ public class ElasticsearchNestTestsFWLatest : ElasticsearchTestsBase<ConsoleDyna
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class ElasticsearchNestTestsFW462 : ElasticsearchTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public ElasticsearchNestTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -282,6 +284,7 @@ public class ElasticsearchNestTestsFW462 : ElasticsearchTestsBase<ConsoleDynamic
     }
 }
 
+[Trait("Runtime", "Core")]
 public class ElasticsearchNestTestsCoreLatest : ElasticsearchTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public ElasticsearchNestTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -290,6 +293,7 @@ public class ElasticsearchNestTestsCoreLatest : ElasticsearchTestsBase<ConsoleDy
     }
 }
 
+[Trait("Runtime", "Core")]
 public class ElasticsearchNestTestsCoreOldest : ElasticsearchTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public ElasticsearchNestTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -301,6 +305,7 @@ public class ElasticsearchNestTestsCoreOldest : ElasticsearchTestsBase<ConsoleDy
 #endregion NEST
 
 #region ElasticsearchNet
+[Trait("Runtime", "Framework")]
 public class ElasticsearchNetTestsFWLatest : ElasticsearchTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public ElasticsearchNetTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -309,6 +314,7 @@ public class ElasticsearchNetTestsFWLatest : ElasticsearchTestsBase<ConsoleDynam
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class ElasticsearchNetTestsFW462 : ElasticsearchTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public ElasticsearchNetTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -318,6 +324,7 @@ public class ElasticsearchNetTestsFW462 : ElasticsearchTestsBase<ConsoleDynamicM
     }
 }
 
+[Trait("Runtime", "Core")]
 public class ElasticsearchNetTestsCoreLatest : ElasticsearchTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public ElasticsearchNetTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -326,6 +333,7 @@ public class ElasticsearchNetTestsCoreLatest : ElasticsearchTestsBase<ConsoleDyn
     }
 }
 
+[Trait("Runtime", "Core")]
 public class ElasticsearchNetTestsCoreOldest : ElasticsearchTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public ElasticsearchNetTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -336,6 +344,7 @@ public class ElasticsearchNetTestsCoreOldest : ElasticsearchTestsBase<ConsoleDyn
 #endregion ElasticsearchNet
 
 #region ElasticClients
+[Trait("Runtime", "Framework")]
 public class ElasticsearchElasticClientTestsFWLatest : ElasticsearchTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public ElasticsearchElasticClientTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -344,6 +353,7 @@ public class ElasticsearchElasticClientTestsFWLatest : ElasticsearchTestsBase<Co
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class ElasticsearchElasticClientTestsFW462 : ElasticsearchTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public ElasticsearchElasticClientTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -352,6 +362,7 @@ public class ElasticsearchElasticClientTestsFW462 : ElasticsearchTestsBase<Conso
     }
 }
 
+[Trait("Runtime", "Core")]
 public class ElasticsearchElasticClientTestsCoreLatest : ElasticsearchTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public ElasticsearchElasticClientTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -360,6 +371,7 @@ public class ElasticsearchElasticClientTestsCoreLatest : ElasticsearchTestsBase<
     }
 }
 
+[Trait("Runtime", "Core")]
 public class ElasticsearchElasticClientTestsCoreOldest : ElasticsearchTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public ElasticsearchElasticClientTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)

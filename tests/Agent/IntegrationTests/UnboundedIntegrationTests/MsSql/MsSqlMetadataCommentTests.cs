@@ -250,6 +250,7 @@ public abstract class MsSqlMetadataCommentTestsStoredProcBase<TFixture> : NewRel
 
 #region System.Data.SqlClient
 
+[Trait("Runtime", "Framework")]
 public class MsSqlMetadataCommentTests_SystemData_FWLatest : MsSqlMetadataCommentTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public MsSqlMetadataCommentTests_SystemData_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -258,6 +259,7 @@ public class MsSqlMetadataCommentTests_SystemData_FWLatest : MsSqlMetadataCommen
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class MsSqlMetadataCommentTestsStoredProc_SystemData_FWLatest : MsSqlMetadataCommentTestsStoredProcBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public MsSqlMetadataCommentTestsStoredProc_SystemData_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -270,6 +272,7 @@ public class MsSqlMetadataCommentTestsStoredProc_SystemData_FWLatest : MsSqlMeta
 
 #region Microsoft.Data.SqlClient
 
+[Trait("Runtime", "Framework")]
 public class MsSqlMetadataCommentTests_MicrosoftDataSqlClient_FWLatest : MsSqlMetadataCommentTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public MsSqlMetadataCommentTests_MicrosoftDataSqlClient_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -278,6 +281,7 @@ public class MsSqlMetadataCommentTests_MicrosoftDataSqlClient_FWLatest : MsSqlMe
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class MsSqlMetadataCommentTests_MicrosoftDataSqlClient_FW462 : MsSqlMetadataCommentTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public MsSqlMetadataCommentTests_MicrosoftDataSqlClient_FW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -286,6 +290,7 @@ public class MsSqlMetadataCommentTests_MicrosoftDataSqlClient_FW462 : MsSqlMetad
     }
 }
 
+[Trait("Runtime", "Core")]
 public class MsSqlMetadataCommentTests_MicrosoftDataSqlClient_CoreOldest : MsSqlMetadataCommentTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public MsSqlMetadataCommentTests_MicrosoftDataSqlClient_CoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -294,6 +299,7 @@ public class MsSqlMetadataCommentTests_MicrosoftDataSqlClient_CoreOldest : MsSql
     }
 }
 
+[Trait("Runtime", "Core")]
 public class MsSqlMetadataCommentTests_MicrosoftDataSqlClient_CoreLatest : MsSqlMetadataCommentTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public MsSqlMetadataCommentTests_MicrosoftDataSqlClient_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -302,6 +308,7 @@ public class MsSqlMetadataCommentTests_MicrosoftDataSqlClient_CoreLatest : MsSql
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class MsSqlMetadataCommentTestsStoredProc_MicrosoftDataSqlClient_FWLatest : MsSqlMetadataCommentTestsStoredProcBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public MsSqlMetadataCommentTestsStoredProc_MicrosoftDataSqlClient_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -310,6 +317,7 @@ public class MsSqlMetadataCommentTestsStoredProc_MicrosoftDataSqlClient_FWLatest
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class MsSqlMetadataCommentTestsStoredProc_MicrosoftDataSqlClient_FW462 : MsSqlMetadataCommentTestsStoredProcBase<ConsoleDynamicMethodFixtureFW462>
 {
     public MsSqlMetadataCommentTestsStoredProc_MicrosoftDataSqlClient_FW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -318,6 +326,7 @@ public class MsSqlMetadataCommentTestsStoredProc_MicrosoftDataSqlClient_FW462 : 
     }
 }
 
+[Trait("Runtime", "Core")]
 public class MsSqlMetadataCommentTestsStoredProc_MicrosoftDataSqlClient_CoreOldest : MsSqlMetadataCommentTestsStoredProcBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public MsSqlMetadataCommentTestsStoredProc_MicrosoftDataSqlClient_CoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -326,6 +335,7 @@ public class MsSqlMetadataCommentTestsStoredProc_MicrosoftDataSqlClient_CoreOlde
     }
 }
 
+[Trait("Runtime", "Core")]
 public class MsSqlMetadataCommentTestsStoredProc_MicrosoftDataSqlClient_CoreLatest : MsSqlMetadataCommentTestsStoredProcBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public MsSqlMetadataCommentTestsStoredProc_MicrosoftDataSqlClient_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)

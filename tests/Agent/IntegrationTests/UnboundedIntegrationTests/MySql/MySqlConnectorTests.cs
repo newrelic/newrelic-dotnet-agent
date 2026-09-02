@@ -220,6 +220,7 @@ public abstract class MySqlConnectorTestBase<TFixture> : NewRelicIntegrationTest
     private static string GetTransactionName(string command) => $"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.MySql.MySqlConnectorExerciser/{command}";
 }
 
+[Trait("Runtime", "Framework")]
 public class MySqlConnectorTestFW462 : MySqlConnectorTestBase<ConsoleDynamicMethodFixtureFW462>
 {
     public MySqlConnectorTestFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -228,6 +229,7 @@ public class MySqlConnectorTestFW462 : MySqlConnectorTestBase<ConsoleDynamicMeth
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class MySqlConnectorTestFW471 : MySqlConnectorTestBase<ConsoleDynamicMethodFixtureFW471>
 {
     public MySqlConnectorTestFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -236,6 +238,7 @@ public class MySqlConnectorTestFW471 : MySqlConnectorTestBase<ConsoleDynamicMeth
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class MySqlConnectorTestFW48 : MySqlConnectorTestBase<ConsoleDynamicMethodFixtureFW48>
 {
     public MySqlConnectorTestFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
@@ -244,6 +247,7 @@ public class MySqlConnectorTestFW48 : MySqlConnectorTestBase<ConsoleDynamicMetho
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class MySqlConnectorTestFWLatest : MySqlConnectorTestBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public MySqlConnectorTestFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -252,6 +256,7 @@ public class MySqlConnectorTestFWLatest : MySqlConnectorTestBase<ConsoleDynamicM
     }
 }
 
+[Trait("Runtime", "Core")]
 public class MySqlConnectorTestCoreOldest : MySqlConnectorTestBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public MySqlConnectorTestCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -260,6 +265,7 @@ public class MySqlConnectorTestCoreOldest : MySqlConnectorTestBase<ConsoleDynami
     }
 }
 
+[Trait("Runtime", "Core")]
 public class MySqlConnectorTestCoreLatest : MySqlConnectorTestBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public MySqlConnectorTestCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)

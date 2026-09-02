@@ -81,6 +81,7 @@ public abstract class MongoDBDriverQueryProviderTestsBase<TFixture> : NewRelicIn
 
 }
 
+[Trait("Runtime", "Framework")]
 public class MongoDBDriverQueryProviderTestsFWLatest : MongoDBDriverQueryProviderTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public MongoDBDriverQueryProviderTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -89,6 +90,7 @@ public class MongoDBDriverQueryProviderTestsFWLatest : MongoDBDriverQueryProvide
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class MongoDBDriverQueryProviderTestsFW48 : MongoDBDriverQueryProviderTestsBase<ConsoleDynamicMethodFixtureFW48>
 {
     public MongoDBDriverQueryProviderTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
@@ -97,6 +99,7 @@ public class MongoDBDriverQueryProviderTestsFW48 : MongoDBDriverQueryProviderTes
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class MongoDBDriverQueryProviderTestsFW471 : MongoDBDriverQueryProviderTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     public MongoDBDriverQueryProviderTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -105,6 +108,7 @@ public class MongoDBDriverQueryProviderTestsFW471 : MongoDBDriverQueryProviderTe
     }
 }
 
+[Trait("Runtime", "Core")]
 public class MongoDBDriverQueryProviderTestsCoreLatest : MongoDBDriverQueryProviderTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public MongoDBDriverQueryProviderTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -113,6 +117,7 @@ public class MongoDBDriverQueryProviderTestsCoreLatest : MongoDBDriverQueryProvi
     }
 }
 
+[Trait("Runtime", "Core")]
 public class MongoDBDriverQueryProviderTestsCoreOldest : MongoDBDriverQueryProviderTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public MongoDBDriverQueryProviderTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)

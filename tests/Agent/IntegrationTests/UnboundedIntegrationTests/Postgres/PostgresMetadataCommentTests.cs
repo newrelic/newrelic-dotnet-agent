@@ -114,6 +114,7 @@ public abstract class PostgresMetadataCommentTestsBase<TFixture> : NewRelicInteg
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class PostgresMetadataCommentTestsFW462 : PostgresMetadataCommentTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public PostgresMetadataCommentTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -121,6 +122,7 @@ public class PostgresMetadataCommentTestsFW462 : PostgresMetadataCommentTestsBas
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class PostgresMetadataCommentTestsFWLatest : PostgresMetadataCommentTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public PostgresMetadataCommentTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
@@ -128,6 +130,7 @@ public class PostgresMetadataCommentTestsFWLatest : PostgresMetadataCommentTests
     }
 }
 
+[Trait("Runtime", "Core")]
 public class PostgresMetadataCommentTestsCoreOldest : PostgresMetadataCommentTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public PostgresMetadataCommentTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output) : base(fixture, output)
@@ -135,6 +138,7 @@ public class PostgresMetadataCommentTestsCoreOldest : PostgresMetadataCommentTes
     }
 }
 
+[Trait("Runtime", "Core")]
 public class PostgresMetadataCommentTestsCoreLatest : PostgresMetadataCommentTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public PostgresMetadataCommentTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)

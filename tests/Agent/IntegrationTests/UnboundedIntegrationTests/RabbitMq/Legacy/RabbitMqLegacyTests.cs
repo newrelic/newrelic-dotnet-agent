@@ -183,6 +183,7 @@ public abstract class RabbitMqLegacyTestsBase<TFixture> : NewRelicIntegrationTes
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class RabbitMqLegacyTestsFWLatest : RabbitMqLegacyTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public RabbitMqLegacyTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -191,6 +192,7 @@ public class RabbitMqLegacyTestsFWLatest : RabbitMqLegacyTestsBase<ConsoleDynami
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class RabbitMqLegacyTestsFW48 : RabbitMqLegacyTestsBase<ConsoleDynamicMethodFixtureFW48>
 {
     public RabbitMqLegacyTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
@@ -199,6 +201,7 @@ public class RabbitMqLegacyTestsFW48 : RabbitMqLegacyTestsBase<ConsoleDynamicMet
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class RabbitMqLegacyTestsFW471 : RabbitMqLegacyTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     public RabbitMqLegacyTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -207,6 +210,7 @@ public class RabbitMqLegacyTestsFW471 : RabbitMqLegacyTestsBase<ConsoleDynamicMe
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class RabbitMqLegacyTestsFW462 : RabbitMqLegacyTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public RabbitMqLegacyTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -215,6 +219,7 @@ public class RabbitMqLegacyTestsFW462 : RabbitMqLegacyTestsBase<ConsoleDynamicMe
     }
 }
 
+[Trait("Runtime", "Core")]
 public class RabbitMqLegacyTestsCoreOldest : RabbitMqLegacyTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public RabbitMqLegacyTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)

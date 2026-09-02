@@ -11,6 +11,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql;
 
 #region ChangeDatabase
 
+[Trait("Runtime", "Framework")]
 public class MsSqlOdbcDatabaseSwitchTests_FWLatest : MsSqlDatabaseSwitchTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public MsSqlOdbcDatabaseSwitchTests_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -19,6 +20,7 @@ public class MsSqlOdbcDatabaseSwitchTests_FWLatest : MsSqlDatabaseSwitchTestsBas
     }
 }
 
+[Trait("Runtime", "Core")]
 public class MsSqlOdbcDatabaseSwitchTests_CoreLatest : MsSqlDatabaseSwitchTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public MsSqlOdbcDatabaseSwitchTests_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -31,6 +33,7 @@ public class MsSqlOdbcDatabaseSwitchTests_CoreLatest : MsSqlDatabaseSwitchTestsB
 
 #region USE statement
 
+[Trait("Runtime", "Framework")]
 public class MsSqlOdbcDatabaseSwitchViaUseStatementTests_FWLatest : MsSqlDatabaseSwitchTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public MsSqlOdbcDatabaseSwitchViaUseStatementTests_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -39,6 +42,7 @@ public class MsSqlOdbcDatabaseSwitchViaUseStatementTests_FWLatest : MsSqlDatabas
     }
 }
 
+[Trait("Runtime", "Core")]
 public class MsSqlOdbcDatabaseSwitchViaUseStatementTests_CoreLatest : MsSqlDatabaseSwitchTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public MsSqlOdbcDatabaseSwitchViaUseStatementTests_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
