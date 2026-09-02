@@ -149,6 +149,7 @@ jobs:
             "RequestHeadersCapture.Owin",
             "RequestHeadersCapture.WCF",
             "RestSharp",
+            "TestInfrastructure",
             "WCF.Client.IIS.ASPDisabled",
             "WCF.Client.IIS.ASPEnabled",
             "WCF.Client.Self",
@@ -172,7 +173,8 @@ jobs:
             "Oracle",
             "Postgres",
             "RabbitMq",
-            "Redis"
+            "Redis",
+            "TestInfrastructure"
           ]'
 
           # Container groups, as name/arch. This list is validated against the
