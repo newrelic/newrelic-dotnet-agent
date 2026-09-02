@@ -340,16 +340,12 @@ public class DefaultConfiguration : IConfiguration
             return true;
         }
 
-        // Resolved before step 8 so that step 8 can report when it shadows a mapping.
-        var appPoolId = GetAppPoolId();
-        var pooledAppName = TryGetApplicationNameForApplicationPool(appPoolId);
-
         // 8. newrelic.config
         if (_localConfiguration.application.name.Count > 0)
         {
-            if (pooledAppName != null)
+            if (HasApplicationPoolMapping())
             {
-                Log.Warn("Application pool '{0}' is mapped to application name '{1}' in newrelic.config, but the application/name element takes precedence. Remove that element to use the application pool mapping.", appPoolId, pooledAppName);
+                Log.Warn("An applicationPool appName mapping is configured in newrelic.config, but the application/name element takes precedence. Remove that element to use the application pool mapping.");
             }
 
             Log.Info("Application name from newrelic.config.");
@@ -358,7 +354,10 @@ public class DefaultConfiguration : IConfiguration
             return true;
         }
 
+        var appPoolId = GetAppPoolId();
+
         // 9. newrelic.config application pool mapping
+        var pooledAppName = TryGetApplicationNameForApplicationPool(appPoolId);
         if (pooledAppName != null)
         {
             Log.Info("Application name from application pool mapping in newrelic.config.");
@@ -388,6 +387,12 @@ public class DefaultConfiguration : IConfiguration
         // Failure path
         names = null;
         return false;
+    }
+
+    private bool HasApplicationPoolMapping()
+    {
+        var pools = _localConfiguration.applicationPools?.applicationPool;
+        return pools != null && pools.Any(pool => !string.IsNullOrWhiteSpace(pool.appName));
     }
 
     private string TryGetApplicationNameForApplicationPool(string appPoolId)

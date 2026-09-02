@@ -2057,6 +2057,19 @@ public class DefaultConfigurationTests
     }
 
     [Test]
+    public void NewRelicConfigApplicationNameWinsWhenNoPoolCarriesAnAppName()
+    {
+        ArrangeApplicationNameFallthrough("MyPool");
+        AddApplicationPoolMapping("MyPool", null);
+        _localConfig.application.name = new List<string> { "FromApplicationElement" };
+
+        NrAssert.Multiple(
+            () => Assert.That(_defaultConfig.ApplicationNames.FirstOrDefault(), Is.EqualTo("FromApplicationElement")),
+            () => Assert.That(_defaultConfig.ApplicationNamesSource, Is.EqualTo("NewRelic Config"))
+        );
+    }
+
+    [Test]
     public void ApplicationPoolMappingIsOutrankedByAppNameEnvironmentVariable()
     {
         ArrangeApplicationNameFallthrough("MyPool");
