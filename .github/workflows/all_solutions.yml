@@ -203,7 +203,9 @@ jobs:
       contents: read
     secrets: inherit
     with:
-      namespaces: ${{ needs.get-test-namespaces.outputs.unbounded-namespaces }}
+      namespaces: ${{ needs.get-test-namespaces.outputs.unbounded-windows-namespaces }}
+      linux_namespaces: ${{ needs.get-test-namespaces.outputs.unbounded-linux-namespaces }}
+      smoke_namespaces: ${{ needs.get-test-namespaces.outputs.unbounded-smoke-namespaces }}
       aggregate_payload_data: ${{ inputs.aggregate_payload_data == true || github.event_name == 'schedule' }}
 
   create-package-rpm:

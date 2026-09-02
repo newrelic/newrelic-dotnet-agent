@@ -83,7 +83,10 @@ jobs:
       contents: read
     secrets: inherit
     with:
-      namespaces: ${{ needs.resolve.outputs.unbounded-namespaces }}
+      namespaces: ${{ needs.resolve.outputs.unbounded-windows-namespaces }}
+      linux_namespaces: ${{ needs.resolve.outputs.unbounded-linux-namespaces }}
+      smoke_namespaces: ${{ needs.resolve.outputs.unbounded-smoke-namespaces }}
+      aggregate_payload_data: ${{ inputs.aggregate_payload_data }}
 
   container:
     name: Run Linux Container Tests

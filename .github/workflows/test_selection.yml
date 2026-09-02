@@ -255,8 +255,8 @@ jobs:
             "MsSql"
           ]'
 
-          # Empty until Task 15 measures the unbounded suite's lanes. Empty
-          # means the Windows lane keeps every unbounded shard, as it does today.
+          # The unbounded census found no Core-only shard, so every shard keeps a
+          # Windows-Framework leg. The Linux lane is selected by trait, not by shard.
           unbounded_linux_only='[]'
 
           if [ "$MODE" = "all" ]; then
