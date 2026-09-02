@@ -61,6 +61,15 @@ public class Class_WrapperService
         _wrapperService = new WrapperService(_configurationService, _wrapperMap, _agent, _agentHealthReporter, _agentTimerService);
     }
 
+    [TearDown]
+    public void TearDown()
+    {
+        // Reset the process-wide seam and the hot-path pre-filter so one test's enabled context can't leak
+        // into another (or into the CP service fixtures, which share these statics).
+        ContinuousProfilingContext.Instance = new ContinuousProfilingContext();
+        ContinuousProfilingContext.AnyEnabled = false;
+    }
+
     [Test]
     public void BeforeWrappedMethod_PassesCorrectParametersToWrapperLoader()
     {
@@ -289,13 +298,6 @@ public class Class_WrapperService
 
     #region Continuous profiling trace-context push
 
-    [TearDown]
-    public void TearDown()
-    {
-        // Reset the process-wide seam so one test's enabled context can't leak into another.
-        ContinuousProfilingContext.Instance = new ContinuousProfilingContext();
-    }
-
     [Test]
     public void BeforeWrappedMethod_pushes_trace_context_to_continuous_profiler_when_enabled()
     {
@@ -317,6 +319,7 @@ public class Class_WrapperService
         var context = Mock.Create<IContinuousProfilingContext>();
         Mock.Arrange(() => context.IsEnabled).Returns(true);
         ContinuousProfilingContext.Instance = context;
+        ContinuousProfilingContext.AnyEnabled = true; // arm the hot-path pre-filter the call sites gate on
 
         var afterWrappedMethod = _wrapperService.BeforeWrappedMethod(typeof(Class_WrapperService), "MyMethod", string.Empty, new object(), new object[0], "MyTracer", null, EmptyTracerArgs, 0);
 
@@ -346,6 +349,7 @@ public class Class_WrapperService
         var context = Mock.Create<IContinuousProfilingContext>();
         Mock.Arrange(() => context.IsEnabled).Returns(true);
         ContinuousProfilingContext.Instance = context;
+        ContinuousProfilingContext.AnyEnabled = true; // arm the hot-path pre-filter the call sites gate on
 
         var afterWrappedMethod = _wrapperService.BeforeWrappedMethod(typeof(Class_WrapperService), "MyMethod", string.Empty, new object(), new object[0], "MyTracer", null, EmptyTracerArgs, 0);
         afterWrappedMethod(null, null);
@@ -364,6 +368,7 @@ public class Class_WrapperService
         var context = Mock.Create<IContinuousProfilingContext>();
         Mock.Arrange(() => context.IsEnabled).Returns(false);
         ContinuousProfilingContext.Instance = context;
+        ContinuousProfilingContext.AnyEnabled = false; // hot-path pre-filter off: the call sites must skip the helper entirely
 
         var afterWrappedMethod = _wrapperService.BeforeWrappedMethod(typeof(Class_WrapperService), "MyMethod", string.Empty, new object(), new object[0], "MyTracer", null, EmptyTracerArgs, 0);
         afterWrappedMethod(null, null);
@@ -377,8 +382,8 @@ public class Class_WrapperService
     {
         // The exit-path re-push (finally block) evaluates _agent.CurrentTransaction as a method argument, which
         // happens before PushContinuousProfilingContext's internal IsEnabled guard can short-circuit it. The call
-        // site itself must gate on IsEnabled so the lookup (context-storage read) never runs when CP is off -
-        // otherwise every instrumented method completion pays for it, even with the feature disabled.
+        // site itself must gate on the AnyEnabled pre-filter so the lookup (context-storage read) never runs when
+        // CP is off - otherwise every instrumented method completion pays for it, even with the feature disabled.
         var wrapper = Mock.Create<IWrapper>();
         Mock.Arrange(() => wrapper.BeforeWrappedMethod(Arg.IsAny<InstrumentedMethodCall>(), Arg.IsAny<IAgent>(), Arg.IsAny<ITransaction>())).Returns((_, __) => { });
         Mock.Arrange(() => _wrapperMap.Get(Arg.IsAny<InstrumentedMethodInfo>())).Returns(new TrackedWrapper(wrapper));
@@ -397,6 +402,7 @@ public class Class_WrapperService
         var context = Mock.Create<IContinuousProfilingContext>();
         Mock.Arrange(() => context.IsEnabled).Returns(false);
         ContinuousProfilingContext.Instance = context;
+        ContinuousProfilingContext.AnyEnabled = false; // hot-path pre-filter off: the call sites must skip the helper entirely
 
         var afterWrappedMethod = _wrapperService.BeforeWrappedMethod(typeof(Class_WrapperService), "MyMethod", string.Empty, new object(), new object[0], "MyTracer", null, EmptyTracerArgs, 0);
 
@@ -432,6 +438,7 @@ public class Class_WrapperService
         var context = Mock.Create<IContinuousProfilingContext>();
         Mock.Arrange(() => context.IsEnabled).Returns(true);
         ContinuousProfilingContext.Instance = context;
+        ContinuousProfilingContext.AnyEnabled = true; // arm the hot-path pre-filter the call sites gate on
 
         var afterWrappedMethod = _wrapperService.BeforeWrappedMethod(typeof(Class_WrapperService), "MyMethod", string.Empty, new object(), new object[0], "MyTracer", null, EmptyTracerArgs, 0);
         afterWrappedMethod(null, null);
@@ -466,6 +473,7 @@ public class Class_WrapperService
         var context = Mock.Create<IContinuousProfilingContext>();
         Mock.Arrange(() => context.IsEnabled).Returns(true);
         ContinuousProfilingContext.Instance = context;
+        ContinuousProfilingContext.AnyEnabled = true; // arm the hot-path pre-filter the call sites gate on
 
         var afterWrappedMethod = _wrapperService.BeforeWrappedMethod(typeof(Class_WrapperService), "MyMethod", string.Empty, new object(), new object[0], "MyTracer", null, EmptyTracerArgs, 0);
 
@@ -501,6 +509,7 @@ public class Class_WrapperService
         Mock.Arrange(() => context.IsEnabled).Returns(true);
         Mock.Arrange(() => context.PushTraceContext(Arg.AnyString, Arg.AnyString)).Throws(new InvalidOperationException("boom"));
         ContinuousProfilingContext.Instance = context;
+        ContinuousProfilingContext.AnyEnabled = true; // arm the hot-path pre-filter the call sites gate on
 
         Assert.DoesNotThrow(() =>
         {

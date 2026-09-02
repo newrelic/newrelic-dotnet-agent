@@ -70,10 +70,26 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
             return false;
         }
 
+        // Truncation counters for the Read path below: how many batches had to be cut to fit the
+        // caller's buffer, and how many bytes were dropped doing so. A truncated batch is silent data
+        // loss, so the caller (which owns all logging) polls these to report it.
+        uint64_t TruncatedBatchCount() const noexcept
+        {
+            std::lock_guard<std::mutex> l(_mtx);
+            return _truncatedBatches;
+        }
+
+        uint64_t TruncatedByteCount() const noexcept
+        {
+            std::lock_guard<std::mutex> l(_mtx);
+            return _truncatedBytes;
+        }
+
         // Copy the OLDEST filled batch into `buf` and free its slot, returning the number of bytes
         // written (0 when nothing is ready). A batch larger than `len` is truncated -- the managed
         // parser tolerates a truncated tail -- and the slot is freed either way so the producer can
-        // reuse it. `buf`/`len` are assumed valid; the caller validates them.
+        // reuse it, with the loss recorded in the truncation counters above. `buf`/`len` are assumed
+        // valid; the caller validates them.
         int32_t Read(int32_t len, unsigned char* buf) noexcept
         {
             std::lock_guard<std::mutex> l(_mtx);
@@ -99,9 +115,47 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
                 std::memcpy(buf, oldest->Bytes.data(), toCopy);
             }
 
+            if (toCopy < available)
+            {
+                ++_truncatedBatches;
+                _truncatedBytes += available - toCopy;
+            }
+
             oldest->Bytes.clear();
             oldest->Filled = false;
             return static_cast<int32_t>(toCopy);
+        }
+
+        // Free both slots' byte buffers back to the allocator -- not just clear() them, which retains
+        // capacity -- and mark them empty, so a stopped continuous-profiling session does not keep up to
+        // two full (multi-MB) batch buffers resident until the profiler is destroyed. Called from
+        // ContinuousProfiler::Stop()/Shutdown() once the sampler thread is guaranteed not to be
+        // producing; still takes the same lock as the producer/consumer, so it is safe even against a
+        // late reader, though by the time the profiler stops the managed reader has finished its final
+        // drain. Any batch still sitting undrained is discarded -- the session is ending. _nextSequence
+        // stays monotonic: it only orders slots that are currently Filled, and none are after this.
+        void Reset() noexcept
+        {
+            std::lock_guard<std::mutex> l(_mtx);
+            for (auto& slot : _slots)
+            {
+                std::vector<uint8_t>().swap(slot.Bytes);
+                slot.Filled = false;
+                slot.Sequence = 0;
+            }
+        }
+
+        // Test seam: total bytes of capacity currently held across both slots. Lets a lifecycle test
+        // assert Reset() actually reclaims the batch buffers rather than just marking the slots free.
+        size_t TotalCapacityForTesting() const noexcept
+        {
+            std::lock_guard<std::mutex> l(_mtx);
+            size_t total = 0;
+            for (const auto& slot : _slots)
+            {
+                total += slot.Bytes.capacity();
+            }
+            return total;
         }
 
     private:
@@ -115,5 +169,7 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
         mutable std::mutex _mtx;
         std::array<Slot, 2> _slots;
         uint64_t _nextSequence{ 1 };
+        uint64_t _truncatedBatches{ 0 };
+        uint64_t _truncatedBytes{ 0 };
     };
 }}}

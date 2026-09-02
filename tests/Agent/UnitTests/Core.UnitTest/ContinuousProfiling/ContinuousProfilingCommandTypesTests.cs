@@ -13,6 +13,12 @@ public class ContinuousProfilingCommandTypesTests
     [TestCase("cpu", true, false)]
     [TestCase("heap", false, true)]
     [TestCase("bogus", false, false)]
+    [TestCase(null, false, false)]
+    [TestCase("", false, false)]
+    [TestCase("ALL", false, false)] // matching is case-sensitive; an unrecognized case variant is reported unsupported, not normalized
+    [TestCase("Cpu", false, false)]
+    [TestCase(" ", false, false)]
+    [TestCase(" cpu ", false, false)] // no trimming; surrounding whitespace makes the token unrecognized
     public void Classify_returns_expected_flags(string token, bool expectedStartsCpuBundle, bool expectedRequestsHeap)
     {
         ContinuousProfilingCommandTypes.Classify(token, out var startsCpuBundle, out var requestsHeap);

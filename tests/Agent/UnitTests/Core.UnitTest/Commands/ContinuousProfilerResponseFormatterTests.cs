@@ -12,9 +12,9 @@ namespace NewRelic.Agent.Core.UnitTest.Commands;
 public class ContinuousProfilerResponseFormatterTests
 {
     [Test]
-    public void AckOnly_always_returns_an_empty_dictionary()
+    public void AckOnly_returns_an_empty_dictionary_when_there_are_no_exceptions()
     {
-        var result = new ContinuousProfilingCommandResult(new[] { "cpu" }, 10000, 10000, new Dictionary<string, string> { { "heap", "not supported" } });
+        var result = new ContinuousProfilingCommandResult(new[] { "cpu" }, 10000, 10000, new Dictionary<string, string>());
 
         var response = new AckOnlyContinuousProfilerResponseFormatter().Format(result);
 
@@ -22,29 +22,23 @@ public class ContinuousProfilerResponseFormatterTests
     }
 
     [Test]
-    public void Detailed_includes_intervals_and_active_types_without_exceptions_key_when_none()
+    public void AckOnly_surfaces_exceptions_under_the_errors_key()
     {
-        var result = new ContinuousProfilingCommandResult(new[] { "cpu" }, 10000, 10000, new Dictionary<string, string>());
+        var result = new ContinuousProfilingCommandResult(new[] { "cpu" }, 10000, 10000, new Dictionary<string, string> { { "heap", "not supported" } });
 
-        var response = new DetailedContinuousProfilerResponseFormatter().Format(result);
+        var response = new AckOnlyContinuousProfilerResponseFormatter().Format(result);
 
-        Assert.Multiple(() =>
-        {
-            Assert.That(response["include"], Is.EqualTo(new[] { "cpu" }));
-            Assert.That(response["sample_interval"], Is.EqualTo(10000));
-            Assert.That(response["cpu_report_interval"], Is.EqualTo(10000));
-            Assert.That(response.ContainsKey("exceptions"), Is.False);
-        });
+        Assert.That(response["errors"], Is.EqualTo("heap: not supported"));
     }
 
     [Test]
-    public void Detailed_includes_exceptions_key_when_present()
+    public void AckOnly_joins_multiple_exceptions_under_the_errors_key()
     {
-        var exceptions = new Dictionary<string, string> { { "heap", "not supported" } };
+        var exceptions = new Dictionary<string, string> { { "heap", "not supported" }, { "cpu", "failed to start: boom" } };
         var result = new ContinuousProfilingCommandResult(new[] { "cpu" }, 10000, 10000, exceptions);
 
-        var response = new DetailedContinuousProfilerResponseFormatter().Format(result);
+        var response = new AckOnlyContinuousProfilerResponseFormatter().Format(result);
 
-        Assert.That(response["exceptions"], Is.EqualTo(exceptions));
+        Assert.That(response["errors"], Is.EqualTo("heap: not supported; cpu: failed to start: boom"));
     }
 }

@@ -191,14 +191,25 @@
   <ItemGroup>
     <ClCompile Include="AgentWorkMapTest.cpp" />
     <ClCompile Include="BoundedLruCacheTest.cpp" />
+    <ClCompile Include="ContinuousProfilerLifecycleTest.cpp" />
+    <ClCompile Include="OnCpuClassificationTest.cpp" />
+    <ClCompile Include="SamplingCadenceTest.cpp" />
+    <ClCompile Include="ThreadCaptureRotationTest.cpp" />
     <ClCompile Include="SampleBufferQueueTest.cpp" />
     <ClCompile Include="SampleBufferWriterTest.cpp" />
     <ClCompile Include="TraceContextMapTest.cpp" />
+    <ClCompile Include="ThreadProfilerNameCacheTest.cpp" />
+    <ClCompile Include="ThreadDescriptionResolverTest.cpp" />
     <ClInclude Include="stdafx.h" />
+    <ClInclude Include="StubCorProfilerInfo4.h" />
+    <ClInclude Include="..\ContinuousProfiler\ContinuousProfiler.h" />
+    <ClInclude Include="..\ContinuousProfiler\SuspendMutex.h" />
     <ClInclude Include="..\ContinuousProfiler\AgentWorkMap.h" />
     <ClInclude Include="..\ContinuousProfiler\SampleBufferQueue.h" />
     <ClInclude Include="..\ContinuousProfiler\SampleBufferWriter.h" />
     <ClInclude Include="..\ContinuousProfiler\TraceContextMap.h" />
+    <ClInclude Include="..\ContinuousProfiler\namecache.h" />
+    <ClInclude Include="..\ContinuousProfiler\ThreadDescriptionResolver.h" />
     <ClInclude Include="..\ThreadProfiler\namecache.h" />
   </ItemGroup>
   <ItemGroup>

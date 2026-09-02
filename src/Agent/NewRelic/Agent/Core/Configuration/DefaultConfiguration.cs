@@ -2961,6 +2961,7 @@ public class DefaultConfiguration : IConfiguration
 
     private const int MinContinuousProfilingSamplingIntervalMs = 1000;
     private const int MaxContinuousProfilingSamplingIntervalMs = 60000;
+    private const int DefaultContinuousProfilingSamplingIntervalMs = 10000;
 
     private bool? _continuousProfilingEnabled;
     // Precedence, matching AiMonitoringEnabled's shape: HSM kills it unconditionally (defense-in-depth,
@@ -2987,12 +2988,30 @@ public class DefaultConfiguration : IConfiguration
                 return _continuousProfilingSamplingIntervalMs.Value;
 
             // Env var only; no appSettings/XML surface for this setting. The clamp is applied last.
-            var configured = EnvironmentOverrides(10000, "NEW_RELIC_CONTINUOUS_PROFILING_SAMPLING_INTERVAL_MS")
+            var configured = EnvironmentOverrides(DefaultContinuousProfilingSamplingIntervalMs, "NEW_RELIC_CONTINUOUS_PROFILING_SAMPLING_INTERVAL_MS")
                 .GetValueOrDefault();
 
-            var clamped = Math.Min(MaxContinuousProfilingSamplingIntervalMs, Math.Max(MinContinuousProfilingSamplingIntervalMs, configured));
-            _continuousProfilingSamplingIntervalMs = clamped;
-            return clamped;
+            int resolved;
+            if (configured <= 0)
+            {
+                // Non-positive is invalid input, not "sample as fast as possible" -- treating it like an
+                // out-of-range positive value and clamping up to the 1000ms floor would make an invalid
+                // override 10x MORE aggressive than the 10000ms default, which is backwards. Fall back
+                // instead, in precedence order: server-side config value > agent-command value > the
+                // hardcoded default. Neither of the first two exists at this layer today -- RpmConfig's
+                // only continuous_profiling.* wire field is ContinuousProfilingEnabled (no interval), and
+                // start_continuous_profiler/stop_continuous_profiler agent commands set
+                // ContinuousProfilingService's own _activeIntervalMs downstream, never routing back through
+                // this getter -- so the chain collapses to the default until one of those surfaces exists.
+                resolved = DefaultContinuousProfilingSamplingIntervalMs;
+            }
+            else
+            {
+                resolved = Math.Min(MaxContinuousProfilingSamplingIntervalMs, Math.Max(MinContinuousProfilingSamplingIntervalMs, configured));
+            }
+
+            _continuousProfilingSamplingIntervalMs = resolved;
+            return resolved;
         }
     }
 

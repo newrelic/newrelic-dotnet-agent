@@ -24,14 +24,17 @@ if [ -f "libNewRelicProfiler.so" ]
 		# root ("X..." or "... for X" / "... to X") ignores std:: templates that merely mention
 		# our types. std:: is excluded deliberately: the arm64 build leaves std:: symbols
 		# undefined exactly as the long-shipping arm64 binary does, a separate pre-existing
-		# condition rather than this bug class.
+		# condition rather than this bug class. The symbol-type column is matched against
+		# U/w/v, not just U: vague linkage (template instantiations, inline functions, weak
+		# vtables) surfaces as a lowercase weak-undefined type, and a miss there still fails
+		# dlopen with "undefined symbol" at runtime just like a plain U would.
 		if ! undefined_symbols=$(nm -DC --undefined-only libNewRelicProfiler.so)
 			then
 				echo "::error could not read symbols from libNewRelicProfiler.so"
 				exit 1
 		fi
 
-		undefined_first_party=$(printf '%s\n' "$undefined_symbols" | sed -n 's/^ *U //p' | grep -E '(^|for |to )(NewRelic|sicily)::')
+		undefined_first_party=$(printf '%s\n' "$undefined_symbols" | sed -n 's/^ *[Uwv] //p' | grep -E '(^|for |to )(NewRelic|sicily)::')
 		if [ -n "$undefined_first_party" ]
 			then
 				echo "::error libNewRelicProfiler.so has undefined first-party symbols and will fail to load:"

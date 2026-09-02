@@ -3,12 +3,14 @@
 
 using System;
 using System.IO;
+using System.IO.Compression;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using Google.Protobuf;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Metrics;
@@ -42,6 +44,7 @@ public class OtlpProfilesHttpDispatcher
 {
     private const string ContentType = "application/x-protobuf";
     private const string ApiKeyHeader = "api-key";
+    private const string UserAgentHeader = "User-Agent";
 
     // Per-attempt connect bound (SocketsHttpHandler.ConnectTimeout) -- bounds only ONE attempt's TCP
     // connect. See TotalSendTimeoutWithRetries for the budget covering the full retry sequence.
@@ -62,16 +65,23 @@ public class OtlpProfilesHttpDispatcher
     public const int MaxResponseBodyBytes = 64 * 1024;
 
     private readonly IConfiguration _configuration;
-    private readonly Func<HttpRequestMessage, HttpResponseMessage> _send;
 
-    public OtlpProfilesHttpDispatcher(IConfiguration configuration, IOtelBridgeSupportabilityMetricCounters supportabilityMetricCounters = null)
+    // Lazy: this dispatcher is constructed by ContinuousProfilingServiceFactory in every
+    // non-serverless process, including every one that never enables continuous profiling (the
+    // feature defaults off). The real pipeline (ConnectionInfo -> reflected SocketsHttpHandler ->
+    // CustomRetryHandler -> a process-lifetime HttpClient) is pure cost until a profile is actually
+    // shipped, so build it on first use rather than in the constructor. Lazy<T>'s default
+    // ExecutionAndPublication mode means two racing sends still build it exactly once.
+    private readonly Lazy<Func<HttpRequestMessage, HttpResponseMessage>> _send;
+
+    public OtlpProfilesHttpDispatcher(IConfiguration configuration, IExportRetrySupportabilityMetricCounters supportabilityMetricCounters = null)
         : this(configuration, (Func<HttpRequestMessage, HttpResponseMessage>)null, supportabilityMetricCounters)
     {
     }
 
-    // The send delegate is injected for testability. When null, a lazily-created HttpClient over the
-    // agent's proxy configuration performs the real network send (the one branch we do not exercise
-    // in unit tests -- see CreateRealSend).
+    // The send delegate is injected for testability. When null, the real network send (a
+    // lazily-created HttpClient over the agent's proxy configuration) is built on first Post -- the
+    // one branch we do not exercise in unit tests -- see CreateRealSend.
     public OtlpProfilesHttpDispatcher(IConfiguration configuration, Func<HttpRequestMessage, HttpResponseMessage> send)
         : this(configuration, send, null)
     {
@@ -79,16 +89,19 @@ public class OtlpProfilesHttpDispatcher
 
     // Test seam: builds the real CustomRetryHandler + HttpClient pipeline (the same code
     // CreateRealSend uses) over a caller-supplied inner handler, so unit tests can exercise
-    // retry/Retry-After/counters wiring end to end without a socket.
-    public OtlpProfilesHttpDispatcher(IConfiguration configuration, HttpMessageHandler innerHandler, IOtelBridgeSupportabilityMetricCounters supportabilityMetricCounters = null)
-        : this(configuration, BuildSend(innerHandler, supportabilityMetricCounters), null)
+    // retry/Retry-After/counters wiring end to end without a socket. delayFunc threads through to
+    // CustomRetryHandler's own test seam so retry-backoff tests don't have to sleep for real.
+    public OtlpProfilesHttpDispatcher(IConfiguration configuration, HttpMessageHandler innerHandler, IExportRetrySupportabilityMetricCounters supportabilityMetricCounters = null, Func<TimeSpan, CancellationToken, Task> delayFunc = null)
+        : this(configuration, BuildSend(innerHandler, supportabilityMetricCounters, delayFunc), null)
     {
     }
 
-    private OtlpProfilesHttpDispatcher(IConfiguration configuration, Func<HttpRequestMessage, HttpResponseMessage> send, IOtelBridgeSupportabilityMetricCounters supportabilityMetricCounters)
+    private OtlpProfilesHttpDispatcher(IConfiguration configuration, Func<HttpRequestMessage, HttpResponseMessage> send, IExportRetrySupportabilityMetricCounters supportabilityMetricCounters)
     {
         _configuration = configuration;
-        _send = send ?? CreateRealSend(configuration, supportabilityMetricCounters);
+        _send = send != null
+            ? new Lazy<Func<HttpRequestMessage, HttpResponseMessage>>(() => send)
+            : new Lazy<Func<HttpRequestMessage, HttpResponseMessage>>(() => CreateRealSend(configuration, supportabilityMetricCounters));
     }
 
     /// <summary>
@@ -96,6 +109,12 @@ public class OtlpProfilesHttpDispatcher
     /// <see cref="ProfilesSendResult"/> (accepted flag, HTTP status, response body) so the caller can log
     /// the send like the collector wire. Never throws; a failure is reported as <c>(false, 0, "")</c>.
     /// </summary>
+    /// <remarks>
+    /// No payload-size guard before POST: <see cref="NewRelic.Agent.Core.ContinuousProfiling.ContinuousProfilingService"/>'s
+    /// fixed drain buffer already bounds a batch, and the request is gzip-compressed here regardless of
+    /// size. Deliberately skipped rather than deferred -- revisit only if a real oversized-batch failure
+    /// shows up.
+    /// </remarks>
     public ProfilesSendResult Post(byte[] payload, string endpoint)
     {
         try
@@ -107,7 +126,7 @@ public class OtlpProfilesHttpDispatcher
             }
 
             using var request = BuildRequestMessage(payload, endpoint);
-            using var response = _send(request);
+            using var response = _send.Value(request);
             if (response == null)
                 return new ProfilesSendResult(false, 0, string.Empty);
 
@@ -163,33 +182,55 @@ public class OtlpProfilesHttpDispatcher
     /// Reads the response body into memory, capped at <see cref="MaxResponseBodyBytes"/> regardless of
     /// what <c>Content-Length</c> claims -- covers chunked/absent-length responses too. Bounded by
     /// <see cref="BodyReadTimeout"/>; a stalled body throws <see cref="OperationCanceledException"/>.
+    /// Once the cap is hit (declared or actual), the rest of the stream is still drained to EOF rather
+    /// than abandoned -- an HttpClient response disposed with unread bytes still on the wire can prevent
+    /// the underlying connection from being returned to the pool cleanly, so draining protects reuse of
+    /// the process-lifetime <see cref="HttpClient"/> this dispatcher shares across every drain.
     /// </summary>
     private static (byte[] bytes, bool truncated) ReadResponseBodyBounded(HttpContent content)
     {
         if (content == null)
             return (Array.Empty<byte>(), false);
 
-        var declaredLength = content.Headers?.ContentLength;
-        if (declaredLength.HasValue && declaredLength.Value > MaxResponseBodyBytes)
-            return (Array.Empty<byte>(), true);
-
         using var cts = new CancellationTokenSource(BodyReadTimeout);
         using var stream = content.ReadAsStreamAsync().ConfigureAwait(false).GetAwaiter().GetResult();
+
+        var declaredLength = content.Headers?.ContentLength;
+        if (declaredLength.HasValue && declaredLength.Value > MaxResponseBodyBytes)
+        {
+            DrainStream(stream, cts.Token);
+            return (Array.Empty<byte>(), true);
+        }
+
         using var buffered = new MemoryStream();
 
         var buffer = new byte[8192];
         int read;
+        var truncated = false;
         while ((read = stream.ReadAsync(buffer, 0, buffer.Length, cts.Token).ConfigureAwait(false).GetAwaiter().GetResult()) > 0)
         {
+            if (truncated)
+                continue;
+
             var remaining = MaxResponseBodyBytes - (int)buffered.Length;
             var toCopy = Math.Min(read, remaining);
             buffered.Write(buffer, 0, toCopy);
 
             if (toCopy < read || buffered.Length >= MaxResponseBodyBytes)
-                return (buffered.ToArray(), true);
+                truncated = true;
         }
 
-        return (buffered.ToArray(), false);
+        return (buffered.ToArray(), truncated);
+    }
+
+    // Reads to EOF and discards, so a body that was capped (declared oversized, or hit the actual cap
+    // mid-read) is still fully consumed -- see ReadResponseBodyBounded's remarks on why.
+    private static void DrainStream(Stream stream, CancellationToken cancellationToken)
+    {
+        var buffer = new byte[8192];
+        while (stream.ReadAsync(buffer, 0, buffer.Length, cancellationToken).ConfigureAwait(false).GetAwaiter().GetResult() > 0)
+        {
+        }
     }
 
     /// <summary>
@@ -206,33 +247,53 @@ public class OtlpProfilesHttpDispatcher
             request.Headers.TryAddWithoutValidation(ApiKeyHeader, licenseKey);
         }
 
-        var content = new ByteArrayContent(payload ?? Array.Empty<byte>());
+        // Matches the format OtlpExporterConfigurationService uses for the metrics OTLP export path.
+        request.Headers.TryAddWithoutValidation(UserAgentHeader, $"NewRelic-DotNet-Agent/{AgentInstallConfiguration.AgentVersion ?? "Unknown"}");
+
+        var body = Gzip(payload ?? Array.Empty<byte>());
+        var content = new ByteArrayContent(body);
         content.Headers.ContentType = new MediaTypeHeaderValue(ContentType);
+        content.Headers.ContentEncoding.Add("gzip");
         request.Content = content;
 
         return request;
+    }
+
+    // otlp-ingest (the collector's OTLP HTTP entry point) accepts gzip/zstd/identity via the standard
+    // Content-Encoding header for every OTLP signal (traces/metrics/profiles alike) -- see
+    // OtlpDeserializer.extractHttpPayload. CP profile batches are text-heavy (repeated stack frame/thread
+    // names), so gzip meaningfully shrinks the wire payload; there is exactly one POST per drain (no
+    // splitting -- see ContinuousProfilingService.DrainOnce), so compressing once here covers the whole send.
+    private static byte[] Gzip(byte[] payload)
+    {
+        using var output = new MemoryStream();
+        using (var gzip = new GZipStream(output, CompressionLevel.Fastest, leaveOpen: true))
+        {
+            gzip.Write(payload, 0, payload.Length);
+        }
+        return output.ToArray();
     }
 
     // Not exercised by unit tests: this constructs a live HttpClient over a real socket handler. The
     // retry/timeout/counters wiring it builds on top of (BuildSend) is exercised directly -- see the
     // HttpMessageHandler-injecting ctor above.
     [NrExcludeFromCodeCoverage]
-    private static Func<HttpRequestMessage, HttpResponseMessage> CreateRealSend(IConfiguration configuration, IOtelBridgeSupportabilityMetricCounters supportabilityMetricCounters)
+    private static Func<HttpRequestMessage, HttpResponseMessage> CreateRealSend(IConfiguration configuration, IExportRetrySupportabilityMetricCounters supportabilityMetricCounters)
     {
         var connectionInfo = new ConnectionInfo(configuration);
         var innerHandler = CreateHandler(connectionInfo.Proxy);
-        return BuildSend(innerHandler, supportabilityMetricCounters);
+        return BuildSend(innerHandler, supportabilityMetricCounters, null);
     }
 
     // Builds the retry-handler + HttpClient chain over the given inner transport handler. Shared by
     // the real network path (CreateRealSend) and the test seam ctor, so both exercise identical wiring.
-    private static Func<HttpRequestMessage, HttpResponseMessage> BuildSend(HttpMessageHandler innerHandler, IOtelBridgeSupportabilityMetricCounters supportabilityMetricCounters)
+    private static Func<HttpRequestMessage, HttpResponseMessage> BuildSend(HttpMessageHandler innerHandler, IExportRetrySupportabilityMetricCounters supportabilityMetricCounters, Func<TimeSpan, CancellationToken, Task> delayFunc)
     {
         // 5s keeps any single honored Retry-After small against both the TotalSendTimeoutWithRetries
         // budget this client is given and the 1-60s drain cadence of the service driving it; a longer
         // server-requested wait is declined so the send doesn't hold its threadpool thread through a
         // DrainBufferBoundary or extend the bounded drain-wait on shutdown.
-        var retryHandler = new CustomRetryHandler(supportabilityMetricCounters, retryAfterBailCeiling: TimeSpan.FromSeconds(5)) { InnerHandler = innerHandler };
+        var retryHandler = new CustomRetryHandler(supportabilityMetricCounters, retryAfterBailCeiling: TimeSpan.FromSeconds(5), delayFunc: delayFunc) { InnerHandler = innerHandler };
         var httpClient = new HttpClient(retryHandler, true) { Timeout = TotalSendTimeoutWithRetries };
 
         // ResponseHeadersRead: HttpClient must not implicitly buffer the whole body into memory before

@@ -4650,17 +4650,37 @@ public class DefaultConfigurationTests
     }
 
     // No newrelic.config XML / appSettings surface for this setting: env var only, clamp to [1000, 60000] applied last.
+    // Non-positive values are treated as invalid/unset (fall back to the default) rather than clamped up to
+    // the 1000ms floor -- see ContinuousProfilingSamplingIntervalMs_non_positive_falls_back_to_default below
+    // for the precedence this exercises once SSC/agent-command surfaces exist.
     [TestCase(null, ExpectedResult = 10000)]   // unset -> default
-    [TestCase("500", ExpectedResult = 1000)]   // below floor -> clamp up
+    [TestCase("500", ExpectedResult = 1000)]   // below floor, positive -> clamp up
     [TestCase("99999", ExpectedResult = 60000)] // above ceiling -> clamp down
     [TestCase("2500", ExpectedResult = 2500)]  // in range -> verbatim
     [TestCase("xyz", ExpectedResult = 10000)]  // unparseable -> falls back to default
+    [TestCase("0", ExpectedResult = 10000)]    // non-positive -> falls back to default, not the 1000ms floor
+    [TestCase("-1", ExpectedResult = 10000)]   // non-positive -> falls back to default, not the 1000ms floor
     public int ContinuousProfilingSamplingIntervalMs_env_var(string envValue)
     {
         Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_CONTINUOUS_PROFILING_SAMPLING_INTERVAL_MS")).Returns(envValue);
 
         var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
         return defaultConfig.ContinuousProfilingSamplingIntervalMs;
+    }
+
+    // No server-side config or agent-command surface exists for this setting today (RpmConfig only carries
+    // ContinuousProfilingEnabled; start/stop_continuous_profiler agent commands mutate
+    // ContinuousProfilingService's own runtime state, not this getter). This test documents that a
+    // non-positive override currently falls straight through to the hardcoded default, and should be
+    // extended to assert SSC/agent-command precedence if either surface is ever added.
+    [Test]
+    public void ContinuousProfilingSamplingIntervalMs_non_positive_falls_back_to_default()
+    {
+        Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_CONTINUOUS_PROFILING_SAMPLING_INTERVAL_MS")).Returns("-5");
+
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+        Assert.That(defaultConfig.ContinuousProfilingSamplingIntervalMs, Is.EqualTo(10000));
     }
 
 }

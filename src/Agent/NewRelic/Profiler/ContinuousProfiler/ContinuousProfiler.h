@@ -31,7 +31,8 @@
 #endif
 
 #include "../Logging/Logger.h"
-#include "../ThreadProfiler/namecache.h"
+#include "namecache.h"
+#include "ThreadDescriptionResolver.h"
 #include "../SignatureParser/SignatureParser.h"
 #include "../SignatureParser/SignatureFormatting.h"
 #include "../Profiler/CorTokenResolver.h"
@@ -67,12 +68,22 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
         {
             LogInfo(L"Initializing ContinuousProfiler");
 
+            if (corProfilerInfo == nullptr)
+            {
+                LogError(L"CP: Init called with a null ICorProfilerInfo4; Continuous Profiling cannot run.");
+                return;
+            }
+
             _corProfilerInfo = corProfilerInfo;
             _isCoreClr = isCoreClr;
 
             HRESULT corProfilerInfoInitResult = corProfilerInfo->QueryInterface(__uuidof(ICorProfilerInfo10), (void**)&_corProfilerInfo10);
             if (SUCCEEDED(corProfilerInfoInitResult)) {
                 LogInfo(L"CP: ICorProfilerInfo10 available");
+            }
+            else {
+                LogInfo(L"CP: ICorProfilerInfo10 not available: ", std::hex, std::showbase, corProfilerInfoInitResult,
+                    std::resetiosflags(std::ios_base::basefield | std::ios_base::showbase));
             }
         }
 
@@ -81,9 +92,42 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
         // interval; and clears any prior stop so the worker resumes sampling.
         void Start(uint32_t intervalMs) noexcept
         {
+            // Same guard as ThreadProfiler::RequestProfile. The exported entry point only checks that the
+            // profiler singleton exists (it is set in the ctor), which leaves a window before Initialize()
+            // reaches Init() where a managed Start would arm sampling and spawn a worker that can never
+            // sample -- silently collecting nothing for the life of the session. Refuse loudly instead.
+            if (_corProfilerInfo == nullptr)
+            {
+                LogError(L"CP: ", __func__, L" called without proper initialization. (corProfilerInfo)");
+                return;
+            }
+
             try
             {
+                // Serialize the whole lifecycle with Stop()/Shutdown() (see _mtx_lifecycle). Without it,
+                // two concurrent Start()s could both observe _workerThread.joinable()==false and each
+                // assign a std::thread over what becomes a joinable thread -> std::terminate() (host
+                // crash); and a Start() racing Shutdown()'s join()/flag-reset could spawn a worker that
+                // immediately parks on a stale _shuttingDown while _workerThread stays joinable, leaving
+                // CP permanently dead with no future Start() able to respawn.
+                std::lock_guard<std::mutex> lifecycle(_mtx_lifecycle);
+
                 _intervalMs.store(std::max<uint32_t>(intervalMs, MinIntervalMs));
+
+                // A fresh start gets a fresh agent-work map. SetAgentWork/ResetAgentWork drive a per-thread
+                // nesting-DEPTH counter that is never tombstoned, so an increment orphaned by a managed-side
+                // lifecycle race would otherwise keep that thread tagged as agent work -- and its samples
+                // filtered out of the profile -- for the rest of the process. Clearing here, BEFORE sampling
+                // is armed, bounds any such leak to the session that caused it. See AgentWorkMap::Clear for
+                // why this is safe against a concurrent suspended-runtime reader.
+                _agentWork.Clear();
+
+                // A fresh start also retires every trace-context link stored by the previous session. A
+                // managed-side reset orphaned by a stop/start race leaves a live thread's slot holding the
+                // old session's (traceId, spanId), which the sampler would otherwise ship on new profile
+                // data until that thread's next SetTraceContext. Bumping the generation invalidates them
+                // all at once; see TraceContextMap::NewGeneration for why no slot is touched.
+                _traceContexts.NewGeneration();
 
                 // Publish under _mtx_wake and notify: an idle worker waits on _cv_wake with no timeout,
                 // so it only resumes if the flag change is visible to its predicate and it is signalled.
@@ -106,14 +150,41 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
         }
 
         // Stop sampling but keep the worker thread alive (idle, waiting for the next Start()). The
-        // thread is only torn down by Shutdown().
+        // thread is only torn down by Shutdown(). Also reclaims the session's sampling buffers so a
+        // stopped session's peak memory shrinks back between sessions instead of staying resident
+        // until Shutdown (see ReleaseSamplingResources) -- important for stop/start retunes, where a
+        // server-side config change stops and restarts sampling and the process should not keep
+        // holding a prior session's ~1 MB stack-walk buffer, capture slots, and multi-MB batch buffers.
         void Stop() noexcept
         {
+            // Serialize with Start()/Shutdown() on the lifecycle mutex (see _mtx_lifecycle) so the
+            // sampling-active toggle can't interleave with a concurrent thread create/join.
+            std::lock_guard<std::mutex> lifecycle(_mtx_lifecycle);
             {
                 std::lock_guard<std::mutex> l(_mtx_wake);
                 _samplingActive.store(false);
             }
             _cv_wake.notify_one();
+
+            // Free the session's sampling buffers now, not at Shutdown. Correctness against the worker
+            // thread (which Stop does NOT join -- it only parks it) rests on two facts:
+            //   1. _samplingActive is already false (stored above under _mtx_wake), so the worker will
+            //      park at the top of its loop rather than starting a new capture; and
+            //   2. acquiring SuspendMutex here waits for any capture the worker is mid-way through to
+            //      finish -- CaptureAllThreads holds this same mutex across its ENTIRE body, including
+            //      the post-resume EncodeAndPublish, so once we hold it the worker is guaranteed to be
+            //      out of CaptureAllThreads and cannot touch any buffer ReleaseSamplingResources frees.
+            // _mtx_lifecycle (held above) blocks a concurrent Start() from re-arming sampling while we
+            // free. Lock order is always _mtx_lifecycle -> SuspendMutex and nothing takes them the other
+            // way (CaptureAllThreads takes SuspendMutex but never _mtx_lifecycle), so this can't invert.
+            try
+            {
+                std::lock_guard<NewRelic::Profiler::SuspendMutex> suspendLock(NewRelic::Profiler::SuspendMutex::Shared());
+                ReleaseSamplingResources();
+            }
+            catch (const std::exception&)
+            {
+            }
         }
 
         // Terminate the worker thread and free resources. Mirrors ThreadProfiler::Shutdown -- signals
@@ -122,6 +193,11 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
         {
             try
             {
+                // Serialize with Start()/Stop() (see _mtx_lifecycle). The signal, join, AND flag resets
+                // must all happen under this lock: a Start() slipping between join() and the flag resets
+                // is exactly failure mode (b) the lifecycle mutex exists to prevent.
+                std::lock_guard<std::mutex> lifecycle(_mtx_lifecycle);
+
                 SignalShutdown();
 
                 if (_workerThread.joinable())
@@ -136,6 +212,12 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
 
                 _samplingActive.store(false);
                 _shuttingDown.store(false);
+
+                // The worker is joined (or was never running), so no capture can be in flight -- free
+                // the session buffers here too, matching Stop(), so a Start()->Shutdown() sequence with
+                // no explicit Stop() doesn't leave them resident. No SuspendMutex needed here (unlike
+                // Stop): the worker thread is gone, so nothing else can touch these buffers.
+                ReleaseSamplingResources();
             }
             catch (const std::exception&)
             {
@@ -155,7 +237,23 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
 
             try
             {
-                return _sampleBuffers.Read(len, buf);
+                const int32_t bytesRead = _sampleBuffers.Read(len, buf);
+
+                // A batch bigger than the caller's buffer is truncated by Read, which loses whole samples
+                // off the tail. Latent today (the managed DrainBufferSize equals MaxBufferBytes), so a
+                // report here is the only thing that would surface a divergence between the two sizes
+                // instead of silently shipping partial batches. Logged once per truncating drain, not per
+                // drain, so a matched pair of sizes costs nothing.
+                const uint64_t truncatedBytes = _sampleBuffers.TruncatedByteCount();
+                if (truncatedBytes != _reportedTruncatedBytes)
+                {
+                    LogWarn(L"CP: sample batch truncated to fit the reader's buffer: kept ", bytesRead,
+                        L" byte(s), dropped ", truncatedBytes - _reportedTruncatedBytes, L"; ",
+                        _sampleBuffers.TruncatedBatchCount(), L" batch(es) truncated so far");
+                    _reportedTruncatedBytes = truncatedBytes;
+                }
+
+                return bytesRead;
             }
             catch (...)
             {
@@ -206,6 +304,143 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
             _agentWork.Decrement(CurrentManagedThreadId());
         }
 
+        // CLR ThreadIDs are recycled (a ThreadID is really a Thread* value), so a thread that dies
+        // without ever calling ResetTraceContext/ResetAgentWork itself (killed mid-transaction, or
+        // mid- Scheduler callback) would otherwise leave its slot in _traceContexts / _agentWork live
+        // forever. A later, unrelated thread allocated at the same address would then inherit the
+        // dead thread's trace-context link (H4a) or its agent-work depth (H4b) -- and with
+        // _agentWork never freeing slots at all, unbounded thread churn over a long-running process
+        // exhausts its fixed table. Called from CorProfilerCallbackImpl::ThreadDestroyed, on
+        // whichever thread the CLR invokes that callback on -- never the dying thread itself, so
+        // there is no race with the dying thread's own last Set/Increment.
+        void ThreadDestroyed(ThreadID threadId) noexcept
+        {
+            _traceContexts.Reset(threadId);
+            _agentWork.Forget(threadId);
+        }
+
+        // Test seam: report whether the sampler worker thread currently exists (is joinable), read
+        // under the lifecycle mutex so it observes a consistent state relative to Start()/Shutdown().
+        // Exists to let the native lifecycle unit test assert that a post-Shutdown Start() can respawn
+        // the worker (the flag-reset-under-lock property) without piercing encapsulation elsewhere.
+        bool IsWorkerThreadRunning() noexcept
+        {
+            std::lock_guard<std::mutex> lifecycle(_mtx_lifecycle);
+            return _workerThread.joinable();
+        }
+
+        // Test seam: run exactly one capture pass synchronously on the CALLING thread, without a worker
+        // thread. Under the lifecycle stub (no ICorProfilerInfo10, isCoreClr == false) this allocates
+        // the per-session buffers (_stackwalk, _capture, _resolved, _threadList) and publishes one
+        // (empty) batch into the sample-buffer queue, all without ever suspending a runtime -- letting a
+        // lifecycle test deterministically drive the allocate path so it can then assert Stop() frees it.
+        void CaptureOnceForTesting()
+        {
+            CaptureAllThreads();
+        }
+
+        // Test seam: whether any of the per-session sampling buffers ReleaseSamplingResources frees are
+        // currently allocated. Lets a lifecycle test assert Stop()/Shutdown() reclaim them and that a
+        // subsequent capture re-allocates cleanly. Read on the test thread only, with no worker running,
+        // so the plain (unsynchronized) reads of the worker-owned buffers below are race-free there.
+        bool HasSamplingResourcesForTesting() const noexcept
+        {
+            return _stackwalk != nullptr
+                || !_capture.empty()
+                || !_resolved.empty()
+                || _threadList.capacity() != 0
+                || _encodeScratch.capacity() != 0
+                || !_prevCpuSamples.empty()
+                || _sampleBuffers.TotalCapacityForTesting() != 0;
+        }
+
+        // Round-robin capture window for a single tick -- see PlanCaptureWindow.
+        struct CaptureWindow
+        {
+            size_t start;       // first _threadList index to visit this tick
+            size_t visitCount;  // number of threads to visit this tick == min(threadCount, capacity)
+            size_t nextOffset;  // rotation offset to carry into the next tick
+        };
+
+        // Plan which threads a single capture tick visits, given the live thread count, the fixed
+        // capture-slot capacity, and the rotation offset carried across ticks. Pure + allocation-free
+        // (scalar math only) so it is safe to call inside the suspend window; public so the native unit
+        // test can exercise the rotation arithmetic directly without a live CLR (it drives no state).
+        //
+        // When threadCount > capacity the naive "walk _threadList from index 0, drop the rest" approach
+        // drops the SAME tail of threads on every tick, because EnumThreads returns CLR ThreadStore order,
+        // which is stable across ticks -- so a fixed subset (typically the newest threads) becomes a
+        // permanent sampling blind spot. Advancing the start offset by visitCount each tick turns that
+        // permanent drop into fair round-robin coverage: over ceil(threadCount / capacity) ticks every
+        // thread is visited. When threadCount <= capacity the whole set is visited and the offset advances
+        // by a full cycle (a no-op mod threadCount next tick), so an under-capacity process sees no churn.
+        // Visiting exactly visitCount (<= capacity) threads also means DoStackSnapshot is never paid for a
+        // thread that would only be dropped -- the old code walked every enumerated thread and discarded
+        // the overflow after paying the walk cost under suspend.
+        static CaptureWindow PlanCaptureWindow(size_t threadCount, size_t capacity, size_t rotationOffset) noexcept
+        {
+            if (threadCount == 0)
+            {
+                return CaptureWindow{ 0, 0, rotationOffset };
+            }
+            const size_t start = rotationOffset % threadCount;
+            const size_t visitCount = capacity < threadCount ? capacity : threadCount;
+            return CaptureWindow{ start, visitCount, rotationOffset + visitCount };
+        }
+
+        // One tick's CPU reading for an OS thread, plus the stamp identifying WHICH thread that reading
+        // belongs to. OS thread ids are recycled, so the CPU total alone is not enough to compare two
+        // ticks -- see IsOnCpu.
+        struct ThreadCpuSample
+        {
+            int64_t CpuMicros{ -1 }; // cumulative user+kernel CPU; -1 when unavailable
+            uint64_t StartStamp{ 0 }; // thread creation stamp (Windows creation FILETIME / Linux starttime); 0 when unavailable
+        };
+
+        // Decide whether a thread was on-CPU during the tick that produced `current`, given the previous
+        // tick's reading for the SAME OS thread id. Pure; public so the native unit test can exercise the
+        // comparison (including the tid-reuse case) without a live CLR.
+        //
+        // The reuse hazard: `_prevCpuSamples` is keyed by OS thread id, and the OS reissues a tid soon
+        // after the thread that held it exits. Without the stamp check, the dead thread's cumulative CPU
+        // total becomes the new thread's baseline -- so the new thread is misclassified for its first
+        // sample, either reported busy (its own total already exceeds the dead thread's) or reported idle
+        // for as long as it takes to catch up. A differing stamp means "different thread, no baseline".
+        static bool IsOnCpu(const ThreadCpuSample& previous, const ThreadCpuSample& current) noexcept
+        {
+            if (previous.CpuMicros < 0 || current.CpuMicros < 0)
+            {
+                return false;
+            }
+            if (previous.StartStamp != current.StartStamp)
+            {
+                return false;
+            }
+            return current.CpuMicros > previous.CpuMicros;
+        }
+
+        // How long the worker should wait before its NEXT capture, given the configured sampling interval
+        // and the measured wall-clock cost of the capture that just finished. Pure; public so the native
+        // unit test can exercise the arithmetic without a live worker thread or CLR.
+        //
+        // Waiting the full interval after every capture makes the real tick-to-tick period
+        // interval + capture cost. At a 1s interval and a ~150ms capture that is ~13% fewer samples per
+        // unit time than the managed side assumes: OtlpProfileBuilder attributes exactly `period`
+        // nanoseconds of time to every sample, with period = the configured interval, so an uncompensated
+        // cadence makes each profile's totals under-report the time the samples actually represent.
+        // Subtracting the previous capture's cost keeps the period at the configured interval instead.
+        //
+        // The floor deliberately leaves half the interval idle no matter how expensive the capture was. A
+        // capture that overruns its own interval cannot be compensated for at all, and driving the wait to
+        // zero to chase the cadence would stop the world back-to-back and starve the application being
+        // profiled -- in that regime the right thing to give up is the cadence, not the app.
+        static uint32_t NextWaitMs(uint32_t intervalMs, int64_t lastCaptureMs) noexcept
+        {
+            const int64_t compensated = static_cast<int64_t>(intervalMs) - (lastCaptureMs > 0 ? lastCaptureMs : 0);
+            const int64_t floorMs = static_cast<int64_t>(intervalMs) / 2;
+            return static_cast<uint32_t>(compensated > floorMs ? compensated : floorMs);
+        }
+
         // NOTE: intentionally NOT declared `noexcept = default`. clang/libstdc++ computes the implicit
         // default ctor's exception spec from the members (some -- e.g. the reused NameCache / vector
         // buffers -- allocate and are therefore not noexcept), so `noexcept = default` is a hard compile
@@ -230,12 +465,8 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
         ContinuousProfiler& operator=(ContinuousProfiler&&) = delete;
 
     private:
-        // Reuse the ThreadProfiler's preallocated name-cache machinery verbatim (same suspend-safe
-        // constraints apply): NameCache, the prealloc name buffers, and the type/method name holder.
-        using NameCache = NewRelic::Profiler::ThreadProfiler::NameCache;
-        using TypeAndMethodNames = NewRelic::Profiler::ThreadProfiler::TypeAndMethodNames;
-        using PreallocTypeName = NewRelic::Profiler::ThreadProfiler::PreallocTypeName;
-        using PreallocMethodName = NewRelic::Profiler::ThreadProfiler::PreallocMethodName;
+        // CP's own bounded name cache -- deliberately NOT shared with
+        // NewRelic::Profiler::ThreadProfiler::NameCache; see namecache.h.
 
         // How many stack frames we support per thread. Walking stops (keeping the leaf-most frames)
         // beyond this; see StaticStackFrameCallback. Deliberately NOT ThreadProfiler's 1337: this cap
@@ -325,21 +556,42 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
             ThreadProfile& operator=(ThreadProfile&&) = delete;
         };
 
-        // The captured, name-resolved stack for one managed thread from a single tick -- the in-memory
-        // hand-off encoded to the OTLP extended-pprof byte buffer. Frames are leaf->root,
-        // "Namespace.Type.Method", name-only.
+        // Raw per-thread capture for a single tick -- the ONLY fields ProfileAllThreads may touch while
+        // the runtime is suspended. Deliberately POD/allocation-free (see CaptureAllThreads's suspend
+        // rule): no strings, no CLR metadata, nothing whose destructor can call operator delete. Mirrors
+        // OTel's dotnet native profiler split (their under-suspend buffer is vector<FunctionIdentifier>,
+        // itself just mdToken/ModuleID/bool/UINT_PTR) -- resolved, allocation-bearing output lives only in
+        // ResolvedThread below, which nothing under suspend ever reaches.
         struct CapturedThread
         {
             ThreadID ManagedThreadId{};
+            // OS thread id resolved via GetThreadInfo INSIDE the suspend window (see ProfileAllThreads).
+            // A ThreadID is a Thread* that is valid only until ThreadDestroyed fires, so it MUST be mapped
+            // to the stable OS id while the runtime is suspended (a suspended thread can't be destroyed) --
+            // resolving it post-resume risks dereferencing a freed Thread* if the thread exited in the gap.
             DWORD OsThreadId{};
-            xstring_t ThreadName;   // resolved AFTER resume (may allocate); "" when the OS has no name.
             TraceContext Context{}; // stamped INSIDE StaticStackFrameCallback, while DoStackSnapshot has this thread suspended.
-            bool OnCpu{}; // set post-resume from CPU-time delta since last tick; false on the first tick.
-            bool IsAgentWork{}; // stamped INSIDE the suspend window from AgentWorkMap -- see its read site.
+            // Stamped from AgentWorkMap in ProfileAllThreads. On CoreCLR that read happens while the
+            // runtime is globally suspended (SuspendRuntime/ResumeRuntime); .NET Framework has no global
+            // suspend, so by this point DoStackSnapshot's own per-thread suspend has already ended --
+            // the read there is effectively post-resume. See ProfileAllThreads for the read site.
+            bool IsAgentWork{};
             // Function IDs captured leaf->root UNDER SUSPEND (cheap copy from the walk buffer, no metadata).
             std::vector<FunctionID> FunctionIds;
-            // Fully-qualified frame names, resolved leaf->root AFTER resume from FunctionIds (metadata +
-            // signature formatting run post-resume so the suspend window holds only the stack walk).
+        };
+
+        // Post-resume, name-resolved output for one managed thread from a single tick -- the in-memory
+        // hand-off encoded to the OTLP extended-pprof byte buffer. Frames are leaf->root,
+        // "Namespace.Type.Method", name-only. Every field here is written ONLY after ResumeRuntime
+        // (ResolveCapturedFrames, EnrichCapturedThreads) -- allocation, CLR metadata calls, and syscalls
+        // are all fine here precisely because CapturedThread above never shares a field with this struct.
+        struct ResolvedThread
+        {
+            DWORD OsThreadId{};
+            xstring_t ThreadName;   // resolved AFTER resume (may allocate); "" when the OS has no name.
+            bool OnCpu{}; // set post-resume from CPU-time delta since last tick; false on the first tick.
+            // Fully-qualified frame names, resolved leaf->root AFTER resume from CapturedThread::FunctionIds
+            // (metadata + signature formatting run post-resume so the suspend window holds only the stack walk).
             std::vector<xstring_t> Frames;
         };
 
@@ -396,12 +648,23 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
 
             // Must be called on any thread before making ICorProfilerInfo* calls and before any thread
             // is suspended by this profiler, to avoid loader/heap-lock deadlocks with a suspended thread.
-            HRESULT hr = _corProfilerInfo->InitializeCurrentThread();
-            if (FAILED(hr))
+            // Guarded on a non-null interface: Start() before Init() (misuse, or a unit test exercising
+            // lifecycle without a live CLR) leaves _corProfilerInfo null, and CaptureAllThreads below
+            // no-ops the same way rather than dereferencing it.
+            if (_corProfilerInfo != nullptr)
             {
-                LogError(L"CP: InitializeCurrentThread failed: ", std::hex, std::showbase, hr,
-                    std::resetiosflags(std::ios_base::basefield | std::ios_base::showbase));
+                HRESULT hr = _corProfilerInfo->InitializeCurrentThread();
+                if (FAILED(hr))
+                {
+                    LogError(L"CP: InitializeCurrentThread failed: ", std::hex, std::showbase, hr,
+                        std::resetiosflags(std::ios_base::basefield | std::ios_base::showbase));
+                }
             }
+
+            // Wall-clock cost of the capture that just finished, subtracted from the next wait so the
+            // tick-to-tick period is the configured interval rather than interval + capture cost. Worker-
+            // thread local: nothing else reads it. See NextWaitMs.
+            int64_t lastCaptureMs = 0;
 
             for (;;)
             {
@@ -411,8 +674,8 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
                         std::unique_lock<std::mutex> l(_mtx_wake);
                         if (_samplingActive.load())
                         {
-                            // Active: wake on the interval OR an explicit signal (Stop/Shutdown).
-                            _cv_wake.wait_for(l, std::chrono::milliseconds(_intervalMs.load()),
+                            // Active: wake on the remainder of the interval OR an explicit signal (Stop/Shutdown).
+                            _cv_wake.wait_for(l, std::chrono::milliseconds(NextWaitMs(_intervalMs.load(), lastCaptureMs)),
                                 [&]() noexcept { return _shuttingDown.load() || !_samplingActive.load(); });
                         }
                         else
@@ -422,6 +685,10 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
                             // Stop() cheap -- an always-true predicate re-evaluated every _intervalMs
                             // returns instantly each time, pegging a core for the whole paused duration.
                             _cv_wake.wait(l, [&]() noexcept { return _shuttingDown.load() || _samplingActive.load(); });
+
+                            // The next session's first tick has no preceding capture of its own to
+                            // compensate for; a cost carried across the pause would shorten its wait.
+                            lastCaptureMs = 0;
                         }
                     }
 
@@ -435,10 +702,18 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
                         continue;
                     }
 
+                    // Measure the whole capture pass -- suspend window, stack walks, and the post-resume
+                    // name resolution alike -- since every part of it delays the next tick.
+                    const auto captureStart = std::chrono::steady_clock::now();
                     CaptureAllThreads();
+                    lastCaptureMs = std::chrono::duration_cast<std::chrono::milliseconds>(
+                        std::chrono::steady_clock::now() - captureStart).count();
                 }
                 catch (...)
                 {
+                    // Cost of a capture that threw part-way through says nothing about a full pass; wait
+                    // the whole interval rather than compensating for a truncated one.
+                    lastCaptureMs = 0;
                     LogError(L"CP: Exception thrown while sampling.");
                     // an exception here is recoverable, "The thread must go on!"
                 }
@@ -454,6 +729,28 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
         // also guards) -- a failure here must never crash or hang the host.
         void CaptureAllThreads()
         {
+            // Nothing to sample without the CLR interface (e.g. Start() before Init(), or a lifecycle
+            // unit test with no live CLR). Bail before touching anything that would dereference it.
+            if (_corProfilerInfo == nullptr)
+            {
+                return;
+            }
+
+            // Serialize the ENTIRE capture cycle with the ThreadProfiler: only one runtime suspend/
+            // stack-walk may be in flight process-wide, and -- widened here -- CP's own pre-suspend setup
+            // and post-resume resolution are held under the same lock. Those phases (HasFreeSlot's mutex,
+            // the StackWalk allocation, EnumerateThreadsInto's EnumThreads which takes the CLR ThreadStore
+            // lock, and ResolveCapturedFrames/AppendSignature's metadata locks + allocations) are exactly
+            // what the "suspend window" rule forbids overlapping with the other profiler's stop-the-world.
+            //
+            // Scope of the hazard this closes: Medium, Linux-only. TP's own SuspendRuntime is inside
+            // #ifdef PAL_STDCPP_COMPAT (CoreCLR-on-Linux), so only there can TP freeze the world while
+            // holding this mutex; on Windows CoreCLR TP never stops the world. CP's sampler is a raw
+            // std::thread (not a managed thread), so a TP suspend can't freeze it -- worst case was a
+            // stall for TP's window, not a permanent hang -- but it did widen the pre-existing
+            // TP-allocates-under-suspend hazard, so CP's setup/post-resume now sit inside the lock too.
+            std::lock_guard<NewRelic::Profiler::SuspendMutex> suspendLock(NewRelic::Profiler::SuspendMutex::Shared());
+
             // BACK-PRESSURE FIRST: if the managed reader has not drained, this tick's batch has nowhere
             // to go, so skip the whole cycle instead of suspending the runtime, walking every stack and
             // encoding a batch we would only discard at publish time. Suspending the app to produce
@@ -474,17 +771,22 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
             }
 
             // Preallocate this tick's capture storage ONCE (first call only), also outside the suspend
-            // window: ThreadCountForReservation persistent slots, each with FunctionIds/Frames reserved
-            // to MaxStackFramesSupported -- the same bound the walk buffer (and therefore
+            // window: ThreadCountForReservation persistent slots, each with FunctionIds reserved to
+            // MaxStackFramesSupported -- the same bound the walk buffer (and therefore
             // StaticStackFrameCallback on overflow) is capped at -- so a per-thread push_back inside the
             // suspend window can never reallocate. Reused every tick from here on; ProfileAllThreads only
-            // clears/overwrites slots in place, never grows this vector.
+            // clears/overwrites slots in place, never grows this vector. _resolved is sized/indexed in
+            // lockstep with _capture but is only ever touched post-resume.
             if (_capture.size() != ThreadCountForReservation)
             {
                 _capture.resize(ThreadCountForReservation);
                 for (auto& slot : _capture)
                 {
                     slot.FunctionIds.reserve(MaxStackFramesSupported);
+                }
+                _resolved.resize(ThreadCountForReservation);
+                for (auto& slot : _resolved)
+                {
                     slot.Frames.reserve(MaxStackFramesSupported);
                 }
                 // Reserve the pre-suspend thread-ID list once, matching the capture slots.
@@ -502,16 +804,19 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
                 std::chrono::system_clock::now().time_since_epoch()).count();
             int64_t microsSuspended = 0;
 
-            // Enumerate managed threads BEFORE suspending the runtime (and before taking the suspend mutex).
-            // EnumThreads + building the ID list allocate/iterate, which must never run inside the suspend
-            // window (heap-lock deadlock hazard). A thread that dies between here and its DoStackSnapshot
-            // simply fails the snapshot and is counted -- never fatal. Mirrors OTel's pre-suspend enumerate.
+            // Enumerate managed threads BEFORE suspending the runtime. EnumThreads + building the ID list
+            // allocate/iterate, which must never run inside the actual stop-the-world window (heap-lock
+            // deadlock hazard) -- though the SuspendMutex is already held at function scope above, that
+            // only serializes against the OTHER profiler; it does not suspend THIS runtime. A thread that
+            // dies between here and its DoStackSnapshot simply fails the snapshot and is counted -- never
+            // fatal. Mirrors OTel's pre-suspend enumerate.
             EnumerateThreadsInto(_threadList);
 
             {
-                // Serialize with the ThreadProfiler: only one runtime suspend/stack-walk cycle in flight
-                // process-wide. Held across the entire suspend->walk->resume sequence.
-                std::lock_guard<NewRelic::Profiler::SuspendMutex> suspendLock(NewRelic::Profiler::SuspendMutex::Shared());
+                // Inner scope = the actual stop-the-world window (SuspendRuntime -> walk -> ResumeRuntime).
+                // The SuspendMutex is already held at function scope, so no lock is taken here; this scope
+                // now only delimits the region where the runtime is genuinely frozen and the strict
+                // "no alloc / no lock / no log" suspend rule applies.
 
                 // Stop-the-world on CoreCLR, on every OS -- gated on _isCoreClr, not PAL_STDCPP_COMPAT/OS
                 // (see Init). .NET Framework has no runtime-wide suspend and skips this branch entirely.
@@ -609,12 +914,13 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
 
             if (overflowCount != 0)
             {
-                // Honest truncation signal, mirroring the sample-buffer truncation log in EncodeAndPublish:
-                // more managed threads were successfully walked this tick than the ThreadCountForReservation
-                // persistent slots hold, so the extras were dropped rather than growing the capture buffer
-                // under suspend.
-                LogTrace(L"CP: thread capture overflow; dropped ", overflowCount, L" thread(s) beyond the ",
-                    static_cast<size_t>(ThreadCountForReservation), L"-slot capture buffer");
+                // Honest truncation signal: more managed threads were live this tick than the
+                // ThreadCountForReservation persistent slots hold, so the extras were deferred to a later
+                // tick rather than growing the capture buffer under suspend. Unlike a static from-index-0
+                // drop, the rotation offset advances each tick, so these threads ARE sampled on subsequent
+                // ticks -- this is round-robin coverage, not a permanent blind spot.
+                LogTrace(L"CP: thread capture overflow; deferred ", overflowCount, L" thread(s) beyond the ",
+                    static_cast<size_t>(ThreadCountForReservation), L"-slot capture buffer to a later tick (round-robin)");
             }
 
             if (truncatedStackCount != 0)
@@ -646,27 +952,28 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
                 int32_t emittedCount = 0;
                 for (size_t i = 0; i < _capturedCount; ++i)
                 {
-                    const auto& thread = _capture[i];
+                    const auto& raw = _capture[i];
+                    const auto& resolved = _resolved[i];
 
                     // Estimate this sample's size and skip it if it would overflow the fixed buffer,
                     // rather than growing without bound. A truncated batch is still valid to the parser.
                     // Reserve TrailerBytes so the WriteBatchStats/WriteEndBatch call below always has
                     // room, even when this sample is the last one that fits.
-                    if (!writer.WillFit(EstimateSampleBytes(thread) + TrailerBytes))
+                    if (!writer.WillFit(EstimateSampleBytes(resolved) + TrailerBytes))
                     {
                         LogTrace(L"CP: sample buffer full mid-batch; truncating remaining threads");
                         break;
                     }
 
                     writer.WriteStartSample();
-                    writer.WriteThreadName(thread.ThreadName);
-                    writer.WriteInt64Field(static_cast<int64_t>(thread.OsThreadId));
-                    writer.WriteInt64Field(thread.Context.TraceIdHigh);
-                    writer.WriteInt64Field(thread.Context.TraceIdLow);
-                    writer.WriteInt64Field(thread.Context.SpanId);
-                    writer.WriteBoolField(thread.OnCpu); // v2 per-sample on-CPU flag
-                    writer.WriteBoolField(thread.IsAgentWork); // v3 per-sample agent-work flag
-                    for (const auto& frame : thread.Frames)
+                    writer.WriteThreadName(resolved.ThreadName);
+                    writer.WriteInt64Field(static_cast<int64_t>(resolved.OsThreadId));
+                    writer.WriteInt64Field(raw.Context.TraceIdHigh);
+                    writer.WriteInt64Field(raw.Context.TraceIdLow);
+                    writer.WriteInt64Field(raw.Context.SpanId);
+                    writer.WriteBoolField(resolved.OnCpu); // v2 per-sample on-CPU flag
+                    writer.WriteBoolField(raw.IsAgentWork); // v3 per-sample agent-work flag
+                    for (const auto& frame : resolved.Frames)
                     {
                         writer.WriteCodedFrameString(frame);
                         ++totalFrames;
@@ -699,7 +1006,7 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
         // Upper-bound byte estimate for one sample, used by the overflow guard. Assumes every frame is a
         // freshly-interned string capped at MaxStringChars (the worst case), plus fixed per-sample bytes
         // and the (now populated) thread-name string.
-        static size_t EstimateSampleBytes(const CapturedThread& thread) noexcept
+        static size_t EstimateSampleBytes(const ResolvedThread& thread) noexcept
         {
             // 1 opcode + name len prefix(2) + 4 int64 fields(32) + onCpu byte(1) + isAgentWork byte(1) +
             // frame terminator(2).
@@ -727,45 +1034,46 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
         {
             uint32_t withContext = 0;
 
-            // This tick's per-thread cumulative CPU micros, used to replace _prevCpuMicros below so dead
-            // threads (not seen this tick) are pruned rather than accumulating forever.
-            std::unordered_map<DWORD, int64_t> seenCpu;
+            // This tick's per-thread CPU readings, used to replace _prevCpuSamples below so dead threads
+            // (not seen this tick) are pruned rather than accumulating forever.
+            std::unordered_map<DWORD, ThreadCpuSample> seenCpu;
             seenCpu.reserve(_capturedCount);
 
             for (size_t i = 0; i < _capturedCount; ++i)
             {
-                auto& thread = _capture[i];
+                const auto& raw = _capture[i];
+                auto& resolved = _resolved[i];
                 // Context was already stamped under suspend in ProfileAllThreads (writers frozen ->
                 // stable read). Here we only tally how many threads carry a link (diagnostic) and resolve
                 // OS thread names (post-resume: may allocate / do syscalls).
-                if (thread.Context.TraceIdHigh != 0 || thread.Context.TraceIdLow != 0 || thread.Context.SpanId != 0)
+                if (raw.Context.TraceIdHigh != 0 || raw.Context.TraceIdLow != 0 || raw.Context.SpanId != 0)
                 {
                     ++withContext;
                 }
 
-                // Resolve the OS thread id from the managed id HERE (post-resume), not under suspend --
-                // nothing in the suspend window needs it. GetThreadInfo's HRESULT is intentionally not
-                // checked: on failure (e.g. the thread exited between resume and now) OsThreadId stays 0,
-                // and the name/CPU lookups below already treat 0 / an unreadable id as "no name, off-CPU".
-                DWORD osThreadId = 0;
-                _corProfilerInfo->GetThreadInfo(thread.ManagedThreadId, &osThreadId);
-                thread.OsThreadId = osThreadId;
+                // OS thread id was resolved UNDER SUSPEND in ProfileAllThreads (a ThreadID is a Thread*
+                // that becomes invalid once ThreadDestroyed fires, so it must be mapped while the runtime
+                // is suspended -- calling GetThreadInfo here, post-resume, could dereference a freed
+                // Thread* for a thread that exited in the gap). On resolve failure OsThreadId stayed 0, and
+                // the name/CPU lookups below already treat 0 / an unreadable id as "no name, off-CPU".
+                resolved.OsThreadId = raw.OsThreadId;
 
-                thread.ThreadName = ResolveThreadName(thread.OsThreadId);
+                resolved.ThreadName = ResolveThreadName(resolved.OsThreadId);
 
                 // On-CPU classification: a thread is on-CPU this tick if its cumulative CPU time grew
-                // since the last tick's baseline. No baseline yet (first tick this thread was seen, or
-                // the read failed) -> false rather than a guess.
-                const int64_t cur = ReadThreadCpuMicros(thread.OsThreadId);
-                const auto prev = _prevCpuMicros.find(thread.OsThreadId);
-                thread.OnCpu = (cur >= 0 && prev != _prevCpuMicros.end() && cur > prev->second);
-                if (cur >= 0)
+                // since the last tick's baseline. No baseline yet (first tick this thread was seen, the
+                // read failed, or the tid has since been reused by a different thread) -> false rather
+                // than a guess. See IsOnCpu.
+                const ThreadCpuSample cur = ReadThreadCpuSample(resolved.OsThreadId);
+                const auto prev = _prevCpuSamples.find(resolved.OsThreadId);
+                resolved.OnCpu = prev != _prevCpuSamples.end() && IsOnCpu(prev->second, cur);
+                if (cur.CpuMicros >= 0)
                 {
-                    seenCpu[thread.OsThreadId] = cur;
+                    seenCpu[resolved.OsThreadId] = cur;
                 }
             }
 
-            _prevCpuMicros.swap(seenCpu); // keep only threads seen (and readable) this tick
+            _prevCpuSamples.swap(seenCpu); // keep only threads seen (and readable) this tick
             return withContext;
         }
 
@@ -801,24 +1109,9 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
 
                 return ToWideString(name);
 #else
-                // Windows: GetThreadDescription (Win 10+). THREAD_QUERY_LIMITED_INFORMATION is the minimal
-                // right needed and succeeds for threads in our own process.
-                xstring_t result;
-                HANDLE hThread = ::OpenThread(THREAD_QUERY_LIMITED_INFORMATION, FALSE, osThreadId);
-                if (hThread == nullptr)
-                {
-                    return xstring_t();
-                }
-
-                PWSTR description = nullptr;
-                const HRESULT hr = ::GetThreadDescription(hThread, &description);
-                if (SUCCEEDED(hr) && description != nullptr)
-                {
-                    result.assign(description);
-                    ::LocalFree(description);
-                }
-                ::CloseHandle(hThread);
-                return result;
+                // Windows: GetThreadDescription (Win 10+), resolved lazily -- see ThreadDescriptionResolver.h
+                // for why this must never be a static import.
+                return GetThreadDescriptionResolver::ResolveThreadName(osThreadId, GetThreadDescriptionResolver::Resolve());
 #endif
             }
             catch (...)
@@ -827,25 +1120,27 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
             }
         }
 
-        // Cumulative CPU time (user+kernel) for an OS thread, in microseconds; -1 if unavailable (thread
-        // gone, or the read failed). Runs POST-resume only, same as ResolveThreadName -- both allocate /
-        // do syscalls and are therefore not suspend-safe. Never throws.
-        static int64_t ReadThreadCpuMicros(DWORD osThreadId) noexcept
+        // Cumulative CPU time (user+kernel) for an OS thread, in microseconds, paired with that thread's
+        // creation stamp; CpuMicros is -1 if unavailable (thread gone, or the read failed). Runs
+        // POST-resume only, same as ResolveThreadName -- both allocate / do syscalls and are therefore not
+        // suspend-safe. Never throws.
+        static ThreadCpuSample ReadThreadCpuSample(DWORD osThreadId) noexcept
         {
+            ThreadCpuSample sample;
             try
             {
 #ifdef PAL_STDCPP_COMPAT
-                // Linux: /proc/self/task/<tid>/stat field 14 (utime) and 15 (stime), in clock ticks.
-                // The 2nd field (comm) is parenthesized and may itself contain spaces/parens, so find the
-                // LAST ')' on the line and count fields from there rather than splitting on whitespace
-                // from the start.
+                // Linux: /proc/self/task/<tid>/stat field 14 (utime), 15 (stime) -- both in clock ticks --
+                // and field 22 (starttime, the thread's creation time in ticks since boot). The 2nd field
+                // (comm) is parenthesized and may itself contain spaces/parens, so find the LAST ')' on the
+                // line and count fields from there rather than splitting on whitespace from the start.
                 char path[64] = { 0 };
                 std::snprintf(path, sizeof(path), "/proc/self/task/%u/stat", static_cast<unsigned>(osThreadId));
 
                 std::FILE* f = std::fopen(path, "r");
                 if (f == nullptr)
                 {
-                    return -1; // thread gone or stat unreadable.
+                    return sample; // thread gone or stat unreadable.
                 }
 
                 char line[512] = { 0 };
@@ -856,7 +1151,7 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
                 char* lastParen = std::strrchr(line, ')');
                 if (lastParen == nullptr)
                 {
-                    return -1;
+                    return sample;
                 }
 
                 // The first whitespace-delimited token after the last ')' is field 3 (state); utime is
@@ -866,51 +1161,66 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
                 for (int skip = 0; skip < 11; ++skip)
                 {
                     while (*cursor == ' ') ++cursor;
-                    if (*cursor == '\0') return -1;
+                    if (*cursor == '\0') return sample;
                     while (*cursor != ' ' && *cursor != '\0') ++cursor;
                 }
 
                 while (*cursor == ' ') ++cursor;
-                if (*cursor == '\0') return -1;
+                if (*cursor == '\0') return sample;
                 const uint64_t utime = std::strtoull(cursor, &cursor, 10);
 
                 while (*cursor == ' ') ++cursor;
-                if (*cursor == '\0') return -1;
+                if (*cursor == '\0') return sample;
                 const uint64_t stime = std::strtoull(cursor, &cursor, 10);
 
                 const long clockTicksPerSec = ::sysconf(_SC_CLK_TCK);
                 if (clockTicksPerSec <= 0)
                 {
-                    return -1;
+                    return sample;
                 }
 
-                return static_cast<int64_t>((utime + stime) * 1000000ULL / static_cast<uint64_t>(clockTicksPerSec));
+                sample.CpuMicros = static_cast<int64_t>((utime + stime) * 1000000ULL / static_cast<uint64_t>(clockTicksPerSec));
+
+                // starttime is field 22, so skip the six fields between stime (15) and it (16..21). A
+                // failure to reach it leaves StartStamp at 0, which only costs the tid-reuse check.
+                for (int skip = 0; skip < 6; ++skip)
+                {
+                    while (*cursor == ' ') ++cursor;
+                    if (*cursor == '\0') return sample;
+                    while (*cursor != ' ' && *cursor != '\0') ++cursor;
+                }
+
+                while (*cursor == ' ') ++cursor;
+                if (*cursor == '\0') return sample;
+                sample.StartStamp = std::strtoull(cursor, &cursor, 10);
+
+                return sample;
 #else
                 // Windows: GetThreadTimes on a query-limited handle; sum kernel+user, 100ns -> microseconds.
+                // Its creation FILETIME doubles as the thread's identity stamp for the tid-reuse check.
                 HANDLE hThread = ::OpenThread(THREAD_QUERY_LIMITED_INFORMATION, FALSE, osThreadId);
                 if (hThread == nullptr)
                 {
-                    return -1;
+                    return sample;
                 }
 
                 FILETIME creation{}, exitTime{}, kernel{}, user{};
-                int64_t micros = -1;
                 if (::GetThreadTimes(hThread, &creation, &exitTime, &kernel, &user))
                 {
-                    auto toMicros = [](const FILETIME& ft) -> uint64_t
+                    auto toTicks = [](const FILETIME& ft) -> uint64_t
                     {
-                        const uint64_t hundredNs = (static_cast<uint64_t>(ft.dwHighDateTime) << 32) | ft.dwLowDateTime;
-                        return hundredNs / 10ULL; // 100ns units -> microseconds
+                        return (static_cast<uint64_t>(ft.dwHighDateTime) << 32) | ft.dwLowDateTime;
                     };
-                    micros = static_cast<int64_t>(toMicros(kernel) + toMicros(user));
+                    sample.CpuMicros = static_cast<int64_t>((toTicks(kernel) + toTicks(user)) / 10ULL); // 100ns units -> microseconds
+                    sample.StartStamp = toTicks(creation);
                 }
                 ::CloseHandle(hThread);
-                return micros;
+                return sample;
 #endif
             }
             catch (...)
             {
-                return -1;
+                return ThreadCpuSample();
             }
         }
 
@@ -983,7 +1293,16 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
                 }
                 else
                 {
-                    wcscpy_s(typeName.first.data(), static_cast<ULONG>(typeName.first.size()), cachedTypeName->c_str());
+                    // Keep .second (the length INCLUDING the null terminator -- NameCache's convention) in
+                    // step with .first on this path too, and clamp to the buffer. NameCache::insert only
+                    // reads .second when the type key is absent, which this cache hit rules out today, but
+                    // a length left over from the previous resolve would otherwise pair this type's name
+                    // with another type's length the moment that stops being true.
+                    const size_t maxChars = typeName.first.size() - 1;
+                    const size_t copied = std::min<size_t>(cachedTypeName->size(), maxChars);
+                    std::copy_n(cachedTypeName->c_str(), copied, typeName.first.data());
+                    typeName.first[copied] = 0;
+                    typeName.second = static_cast<ULONG>(copied + 1);
                 }
 
                 AppendSignature(scratch); // fold the parameter list into the method name
@@ -1073,14 +1392,16 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
         {
             for (size_t i = 0; i < _capturedCount; ++i)
             {
-                auto& thread = _capture[i];
-                // Frames was already cleared for this slot (under suspend, in ProfileAllThreads) and is
-                // reserved to MaxStackFramesSupported, so these emplace_backs cannot reallocate even
-                // though this runs post-resume.
-                for (const auto functionId : thread.FunctionIds)
+                const auto& raw = _capture[i];
+                auto& resolved = _resolved[i];
+                // Clear here, post-resume: Frames holds last tick's resolved xstring_t names, so freeing
+                // them must never happen under suspend (see ResolvedThread's header comment / review C4).
+                // Reserved to MaxStackFramesSupported, so the emplace_backs below cannot reallocate.
+                resolved.Frames.clear();
+                for (const auto functionId : raw.FunctionIds)
                 {
                     ResolveIntoCache(functionId);
-                    thread.Frames.emplace_back(AssembleFrameName(functionId));
+                    resolved.Frames.emplace_back(AssembleFrameName(functionId));
                 }
             }
         }
@@ -1126,14 +1447,60 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
             }
         }
 
+        // Contain a structured (SEH) fault raised INSIDE DoStackSnapshot while the runtime is suspended.
+        //
+        // DoStackSnapshot walks a target thread's native+managed stack; a corrupt frame, a torn stack, or
+        // a race the CLR's own guards miss can raise an access violation (or another structured exception)
+        // from inside the walk. On Windows the profiler is built with /EHsc, under which catch(...) does
+        // NOT catch structured exceptions -- so such a fault would blow straight past the C++ catch in
+        // ProfileAllThreads, terminate the process, AND (worse than a plain crash) leave the runtime
+        // permanently suspended, because ResumeRuntime in CaptureAllThreads is never reached: every other
+        // thread stays frozen while the process tears down. Wrapping just this one call in __try/__except
+        // turns a fault into an ordinary failed-snapshot HRESULT, so the thread is skipped, the capture
+        // loop continues, and ResumeRuntime still runs.
+        //
+        // Isolated in its own function with no C++ objects that require unwinding, because MSVC forbids
+        // __try/__except in a frame that also needs C++ exception unwinding (C2712) -- ProfileAllThreads'
+        // loop constructs ThreadProfile/TraceContext locals and so cannot host the __try itself. Logging
+        // is deliberately absent (this runs inside the suspend window, where taking StdLog's mutex or
+        // allocating could deadlock against a frozen app thread); a contained fault is surfaced by the
+        // failedSnapshotCount tally that ProfileAllThreads reports post-resume.
+        //
+        // Linux/CoreCLR has no SEH -- an access violation there is a process-level signal, outside the
+        // scope of this containment -- so the call is issued directly. This does not regain the Linux
+        // libstdc++ concern (a C++ throw allocating via __cxa_allocate_exception under suspend): the whole
+        // suspend window is allocation-free and throw-free by construction (preallocated capture buffers,
+        // wait-free noexcept map reads, an HRESULT-returning DoStackSnapshot), so no C++ exception arises
+        // here to allocate in the first place.
+        HRESULT DoStackSnapshotContained(ThreadID threadId, ThreadProfile& threadProfile) noexcept
+        {
+#ifdef PAL_STDCPP_COMPAT
+            return _corProfilerInfo->DoStackSnapshot(threadId, StaticStackFrameCallback,
+                COR_PRF_SNAPSHOT_INFO::COR_PRF_SNAPSHOT_DEFAULT, &threadProfile, nullptr, 0);
+#else
+            __try
+            {
+                return _corProfilerInfo->DoStackSnapshot(threadId, StaticStackFrameCallback,
+                    COR_PRF_SNAPSHOT_INFO::COR_PRF_SNAPSHOT_DEFAULT, &threadProfile, nullptr, 0);
+            }
+            __except (EXCEPTION_EXECUTE_HANDLER)
+            {
+                // Treat a fault during the walk as a failed snapshot: ProfileAllThreads drops the thread
+                // like any other DoStackSnapshot failure and counts it, and the runtime is still resumed.
+                return E_FAIL;
+            }
+#endif
+        }
+
         // Enumerate all managed threads and DoStackSnapshot each one into a preallocated frame buffer,
         // resolving names into the reused NameCache (mirrors ThreadProfiler::ProfileAllThreads). Runs
         // under the suspend rule -- see the class header.
         //
         // Writes into the persistent _capture buffer (preallocated to ThreadCountForReservation slots,
         // before suspend): _capturedCount successfully-walked threads land in _capture[0.._capturedCount),
-        // each slot updated in place so nothing here can allocate. A tick with more walked threads than
-        // slots drops the extras (overflowCount) instead of growing the buffer under suspend.
+        // each slot updated in place so nothing here can allocate. A tick with more live threads than slots
+        // walks only a rotating window of them (see PlanCaptureWindow); the rest (overflowCount) are
+        // deferred to later ticks rather than growing the buffer under suspend or dropping a fixed subset.
         void ProfileAllThreads(uint32_t& failedSnapshotCount, uint32_t& overflowCount, uint32_t& exceptionCount,
             uint32_t& truncatedStackCount)
         {
@@ -1145,7 +1512,20 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
 
             // _threadList was populated by EnumerateThreadsInto() BEFORE the suspend window opened -- no
             // enumeration or allocation happens here, under suspend.
-            for (const auto threadId : _threadList)
+            //
+            // Round-robin over ticks: rather than always walking _threadList from index 0 and dropping the
+            // stable tail once the slots fill (a permanent blind spot -- see PlanCaptureWindow), start at a
+            // rotating offset and visit exactly window.visitCount (<= slot capacity) threads. Threads not
+            // visited this tick are covered by later ticks as the window advances. This also avoids paying
+            // DoStackSnapshot's cost under suspend for threads that would only be dropped.
+            const size_t threadCount = _threadList.size();
+            const CaptureWindow window = PlanCaptureWindow(threadCount, _capture.size(), _rotationOffset);
+            _rotationOffset = window.nextOffset;
+            // Threads deferred to a later tick (not permanently dropped -- rotation covers them). 0 when
+            // every enumerated thread fit this tick.
+            overflowCount = static_cast<uint32_t>(threadCount - window.visitCount);
+
+            for (size_t visited = 0; visited < window.visitCount; ++visited)
             {
                 // Read the flag directly rather than via IsShutdownRequested(): that helper logs, and
                 // LogStuff takes StdLog's shared mutex and allocates. A frozen app thread holding that
@@ -1156,6 +1536,8 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
                 {
                     break;
                 }
+
+                const auto threadId = _threadList[(window.start + visited) % threadCount];
 
                 try
                 {
@@ -1172,9 +1554,10 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
                     ThreadProfile threadProfile(threadId, _corProfilerInfo, _nameCache, *_stackwalk, _traceContexts, threadContext);
 
                     // If context is NULL, the walk begins at the last available managed frame for the
-                    // target thread (mirror ThreadProfiler.h:585).
-                    const auto result = _corProfilerInfo->DoStackSnapshot(threadId, StaticStackFrameCallback,
-                        COR_PRF_SNAPSHOT_INFO::COR_PRF_SNAPSHOT_DEFAULT, &threadProfile, nullptr, 0);
+                    // target thread (mirror ThreadProfiler.h:585). Routed through DoStackSnapshotContained
+                    // so a structured (SEH) fault inside the walk on Windows/EHsc is contained and the
+                    // runtime is still resumed, rather than crashing with the runtime left suspended.
+                    const auto result = DoStackSnapshotContained(threadId, threadProfile);
 
                     // A managed thread with no managed frames, or one that died between Enum and snapshot,
                     // fails here -- record it and skip, never fatal. A stack deeper than
@@ -1191,21 +1574,24 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
                         continue;
                     }
 
-                    // _capture holds exactly ThreadCountForReservation preallocated slots; a tick that
-                    // walks more threads than that drops the extras rather than reallocating under suspend.
-                    if (_capturedCount >= _capture.size())
-                    {
-                        ++overflowCount;
-                        continue;
-                    }
-
                     // Reuse the next free slot in place; stale data from an earlier occupant is fully
-                    // overwritten below.
+                    // overwritten below. No per-thread overflow guard is needed: window.visitCount is
+                    // capped at _capture.size() and failed snapshots only lower _capturedCount, so this
+                    // index can never reach the slot count.
                     auto& captured = _capture[_capturedCount];
                     captured.ManagedThreadId = threadId;
-                    // OS thread id is resolved POST-RESUME in EnrichCapturedThreads; zeroed here so a
-                    // since-freed slot can't leak a prior occupant's id if that resolve fails.
+
+                    // Resolve the OS thread id from the ThreadID HERE, under suspend, NOT post-resume. A
+                    // ThreadID is a Thread* that is valid only until ThreadDestroyed fires; on CoreCLR the
+                    // runtime is globally suspended for this whole loop, so the thread cannot be destroyed
+                    // and the mapping is safe. (On .NET Framework there is no global suspend, but this call
+                    // sits in the same tight loop as the walk instead of after resume + all name/metadata
+                    // resolution, shrinking the death window to negligible.) GetThreadInfo is a cheap
+                    // Thread* getter -- no allocation, no metadata -- so it is safe under suspend. HRESULT
+                    // is intentionally unchecked: on failure OsThreadId stays 0 and the post-resume name/CPU
+                    // lookups already treat 0 as "no name, off-CPU".
                     captured.OsThreadId = 0;
+                    _corProfilerInfo->GetThreadInfo(threadId, &captured.OsThreadId);
 
                     // threadContext was stamped by StaticStackFrameCallback DURING DoStackSnapshot, while
                     // this specific thread was suspended -- true on every platform, unlike a read gated on
@@ -1229,7 +1615,6 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
                     {
                         captured.FunctionIds.push_back(it->functionId);
                     }
-                    captured.Frames.clear();
 
                     ++_capturedCount;
                 }
@@ -1345,6 +1730,41 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
             return S_OK;
         }
 
+        // Free the per-session sampling buffers back to the allocator so a stopped session's peak memory
+        // shrinks back instead of staying resident until the profiler object is destroyed. Callers MUST
+        // guarantee the sampler worker thread is not inside CaptureAllThreads: Stop() enforces this by
+        // holding SuspendMutex (the whole capture cycle runs under it) with _samplingActive already
+        // false; Shutdown() enforces it by having joined the worker. Nothing here touches CLR state or
+        // takes a lock that could be held under suspend, and every operation is on a worker-owned buffer,
+        // so it is a plain, allocation-freeing reset.
+        //
+        // swap-with-a-fresh-empty is used instead of clear() because clear()/shrink_to_fit() does not
+        // *guarantee* the capacity is returned (shrink_to_fit is a non-binding request); swapping in an
+        // empty container is the guaranteed release idiom. The next Start() re-allocates lazily on the
+        // worker's first tick via the size guards in CaptureAllThreads, so this only trades a small
+        // restart cost for the retained memory between sessions.
+        //
+        // Deliberately does NOT clear _nameCache: it is a BoundedLruCache (fixed cap, cannot grow
+        // without bound), and clearing it would force every frame to re-resolve its type/method metadata
+        // on the next session. That is memory we keep on purpose to make restarts cheap -- a genuine
+        // memory/restart-latency tradeoff, resolved in favor of keeping the bounded cache. _resolveScratch
+        // (one fixed ~4 KB frame) is likewise left alone -- not worth churning.
+        void ReleaseSamplingResources() noexcept
+        {
+            _stackwalk.reset();
+
+            std::vector<CapturedThread>().swap(_capture);
+            std::vector<ResolvedThread>().swap(_resolved);
+            std::vector<ThreadID>().swap(_threadList);
+            std::vector<uint8_t>().swap(_encodeScratch);
+            std::unordered_map<DWORD, ThreadCpuSample>().swap(_prevCpuSamples);
+
+            _capturedCount = 0;
+            _rotationOffset = 0;
+
+            _sampleBuffers.Reset();
+        }
+
         //
         // Shutdown -- set during shutdown; the worker checks this to terminate.
         //
@@ -1362,6 +1782,14 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
         //
         mutable std::mutex _mtx_wake;
         std::condition_variable _cv_wake;
+
+        // Lifecycle mutex -- serializes Start()/Stop()/Shutdown() so the joinable() check, thread
+        // create, join(), and _shuttingDown/_samplingActive resets never interleave across concurrent
+        // callers. DISTINCT from _mtx_wake (which only guards the sampler wake condition): the worker
+        // thread takes _mtx_wake but never _mtx_lifecycle, so holding _mtx_lifecycle across join()
+        // cannot deadlock the worker. Lock ordering is always _mtx_lifecycle then _mtx_wake; no path
+        // takes them in the opposite order.
+        std::mutex _mtx_lifecycle;
 
         // Worker thread that periodically samples all managed threads.
         std::thread _workerThread;
@@ -1384,17 +1812,29 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
         std::unique_ptr<StackWalk> _stackwalk;
 
         // Persistent per-tick capture buffer. Resized ONCE, to ThreadCountForReservation slots, on the
-        // first CaptureAllThreads call -- outside the suspend window -- with each slot's FunctionIds and
-        // Frames vectors reserved to MaxStackFramesSupported. Every tick thereafter, ProfileAllThreads
-        // reuses slots [0, _capturedCount) in place (clear() + push_back, never resize/emplace_back), so
-        // no allocation is possible while the runtime is suspended. Slots at or beyond _capturedCount
-        // hold stale data from an earlier tick and must not be read until claimed and overwritten again.
+        // first CaptureAllThreads call -- outside the suspend window -- with each slot's FunctionIds
+        // vector reserved to MaxStackFramesSupported. Every tick thereafter, ProfileAllThreads reuses
+        // slots [0, _capturedCount) in place (clear() + push_back, never resize/emplace_back), so no
+        // allocation is possible while the runtime is suspended. Slots at or beyond _capturedCount hold
+        // stale data from an earlier tick and must not be read until claimed and overwritten again.
         std::vector<CapturedThread> _capture;
 
-        // Number of valid, freshly-written entries in _capture for the current/most recent tick. Set by
-        // ProfileAllThreads (under suspend); read by ResolveCapturedFrames, EnrichCapturedThreads, and
-        // EncodeAndPublish (all post-resume) to bound their iteration over _capture.
+        // Resolved output, indexed in lockstep with _capture (same size, same [0, _capturedCount) bound).
+        // ONLY ever written by ResolveCapturedFrames/EnrichCapturedThreads and read by EncodeAndPublish --
+        // all post-resume. Nothing in ProfileAllThreads (the suspend-window code) may touch this.
+        std::vector<ResolvedThread> _resolved;
+
+        // Number of valid, freshly-written entries in _capture/_resolved for the current/most recent tick.
+        // Set by ProfileAllThreads (under suspend); read by ResolveCapturedFrames, EnrichCapturedThreads,
+        // and EncodeAndPublish (all post-resume) to bound their iteration.
         size_t _capturedCount{ 0 };
+
+        // Round-robin start offset for thread capture, carried across ticks and advanced by each tick's
+        // visitCount (see PlanCaptureWindow / ProfileAllThreads). Only ever touched by the sampler thread.
+        // When live threads exceed the capture slots this rotates which threads are sampled each tick so no
+        // fixed subset is permanently dropped; when they fit it is a no-op. Unbounded growth is harmless --
+        // it is always read modulo the current thread count.
+        size_t _rotationOffset{ 0 };
 
         // Managed-thread ID list for the current tick. Filled by EnumerateThreadsInto() BEFORE the runtime is
         // suspended -- EnumThreads plus building this ID vector must NOT happen inside the suspend window: an
@@ -1428,10 +1868,11 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
         // Throttle counter for the SetTraceContext push diagnostic (see ShouldLogPushDiagnostic).
         std::atomic<uint32_t> _pushDiagnosticCount{ 0 };
 
-        // Previous-tick per-OS-thread cumulative CPU micros, keyed by OS thread id. Read/written only on
-        // the sampler thread, only post-resume (allocation is fine here). Rebuilt each tick in
-        // EnrichCapturedThreads to prune dead threads.
-        std::unordered_map<DWORD, int64_t> _prevCpuMicros;
+        // Previous-tick per-OS-thread CPU reading, keyed by OS thread id. Read/written only on the sampler
+        // thread, only post-resume (allocation is fine here). Rebuilt each tick in EnrichCapturedThreads to
+        // prune dead threads. The stored creation stamp is what keeps a recycled tid from inheriting the
+        // previous holder's baseline (see IsOnCpu).
+        std::unordered_map<DWORD, ThreadCpuSample> _prevCpuSamples;
 
         // Scratch buffer the encoder writes into each tick before the bytes are swapped into a filled
         // double-buffer slot. Reused across ticks; only touched by the sampling thread (after resume),
@@ -1452,5 +1893,16 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
         // slots are filled the producer applies back-pressure by SKIPPING the tick before it suspends
         // anything (never blocks the app). Owns its own lock -- see SampleBufferQueue.h.
         SampleBufferQueue _sampleBuffers;
+
+        // Truncated-byte total already reported by ReadThreadSamples, so each truncating drain logs once.
+        // Only ever touched on the managed reader's thread, inside ReadThreadSamples.
+        uint64_t _reportedTruncatedBytes{ 0 };
     };
+
+    // Pre-C++17, a static constexpr member that is ODR-used (bound to a reference, as it is at
+    // MinIntervalMs's only use site: std::max<uint32_t>(intervalMs, MinIntervalMs) takes its arguments by
+    // const&) needs a namespace-scope definition in addition to the in-class declaration, or the symbol is
+    // left undefined at link time. MSVC does not enforce this and links fine without it; the Linux build
+    // (Clang, -std=c++11/14) does not, and fails to link/load.
+    constexpr uint32_t ContinuousProfiler::MinIntervalMs;
 }}}

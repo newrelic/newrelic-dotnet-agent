@@ -436,7 +436,8 @@ public class OtlpProfileBuilderTests
     public void Build_sets_period_type_and_period_when_interval_provided()
     {
         // periodNanos = 10 s sampling interval in nanoseconds. With a period supplied, Build emits two
-        // profiles (off_cpu/cpu); [0] is off_cpu.
+        // profiles (off_cpu/cpu); [0] is off_cpu, whose period_type is "wall_clock" (not "cpu" -- an off-cpu
+        // sample's value is parked wall-clock time, not CPU time).
         var req = OtlpProfileBuilder.Build(new[] { Sample("t1", 0, "A()") }, 1234, 5678, "svc", periodNanos: 10_000_000_000L);
         var dict = req.Dictionary;
         var profile = req.ResourceProfiles.Single().ScopeProfiles.Single().Profiles[0];
@@ -444,9 +445,30 @@ public class OtlpProfileBuilderTests
         Assert.Multiple(() =>
         {
             Assert.That(profile.PeriodType, Is.Not.Null);
-            Assert.That(dict.StringTable[profile.PeriodType.TypeStrindex], Is.EqualTo("cpu"));
+            Assert.That(dict.StringTable[profile.PeriodType.TypeStrindex], Is.EqualTo("wall_clock"));
             Assert.That(dict.StringTable[profile.PeriodType.UnitStrindex], Is.EqualTo("nanoseconds"));
             Assert.That(profile.Period, Is.EqualTo(10_000_000_000L));
+        });
+    }
+
+    [Test]
+    public void Build_on_cpu_and_off_cpu_profiles_have_different_period_types()
+    {
+        var samples = new[]
+        {
+            new ManagedThreadSample("on", 1, 0, 0, 0, new[] { "A.b" }, onCpu: true),
+            new ManagedThreadSample("off", 2, 0, 0, 0, new[] { "C.d" }, onCpu: false),
+        };
+        var req = OtlpProfileBuilder.Build(samples, 0, 0, "svc", periodNanos: 1_000_000L, includeAgentCode: true);
+        var dict = req.Dictionary;
+        var p = req.ResourceProfiles[0].ScopeProfiles[0].Profiles;
+        string PeriodTypeName(Profile x) => dict.StringTable[x.PeriodType.TypeStrindex];
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(PeriodTypeName(p[0]), Is.EqualTo("wall_clock")); // off_cpu
+            Assert.That(PeriodTypeName(p[1]), Is.EqualTo("cpu")); // cpu
+            Assert.That(PeriodTypeName(p[0]), Is.Not.EqualTo(PeriodTypeName(p[1])));
         });
     }
 
@@ -751,5 +773,77 @@ public class OtlpProfileBuilderTests
         Assert.That(profiles, Has.Count.EqualTo(2));
         Assert.That(profiles[0].Samples, Has.Count.EqualTo(1)); // off_cpu: agent dropped, only app-off remains
         Assert.That(profiles[1].Samples, Has.Count.EqualTo(1)); // cpu: agent dropped, only app-on remains
+    }
+
+    [Test]
+    public void Build_empty_frame_stack_reuses_stack_table_zero_index_not_a_duplicate()
+    {
+        // A zero-frame sample's stack is identical in value to the reserved stack_table[0] zero value --
+        // it must resolve back to index 0 rather than adding a second all-zero Stack entry.
+        var req = OtlpProfileBuilder.Build(
+            new[] { new ManagedThreadSample("t1", 1, 0, 0, 0, System.Array.Empty<string>(), onCpu: false) },
+            1000, 1, "svc", periodNanos: 1_000_000L);
+        var dict = req.Dictionary;
+        var sample = req.ResourceProfiles.Single().ScopeProfiles.Single().Profiles[0].Samples.Single();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(sample.StackIndex, Is.EqualTo(0));
+            Assert.That(dict.StackTable, Has.Count.EqualTo(1), "no duplicate zero-value stack should be added");
+        });
+    }
+
+    [Test]
+    public void Build_empty_frame_name_reuses_function_table_zero_index_not_a_duplicate()
+    {
+        // A frame whose resolved name is the empty string produces a Function{} identical in value to the
+        // reserved function_table[0] zero value -- it must resolve back to index 0.
+        var req = OtlpProfileBuilder.Build(
+            new[] { Sample("t1", 0, string.Empty) },
+            1000, 1, "svc");
+        var dict = req.Dictionary;
+
+        var stack = dict.StackTable[dict.StackTable.Count - 1];
+        var location = dict.LocationTable[stack.LocationIndices.Single()];
+        Assert.Multiple(() =>
+        {
+            Assert.That(location.Lines.Single().FunctionIndex, Is.EqualTo(0));
+            Assert.That(dict.FunctionTable.Count(f => f.NameStrindex == 0), Is.EqualTo(1), "no duplicate zero-value function should be added");
+        });
+    }
+
+    [Test]
+    public void Build_merges_samples_sharing_the_same_stack_attributes_and_link_identity()
+    {
+        // Two identical off-CPU samples for the same thread/stack (e.g. parked across two sweeps in the same
+        // drain) share {stack, attributes, link} identity and must be combined into one Sample with summed
+        // values, not emitted as two separate entries.
+        var samples = new[]
+        {
+            new ManagedThreadSample("worker", 7, 0, 0, 0, new[] { "A()" }, onCpu: false),
+            new ManagedThreadSample("worker", 7, 0, 0, 0, new[] { "A()" }, onCpu: false),
+        };
+        var req = OtlpProfileBuilder.Build(samples, 1000, 1, "svc", periodNanos: 1_000_000L);
+        var profile = req.ResourceProfiles.Single().ScopeProfiles.Single().Profiles[0];
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(profile.Samples, Has.Count.EqualTo(1), "identical-identity samples should be merged into one Sample");
+            Assert.That(profile.Samples[0].Values.Single(), Is.EqualTo(2_000_000L), "merged values should be summed");
+        });
+    }
+
+    [Test]
+    public void Build_does_not_merge_samples_with_different_stack_identity()
+    {
+        var samples = new[]
+        {
+            new ManagedThreadSample("worker", 7, 0, 0, 0, new[] { "A()" }, onCpu: false),
+            new ManagedThreadSample("worker", 7, 0, 0, 0, new[] { "B()" }, onCpu: false),
+        };
+        var req = OtlpProfileBuilder.Build(samples, 1000, 1, "svc", periodNanos: 1_000_000L);
+        var profile = req.ResourceProfiles.Single().ScopeProfiles.Single().Profiles[0];
+
+        Assert.That(profile.Samples, Has.Count.EqualTo(2));
     }
 }

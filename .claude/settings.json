@@ -20,6 +20,7 @@
       "Bash(git push --force *)",
       "Bash(git reset --hard *)",
       "Bash(git release *)",
+      "Bash(git tag *)",
       "Bash(git push * --tags*)",
       "Bash(git push * refs/tags/*)",
       "Bash(git push *tag*)",

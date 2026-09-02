@@ -28,6 +28,24 @@ public class ContinuousProfilingContext : IContinuousProfilingContext
     // costs only one volatile read + a false branch. The CP session swaps in a live instance on start.
     private static volatile IContinuousProfilingContext _instance = new ContinuousProfilingContext();
 
+    // Process-wide fast-path pre-filter for the wrapper hot path (WrapperService), NOT the authority.
+    // It lets the disabled path (every customer without continuous profiling) pay only a static volatile
+    // bool read plus a not-taken branch, instead of two interface dispatches through Instance.IsEnabled --
+    // a field, deliberately, so the JIT need not inline through a property getter to fold the read into the
+    // branch. The per-instance IsEnabled check inside PushContinuousProfilingContext stays authoritative.
+    //
+    // Why a coarse pre-filter is sufficient and safe:
+    //   * Publish ordering: ContinuousProfilingService.StartLocked calls Enable(_native) (which sets this
+    //     true) and only THEN publishes Instance = the live context. So there is a brief window where
+    //     AnyEnabled is already true while Instance is still the inert default whose IsEnabled is false.
+    //     During that window the hot path calls the helper but the helper's own IsEnabled guard no-ops it --
+    //     correct, not a bug. AnyEnabled can be true-but-not-yet-live; it is never the final word.
+    //   * Single-owner invariant: ContinuousProfilingService owns exactly one live context at a time.
+    //     StopLocked disables the live one (clearing this to false) and swaps in a fresh inert instance
+    //     whose Disable is never called. Because only the live context is ever Disable()d, an unconditional
+    //     clear here is correct. Enable re-sets it, so even a spurious clear self-heals on the next start.
+    public static volatile bool AnyEnabled;
+
     public static IContinuousProfilingContext Instance
     {
         get => _instance;
@@ -36,6 +54,30 @@ public class ContinuousProfilingContext : IContinuousProfilingContext
 
     // volatile: written on the (rare) lifecycle transition thread, read on every app thread's hot path.
     private volatile INativeContinuousProfiler _native;
+
+    // The native profiler this context was most recently armed with, RETAINED across Disable().
+    //
+    // SetAgentWork/ResetAgentWork are the two halves of a native per-thread nesting-DEPTH counter
+    // (AgentWorkMap.h) that requires strict 1:1 pairing: an increment whose decrement never arrives pins
+    // that thread's slot at depth >= 1 for the rest of the process, so every later sample on it --
+    // including real application work -- is tagged agent work and filtered out of the profile. Silent,
+    // permanent coverage loss, and the slot is by design never tombstoned.
+    //
+    // Scheduler now captures Instance ONCE per timer callback and drives both halves through that single
+    // captured instance, so an Instance swap mid-callback can no longer split a pair across two objects.
+    // That leaves exactly one way to orphan an increment: the captured context being Disable()d between
+    // its set and its reset -- precisely what a CP stop/retune does (StopLocked calls Disable() on the
+    // live context and then republishes a fresh inert Instance). By then _native is null, so a reset
+    // gated on _native would silently drop the decrement. Gating the reset on this field instead keeps
+    // the decrement flowing to the SAME native counter the increment hit, while new sets stay gated on
+    // _native and so are still correctly suppressed after Disable().
+    //
+    // Only ever written by Enable, so a context that was never armed (the inert default) still no-ops
+    // resets, and a reset arriving after Disable on a never-set thread merely reaches native Decrement,
+    // which clamps at depth 0 -- a no-op. Retaining the reference is not a leak: the
+    // INativeContinuousProfiler is the process-lifetime P/Invoke shim already held by
+    // ContinuousProfilingService for as long as the agent lives.
+    private volatile INativeContinuousProfiler _nativeForAgentWorkReset;
 
     // Per-thread push change-detection. The wrapper pipeline pushes the current trace/span on BOTH entry
     // and exit of every instrumented method -- the hottest path in the agent. Within a transaction, on a
@@ -60,14 +102,27 @@ public class ContinuousProfilingContext : IContinuousProfilingContext
     /// <summary>Arms the context: subsequent pushes forward to the given native profiler.</summary>
     public void Enable(INativeContinuousProfiler native)
     {
-        _native = native ?? throw new ArgumentNullException(nameof(native));
+        if (native == null)
+            throw new ArgumentNullException(nameof(native));
+
+        // Publish the reset target BEFORE _native: _native is what admits a SetAgentWork, so ordering it
+        // second guarantees no admitted increment can ever observe a null reset target for its decrement.
+        _nativeForAgentWorkReset = native;
+        _native = native;
         Interlocked.Increment(ref _epoch); // invalidate stale per-thread change-detection guards
+        AnyEnabled = true; // arm the hot-path pre-filter after _native is live so pushes can begin
     }
 
-    /// <summary>Disarms the context: pushes become no-ops again with zero native traffic.</summary>
+    /// <summary>
+    /// Disarms the context: pushes and new <see cref="SetAgentWork"/> calls become no-ops again with zero
+    /// native traffic. Deliberately does NOT disarm <see cref="ResetAgentWork"/> -- a reset already paired
+    /// against a set made while this context was armed must still reach native, or the thread's
+    /// agent-work depth counter stays stuck (see <see cref="_nativeForAgentWorkReset"/>).
+    /// </summary>
     public void Disable()
     {
         _native = null;
+        AnyEnabled = false; // clear the hot-path pre-filter; safe unconditionally (single-owner invariant, see AnyEnabled)
     }
 
     public void PushTraceContext(string traceId, string spanId)
@@ -140,9 +195,15 @@ public class ContinuousProfilingContext : IContinuousProfilingContext
         }
     }
 
+    /// <summary>
+    /// Decrements the calling thread's native agent-work depth. Gated on the RETAINED native reference,
+    /// not on <see cref="_native"/>, so a reset still lands after this context has been disabled by a
+    /// stop/retune -- see <see cref="_nativeForAgentWorkReset"/> for why an orphaned increment is
+    /// permanently damaging.
+    /// </summary>
     public void ResetAgentWork()
     {
-        var native = _native;
+        var native = _nativeForAgentWorkReset;
         if (native == null)
             return;
 

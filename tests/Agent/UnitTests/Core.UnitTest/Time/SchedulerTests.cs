@@ -207,6 +207,78 @@ public class SchedulerTests
         Mock.Assert(() => mockContext.ResetAgentWork(), Occurs.Never());
     }
 
+    // Regression: SetAgentWork/ResetAgentWork are the two halves of a native per-thread nesting-DEPTH
+    // counter and must be paired against the SAME context instance. The callback previously read the
+    // static Instance separately for each half, so a continuous-profiling stop/retune landing mid-callback
+    // (which swaps Instance for a fresh inert instance) sent the set to one object and the reset to
+    // another -- permanently pinning that ThreadPool thread's native slot at depth >= 1.
+    [Test]
+    public void ExecuteOnce_ResetsAgentWorkOnTheContextCapturedAtCallbackStart_EvenIfInstanceIsSwappedMidCallback()
+    {
+        var capturedContext = Mock.Create<IContinuousProfilingContext>();
+        var replacementContext = Mock.Create<IContinuousProfilingContext>();
+        ContinuousProfilingContext.Instance = capturedContext;
+        var wasExecuted = false;
+
+        _scheduler.ExecuteOnce(() =>
+        {
+            // Simulate ContinuousProfilingService.StopLocked republishing Instance while this callback
+            // (which has already called SetAgentWork) is in flight.
+            ContinuousProfilingContext.Instance = replacementContext;
+            wasExecuted = true;
+        }, TimeSpan.FromMilliseconds(1));
+
+        AssertEventuallyTrue(() => wasExecuted);
+
+        Mock.Assert(() => capturedContext.SetAgentWork(), Occurs.Once());
+        // The pairing reset must land on the context that took the set...
+        Mock.Assert(() => capturedContext.ResetAgentWork(), Occurs.Once());
+        // ...and never on the instance published after the set.
+        Mock.Assert(() => replacementContext.SetAgentWork(), Occurs.Never());
+        Mock.Assert(() => replacementContext.ResetAgentWork(), Occurs.Never());
+    }
+
+    [Test]
+    public void ExecuteEvery_ResetsAgentWorkOnTheContextCapturedAtCallbackStart_EvenIfInstanceIsSwappedMidCallback()
+    {
+        // Count both halves per instance: with a recurring timer, later ticks legitimately capture the
+        // replacement instance, so the invariant that actually matters is that NO instance ever saw an
+        // unpaired half -- set count == reset count on each, which is exactly what the native depth
+        // counter requires.
+        var capturedContext = Mock.Create<IContinuousProfilingContext>();
+        var replacementContext = Mock.Create<IContinuousProfilingContext>();
+        var capturedSets = 0;
+        var capturedResets = 0;
+        var replacementSets = 0;
+        var replacementResets = 0;
+        Mock.Arrange(() => capturedContext.SetAgentWork()).DoInstead(() => Interlocked.Increment(ref capturedSets));
+        Mock.Arrange(() => capturedContext.ResetAgentWork()).DoInstead(() => Interlocked.Increment(ref capturedResets));
+        Mock.Arrange(() => replacementContext.SetAgentWork()).DoInstead(() => Interlocked.Increment(ref replacementSets));
+        Mock.Arrange(() => replacementContext.ResetAgentWork()).DoInstead(() => Interlocked.Increment(ref replacementResets));
+
+        ContinuousProfilingContext.Instance = capturedContext;
+        var wasExecuted = false;
+
+        Action action = () =>
+        {
+            ContinuousProfilingContext.Instance = replacementContext;
+            wasExecuted = true;
+        };
+
+        _scheduler.ExecuteEvery(action, TimeSpan.FromMilliseconds(1));
+        AssertEventuallyTrue(() => wasExecuted);
+
+        // Wait for any in-flight callback to finish so no pair is mid-execution when we compare counts.
+        _scheduler.StopExecuting(action, TimeSpan.FromSeconds(5));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(capturedSets, Is.GreaterThanOrEqualTo(1), "the first tick must have taken a set on the originally published instance");
+            Assert.That(capturedResets, Is.EqualTo(capturedSets), "every set on the captured context must be paired by a reset on that same context");
+            Assert.That(replacementResets, Is.EqualTo(replacementSets), "every set on the replacement context must be paired by a reset on that same context");
+        });
+    }
+
     private static void AssertEventuallyTrue(Func<bool> wasExecutedFunc)
     {
         Assertions.Eventually(wasExecutedFunc, TimeSpan.FromSeconds(5));

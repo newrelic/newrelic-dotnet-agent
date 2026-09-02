@@ -14,6 +14,14 @@ public static class BufferParser
     private const byte EndBatch = 0x06;
     private const byte BatchStatsOpcode = 0x07;
 
+    // v1: base layout. v2 adds a 1-byte OnCpu flag after spanId. v3 adds a 1-byte IsAgentWork flag
+    // after OnCpu. Keep in sync with SampleBufferWriter.h's BatchVersion.
+    private const byte MinSupportedBatchVersion = 1;
+    private const byte MaxSupportedBatchVersion = 3;
+
+    // StartBatch payload: 1 version byte + int64 timestamp.
+    private const int StartBatchHeaderSize = 9;
+
     /// <summary>
     /// Per-sweep native BatchStats (opcode 0x07). <see cref="MicrosSuspended"/> is the actual runtime-suspend
     /// (stop-the-world) window for this sample sweep; <see cref="Skipped"/> is threads/frames the stack walk
@@ -37,15 +45,26 @@ public static class BufferParser
     }
 
     public static IReadOnlyList<ManagedThreadSample> Parse(byte[] buffer, int length)
-        => Parse(buffer, length, out _);
+        => Parse(buffer, length, out _, out _);
 
     /// <summary>
     /// Parse overload that also captures the batch's <see cref="BatchStats"/> (null when the batch carried
     /// none). Callers use it to surface the suspend-window / coverage counters.
     /// </summary>
     public static IReadOnlyList<ManagedThreadSample> Parse(byte[] buffer, int length, out BatchStats stats)
+        => Parse(buffer, length, out stats, out _);
+
+    /// <summary>
+    /// Parse overload that also reports whether the batch was rejected as corrupt (truncated header,
+    /// unknown/future <c>BatchVersion</c>, or a sample/stats opcode seen before <c>StartBatch</c>).
+    /// A rejected batch never returns fabricated samples parsed under the wrong layout assumptions --
+    /// <paramref name="parseFailed"/> is the caller's signal to log and increment an error metric
+    /// instead of treating an empty/partial result as "nothing to report".
+    /// </summary>
+    public static IReadOnlyList<ManagedThreadSample> Parse(byte[] buffer, int length, out BatchStats stats, out bool parseFailed)
     {
         stats = null;
+        parseFailed = false;
         var samples = new List<ManagedThreadSample>();
         if (buffer == null || length <= 0)
             return samples;
@@ -53,6 +72,7 @@ public static class BufferParser
         var frameDictionary = new Dictionary<int, string>();
         var pos = 0;
         var version = 0;
+        var batchStarted = false;
         try
         {
             while (pos < length)
@@ -61,14 +81,31 @@ public static class BufferParser
                 switch (opcode)
                 {
                     case StartBatch:
-                        version = buffer[pos++];
-                        pos += 8; // timestamp (int64)
+                        RequireBound(pos, StartBatchHeaderSize, length);
+                        version = buffer[pos];
+                        pos += StartBatchHeaderSize;
+                        if (version < MinSupportedBatchVersion || version > MaxSupportedBatchVersion)
+                        {
+                            parseFailed = true;
+                            return samples;
+                        }
+                        batchStarted = true;
                         break;
                     case StartSample:
+                        if (!batchStarted)
+                        {
+                            parseFailed = true;
+                            return samples;
+                        }
                         samples.Add(ReadSample(buffer, ref pos, frameDictionary, version, length));
                         break;
                     case BatchStatsOpcode:
                         {
+                            if (!batchStarted)
+                            {
+                                parseFailed = true;
+                                return samples;
+                            }
                             var micros = ReadLong(buffer, ref pos, length);   // microsSuspended (int64)
                             var threads = ReadInt(buffer, ref pos, length);   // threads
                             var frames = ReadInt(buffer, ref pos, length);    // frames
@@ -85,7 +122,9 @@ public static class BufferParser
         }
         catch (Exception)
         {
-            // truncated/garbage past `length`: return what parsed cleanly (Global Constraint: never throw)
+            // truncated/garbage past `length`: stop and report rather than fabricating a batch from
+            // whatever happened to parse before the cut (Global Constraint: never throw out to the caller)
+            parseFailed = true;
         }
         return samples;
     }

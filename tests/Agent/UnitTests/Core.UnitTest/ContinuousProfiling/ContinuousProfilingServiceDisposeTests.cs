@@ -76,8 +76,10 @@ public class ContinuousProfilingServiceDisposeTests
     public void TearDown()
     {
         _service.Dispose();
-        // Reset the process-wide seam so one test's enabled context can't leak into another.
+        // Reset the process-wide seam and the hot-path pre-filter so one test's enabled context can't leak
+        // into another (Enable/Disable on the real service flips AnyEnabled).
         ContinuousProfilingContext.Instance = new ContinuousProfilingContext();
+        ContinuousProfilingContext.AnyEnabled = false;
         Log.Initialize(new NoOpLogger());
     }
 
@@ -108,28 +110,57 @@ public class ContinuousProfilingServiceDisposeTests
     [Test]
     public void Dispose_waits_for_an_in_flight_dispatched_drain_before_stopping_native_sampling()
     {
-        ArrangeEnabled(10000);
+        // Real (non-mock) blocking ISampleSource, not a mocked ReadBatch: a thread parked inside a
+        // JustMock DoInstead holds JustMock Lite's cross-thread lock, which would serialize StopLocked's
+        // own mock call (_scheduler.StopExecuting) on the Dispose thread behind it -- Dispose would then
+        // never reach the bounded drain wait at all, timing out this test's barrier for a reason unrelated
+        // to what it proves. Same technique as BlockingSampleSource's other usages in this file.
+        var drainReachedReadBatch = new ManualResetEventSlim(false);
+        var releaseReadBatch = new ManualResetEventSlim(false);
+        var blockingSource = new BlockingSampleSource(drainReachedReadBatch, releaseReadBatch);
+        var service = new ContinuousProfilingService(blockingSource, _native, _transport, _scheduler, _health);
+
+        var connectionInfo = Mock.Create<IConnectionInfo>();
+        Mock.Arrange(() => connectionInfo.HttpProtocol).Returns("https");
+        Mock.Arrange(() => connectionInfo.Host).Returns("collector.nr-data.net");
+        Mock.Arrange(() => connectionInfo.Port).Returns(443);
+        EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent { ConnectInfo = connectionInfo });
+
+        Mock.Arrange(() => _config.ContinuousProfilingEnabled).Returns(true);
+        Mock.Arrange(() => _config.ContinuousProfilingSamplingIntervalMs).Returns(10000);
+        Mock.Arrange(() => _config.ApplicationNames).Returns(new[] { "MyApp" });
+        service.OverrideConfigForTesting(_config);
 
         Action drainAction = null;
         Mock.Arrange(() => _scheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>(), Arg.IsAny<bool>()))
             .DoInstead((Action action, TimeSpan interval, TimeSpan? initialDelay, bool trackAsAgentWork) => drainAction = action);
 
-        _service.StartIfEnabled();
+        service.StartIfEnabled();
         Assert.That(drainAction, Is.Not.Null);
-
-        var releaseReadBatch = new ManualResetEventSlim(false);
-        Mock.Arrange(() => _source.ReadBatch(Arg.IsAny<byte[]>()))
-            .DoInstead(() => releaseReadBatch.Wait(TimeSpan.FromSeconds(2)))
-            .Returns(0);
-
-        drainAction(); // dispatches DrainOnce onto the thread pool, held open by the ReadBatch wait above
 
         var nativeStopOrder = new List<string>();
         Mock.Arrange(() => _native.Stop()).DoInstead(() => nativeStopOrder.Add("native-stop"));
 
-        releaseReadBatch.Set(); // let the in-flight drain finish shortly after Dispose starts waiting
-        _service.Dispose();
+        drainAction(); // dispatches DrainOnce onto the thread pool, held open by the ReadBatch wait above
+        Assert.That(drainReachedReadBatch.Wait(TimeSpan.FromSeconds(5)), Is.True,
+            "the dispatched drain must actually reach ReadBatch (be in-flight) before Dispose runs -- otherwise "
+            + "_lastDrainTask may still be the default completed task and StopLocked would skip its wait entirely");
 
+        // Position Dispose genuinely inside StopLocked's bounded drain wait -- rather than releasing the
+        // drain before calling Dispose -- so the test cannot pass merely because the drain happened to
+        // finish before Dispose ever started waiting for it (which would be true even with the bounded
+        // wait removed entirely).
+        var disposeEnteredBoundedWait = new ManualResetEventSlim(false);
+        service.EnteredPrimaryDrainWaitForTesting = () => disposeEnteredBoundedWait.Set();
+
+        var dispose = new Thread(() => service.Dispose()) { IsBackground = true };
+        dispose.Start();
+
+        Assert.That(disposeEnteredBoundedWait.Wait(TimeSpan.FromSeconds(5)), Is.True,
+            "Dispose must have entered StopLocked's bounded drain wait before the in-flight drain is released");
+        releaseReadBatch.Set(); // let the in-flight drain finish now that Dispose is genuinely waiting on it
+
+        Assert.That(dispose.Join(TimeSpan.FromSeconds(5)), Is.True, "Dispose must complete once the in-flight drain finishes");
         Assert.That(nativeStopOrder, Does.Contain("native-stop"), "Dispose must still reach _native.Stop() after the in-flight drain completes");
     }
 
@@ -297,6 +328,139 @@ public class ContinuousProfilingServiceDisposeTests
             _release.Wait(TimeSpan.FromSeconds(10));
             return 0;
         }
+    }
+
+    /// <summary>
+    /// A real (non-mock) <see cref="INativeContinuousProfiler"/> whose Stop() signals it has been entered and
+    /// then blocks until released. Deliberately not a JustMock mock for the same reason as
+    /// <see cref="BlockingSampleSource"/>: a thread blocked inside a mocked Stop's DoInstead holds JustMock's
+    /// cross-thread lock, which would serialize the concurrent stopper's own mock calls behind it. Blocking in
+    /// a plain object holds no such lock, so the concurrent stopper can genuinely reach and time out its
+    /// bounded wait while this Stop is wedged. Start/Shutdown and the trace-context seam methods are no-ops.
+    /// </summary>
+    private sealed class BlockingNativeProfiler : INativeContinuousProfiler
+    {
+        private readonly ManualResetEventSlim _stopEntered;
+        private readonly ManualResetEventSlim _releaseStop;
+
+        public BlockingNativeProfiler(ManualResetEventSlim stopEntered, ManualResetEventSlim releaseStop)
+        {
+            _stopEntered = stopEntered;
+            _releaseStop = releaseStop;
+        }
+
+        public void Start(int intervalMs) { }
+
+        public void Stop()
+        {
+            _stopEntered.Set();
+            // Cap the block so a test that forgets to release can never hang the run indefinitely.
+            _releaseStop.Wait(TimeSpan.FromSeconds(10));
+        }
+
+        public void Shutdown() { }
+
+        public void SetTraceContext(long traceIdHigh, long traceIdLow, long spanId) { }
+
+        public void ResetTraceContext() { }
+
+        public void SetAgentWork() { }
+
+        public void ResetAgentWork() { }
+    }
+
+    [Test]
+    public void Dispose_hard_resets_state_when_StopLocked_returns_via_the_concurrent_stop_timeout()
+    {
+        // Regression test for the concurrent-stop-timeout backstop. StopLocked's second-caller path (a stop
+        // landing while another stop has published _stopInProgress and dropped _lifecycleLock for its bounded
+        // drain wait) returns EARLY -- via the "concurrent stop already in progress" timeout -- WITHOUT
+        // running the finally that clears _isActive/_activeIntervalMs and disarms the trace-context seam.
+        // Dispose must therefore hard-reset that state itself rather than relying on StopLocked's unwind
+        // having run: otherwise a timed-out concurrent stop would leave _isActive stuck true (permanently
+        // blocking ThreadProfilingService's mutual-exclusion guard) and ContinuousProfilingContext.Instance
+        // armed against a native sampler Dispose is about to Shutdown.
+        //
+        // Interleaving (all deterministic via the test seams + blocking stubs):
+        //   * A first stopper (a config-disable ApplyConfigChange) enters StopLocked, publishes
+        //     _stopInProgress, drops the lock for its bounded drain wait, times out, reacquires the lock, and
+        //     then wedges in _native.Stop() (BlockingNativeProfiler) while holding _lifecycleLock.
+        //   * Dispose acquires the lock in the first stopper's drop window, sets _disposed, sees
+        //     _stopInProgress != null, and parks on the concurrent-stop wait -- which times out because the
+        //     first stopper is still wedged in Stop().
+        //   * Releasing Stop() lets the first stopper finish; Dispose then reacquires the lock, takes the
+        //     early-return, and runs its hard-reset backstop.
+        var enabled = true;
+        var drainReachedReadBatch = new ManualResetEventSlim(false);
+        var releaseReadBatch = new ManualResetEventSlim(false);
+        var stopEntered = new ManualResetEventSlim(false);
+        var releaseStop = new ManualResetEventSlim(false);
+        var blockingSource = new BlockingSampleSource(drainReachedReadBatch, releaseReadBatch);
+        var blockingNative = new BlockingNativeProfiler(stopEntered, releaseStop);
+        var timeout = TimeSpan.FromMilliseconds(500);
+        var service = new ContinuousProfilingService(blockingSource, blockingNative, _transport, _scheduler, _health, timeout);
+
+        var connectionInfo = Mock.Create<IConnectionInfo>();
+        Mock.Arrange(() => connectionInfo.HttpProtocol).Returns("https");
+        Mock.Arrange(() => connectionInfo.Host).Returns("collector.nr-data.net");
+        Mock.Arrange(() => connectionInfo.Port).Returns(443);
+        EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent { ConnectInfo = connectionInfo });
+
+        Mock.Arrange(() => _config.ContinuousProfilingEnabled).Returns(() => enabled);
+        Mock.Arrange(() => _config.ContinuousProfilingSamplingIntervalMs).Returns(10000);
+        Mock.Arrange(() => _config.ApplicationNames).Returns(new[] { "MyApp" });
+        service.OverrideConfigForTesting(_config);
+
+        Action drainAction = null;
+        Mock.Arrange(() => _scheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>(), Arg.IsAny<bool>()))
+            .DoInstead((Action action, TimeSpan interval, TimeSpan? initialDelay, bool trackAsAgentWork) => drainAction = action);
+
+        // Fires from inside the first stopper's StopLocked, after it has published _stopInProgress and while
+        // it still holds _lifecycleLock (StopExecuting runs before the lock is dropped) -- so once this
+        // signals, the first stopper is committed and Dispose is guaranteed to observe _stopInProgress != null.
+        var firstStopperInStopLocked = new ManualResetEventSlim(false);
+        Mock.Arrange(() => _scheduler.StopExecuting(Arg.IsAny<Action>()))
+            .DoInstead(() => firstStopperInStopLocked.Set());
+
+        service.StartIfEnabled();
+        Assert.That(drainAction, Is.Not.Null);
+        Assert.That(service.IsActive, Is.True, "precondition: the session is active");
+        Assert.That(ContinuousProfilingContext.Instance.IsEnabled, Is.True, "precondition: the trace-context seam is armed");
+
+        drainAction(); // dispatch the drain; it blocks in the stub's ReadBatch, keeping itself in-flight
+        Assert.That(drainReachedReadBatch.Wait(TimeSpan.FromSeconds(5)), Is.True, "the drain must be in-flight before the stops run");
+
+        // First stopper: a config-disable that enters StopLocked, publishes _stopInProgress, drops the lock
+        // at its bounded drain wait, times out, then wedges in _native.Stop().
+        enabled = false;
+        var firstStop = new Thread(() => service.ApplyConfigChange()) { IsBackground = true };
+        firstStop.Start();
+        Assert.That(firstStopperInStopLocked.Wait(TimeSpan.FromSeconds(5)), Is.True, "the first stopper must reach StopLocked");
+
+        // Dispose: the second caller. It parks on the concurrent-stop wait once the first stopper drops the lock.
+        var disposeParked = new ManualResetEventSlim(false);
+        service.EnteredStopInProgressWaitForTesting = () => disposeParked.Set();
+
+        var dispose = new Thread(() => service.Dispose()) { IsBackground = true };
+        dispose.Start();
+        Assert.That(disposeParked.Wait(TimeSpan.FromSeconds(5)), Is.True, "Dispose must park on the first stopper's in-progress stop");
+
+        // Wait past both bounded waits (deterministic: the timeout is a known 500ms, so over-waiting is safe --
+        // unlike an under-wait, a longer wait only leaves the first stopper wedged in Stop() a bit longer). By
+        // now the first stopper has timed out its drain wait and is wedged in _native.Stop() holding the lock,
+        // and Dispose has timed out its concurrent-stop wait and is blocked reacquiring the lock. Releasing
+        // Stop() lets the first stopper finish and unblocks Dispose onto its early-return + hard-reset.
+        Thread.Sleep(timeout + timeout);
+        releaseStop.Set();
+
+        Assert.That(firstStop.Join(TimeSpan.FromSeconds(10)) && dispose.Join(TimeSpan.FromSeconds(10)), Is.True,
+            "the first stopper and Dispose must both complete without deadlocking");
+        releaseReadBatch.Set(); // unwind the still-parked drain pool thread
+
+        Mock.Assert(() => _nrLogger.Warn(Arg.Matches<string>(m => m.Contains("concurrent stop already in progress")), Arg.IsAny<object[]>()), Occurs.Once(),
+            "Dispose's StopLocked must have returned via the concurrent-stop timeout early-return -- the path that skips the unwind finally");
+        Assert.That(service.IsActive, Is.False, "Dispose must force _isActive false even when StopLocked early-returned without unwinding");
+        Assert.That(ContinuousProfilingContext.Instance.IsEnabled, Is.False, "Dispose must disarm the trace-context seam even when StopLocked early-returned without unwinding");
     }
 
     /// <summary>
@@ -670,6 +834,11 @@ public class ContinuousProfilingServiceDisposeTests
         Assert.That(service.IsActive, Is.False, "the command stop's intent must be reflected in the session state");
         Mock.Assert(() => _nrLogger.Warn(Arg.Matches<string>(m => m.Contains("Timed out")), Arg.IsAny<object[]>()), Occurs.Never(),
             "neither bounded wait should have timed out in this interleaving");
+
+        // Unlike the other CreateConnectedService-based tests above, this one never routes through Dispose --
+        // dispose it explicitly so its EventBus subscription (only unsubscribed via base.Dispose()) doesn't
+        // leak into later tests in this fixture run.
+        service.Dispose();
     }
 
     /// <summary>

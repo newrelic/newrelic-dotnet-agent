@@ -2,7 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading;
@@ -407,6 +409,36 @@ public class CustomRetryHandlerTests
         Assert.That(_innerHandler.RequestCount, Is.EqualTo(2));
     }
 
+    [Test]
+    public async Task SendAsync_ClonesLargePayload_SendsIdenticalBytesOnEveryAttempt()
+    {
+        // Arrange -- a multi-hundred-KB payload similar in size to a Continuous Profiling export,
+        // to guard the reduced-copy cloning path against corrupting or truncating the body across retries
+        var payload = new byte[512 * 1024];
+        new Random(42).NextBytes(payload);
+
+        var request = new HttpRequestMessage(HttpMethod.Post, "http://test.com")
+        {
+            Content = new ByteArrayContent(payload)
+        };
+
+        _innerHandler.SetSequence(
+            new HttpResponseMessage(HttpStatusCode.InternalServerError),
+            new HttpResponseMessage(HttpStatusCode.ServiceUnavailable),
+            new HttpResponseMessage(HttpStatusCode.OK));
+
+        // Act
+        var response = await _httpClient.SendAsync(request);
+
+        // Assert -- every attempt saw the same bytes as the original payload
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+        Assert.That(_innerHandler.ReceivedContentBytes, Has.Count.EqualTo(3));
+        foreach (var receivedBytes in _innerHandler.ReceivedContentBytes)
+        {
+            Assert.That(receivedBytes, Is.EqualTo(payload));
+        }
+    }
+
     #endregion
 
     #region Retry Delay Tests
@@ -463,6 +495,47 @@ public class CustomRetryHandlerTests
 
         Assert.That(ex.Message, Does.Contain("Network failure"));
         Assert.That(_innerHandler.RequestCount, Is.EqualTo(3));
+    }
+
+    [Test]
+    public async Task SendAsync_ConcurrentHandlersOnDifferentThreads_ProduceVariedJitterWithinBounds()
+    {
+        // Arrange -- two consumers (the metrics exporter and the CP dispatcher) can each drive a
+        // CustomRetryHandler concurrently on their own thread; a shared, non-thread-safe Random would
+        // degrade jitter to a stuck value under that concurrency
+        const int handlerCount = 20;
+        var allDelays = new ConcurrentBag<TimeSpan>();
+
+        var tasks = Enumerable.Range(0, handlerCount).Select(_ => Task.Run(async () =>
+        {
+            var innerHandler = new TestHttpMessageHandler();
+            innerHandler.SetSequence(
+                new HttpResponseMessage(HttpStatusCode.InternalServerError),
+                new HttpResponseMessage(HttpStatusCode.OK));
+
+            Task RecordAndSkipDelay(TimeSpan delay, CancellationToken token)
+            {
+                allDelays.Add(delay);
+                return Task.CompletedTask;
+            }
+
+            using var handler = new CustomRetryHandler(delayFunc: RecordAndSkipDelay)
+            {
+                InnerHandler = innerHandler
+            };
+            using var client = new HttpClient(handler);
+
+            await client.GetAsync("http://test.com");
+            innerHandler.Dispose();
+        }));
+
+        await Task.WhenAll(tasks);
+
+        // Assert -- every jitter value still respects the documented [1000,1500) bound for the first
+        // retry, and concurrent access produced more than one distinct value
+        Assert.That(allDelays, Has.Count.EqualTo(handlerCount));
+        Assert.That(allDelays, Has.All.Matches<TimeSpan>(d => d.TotalMilliseconds >= 1000 && d.TotalMilliseconds < 1500));
+        Assert.That(allDelays.Select(d => d.TotalMilliseconds).Distinct().Count(), Is.GreaterThan(1));
     }
 
     #endregion
@@ -535,53 +608,64 @@ public class CustomRetryHandlerTests
     }
 
     [Test]
-    public async Task SendAsync_RetryAfterExceedsCeiling_BailsWithoutSleeping()
+    public async Task SendAsync_RetryAfterExceedsCeiling_FallsBackToExponentialBackoff()
     {
-        // Arrange
+        // Arrange -- a Retry-After at/above the ceiling must not abandon the send; the retry loop
+        // keeps going using the computed backoff instead of the (unaffordable) server delay
         var counters = new FakeMetricCounters();
         using var retryHandler = CreateHandler(counters);
         using var client = new HttpClient(retryHandler);
-        _innerHandler.SetResponse(ResponseWithRetryAfterSeconds((HttpStatusCode)429, 30));
+        _innerHandler.SetSequence(
+            ResponseWithRetryAfterSeconds((HttpStatusCode)429, 30),
+            new HttpResponseMessage(HttpStatusCode.OK));
 
         // Act
         var response = await client.GetAsync("http://test.com");
 
-        // Assert -- no sleep, no second attempt; the caller's next periodic cycle retries instead
-        Assert.That(response.StatusCode, Is.EqualTo((HttpStatusCode)429));
-        Assert.That(_innerHandler.RequestCount, Is.EqualTo(1));
-        Assert.That(_requestedDelays, Is.Empty);
-        Assert.That(counters.Recorded, Does.Contain(OtelBridgeSupportabilityMetric.ExportFailure));
-        Assert.That(counters.Recorded, Does.Not.Contain(OtelBridgeSupportabilityMetric.ExportRetry));
+        // Assert -- retried using exponential backoff (~1s), not the server's 30s
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+        Assert.That(_innerHandler.RequestCount, Is.EqualTo(2));
+        Assert.That(_requestedDelays, Has.Count.EqualTo(1));
+        Assert.That(_requestedDelays[0].TotalMilliseconds, Is.InRange(1000, 1500));
+        Assert.That(counters.Recorded, Does.Contain(OtelBridgeSupportabilityMetric.ExportRetry));
+        Assert.That(counters.Recorded, Does.Not.Contain(OtelBridgeSupportabilityMetric.ExportFailure));
     }
 
     [Test]
-    public async Task SendAsync_RetryAfterEqualsCeiling_Bails()
+    public async Task SendAsync_RetryAfterEqualsCeiling_FallsBackToExponentialBackoff()
     {
-        // Arrange -- the ceiling is exclusive: a delay exactly at the ceiling bails
+        // Arrange -- the ceiling is exclusive: a delay exactly at the ceiling also falls back
         using var retryHandler = CreateHandler(ceilingSeconds: 3);
         using var client = new HttpClient(retryHandler);
-        _innerHandler.SetResponse(ResponseWithRetryAfterSeconds(HttpStatusCode.ServiceUnavailable, 3));
+        _innerHandler.SetSequence(
+            ResponseWithRetryAfterSeconds(HttpStatusCode.ServiceUnavailable, 3),
+            new HttpResponseMessage(HttpStatusCode.OK));
 
         // Act
         var response = await client.GetAsync("http://test.com");
 
         // Assert
-        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.ServiceUnavailable));
-        Assert.That(_innerHandler.RequestCount, Is.EqualTo(1));
-        Assert.That(_requestedDelays, Is.Empty);
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+        Assert.That(_innerHandler.RequestCount, Is.EqualTo(2));
+        Assert.That(_requestedDelays, Has.Count.EqualTo(1));
+        Assert.That(_requestedDelays[0].TotalMilliseconds, Is.InRange(1000, 1500));
     }
 
     [Test]
-    public async Task SendAsync_RetryAfterBail_ReturnsUsableResponse()
+    public async Task SendAsync_RetryAfterAboveCeilingOnEveryAttempt_ExhaustsRetriesAndReturnsUsableResponse()
     {
-        // Arrange -- the bailed response is handed back to the caller, so it must not be disposed
+        // Arrange -- Retry-After stays above the ceiling on every attempt, so backoff is used
+        // throughout and the loop still exhausts normally; the final response must be usable
+        // (not disposed) since it's handed back to the caller
         _innerHandler.SetResponse(ResponseWithRetryAfterSeconds((HttpStatusCode)429, 30));
 
         // Act
         var response = await _httpClient.GetAsync("http://test.com");
 
         // Assert
-        Assert.That(_innerHandler.RequestCount, Is.EqualTo(1));
+        Assert.That(response.StatusCode, Is.EqualTo((HttpStatusCode)429));
+        Assert.That(_innerHandler.RequestCount, Is.EqualTo(3));
+        Assert.That(_requestedDelays, Has.Count.EqualTo(2));
         Assert.That(await response.Content.ReadAsStringAsync(), Is.Empty);
         Assert.That(response.Headers.RetryAfter.Delta, Is.EqualTo(TimeSpan.FromSeconds(30)));
     }
@@ -623,18 +707,24 @@ public class CustomRetryHandlerTests
     [Test]
     public async Task SendAsync_RetryAfterHttpDateWithoutDateHeader_ComputedAgainstLocalClock()
     {
-        // Arrange -- no Date header, so the only reference point available is the local clock
+        // Arrange -- no Date header, so the only reference point is the local clock. Inject a fixed
+        // "now" (the same instant the header is built against) via utcNowFunc, so the computed delay is
+        // deterministic instead of depending on how much real wall-clock time elapses between building
+        // the header here and the handler reading its clock.
+        var referenceNow = new DateTimeOffset(2026, 8, 28, 12, 0, 0, TimeSpan.Zero);
+        using var retryHandler = new CustomRetryHandler(delayFunc: RecordDelay, utcNowFunc: () => referenceNow) { InnerHandler = _innerHandler };
+        using var client = new HttpClient(retryHandler);
+
         var response = new HttpResponseMessage(HttpStatusCode.ServiceUnavailable);
-        response.Headers.TryAddWithoutValidation("Retry-After", DateTimeOffset.UtcNow.AddSeconds(2).ToString("r"));
+        response.Headers.TryAddWithoutValidation("Retry-After", referenceNow.AddSeconds(2).ToString("r"));
         _innerHandler.SetSequence(response, new HttpResponseMessage(HttpStatusCode.OK));
 
         // Act
-        var result = await _httpClient.GetAsync("http://test.com");
+        var result = await client.GetAsync("http://test.com");
 
-        // Assert -- HTTP-date has one-second resolution, so allow the truncated second
+        // Assert -- HTTP-date has one-second resolution; referenceNow has none, so the delay is exactly 2s
         Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.OK));
-        Assert.That(_requestedDelays, Has.Count.EqualTo(1));
-        Assert.That(_requestedDelays[0].TotalMilliseconds, Is.InRange(1000, 2000));
+        Assert.That(_requestedDelays, Is.EqualTo(new[] { TimeSpan.FromSeconds(2) }));
     }
 
     [Test]
@@ -854,6 +944,9 @@ public class CustomRetryHandlerTests
         public List<OtelBridgeSupportabilityMetric> Recorded { get; } = new();
 
         public void Record(OtelBridgeSupportabilityMetric metric) => Recorded.Add(metric);
+        public void RecordExportSuccess() => Record(OtelBridgeSupportabilityMetric.ExportSuccess);
+        public void RecordExportRetry() => Record(OtelBridgeSupportabilityMetric.ExportRetry);
+        public void RecordExportFailure() => Record(OtelBridgeSupportabilityMetric.ExportFailure);
         public void CollectMetrics() { }
         public void RegisterPublishMetricHandler(PublishMetricDelegate publishMetricDelegate) { }
     }
@@ -870,6 +963,7 @@ public class CustomRetryHandlerTests
         private HttpResponseMessage[] _sequence;
         private int _sequenceIndex = 0;
         public int RequestCount { get; private set; }
+        public List<byte[]> ReceivedContentBytes { get; } = new();
 
         public void SetResponse(HttpResponseMessage response)
         {
@@ -907,6 +1001,11 @@ public class CustomRetryHandlerTests
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             RequestCount++;
+
+            if (request.Content != null)
+            {
+                ReceivedContentBytes.Add(request.Content.ReadAsByteArrayAsync().GetAwaiter().GetResult());
+            }
 
             cancellationToken.ThrowIfCancellationRequested();
 

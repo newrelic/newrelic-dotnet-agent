@@ -36,7 +36,7 @@ public static class ContinuousProfilingServiceFactory
             // isn't known yet; it's resolved from the collector connection once the agent connects, and
             // drains before that point are dropped without doing any work (see DrainOnce).
             var nativeMethods = container.Resolve<INativeMethods>();
-            var supportabilityMetricCounters = container.Resolve<IOtelBridgeSupportabilityMetricCounters>();
+            var supportabilityMetricCounters = container.Resolve<IContinuousProfilingSupportabilityMetricCounters>();
             var profilesDispatcher = new OtlpProfilesHttpDispatcher(configuration, supportabilityMetricCounters);
             var profilesTransport = new ProfilesTransport(profilesDispatcher.Post, null, agentHealthReporter);
             var sampleSource = new NativeContinuousProfilerSampleSource(nativeMethods);

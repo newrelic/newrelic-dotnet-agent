@@ -4,6 +4,7 @@
 using Google.Protobuf;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.DataTransport.ContinuousProfiling;
+using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
@@ -32,6 +33,7 @@ public class ProfilesTransportTests
     public void TearDown()
     {
         Log.Initialize(new NoOpLogger());
+        AuditLog.IsAuditLogEnabled = false;
     }
 
     [Test]
@@ -138,13 +140,76 @@ public class ProfilesTransportTests
     }
 
     [Test]
-    public void Send_does_not_warn_on_a_non_auth_failure_status()
+    public void Send_repeats_the_rejection_warn_once_the_rate_limit_window_elapses()
     {
-        var transport = new ProfilesTransport((bytes, endpoint) => new ProfilesSendResult(false, 500, "error"), "http://unused", null);
+        // Stopwatch.Frequency ticks-per-second times 5 minutes plus 1 tick -- one tick past the window
+        // rather than a wall-clock sleep.
+        var windowTicks = (long)(System.TimeSpan.FromMinutes(5).TotalSeconds * System.Diagnostics.Stopwatch.Frequency);
+        var currentTicks = 1_000_000L;
+        var transport = new ProfilesTransport((bytes, endpoint) => new ProfilesSendResult(false, 401, "error"),
+            "http://unused", null, () => currentTicks);
+
+        transport.Send(BuildNonEmptyRequest()); // first rejection: warns, arms the window
+
+        currentTicks += windowTicks - 1;
+        transport.Send(BuildNonEmptyRequest()); // still inside the window: suppressed
+
+        currentTicks += 2; // now past the window
+        transport.Send(BuildNonEmptyRequest()); // window elapsed: warns again
+
+        Mock.Assert(() => _nrLogger.Warn(Arg.Matches<string>(m => m.Contains("license key")), Arg.IsAny<object[]>()), Occurs.Exactly(2));
+    }
+
+    [TestCase(404)]
+    [TestCase(413)]
+    [TestCase(400)]
+    [TestCase(500)]
+    public void Send_warns_on_the_first_non_auth_rejection_too(int statusCode)
+    {
+        // Every non-2xx rejection mode -- not just 401/403 -- must escalate above Debug on the first
+        // occurrence, otherwise a permanently-rejected drain produces zero delivered data silently.
+        var transport = new ProfilesTransport((bytes, endpoint) => new ProfilesSendResult(false, statusCode, "error"), "http://unused", null);
 
         transport.Send(BuildNonEmptyRequest());
 
-        Mock.Assert(() => _nrLogger.Warn(Arg.IsAny<string>(), Arg.IsAny<object[]>()), Occurs.Never());
+        Mock.Assert(() => _nrLogger.Warn(Arg.Matches<string>(m => m.Contains("rejected")), Arg.IsAny<object[]>()), Occurs.Once());
+    }
+
+    [Test]
+    public void Send_uses_generic_rejection_wording_for_a_non_auth_status()
+    {
+        var transport = new ProfilesTransport((bytes, endpoint) => new ProfilesSendResult(false, 413, "error"), "http://unused", null);
+
+        transport.Send(BuildNonEmptyRequest());
+
+        Mock.Assert(() => _nrLogger.Warn(Arg.Matches<string>(m => !m.Contains("license key")), Arg.IsAny<object[]>()), Occurs.Once());
+    }
+
+    [Test]
+    public void Send_does_not_repeat_a_non_auth_rejection_warn_within_the_rate_limit_window()
+    {
+        var transport = new ProfilesTransport((bytes, endpoint) => new ProfilesSendResult(false, 404, "error"), "http://unused", null);
+
+        transport.Send(BuildNonEmptyRequest());
+        transport.Send(BuildNonEmptyRequest());
+        transport.Send(BuildNonEmptyRequest());
+
+        Mock.Assert(() => _nrLogger.Warn(Arg.IsAny<string>(), Arg.IsAny<object[]>()), Occurs.Once());
+    }
+
+    [Test]
+    public void Send_shares_the_rate_limit_window_across_different_rejection_statuses()
+    {
+        // A 401 warn and a subsequent 404 within the same window share one rate-limit gate per
+        // transport instance -- the second status must not warn again.
+        var statusCode = 401;
+        var transport = new ProfilesTransport((bytes, endpoint) => new ProfilesSendResult(false, statusCode, "error"), "http://unused", null);
+
+        transport.Send(BuildNonEmptyRequest());
+        statusCode = 404;
+        transport.Send(BuildNonEmptyRequest());
+
+        Mock.Assert(() => _nrLogger.Warn(Arg.IsAny<string>(), Arg.IsAny<object[]>()), Occurs.Once());
     }
 
     [Test]
@@ -249,6 +314,44 @@ public class ProfilesTransportTests
         transport.Send(BuildNonEmptyRequest());
 
         Assert.That(dispatchedEndpoint, Is.EqualTo("https://otlp.nr-data.net/v1/profiles"));
+    }
+
+    [Test]
+    public void Send_does_not_render_diagnostic_json_when_only_debug_is_enabled()
+    {
+        // L17: rendering ToDiagnosticJson (protobuf -> JsonFormatter -> JToken DOM -> truncate) must be
+        // gated behind something stricter than plain Debug -- rendering it unconditionally at Debug level
+        // would allocate several MB per drain for a log line that routine `NEWRELIC_LOG_LEVEL=debug`
+        // troubleshooting would otherwise trigger every drain.
+        Mock.Arrange(() => _nrLogger.IsDebugEnabled).Returns(true);
+        Mock.Arrange(() => _nrLogger.IsFinestEnabled).Returns(false);
+        AuditLog.IsAuditLogEnabled = false;
+
+        var transport = new ProfilesTransport((bytes, endpoint) => new ProfilesSendResult(true, 200, string.Empty), "http://unused", null);
+        transport.Send(BuildNonEmptyRequest());
+
+        // The payload-json arg passed to the Debug log line must be null, not a rendered JSON string --
+        // proves ToDiagnosticJson was never invoked.
+        Mock.Assert(() => _nrLogger.Debug(
+                Arg.Matches<string>(m => m.Contains("Invoked")),
+                Arg.Matches<object[]>(a => System.Linq.Enumerable.Contains(a, (object)null))),
+            Occurs.Once());
+    }
+
+    [Test]
+    public void Send_renders_diagnostic_json_when_finest_is_enabled()
+    {
+        Mock.Arrange(() => _nrLogger.IsDebugEnabled).Returns(true);
+        Mock.Arrange(() => _nrLogger.IsFinestEnabled).Returns(true);
+        AuditLog.IsAuditLogEnabled = false;
+
+        var transport = new ProfilesTransport((bytes, endpoint) => new ProfilesSendResult(true, 200, string.Empty), "http://unused", null);
+        transport.Send(BuildNonEmptyRequest());
+
+        Mock.Assert(() => _nrLogger.Debug(
+                Arg.Matches<string>(m => m.Contains("Invoked")),
+                Arg.Matches<object[]>(a => System.Linq.Enumerable.Any(a, x => (x as string) != null && ((string)x).Contains("resourceProfiles")))),
+            Occurs.Once());
     }
 
     // The Finest diagnostic log line carries ToDiagnosticJson(request); testing the serialization directly

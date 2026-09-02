@@ -194,6 +194,13 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
         }
 
     private:
+        // High half of a UTF-16 surrogate pair (U+D800..U+DBFF); the low half always follows it.
+        static bool IsLeadingSurrogate(xchar_t codeUnit) noexcept
+        {
+            const uint16_t value = static_cast<uint16_t>(codeUnit);
+            return value >= 0xD800 && value <= 0xDBFF;
+        }
+
         // Append a single raw byte.
         void WriteByte(uint8_t b)
         {
@@ -244,6 +251,16 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
             if (charCount > MaxStringChars)
             {
                 charCount = MaxStringChars;
+
+                // Never cut between the two halves of a surrogate pair. A lone leading surrogate is not
+                // valid UTF-16: the managed decoder replaces it with U+FFFD, and whether it appears at all
+                // depends on where the cap lands, so the SAME logical frame could encode two different
+                // strings and break downstream interning/dedup. Dropping the orphaned lead unit instead
+                // costs one character and always yields well-formed UTF-16.
+                if (IsLeadingSurrogate(str[charCount - 1]))
+                {
+                    --charCount;
+                }
             }
 
             WriteShort(static_cast<int16_t>(charCount));

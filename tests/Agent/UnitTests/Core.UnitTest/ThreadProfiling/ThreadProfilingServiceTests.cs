@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Threading.Tasks;
 using NewRelic.Agent.Core.ContinuousProfiling;
 using NewRelic.Agent.Core.DataTransport;
@@ -91,14 +92,26 @@ public class ThreadProfilingServiceTests
     [Test]
     public void StartThreadProfilingSession_serializes_on_ProfilingMutualExclusionGate()
     {
-        // Proves the guard-check-and-arm sequence actually takes ProfilingMutualExclusionGate.Lock --
+        // Proves the guard-check-and-arm sequence actually takes ProfilingMutualExclusionGate.Acquire() --
         // the same lock ContinuousProfilingService.StartLocked takes -- rather than merely documenting
         // the intent in a comment.
         Task<bool> startTask;
 
-        lock (ProfilingMutualExclusionGate.Lock)
+        // Signaled by the background task the instant before it calls StartThreadProfilingSession, so the
+        // assertion below runs only after the worker is provably executing -- not while it may still be
+        // sitting unscheduled in the ThreadPool queue (which would let the "did not complete" check pass
+        // without the gate ever being contended).
+        using var workerReachedStart = new ManualResetEventSlim(false);
+
+        using (ProfilingMutualExclusionGate.Acquire())
         {
-            startTask = Task.Run(() => _threadProfilingService.StartThreadProfilingSession(1, 100, 1000));
+            startTask = Task.Run(() =>
+            {
+                workerReachedStart.Set();
+                return _threadProfilingService.StartThreadProfilingSession(1, 100, 1000);
+            });
+
+            Assert.That(workerReachedStart.Wait(5000), Is.True, "Background worker never started.");
 
             var completedWhileHeld = Task.WaitAny(new Task[] { startTask }, 200) == 0;
             Assert.That(completedWhileHeld, Is.False, "StartThreadProfilingSession must block while the gate is held elsewhere.");

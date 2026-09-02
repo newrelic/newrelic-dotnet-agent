@@ -26,9 +26,16 @@ public class ThreadProfilingSampler : IThreadProfilingSampler
     private Thread _samplingWorker = null;
     private readonly INativeMethods _nativeMethods;
 
-    public ThreadProfilingSampler(INativeMethods nativeMethods)
+    private readonly TimeSpan _shutdownJoinTimeout;
+
+    public ThreadProfilingSampler(INativeMethods nativeMethods) : this(nativeMethods, TimeSpan.FromSeconds(5))
+    {
+    }
+
+    public ThreadProfilingSampler(INativeMethods nativeMethods, TimeSpan shutdownJoinTimeout)
     {
         _nativeMethods = nativeMethods;
+        _shutdownJoinTimeout = shutdownJoinTimeout;
     }
 
     public bool IsRunning => Volatile.Read(ref _workerRunning) == 1;
@@ -61,10 +68,15 @@ public class ThreadProfilingSampler : IThreadProfilingSampler
         //signal sampling worker to terminate
         _shutdownEvent.Set();
 
-        //wait for the sampling worker to terminate
+        //wait (bounded) for the sampling worker to terminate -- an unbounded join here can outlast the
+        //OS's process-exit budget and truncate agent shutdown; the worker is a background thread, so a
+        //timeout just means we stop waiting, not that the thread is leaked.
         if (_samplingWorker != null)
         {
-            _samplingWorker.Join();
+            if (!_samplingWorker.Join(_shutdownJoinTimeout))
+            {
+                Log.Warn($"ThreadProfilingSampler.Stop(): sampling worker did not terminate within {_shutdownJoinTimeout}; continuing shutdown without waiting further.");
+            }
             _samplingWorker = null;
         }
     }

@@ -25,7 +25,11 @@ public class ThreadProfilingService : ConfigurationBasedService, IThreadProfilin
 
     // Set (optionally via ctor, otherwise post-construction by AgentManager) so the thread profiler can
     // refuse to start while continuous profiling is active. Nullable: no reference wired == no guard.
-    private IContinuousProfilingSessionControl _continuousProfilingSessionControl;
+    // volatile: the post-construction wiring in AgentManager.Initialize runs on the startup thread with
+    // no lock, while the read in StartThreadProfilingSession happens on the collector-command thread
+    // under ProfilingMutualExclusionGate.Acquire(). Without the release/acquire that read could see a stale
+    // null, skip the "CP is active" guard, and let both profilers arm concurrently.
+    private volatile IContinuousProfilingSessionControl _continuousProfilingSessionControl;
     // volatile: assigned on the collector-command thread that starts a session, read on the
     // continuous-profiling scheduler thread through IsThreadProfilingActive. Without the release/acquire
     // that read could see a stale null and report "no thread-profiling session" while one is starting.
@@ -48,8 +52,11 @@ public class ThreadProfilingService : ConfigurationBasedService, IThreadProfilin
     /// </summary>
     private volatile bool _reportData = true;
 
-    // Guards Dispose() against running its teardown more than once (TearDown/shutdown can dispose twice,
-    // and base.Dispose() releases subscriptions that must not be released again).
+    // Guards Dispose() against running its teardown more than once. Dispose() is not called anywhere in
+    // production today -- AgentManager.StopServices() calls Stop(), not Dispose(), and this service is
+    // constructed once for the process lifetime and never re-registered/re-disposed. This guard exists
+    // for test callers (unit test TearDown, and tests that call Dispose() directly) that can invoke
+    // Dispose() more than once; base.Dispose() releases subscriptions that must not be released again.
     private volatile bool _disposed;
 
     // i.e.,  this is a dictionary of ManagedThreadId, Total Call Count
@@ -149,7 +156,9 @@ public class ThreadProfilingService : ConfigurationBasedService, IThreadProfilin
     /// <summary>
     /// Deterministically stops any in-flight session so a disposed service never orphans a live sampling
     /// worker thread, then chains <see cref="ConfigurationBasedService.Dispose"/>. Idempotent: safe to call
-    /// with no session active and safe to call more than once.
+    /// with no session active and safe to call more than once. Not invoked in production -- see the
+    /// <see cref="_disposed"/> comment; kept for test callers and as a correct implementation should a
+    /// future caller ever need it.
     /// </summary>
     public override void Dispose()
     {
@@ -184,7 +193,7 @@ public class ThreadProfilingService : ConfigurationBasedService, IThreadProfilin
     {
         // Forward mutual-exclusion guard: refuse to start while continuous profiling is active.
         // See ProfilingMutualExclusionGate for the full handshake with CP's reverse guard.
-        lock (ProfilingMutualExclusionGate.Lock)
+        using (ProfilingMutualExclusionGate.Acquire())
         {
             if (_continuousProfilingSessionControl?.IsActive == true)
             {

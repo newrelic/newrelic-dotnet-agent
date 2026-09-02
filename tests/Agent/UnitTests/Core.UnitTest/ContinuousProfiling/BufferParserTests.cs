@@ -308,10 +308,10 @@ public class BufferParserTests
     {
         var full = BuildV2Batch(onCpu: true);
 
-        // Parse's `length` param only bounds the outer opcode-dispatch loop; reads within a sample
-        // go straight to the array regardless of `length` (see the mid-string truncation test above).
-        // So to actually exercise the truncation/no-throw path, physically shorten the array right
-        // after spanId (before the OnCpu byte) by rebuilding the same prefix independently.
+        // Field reads within a sample DO bound-check against the logical `length`, not just the
+        // physical array (see Parse_logical_length_shorter_than_buffer_stops_before_reading_stale_bytes),
+        // so cutting `length` alone would already exercise the truncation path. This test instead
+        // physically shortens the array to also prove no read reaches past the array itself.
         var prefix = new List<byte>();
         prefix.Add(0x01);                 // StartBatch
         prefix.Add(0x02);                 // version = 2
@@ -393,6 +393,165 @@ public class BufferParserTests
         {
             Assert.That(samples[0].OnCpu, Is.True);
             Assert.That(samples[0].IsAgentWork, Is.False);
+        });
+    }
+
+    // --- header bounds checking / batch version rejection / missing StartBatch ---
+
+    [Test]
+    public void Parse_startBatch_with_no_bytes_following_reports_parseFailed_and_no_samples()
+    {
+        // Only the opcode byte is present; the version + timestamp header never arrives.
+        var buf = new byte[] { StartBatch };
+
+        var samples = BufferParser.Parse(buf, buf.Length, out var stats, out var parseFailed);
+
+        Assert.That(samples, Is.Empty);
+        Assert.That(stats, Is.Null);
+        Assert.That(parseFailed, Is.True);
+    }
+
+    [Test]
+    public void Parse_startBatch_header_truncated_mid_timestamp_reports_parseFailed()
+    {
+        // Version byte present, timestamp cut short -- must not read a stale/leftover byte as version
+        // for a subsequent field; it must be rejected outright.
+        var buf = new byte[] { StartBatch, 0x01, 0x00, 0x00, 0x00 }; // 3 of the 8 timestamp bytes
+
+        var samples = BufferParser.Parse(buf, buf.Length, out _, out var parseFailed);
+
+        Assert.That(samples, Is.Empty);
+        Assert.That(parseFailed, Is.True);
+    }
+
+    [Test]
+    public void Parse_unknown_future_batchVersion_is_rejected_not_misparsed()
+    {
+        using var ms = new MemoryStream();
+        ms.WriteByte(StartBatch); ms.WriteByte(99); WriteLong(ms, 1L); // version far beyond anything known
+        ms.WriteByte(StartSample); WriteString(ms, "t1"); WriteLong(ms, 1); WriteLong(ms, 0); WriteLong(ms, 0); WriteLong(ms, 0);
+        WriteShort(ms, 0);
+        ms.WriteByte(EndBatch);
+        var buf = ms.ToArray();
+
+        var samples = BufferParser.Parse(buf, buf.Length, out _, out var parseFailed);
+
+        Assert.That(samples, Is.Empty); // must not attempt to parse the sample under a version it doesn't know
+        Assert.That(parseFailed, Is.True);
+    }
+
+    [Test]
+    public void Parse_batchVersion_zero_is_rejected()
+    {
+        using var ms = new MemoryStream();
+        ms.WriteByte(StartBatch); ms.WriteByte(0); WriteLong(ms, 1L);
+        ms.WriteByte(EndBatch);
+        var buf = ms.ToArray();
+
+        var samples = BufferParser.Parse(buf, buf.Length, out _, out var parseFailed);
+
+        Assert.That(samples, Is.Empty);
+        Assert.That(parseFailed, Is.True);
+    }
+
+    [Test]
+    public void Parse_startSample_without_a_preceding_startBatch_is_rejected()
+    {
+        using var ms = new MemoryStream();
+        ms.WriteByte(StartSample); WriteString(ms, "t1"); WriteLong(ms, 1); WriteLong(ms, 0); WriteLong(ms, 0); WriteLong(ms, 0);
+        WriteShort(ms, 0);
+        ms.WriteByte(EndBatch);
+        var buf = ms.ToArray();
+
+        var samples = BufferParser.Parse(buf, buf.Length, out _, out var parseFailed);
+
+        Assert.That(samples, Is.Empty);
+        Assert.That(parseFailed, Is.True);
+    }
+
+    [Test]
+    public void Parse_batchStats_without_a_preceding_startBatch_is_rejected()
+    {
+        using var ms = new MemoryStream();
+        ms.WriteByte(BatchStats);
+        WriteLong(ms, 1L);
+        ms.Write(new byte[] { 0, 0, 0, 1 }, 0, 4);
+        ms.Write(new byte[] { 0, 0, 0, 1 }, 0, 4);
+        ms.Write(new byte[] { 0, 0, 0, 1 }, 0, 4);
+        ms.WriteByte(EndBatch);
+        var buf = ms.ToArray();
+
+        var samples = BufferParser.Parse(buf, buf.Length, out var stats, out var parseFailed);
+
+        Assert.That(samples, Is.Empty);
+        Assert.That(stats, Is.Null);
+        Assert.That(parseFailed, Is.True);
+    }
+
+    [Test]
+    public void Parse_valid_batch_reports_parseFailed_false()
+    {
+        var buf = OneSampleBatch("worker", 1, 0, 0, 0, new[] { "F()" });
+
+        var samples = BufferParser.Parse(buf, buf.Length, out _, out var parseFailed);
+
+        Assert.That(samples, Has.Count.EqualTo(1));
+        Assert.That(parseFailed, Is.False);
+    }
+
+    [Test]
+    public void Parse_truncated_buffer_reports_parseFailed_true()
+    {
+        var buf = OneSampleBatch("worker", 1, 0, 0, 0, new[] { "F()" });
+
+        var samples = BufferParser.Parse(buf, buf.Length - 3, out _, out var parseFailed);
+
+        Assert.That(samples, Is.Empty);
+        Assert.That(parseFailed, Is.True);
+    }
+
+    [Test]
+    public void Parse_batch_with_no_endBatch_opcode_still_returns_completed_samples()
+    {
+        // The writer's own EndBatch byte is missing entirely (not truncated mid-record -- every
+        // sample is fully intact, the buffer simply ends after it). The reader loop falls out
+        // because `pos >= length`, not via the EndBatch case; must not be treated as a failure.
+        using var ms = new MemoryStream();
+        ms.WriteByte(StartBatch); ms.WriteByte(1); WriteLong(ms, 1L);
+        ms.WriteByte(StartSample); WriteString(ms, "t1"); WriteLong(ms, 1); WriteLong(ms, 0); WriteLong(ms, 0); WriteLong(ms, 0);
+        WriteShort(ms, 0); // no frames
+        var buf = ms.ToArray(); // no EndBatch byte appended
+
+        var samples = BufferParser.Parse(buf, buf.Length, out _, out var parseFailed);
+
+        Assert.That(samples, Has.Count.EqualTo(1));
+        Assert.That(parseFailed, Is.False);
+    }
+
+    [Test]
+    public void Parse_batchStats_before_any_startSample_is_captured_with_no_samples()
+    {
+        // BatchStats only requires a preceding StartBatch, not a StartSample -- a sweep that captured
+        // stats but walked zero threads must still report them, with an empty (not rejected) sample list.
+        using var ms = new MemoryStream();
+        ms.WriteByte(StartBatch); ms.WriteByte(1); WriteLong(ms, 1L);
+        ms.WriteByte(BatchStats);
+        WriteLong(ms, 7L); // microsSuspended
+        ms.Write(new byte[] { 0, 0, 0, 0 }, 0, 4); // threads
+        ms.Write(new byte[] { 0, 0, 0, 0 }, 0, 4); // frames
+        ms.Write(new byte[] { 0, 0, 0, 4 }, 0, 4); // skipped
+        ms.WriteByte(EndBatch);
+        var buf = ms.ToArray();
+
+        var samples = BufferParser.Parse(buf, buf.Length, out var stats, out var parseFailed);
+
+        Assert.That(samples, Is.Empty);
+        Assert.That(parseFailed, Is.False);
+        Assert.That(stats, Is.Not.Null);
+        Assert.Multiple(() =>
+        {
+            Assert.That(stats!.MicrosSuspended, Is.EqualTo(7L));
+            Assert.That(stats.Skipped, Is.EqualTo(4));
         });
     }
 

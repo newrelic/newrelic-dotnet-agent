@@ -207,6 +207,37 @@ public class SegmentTests
     }
 
     [Test]
+    public void TryGetActivityTraceId_DoesNotCacheEmptyString_UntilRealTraceIdAvailable()
+    {
+        // Arrange
+        var transactionSegmentState = Mock.Create<ITransactionSegmentState>();
+        Mock.Arrange(() => transactionSegmentState.CurrentManagedThreadId).Returns(1);
+        Mock.Arrange(() => transactionSegmentState.GetRelativeTime()).Returns(TimeSpan.Zero);
+        Mock.Arrange(() => transactionSegmentState.ParentSegmentId()).Returns((int?)null);
+        Mock.Arrange(() => transactionSegmentState.CallStackPush(Arg.IsAny<Segment>())).Returns(1);
+
+        var methodCallData = new MethodCallData("Type", "Method", 1);
+        var segment = new Segment(transactionSegmentState, methodCallData);
+
+        var currentTraceId = string.Empty;
+        var mockActivity = Mock.Create<INewRelicActivity>();
+        Mock.Arrange(() => mockActivity.TraceId).Returns(() => currentTraceId);
+
+        segment.SetActivity(mockActivity);
+
+        // Act -- first call observes the empty string an unstarted Activity reports
+        var beforeStart = segment.TryGetActivityTraceId();
+
+        // Simulate the Activity being started and getting a real trace id
+        currentTraceId = "trace-id-real";
+        var afterStart = segment.TryGetActivityTraceId();
+
+        // Assert -- the empty string must not have been cached as the resolved value
+        Assert.That(beforeStart, Is.EqualTo(string.Empty));
+        Assert.That(afterStart, Is.EqualTo("trace-id-real"));
+    }
+
+    [Test]
     public void SpanId_ReturnsExistingSpanId_IfAlreadySet()
     {
         // Arrange

@@ -133,7 +133,6 @@ public abstract class ContinuousProfilingContainerTest<T> : NewRelicIntegrationT
             .ToArray();
 
         NrAssert.Multiple(
-            () => Assert.NotEmpty(jsonMatches),
             () => Assert.NotEmpty(correlatedTraceIds)
         );
     }

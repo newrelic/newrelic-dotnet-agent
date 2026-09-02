@@ -6,6 +6,7 @@ using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.ContinuousProfiling;
 using NewRelic.Agent.Core.DependencyInjection;
+using NewRelic.Agent.Core.Metrics;
 using NUnit.Framework;
 using Telerik.JustMock;
 
@@ -41,6 +42,18 @@ public class ContinuousProfilingServiceFactoryTests
 
         Assert.That(result, Is.Not.Null);
         Mock.Assert(() => _container.Resolve<INativeMethods>(), Occurs.Once());
+    }
+
+    [Test]
+    public void TryCreate_ResolvesContinuousProfilingSpecificSupportabilityCounters_NotTheSharedOtelBridgeOnes()
+    {
+        Mock.Arrange(() => _configuration.ContinuousProfilingEnabled).Returns(true);
+
+        var result = ContinuousProfilingServiceFactory.TryCreate(_container, _configuration, _agentHealthReporter);
+
+        Assert.That(result, Is.Not.Null);
+        Mock.Assert(() => _container.Resolve<IContinuousProfilingSupportabilityMetricCounters>(), Occurs.Once());
+        Mock.Assert(() => _container.Resolve<IOtelBridgeSupportabilityMetricCounters>(), Occurs.Never());
     }
 
     [Test]

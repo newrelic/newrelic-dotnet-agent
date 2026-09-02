@@ -238,13 +238,21 @@ public sealed class AgentManager : IAgentManager, IDisposable
 
             try
             {
-                // closeLogging: false -- AgentSingleton swaps in the DisabledAgentManager right after
-                // this rethrows, and its later logging needs a live Serilog sink to reach anyone.
                 Shutdown(false, closeLogging: false);
             }
             catch
             {
                 // ignored -- a cleanup failure must never mask the original startup exception below
+            }
+            finally
+            {
+                // Serilog's file/console sinks are wrapped in Serilog.Sinks.Async, which buffers
+                // events on a background thread with no public flush other than Dispose. CloseAndFlush
+                // guarantees the failure logged above actually reaches disk before the process
+                // potentially exits; re-initializing right after restores a live (startup) logger so
+                // the DisabledAgentManager that AgentSingleton swaps in next can still log.
+                Serilog.Log.CloseAndFlush();
+                LoggerBootstrapper.Initialize();
             }
 
             throw;
@@ -412,8 +420,29 @@ public sealed class AgentManager : IAgentManager, IDisposable
 
     private void StopServices()
     {
-        _threadProfilingService?.Stop();
-        _continuousProfilingService?.Dispose();
+        StopProfilerServices(
+            () => _threadProfilingService?.Stop(),
+            () => _continuousProfilingService?.Dispose());
+    }
+
+    // Best-effort two-step profiler teardown. The continuous-profiling dispose MUST run even when stopping
+    // thread profiling throws: ThreadProfilingService.Stop() joins a sampling worker and can throw, and the
+    // original unguarded `Stop(); Dispose();` would then skip Dispose() and orphan the continuous-profiling
+    // native sampler thread for the rest of the process (Shutdown()'s outer catch never compensates -- its
+    // finally only disposes the container, not the CP service). The finally guarantees the CP dispose runs
+    // while still letting a Stop() failure propagate so the shutdown path's error/health reporting is
+    // preserved. Public static so the ordering/null-safety/isolation is unit-testable without constructing
+    // AgentManager (whose ctor drives the full static startup path).
+    public static void StopProfilerServices(Action stopThreadProfiler, Action disposeContinuousProfiler)
+    {
+        try
+        {
+            stopThreadProfiler?.Invoke();
+        }
+        finally
+        {
+            disposeContinuousProfiler?.Invoke();
+        }
     }
 
     /// <summary>

@@ -34,7 +34,11 @@ public static class OtlpProfileBuilder
     private const string NanosecondsUnit = "nanoseconds"; // == PeriodTypeUnit
 
     // period = the configured sampling interval in nanoseconds (an all-thread snapshot is taken every interval).
+    // The on- and off-CPU profiles are each sampled on that same wall-clock cadence, but only the cpu profile's
+    // values represent CPU time -- an off-cpu sample's value is parked wall-clock time, so it gets its own,
+    // truthful period_type rather than reusing "cpu".
     private const string PeriodTypeName = "cpu";
+    private const string OffCpuPeriodTypeName = "wall_clock";
     private const string PeriodTypeUnit = "nanoseconds";
 
     // profile.frame.type: the managed walk yields "dotnet" frames except the synthetic native-thread-entry
@@ -90,6 +94,15 @@ public static class OtlpProfileBuilder
         dictionary.LocationTable.Add(new Location());
         dictionary.StackTable.Add(new Stack());
         dictionary.AttributeTable.Add(new KeyValueAndUnit());
+
+        // Register the zero-value entries above in the interning caches too, so a real value that happens to
+        // match the zero value (an empty-name frame, a zero-frame stack, an unset attribute) resolves back to
+        // index 0 instead of being re-added as a duplicate entry that a naive "index 0 means empty" reader
+        // downstream wouldn't recognize as such. Function/attribute are keyed the same way InternFunction/
+        // InternAttribute key them; stack is keyed by InternStack's empty-frames join ("").
+        functionTable[string.Empty] = 0;
+        stackTable[string.Empty] = 0;
+        attributeTable[(0, 0L, null)] = 0;
 
         // link_table[0] is the reserved "no linked span" sentinel and is REQUIRED by the OTLP profiles
         // spec: profiles.proto states `link_table[0] MUST be the zero value (Link{}) and present`, and
@@ -152,12 +165,12 @@ public static class OtlpProfileBuilder
             // off_cpu:nanoseconds -- parked (off-CPU) threads only; value = off-CPU time attributed this sweep.
             if (anyOffCpu)
                 scopeProfiles.Profiles.Add(BuildProfile(dictionary, stringTable, startUnixNano, durationNano, periodNanos,
-                    OffCpuSampleTypeName, NanosecondsUnit, resolved, valueForSample: _ => periodNanos, includeSample: r => !r.OnCpu));
+                    OffCpuSampleTypeName, NanosecondsUnit, OffCpuPeriodTypeName, resolved, valueForSample: _ => periodNanos, includeSample: r => !r.OnCpu));
 
             // cpu:nanoseconds -- on-CPU threads only.
             if (anyOnCpu)
                 scopeProfiles.Profiles.Add(BuildProfile(dictionary, stringTable, startUnixNano, durationNano, periodNanos,
-                    CpuSampleTypeName, NanosecondsUnit, resolved, valueForSample: _ => periodNanos, includeSample: r => r.OnCpu));
+                    CpuSampleTypeName, NanosecondsUnit, PeriodTypeName, resolved, valueForSample: _ => periodNanos, includeSample: r => r.OnCpu));
         }
 
         var resourceProfiles = new ResourceProfiles
@@ -246,7 +259,7 @@ public static class OtlpProfileBuilder
     // -- no re-interning happens here.
     private static Profile BuildProfile(ProfilesDictionary dictionary, Dictionary<string, int> stringTable,
         long startUnixNano, long durationNano, long periodNanos, string sampleTypeName, string sampleTypeUnit,
-        List<ResolvedSample> resolved, System.Func<ResolvedSample, long> valueForSample, System.Func<ResolvedSample, bool> includeSample)
+        string periodTypeName, List<ResolvedSample> resolved, System.Func<ResolvedSample, long> valueForSample, System.Func<ResolvedSample, bool> includeSample)
     {
         var profile = new Profile
         {
@@ -265,21 +278,42 @@ public static class OtlpProfileBuilder
         {
             profile.PeriodType = new ProtoValueType
             {
-                TypeStrindex = InternString(dictionary, stringTable, PeriodTypeName),
+                TypeStrindex = InternString(dictionary, stringTable, periodTypeName),
                 UnitStrindex = InternString(dictionary, stringTable, PeriodTypeUnit),
             };
             profile.Period = periodNanos;
         }
 
+        // profiles.proto: a Sample's identity is {stack_index, set_of(attribute_indices), link_index} --
+        // samples sharing an identity SHOULD be combined rather than emitted as separate entries. A drain can
+        // read multiple sweeps whose samples share identity (e.g. the same thread parked on the same stack
+        // across sweeps), so aggregate by identity before emitting.
+        var aggregatedValues = new Dictionary<(int Stack, int Link, int ThreadIdAttr, int ThreadNameAttr), long>();
+        var order = new List<(int Stack, int Link, int ThreadIdAttr, int ThreadNameAttr)>();
         foreach (var r in resolved)
         {
             if (!includeSample(r))
                 continue;
 
-            var protoSample = new Sample { StackIndex = r.StackIndex, LinkIndex = r.LinkIndex };
-            protoSample.Values.Add(valueForSample(r));
-            protoSample.AttributeIndices.Add(r.ThreadIdAttr);
-            protoSample.AttributeIndices.Add(r.ThreadNameAttr);
+            var identity = (r.StackIndex, r.LinkIndex, r.ThreadIdAttr, r.ThreadNameAttr);
+            var value = valueForSample(r);
+            if (aggregatedValues.TryGetValue(identity, out var existing))
+            {
+                aggregatedValues[identity] = existing + value;
+            }
+            else
+            {
+                aggregatedValues[identity] = value;
+                order.Add(identity);
+            }
+        }
+
+        foreach (var identity in order)
+        {
+            var protoSample = new Sample { StackIndex = identity.Stack, LinkIndex = identity.Link };
+            protoSample.Values.Add(aggregatedValues[identity]);
+            protoSample.AttributeIndices.Add(identity.ThreadIdAttr);
+            protoSample.AttributeIndices.Add(identity.ThreadNameAttr);
             profile.Samples.Add(protoSample);
         }
 

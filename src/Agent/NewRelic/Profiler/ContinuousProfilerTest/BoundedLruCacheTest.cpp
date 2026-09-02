@@ -7,10 +7,10 @@
 
 #include <functional>
 
-#include "../ThreadProfiler/namecache.h"
+#include "../ContinuousProfiler/namecache.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
-using NewRelic::Profiler::ThreadProfiler::BoundedLruCache;
+using NewRelic::Profiler::ContinuousProfiler::BoundedLruCache;
 
 namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
 {

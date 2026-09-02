@@ -126,9 +126,8 @@ public abstract class ContinuousProfilingTestsBase<TFixture> : NewRelicIntegrati
         var builtProfile = matches.FirstOrDefault(m => m.Groups[1].Value == "built");
 
         NrAssert.Multiple(
-            () => Assert.NotEmpty(matches),
             () => Assert.NotNull(builtProfile),
-            () => Assert.True(int.Parse(builtProfile.Groups[2].Value) > 0, "Built profile reported zero bytes.")
+            () => Assert.True(builtProfile != null && int.Parse(builtProfile.Groups[2].Value) > 0, "Built profile reported zero bytes.")
         );
     }
 
@@ -141,7 +140,6 @@ public abstract class ContinuousProfilingTestsBase<TFixture> : NewRelicIntegrati
         var jsonMatches = _fixture.AgentLog.WaitForLogLines(ProfileJsonLogLineRegex, TimeSpan.FromSeconds(30)).ToArray();
 
         NrAssert.Multiple(
-            () => Assert.NotEmpty(jsonMatches),
             () => Assert.Contains("resourceProfiles", jsonMatches[0].Groups[1].Value),
             () => Assert.Contains("dictionary", jsonMatches[0].Groups[1].Value)
         );
@@ -167,7 +165,6 @@ public abstract class ContinuousProfilingTestsBase<TFixture> : NewRelicIntegrati
             .ToArray();
 
         NrAssert.Multiple(
-            () => Assert.NotEmpty(jsonMatches),
             () => Assert.NotEmpty(correlatedTraceIds)
         );
     }

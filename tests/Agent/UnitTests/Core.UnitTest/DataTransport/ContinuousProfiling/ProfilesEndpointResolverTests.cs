@@ -56,6 +56,37 @@ public class ProfilesEndpointResolverTests
     }
 
     [Test]
+    public void ResolveFromConnectionInfo_builds_an_http_endpoint_when_the_collector_protocol_is_http()
+    {
+        var connectionInfo = Mock.Create<IConnectionInfo>();
+        Mock.Arrange(() => connectionInfo.HttpProtocol).Returns("http");
+        Mock.Arrange(() => connectionInfo.Host).Returns("collector.eu01.nr-data.net");
+        Mock.Arrange(() => connectionInfo.Port).Returns(80);
+
+        var endpoint = ProfilesEndpointResolver.ResolveFromConnectionInfo(connectionInfo);
+
+        Assert.That(endpoint, Is.EqualTo("http://collector.eu01.nr-data.net/v1/profiles"));
+    }
+
+    [TestCase(null)]
+    [TestCase("")]
+    public void ResolveFromConnectionInfo_does_not_throw_for_a_null_or_blank_protocol(string protocol)
+    {
+        // UriBuilder tolerates a null/empty scheme rather than throwing -- it just omits the "://"
+        // separator (e.g. "host:443/v1/profiles"). Pins the current no-throw behavior so a future
+        // .NET UriBuilder change that starts throwing here is caught, since OnAgentConnected calls
+        // ResolveFromConnectionInfo with no surrounding try/catch.
+        var connectionInfo = Mock.Create<IConnectionInfo>();
+        Mock.Arrange(() => connectionInfo.HttpProtocol).Returns(protocol);
+        Mock.Arrange(() => connectionInfo.Host).Returns("collector.eu01.nr-data.net");
+        Mock.Arrange(() => connectionInfo.Port).Returns(443);
+
+        string endpoint = null;
+        Assert.That(() => endpoint = ProfilesEndpointResolver.ResolveFromConnectionInfo(connectionInfo), Throws.Nothing);
+        Assert.That(endpoint, Is.Not.Null);
+    }
+
+    [Test]
     public void ResolveFromConnectionInfo_returns_null_for_a_null_connection_info()
     {
         Assert.That(ProfilesEndpointResolver.ResolveFromConnectionInfo(null), Is.Null);

@@ -599,6 +599,13 @@ namespace NewRelic { namespace Profiler {
         {
             LogInfo(L"Profiler shutting down");
             _threadProfiler.Shutdown();
+            // Backstop for the managed ContinuousProfilingService.Dispose() path (which also calls
+            // ContinuousProfilerShutdown()): if managed Dispose doesn't run or doesn't finish before the
+            // CLR tears down (FailFast, unhandled exception, ProcessExit budget exceeded), the CP sampler
+            // thread must not be left calling SuspendRuntime/DoStackSnapshot/GetFunctionInfo after this
+            // callback returns -- that's forbidden by the profiling API. ContinuousProfiler::Shutdown() is
+            // idempotent (safe to call again if managed code already shut it down).
+            _continuousProfiler.Shutdown();
             LogInfo(L"Profiler shutdown");
             return S_OK;
         }
@@ -606,6 +613,10 @@ namespace NewRelic { namespace Profiler {
         // ICorProfilerCallback
         virtual HRESULT __stdcall ThreadDestroyed(ThreadID threadId) override
         {
+            // CLR ThreadIDs are recycled once a Thread is destroyed; without this, a later thread
+            // reusing the same address would inherit a dead thread's trace-context link and/or
+            // agent-work depth (see ContinuousProfiler::ThreadDestroyed).
+            _continuousProfiler.ThreadDestroyed(threadId);
             return _threadProfiler.ThreadDestroyed(threadId);
         }
 

@@ -115,6 +115,46 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
             Assert::IsTrue(PublishMarker(queue, 2)); // both slots free before these -> both succeed
         }
 
+        // Truncation must be observable, not silent: the dropped tail is counted so the caller can report
+        // it. A read that fits entirely must leave the counters alone.
+        TEST_METHOD(read_counts_truncated_batches_and_dropped_bytes)
+        {
+            SampleBufferQueue queue;
+
+            std::vector<uint8_t> batch{ 1, 2, 3, 4, 5 };
+            Assert::IsTrue(queue.TryPublish(batch));
+
+            unsigned char tight[2] = { 0 }; // not `small`: rpcndr.h #defines that to char
+            Assert::AreEqual(2, static_cast<int>(queue.Read(2, tight)));
+            Assert::AreEqual(1, static_cast<int>(queue.TruncatedBatchCount()));
+            Assert::AreEqual(3, static_cast<int>(queue.TruncatedByteCount())); // 5 available - 2 copied
+
+            // A second truncating read accumulates on top of the first.
+            std::vector<uint8_t> another{ 1, 2, 3, 4 };
+            Assert::IsTrue(queue.TryPublish(another));
+            Assert::AreEqual(2, static_cast<int>(queue.Read(2, tight)));
+            Assert::AreEqual(2, static_cast<int>(queue.TruncatedBatchCount()));
+            Assert::AreEqual(5, static_cast<int>(queue.TruncatedByteCount())); // 3 + (4 - 2)
+
+            // A batch that fits leaves the counters untouched.
+            unsigned char roomy[16] = { 0 };
+            Assert::IsTrue(PublishMarker(queue, 9));
+            Assert::AreEqual(1, static_cast<int>(queue.Read(static_cast<int32_t>(sizeof(roomy)), roomy)));
+            Assert::AreEqual(2, static_cast<int>(queue.TruncatedBatchCount()));
+            Assert::AreEqual(5, static_cast<int>(queue.TruncatedByteCount()));
+        }
+
+        // No batch ready is not a truncation -- an empty read must not touch the counters.
+        TEST_METHOD(read_with_nothing_filled_does_not_count_truncation)
+        {
+            SampleBufferQueue queue;
+
+            unsigned char buf[1] = { 0 };
+            Assert::AreEqual(0, static_cast<int>(queue.Read(1, buf)));
+            Assert::AreEqual(0, static_cast<int>(queue.TruncatedBatchCount()));
+            Assert::AreEqual(0, static_cast<int>(queue.TruncatedByteCount()));
+        }
+
         // Reading an empty queue returns 0.
         TEST_METHOD(read_with_nothing_filled_returns_zero)
         {

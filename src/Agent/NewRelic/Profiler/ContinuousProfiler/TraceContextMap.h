@@ -42,6 +42,11 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
 
     class TraceContextMap
     {
+        // The unit test builds keys that deliberately share a home slot to exercise probing / tombstone
+        // reclaim, so it must hash exactly as production does. Friendship lets it call the private HashOf
+        // (and thus track SlotBits) rather than keeping a hand-copied hash that silently goes stale.
+        friend class TraceContextMapTest;
+
     public:
         // Store (or overwrite) the calling thread's active context. Called from an app thread. Uses a
         // seqlock write: bump the slot seq to odd (write in progress), publish the three int64s, then
@@ -60,7 +65,7 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
                 return; // table full -> silently drop; this thread's samples simply carry no link.
             }
 
-            WriteSlot(*slot, hi, lo, span);
+            WriteSlot(*slot, hi, lo, span, _generation.load(std::memory_order_relaxed));
         }
 
         // Clear the calling thread's context (transaction/segment ended) AND free its slot for reuse.
@@ -88,7 +93,7 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
             // (tombstone store not yet visible to it) reads zeros -> no link, never stale context. The
             // release on the Key store below then hands the zeroed, seq-even slot to whichever thread later
             // reclaims it, so that thread's relaxed seq load in WriteSlot still sees a settled value.
-            WriteSlot(*slot, 0, 0, 0);
+            WriteSlot(*slot, 0, 0, 0, _generation.load(std::memory_order_relaxed));
             slot->Key.store(TombstoneKey, std::memory_order_release);
         }
 
@@ -122,6 +127,7 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
             value.TraceIdHigh = slot->Hi.load(std::memory_order_relaxed);
             value.TraceIdLow = slot->Lo.load(std::memory_order_relaxed);
             value.SpanId = slot->Span.load(std::memory_order_relaxed);
+            const uint64_t gen = slot->Gen.load(std::memory_order_relaxed);
 
             // Pairs with the writer's release fence in WriteSlot: an acquire-load alone on seqAfter
             // does not stop the relaxed value loads above from being reordered after it on a weak
@@ -135,6 +141,11 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
                 return false; // slot changed under us -> torn read, treat as none (no spin/retry).
             }
 
+            if (gen != _generation.load(std::memory_order_relaxed))
+            {
+                return false; // stamped by an earlier profiling session (or never written) -> no link.
+            }
+
             if (value.TraceIdHigh == 0 && value.TraceIdLow == 0 && value.SpanId == 0)
             {
                 return false; // reset/never-set context -> no link.
@@ -142,6 +153,26 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
 
             out = value;
             return true;
+        }
+
+        // Invalidate every context currently stored in the map without touching a single slot.
+        //
+        // Called when continuous profiling (re)starts. Managed-side trace-context resets can be orphaned
+        // across a stop/start cycle, leaving slots that hold a context from the previous session while
+        // their owning threads are still live -- so the sampler could ship those stale (traceId, spanId)
+        // links on fresh profile data until each owning thread happens to call Set again.
+        //
+        // A bulk per-slot clear is NOT an option: WriteSlot's relaxed payload stores are only sound under
+        // the single-writer-per-slot invariant (a slot is written solely by the thread that owns its Key).
+        // Writing slots we do not own could publish a seq-stable slot whose fields are a mix of two
+        // writers'. Instead every write stamps the generation it was made in and TryGet accepts a slot only
+        // if its stamp matches the current generation, so one relaxed increment retires the entire previous
+        // session's contents. Safe to call concurrently with in-flight readers and writers: it touches no
+        // slot, and a writer that reads the pre-increment generation just publishes a context that reads as
+        // absent -- the same outcome as the stale entry this exists to suppress.
+        void NewGeneration() noexcept
+        {
+            _generation.fetch_add(1, std::memory_order_relaxed);
         }
 
     private:
@@ -181,6 +212,11 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
             std::atomic<int64_t> Hi{ 0 };
             std::atomic<int64_t> Lo{ 0 };
             std::atomic<int64_t> Span{ 0 };
+
+            // Profiling session this slot's payload was published in; part of the seqlock-protected payload.
+            // 0 means "never written", which never matches a live generation (those start at 1), so a
+            // default-constructed slot is rejected by TryGet on the generation check alone. See NewGeneration.
+            std::atomic<uint64_t> Gen{ 0 };
         };
 
         // Knuth multiplicative hash folded to a slot index. The mixing in a multiplicative hash lands in the
@@ -306,7 +342,7 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
         }
 
         // Publish a value into a slot under the per-slot seqlock. Writer-only.
-        static void WriteSlot(Slot& slot, int64_t hi, int64_t lo, int64_t span) noexcept
+        static void WriteSlot(Slot& slot, int64_t hi, int64_t lo, int64_t span, uint64_t generation) noexcept
         {
             // Relaxed load is sound here only because of the single-writer-per-slot invariant: the
             // slot's key is the writing thread's own CLR ThreadID, so no other thread ever writes this
@@ -317,9 +353,14 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
             slot.Hi.store(hi, std::memory_order_relaxed);
             slot.Lo.store(lo, std::memory_order_relaxed);
             slot.Span.store(span, std::memory_order_relaxed);
+            slot.Gen.store(generation, std::memory_order_relaxed);
             slot.Seq.store((seq | 1u) + 1u, std::memory_order_release); // mark complete (even, advanced).
         }
 
         std::array<Slot, SlotCount> _slots{};
+
+        // Current profiling session, bumped by NewGeneration. Starts at 1 so it can never equal the 0 a
+        // never-written slot carries.
+        std::atomic<uint64_t> _generation{ 1 };
     };
 }}}

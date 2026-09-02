@@ -291,17 +291,9 @@ namespace NewRelic { namespace Profiler { namespace ThreadProfiler
         struct StackFrame
         {
             FunctionID functionId{};
-            // Defining module of functionId. Half of the type-name cache key: an mdTypeDef token is only
-            // unique within its own module (see namecache.h).
-            ModuleID moduleId{};
             mdTypeDef typeDef{};
             PreallocTypeName typeName{};
             PreallocMethodName methodName{};
-            // True only when every metadata call for THIS frame succeeded. These slots (and the name
-            // buffers in them) are reused across frames and threads, so a frame that failed to resolve --
-            // or one whose names were never re-read because the function was already cached -- still holds
-            // some other frame's names and must not be handed to the name cache.
-            bool resolved{};
 
             StackFrame() = default;
             StackFrame(const StackFrame&) = delete;
@@ -606,9 +598,9 @@ namespace NewRelic { namespace Profiler { namespace ThreadProfiler
 
                     std::for_each(std::begin(threadProfile._stackwalk), threadProfile._frameNext, [&](const StackFrame& funcdetails)
                     {
-                        if (funcdetails.resolved)
+                        if (funcdetails.functionId && funcdetails.typeDef != 0)
                         {
-                            _nameCache.insert(funcdetails.moduleId, funcdetails.functionId, funcdetails.typeDef, funcdetails.typeName, funcdetails.methodName);
+                            _nameCache.insert(funcdetails.functionId, funcdetails.typeDef, funcdetails.typeName, funcdetails.methodName);
                         }
                     });
 
@@ -720,11 +712,6 @@ namespace NewRelic { namespace Profiler { namespace ThreadProfiler
 
                 auto& thisframe = *threadProfile._frameNext;
                 thisframe.functionId = functionId;
-                //this slot is reused across frames and threads: clear the previous occupant's resolution
-                //state so it can never be mistaken for this frame's.
-                thisframe.moduleId = 0;
-                thisframe.typeDef = 0;
-                thisframe.resolved = false;
                 const auto& nameCache = threadProfile._nameCache;
 
                 if (functionId && !nameCache.has_fid(functionId))
@@ -733,10 +720,7 @@ namespace NewRelic { namespace Profiler { namespace ThreadProfiler
                     CComPtr<IMetaDataImport2> metaDataImport;
                     mdToken mdTokenForFunction{};
                     HRESULT hr{};
-                    ClassID classId{};
-                    mdToken functionToken{};
-                    if (SUCCEEDED(hr = threadProfile._corProfilerInfo->GetFunctionInfo(functionId, &classId, &thisframe.moduleId, &functionToken)) &&
-                        SUCCEEDED(hr = threadProfile._corProfilerInfo->GetTokenAndMetaDataFromFunction(functionId, IID_IMetaDataImport2, (IUnknown**)&metaDataImport, &mdTokenForFunction)) &&
+                    if (SUCCEEDED(hr = threadProfile._corProfilerInfo->GetTokenAndMetaDataFromFunction(functionId, IID_IMetaDataImport2, (IUnknown**)&metaDataImport, &mdTokenForFunction)) &&
                         metaDataImport != nullptr)
                     {
                         auto& preallocMethodName = thisframe.methodName;
@@ -746,7 +730,7 @@ namespace NewRelic { namespace Profiler { namespace ThreadProfiler
                             nullptr, nullptr, nullptr, nullptr, nullptr)))
                         {
                             auto& preallocTypeName = thisframe.typeName;
-                            const auto typeName = nameCache.typename_for(thisframe.moduleId, thisframe.typeDef);
+                            auto& typeName = nameCache.typename_for(thisframe.typeDef);
                             if (typeName == TypeAndMethodNames::GetUnknownTypeName())
                             {
                                 // get the name of the class from the cache. Make a cache entry if not found.
@@ -755,17 +739,10 @@ namespace NewRelic { namespace Profiler { namespace ThreadProfiler
                             else
                             {
                                 wcscpy_s(preallocTypeName.first.data(), static_cast<ULONG>(preallocTypeName.first.size()), typeName->c_str());
-                                //keep the length in step with the buffer: the cache is bounded now, so the
-                                //entry we just read can be evicted before ProfileAllThreads inserts this
-                                //frame, at which point insert() rebuilds the name from this buffer.
-                                preallocTypeName.second = static_cast<ULONG>(typeName->size() + 1);
                             }
-
-                            //only a frame whose own metadata calls all succeeded may be cached; see StackFrame::resolved
-                            thisframe.resolved = SUCCEEDED(hr) && thisframe.typeDef != 0 && thisframe.moduleId != 0;
                         }
                     }
-                    //don't overwrite StackTooDeep.  
+                    //don't overwrite StackTooDeep.
                     if (FAILED(hr) && StackTooDeep != threadProfile._errorCode)
                     {
                         threadProfile._errorCode = hr;

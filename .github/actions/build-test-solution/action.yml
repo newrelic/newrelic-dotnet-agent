@@ -108,8 +108,8 @@ runs:
         # -- every other test app only needs win-x64, so publishing all of them for x86 would be waste.
         $x86Runtime = "win-x86"
         $x86Projects = @("${{ inputs.x86-projects }}" -split ' ' | Where-Object { $_ })
-        $x86Tfm = "net10.0"
         $x86Published = 0; $x86Failed = 0
+        $x86Matched = @()
         if ($x86Projects.Count -gt 0) {
           foreach ($searchPath in $searchPaths) {
             $fullPath = Join-Path $basePath $searchPath
@@ -117,6 +117,18 @@ runs:
             Get-ChildItem -Path $fullPath -Filter "*.csproj" -Recurse |
               Where-Object { $x86Projects -contains $_.BaseName } |
               ForEach-Object {
+                $x86Matched += $_.BaseName
+                $content = Get-Content $_.FullName -Raw
+                if ($content -match '<TargetFrameworks?>(.*?)</TargetFrameworks?>') {
+                  $x86Tfm = ($Matches[1] -split ';') | Where-Object { $_ -match '^net\d+\.\d+$' } | Select-Object -Last 1
+                } else {
+                  $x86Tfm = $null
+                }
+                if (-not $x86Tfm) {
+                  Write-Warning "Could not determine a net TFM for $($_.Name); skipping x86 pre-publish"
+                  $x86Failed++
+                  return
+                }
                 Write-Host "Pre-publishing $($_.Name) for $x86Tfm/$x86Runtime"
                 $output = dotnet publish --configuration Release --runtime $x86Runtime --framework $x86Tfm --self-contained true $_.FullName 2>&1
                 if ($LASTEXITCODE -ne 0) {
@@ -131,6 +143,10 @@ runs:
           Write-Host "x86 pre-publish complete: $x86Published succeeded, $x86Failed failed"
           if ($x86Failed -gt 0) {
             throw "x86 pre-publish failed for $x86Failed project(s); see warnings above."
+          }
+          $x86Missing = $x86Projects | Where-Object { $x86Matched -notcontains $_ }
+          if ($x86Missing.Count -gt 0) {
+            throw "x86-projects requested but not found under any search path: $($x86Missing -join ', ')"
           }
         }
 

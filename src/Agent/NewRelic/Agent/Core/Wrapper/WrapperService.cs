@@ -189,8 +189,10 @@ public class WrapperService : IWrapperService
 
                 // Continuous profiling correlation: on the executing app thread, record this transaction's
                 // trace/span in the native profiler so CPU samples taken on this thread link to it. Gated on a
-                // single field read (IsEnabled) so it costs nothing when continuous profiling is off.
-                PushContinuousProfilingContext(transaction);
+                // single static volatile bool read (AnyEnabled) so the disabled path -- every customer without
+                // continuous profiling -- pays only a not-taken branch and never even calls the helper.
+                if (ContinuousProfilingContext.AnyEnabled)
+                    PushContinuousProfilingContext(transaction);
 
                 return (result, exception) =>
                 {
@@ -211,8 +213,8 @@ public class WrapperService : IWrapperService
                         {
                             // Re-push now that CurrentSegment has popped back to the parent, so native TLS
                             // tracks the segment actually executing on this thread. Gate the CurrentTransaction
-                            // lookup itself behind IsEnabled -- it's otherwise evaluated eagerly as a call argument.
-                            if (ContinuousProfilingContext.Instance.IsEnabled)
+                            // lookup itself behind AnyEnabled -- it's otherwise evaluated eagerly as a call argument.
+                            if (ContinuousProfilingContext.AnyEnabled)
                             {
                                 PushContinuousProfilingContext(_agent.CurrentTransaction);
                             }

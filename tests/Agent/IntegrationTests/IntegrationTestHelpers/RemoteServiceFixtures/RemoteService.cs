@@ -139,7 +139,9 @@ public class RemoteService : RemoteApplication
             WindowStyle = ProcessWindowStyle.Hidden, UseShellExecute = false, FileName = "dotnet",
             RedirectStandardOutput = true,
             RedirectStandardError = true,
-            Arguments = $"publish --configuration Release --runtime {runtime} --framework {framework} --output {deployPath} {projectFile}"
+            Arguments = string.IsNullOrWhiteSpace(_archOverride)
+                ? $"publish --configuration Release --runtime {runtime} --framework {framework} --output {deployPath} {projectFile}"
+                : $"publish --configuration Release --runtime {runtime} --framework {framework} --self-contained true --output {deployPath} {projectFile}"
         };
 
         TestLogger?.WriteLine($"[RemoteService]: executing 'dotnet {startInfo.Arguments}'");

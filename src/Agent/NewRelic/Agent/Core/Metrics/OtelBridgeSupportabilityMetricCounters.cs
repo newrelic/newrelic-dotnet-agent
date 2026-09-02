@@ -33,7 +33,7 @@ public enum OtelBridgeSupportabilityMetric
     ExportRetry
 }
 
-public interface IOtelBridgeSupportabilityMetricCounters : IOutOfBandMetricSource
+public interface IOtelBridgeSupportabilityMetricCounters : IOutOfBandMetricSource, IExportRetrySupportabilityMetricCounters
 {
     void Record(OtelBridgeSupportabilityMetric metric);
 }
@@ -61,7 +61,9 @@ public class OtelBridgeSupportabilityMetricCounters : IOtelBridgeSupportabilityM
         _counters[metric].Increment();
     }
 
-
+    public void RecordExportSuccess() => Record(OtelBridgeSupportabilityMetric.ExportSuccess);
+    public void RecordExportRetry() => Record(OtelBridgeSupportabilityMetric.ExportRetry);
+    public void RecordExportFailure() => Record(OtelBridgeSupportabilityMetric.ExportFailure);
 
     #endregion
 

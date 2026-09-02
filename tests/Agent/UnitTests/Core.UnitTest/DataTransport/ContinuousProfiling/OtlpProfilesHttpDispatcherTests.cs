@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
-using System.Collections.Generic;
+using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -14,7 +15,6 @@ using Google.Protobuf;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.DataTransport.ContinuousProfiling;
 using NewRelic.Agent.Core.Metrics;
-using NewRelic.Agent.Core.SharedInterfaces;
 using NUnit.Framework;
 using OpenTelemetry.Proto.Collector.Profiles.V1Development;
 using Telerik.JustMock;
@@ -50,18 +50,24 @@ public class OtlpProfilesHttpDispatcherTests
         });
     }
 
+    // ContinuousProfilingService's bounded drain-shutdown wait (the _drainShutdownWaitTimeout field,
+    // 60s by default) is not exposed as a public constant, so it can't be referenced directly here.
+    // Asserting against it by name, keeping this comment as the tripwire: if that default ever
+    // changes, update this value too so the margin assertion below stays meaningful.
+    private static readonly TimeSpan KnownDrainShutdownWaitTimeoutDefault = TimeSpan.FromSeconds(60);
+
     [Test]
     public void TotalSendTimeoutWithRetries_covers_the_full_multi_attempt_budget()
     {
         // Must be strictly larger than a single AttemptConnectTimeout (room for retries + backoff)
-        // and stay well under ContinuousProfilingService.DrainShutdownWaitTimeout so Dispose's
+        // and stay well under ContinuousProfilingService's drain-shutdown wait default so Dispose's
         // bounded wait for an in-flight drain always has margin over this send-side ceiling.
         Assert.Multiple(() =>
         {
             Assert.That(OtlpProfilesHttpDispatcher.TotalSendTimeoutWithRetries,
                 Is.GreaterThan(OtlpProfilesHttpDispatcher.AttemptConnectTimeout));
             Assert.That(OtlpProfilesHttpDispatcher.TotalSendTimeoutWithRetries,
-                Is.LessThanOrEqualTo(TimeSpan.FromSeconds(45)));
+                Is.LessThan(KnownDrainShutdownWaitTimeoutDefault));
         });
     }
 
@@ -90,6 +96,16 @@ public class OtlpProfilesHttpDispatcherTests
     }
 
     [Test]
+    public void BuildRequestMessage_sets_a_user_agent_header_identifying_the_dotnet_agent()
+    {
+        var dispatcher = new OtlpProfilesHttpDispatcher(_configuration);
+
+        using var message = dispatcher.BuildRequestMessage(new byte[] { 1, 2, 3 }, Endpoint);
+
+        Assert.That(message.Headers.GetValues("User-Agent").Single(), Does.StartWith("NewRelic-DotNet-Agent/"));
+    }
+
+    [Test]
     public void BuildRequestMessage_sets_the_api_key_header_to_the_license_key()
     {
         var dispatcher = new OtlpProfilesHttpDispatcher(_configuration);
@@ -100,15 +116,22 @@ public class OtlpProfilesHttpDispatcherTests
     }
 
     [Test]
-    public void BuildRequestMessage_carries_the_serialized_body_bytes()
+    public void BuildRequestMessage_carries_the_serialized_body_bytes_gzip_compressed()
     {
         var dispatcher = new OtlpProfilesHttpDispatcher(_configuration);
         var payload = new byte[] { 9, 8, 7, 6 };
 
         using var message = dispatcher.BuildRequestMessage(payload, Endpoint);
 
-        var actual = message.Content.ReadAsByteArrayAsync().ConfigureAwait(false).GetAwaiter().GetResult();
-        Assert.That(actual, Is.EqualTo(payload));
+        Assert.That(message.Content.Headers.ContentEncoding, Does.Contain("gzip"));
+
+        var compressed = message.Content.ReadAsByteArrayAsync().ConfigureAwait(false).GetAwaiter().GetResult();
+        using var compressedStream = new MemoryStream(compressed);
+        using var gzip = new GZipStream(compressedStream, CompressionMode.Decompress);
+        using var decompressed = new MemoryStream();
+        gzip.CopyTo(decompressed);
+
+        Assert.That(decompressed.ToArray(), Is.EqualTo(payload));
     }
 
     [Test]
@@ -288,11 +311,10 @@ public class OtlpProfilesHttpDispatcherTests
     }
 
     [Test]
-    public void Post_skips_reading_the_body_when_content_length_declares_it_oversized()
+    public void Post_does_not_read_the_body_into_memory_when_content_length_declares_it_oversized()
     {
-        // A huge declared Content-Length must short-circuit before the body stream is even opened --
-        // ByteArrayContent here is small, so if the dispatcher actually tried to read it fully this test
-        // would still pass; the real assertion is that ResponseContent stays empty despite a 200.
+        // ResponseContent stays empty despite a 200 -- a huge declared Content-Length skips buffering
+        // the body, but (see next test) the stream is still drained rather than abandoned.
         using var response = new HttpResponseMessage(HttpStatusCode.OK) { Content = new ByteArrayContent(new byte[] { 1, 2, 3 }) };
         response.Content.Headers.ContentLength = OtlpProfilesHttpDispatcher.MaxResponseBodyBytes + 1;
         var dispatcher = new OtlpProfilesHttpDispatcher(_configuration, _ => response);
@@ -305,6 +327,78 @@ public class OtlpProfilesHttpDispatcherTests
             Assert.That(result.StatusCode, Is.EqualTo(200));
             Assert.That(result.ResponseContent, Is.Empty);
         });
+    }
+
+    [Test]
+    public void Post_drains_the_response_stream_to_eof_when_content_length_declares_it_oversized()
+    {
+        // A poisoned connection would surface here in the real pipeline as a broken pooled connection;
+        // this test asserts the seam that prevents it -- the content stream is read to completion (not
+        // aborted mid-read) even though the declared Content-Length short-circuits buffering the body.
+        using var trackingContent = new StreamTrackingContent(new byte[] { 1, 2, 3 });
+        using var response = new HttpResponseMessage(HttpStatusCode.OK) { Content = trackingContent };
+        response.Content.Headers.ContentLength = OtlpProfilesHttpDispatcher.MaxResponseBodyBytes + 1;
+        var dispatcher = new OtlpProfilesHttpDispatcher(_configuration, _ => response);
+
+        dispatcher.Post(new byte[] { 1 }, Endpoint);
+
+        Assert.That(trackingContent.ReadToEnd, Is.True);
+    }
+
+    [Test]
+    public void Post_drains_the_response_stream_to_eof_when_the_actual_body_exceeds_the_cap()
+    {
+        var hugeBody = new byte[OtlpProfilesHttpDispatcher.MaxResponseBodyBytes + 1024];
+        using var trackingContent = new StreamTrackingContent(hugeBody);
+        using var response = new HttpResponseMessage(HttpStatusCode.OK) { Content = trackingContent };
+        var dispatcher = new OtlpProfilesHttpDispatcher(_configuration, _ => response);
+
+        dispatcher.Post(new byte[] { 1 }, Endpoint);
+
+        Assert.That(trackingContent.ReadToEnd, Is.True);
+    }
+
+    // Wraps ByteArrayContent's stream so a test can observe whether the dispatcher read all the way to
+    // EOF (ReadToEnd becomes true only once a 0-byte read is returned) rather than stopping partway
+    // through once its size cap is hit.
+    private class StreamTrackingContent : HttpContent
+    {
+        private readonly byte[] _body;
+        public bool ReadToEnd { get; private set; }
+
+        public StreamTrackingContent(byte[] body) => _body = body;
+
+        protected override Task<Stream> CreateContentReadStreamAsync() => Task.FromResult<Stream>(new TrackingStream(_body, this));
+
+        protected override Task SerializeToStreamAsync(Stream stream, TransportContext context) => stream.WriteAsync(_body, 0, _body.Length);
+
+        protected override bool TryComputeLength(out long length)
+        {
+            length = _body.Length;
+            return true;
+        }
+
+        private class TrackingStream : MemoryStream
+        {
+            private readonly StreamTrackingContent _owner;
+            public TrackingStream(byte[] body, StreamTrackingContent owner) : base(body) => _owner = owner;
+
+            public override int Read(byte[] buffer, int offset, int count)
+            {
+                var read = base.Read(buffer, offset, count);
+                if (read == 0)
+                    _owner.ReadToEnd = true;
+                return read;
+            }
+
+            public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+            {
+                var read = base.Read(buffer, offset, count);
+                if (read == 0)
+                    _owner.ReadToEnd = true;
+                return Task.FromResult(read);
+            }
+        }
     }
 
     [Test]
@@ -346,6 +440,65 @@ public class OtlpProfilesHttpDispatcherTests
         Assert.That(result.Accepted, Is.False);
     }
 
+    #region Lazy real-pipeline construction (L20)
+
+    // These prove the real CreateRealSend pipeline (ConnectionInfo -> reflected SocketsHttpHandler ->
+    // CustomRetryHandler -> HttpClient) is built on first use, not in the constructor -- the observable
+    // seam is that ConnectionInfo's ctor reads the proxy configuration off IConfiguration.
+
+    [Test]
+    public void Constructing_via_the_real_send_path_does_not_read_proxy_configuration()
+    {
+        _ = new OtlpProfilesHttpDispatcher(_configuration);
+
+        Mock.Assert(() => _configuration.ProxyHost, Occurs.Never());
+        Mock.Assert(() => _configuration.CollectorPort, Occurs.Never());
+    }
+
+    [Test]
+    public void Post_with_an_invalid_endpoint_never_reads_proxy_configuration()
+    {
+        // Endpoint validation must short-circuit before the lazy real pipeline is ever touched.
+        var dispatcher = new OtlpProfilesHttpDispatcher(_configuration);
+
+        var result = dispatcher.Post(new byte[] { 1 }, string.Empty);
+
+        Assert.That(result.Accepted, Is.False);
+        Mock.Assert(() => _configuration.ProxyHost, Occurs.Never());
+        Mock.Assert(() => _configuration.CollectorPort, Occurs.Never());
+    }
+
+    [Test]
+    public void Post_with_a_non_absolute_endpoint_never_reads_proxy_configuration()
+    {
+        var dispatcher = new OtlpProfilesHttpDispatcher(_configuration);
+
+        var result = dispatcher.Post(new byte[] { 1 }, "not a uri");
+
+        Assert.That(result.Accepted, Is.False);
+        Mock.Assert(() => _configuration.ProxyHost, Occurs.Never());
+        Mock.Assert(() => _configuration.CollectorPort, Occurs.Never());
+    }
+
+    [Test]
+    public void Post_with_a_well_formed_endpoint_builds_the_real_pipeline_and_reads_proxy_configuration()
+    {
+        // 127.0.0.1:1 refuses the connection immediately (nothing listens there), so this exercises
+        // CreateRealSend/CreateHandler for real without a hanging socket. The connection failure is a
+        // retryable HttpRequestException, so CustomRetryHandler burns through its real (short) backoff
+        // before giving up -- this test takes a few real seconds, matching the existing "real pipeline"
+        // tests below rather than adding new flakiness.
+        var dispatcher = new OtlpProfilesHttpDispatcher(_configuration);
+
+        var result = dispatcher.Post(new byte[] { 1 }, "https://127.0.0.1:1/v1/profiles");
+
+        Assert.That(result.Accepted, Is.False);
+        Mock.Assert(() => _configuration.ProxyHost, Occurs.AtLeastOnce());
+        Mock.Assert(() => _configuration.CollectorPort, Occurs.AtLeastOnce());
+    }
+
+    #endregion
+
     #region Real pipeline wiring tests (M10/M12)
 
     // These exercise the actual CustomRetryHandler + HttpClient chain (OtlpProfilesHttpDispatcher's
@@ -353,17 +506,18 @@ public class OtlpProfilesHttpDispatcherTests
     // supportability-metric wiring are verified for real rather than through the injected _send
     // delegate (which bypasses CustomRetryHandler entirely).
 
+    // Instant no-op delay, threaded through to CustomRetryHandler's own delayFunc seam -- verifies the
+    // same retry-count/outcome behavior as the real backoff without sleeping for it.
+    private static Task NoDelay(TimeSpan delay, CancellationToken cancellationToken) => Task.CompletedTask;
+
     [Test]
     public void Post_via_real_pipeline_retries_transient_failures_and_records_supportability_metrics()
     {
-        // Real CustomRetryHandler backoff delay runs for real here (no injected delay seam reaches
-        // this far down) -- ~1s for the single retry below. Bounded and consistent with the existing
-        // CustomRetryHandlerTests real-delay coverage.
         var innerHandler = new SequencedHttpMessageHandler(
             new HttpResponseMessage(HttpStatusCode.InternalServerError),
             new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("ok") });
-        var counters = new FakeMetricCounters();
-        var dispatcher = new OtlpProfilesHttpDispatcher(_configuration, innerHandler, counters);
+        var counters = new FakeExportRetryCounters();
+        var dispatcher = new OtlpProfilesHttpDispatcher(_configuration, innerHandler, counters, NoDelay);
 
         var result = dispatcher.Post(new byte[] { 1, 2, 3 }, Endpoint);
 
@@ -371,18 +525,17 @@ public class OtlpProfilesHttpDispatcherTests
         {
             Assert.That(result.Accepted, Is.True);
             Assert.That(innerHandler.RequestCount, Is.EqualTo(2));
-            Assert.That(counters.Recorded, Does.Contain(OtelBridgeSupportabilityMetric.ExportRetry));
-            Assert.That(counters.Recorded, Does.Contain(OtelBridgeSupportabilityMetric.ExportSuccess));
+            Assert.That(counters.RetryCount, Is.EqualTo(1));
+            Assert.That(counters.SuccessCount, Is.EqualTo(1));
         });
     }
 
     [Test]
     public void Post_via_real_pipeline_gives_up_after_max_retries_and_records_export_failure()
     {
-        // ~1s + ~2s of real backoff delay across the two retries before exhaustion.
         var innerHandler = new SequencedHttpMessageHandler(new HttpResponseMessage(HttpStatusCode.ServiceUnavailable));
-        var counters = new FakeMetricCounters();
-        var dispatcher = new OtlpProfilesHttpDispatcher(_configuration, innerHandler, counters);
+        var counters = new FakeExportRetryCounters();
+        var dispatcher = new OtlpProfilesHttpDispatcher(_configuration, innerHandler, counters, NoDelay);
 
         var result = dispatcher.Post(new byte[] { 1, 2, 3 }, Endpoint);
 
@@ -390,17 +543,22 @@ public class OtlpProfilesHttpDispatcherTests
         {
             Assert.That(result.Accepted, Is.False);
             Assert.That(innerHandler.RequestCount, Is.EqualTo(3));
-            Assert.That(counters.Recorded, Does.Contain(OtelBridgeSupportabilityMetric.ExportFailure));
+            Assert.That(counters.FailureCount, Is.EqualTo(1));
         });
     }
 
-    private class FakeMetricCounters : IOtelBridgeSupportabilityMetricCounters
+    // CP's dispatcher must record into its own IExportRetrySupportabilityMetricCounters implementation,
+    // not the shared OpenTelemetry Metrics Bridge counters -- this fake carries no dependency on
+    // OtelBridgeSupportabilityMetric at all, proving the dispatcher only needs the narrow interface.
+    private class FakeExportRetryCounters : IExportRetrySupportabilityMetricCounters
     {
-        public List<OtelBridgeSupportabilityMetric> Recorded { get; } = new();
+        public int SuccessCount { get; private set; }
+        public int RetryCount { get; private set; }
+        public int FailureCount { get; private set; }
 
-        public void Record(OtelBridgeSupportabilityMetric metric) => Recorded.Add(metric);
-        public void CollectMetrics() { }
-        public void RegisterPublishMetricHandler(PublishMetricDelegate publishMetricDelegate) { }
+        public void RecordExportSuccess() => SuccessCount++;
+        public void RecordExportRetry() => RetryCount++;
+        public void RecordExportFailure() => FailureCount++;
     }
 
     // Minimal stub transport: replays a fixed response sequence, repeating the last entry once

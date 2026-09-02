@@ -109,12 +109,34 @@ public class Scheduler : IScheduler, IDisposable
         return PrivateCreateExecuteOnceTimer(action, timeUntilExecution, trackAsAgentWork);
     }
 
+    /// <summary>
+    /// Resolves the continuous-profiling context a single timer callback will use for BOTH its
+    /// <see cref="IContinuousProfilingContext.SetAgentWork"/> and its matching
+    /// <see cref="IContinuousProfilingContext.ResetAgentWork"/>, or <c>null</c> when this timer does not
+    /// track agent work.
+    ///
+    /// <para>Capturing once is load-bearing, not a micro-optimization. Those two calls are the halves of a
+    /// native per-thread nesting-DEPTH counter that demands strict 1:1 pairing. Reading the static
+    /// <see cref="ContinuousProfilingContext.Instance"/> separately for each half let a CP stop/retune
+    /// landing mid-callback (a server-side config change is enough) send the set to the live context and
+    /// the reset to the inert replacement instance published in its place -- leaving this ThreadPool
+    /// thread's native slot stuck at depth >= 1 for the rest of the process, so every subsequent sample on
+    /// it, application work included, was silently filtered out as agent work.</para>
+    /// </summary>
+    private static IContinuousProfilingContext CaptureAgentWorkContext(bool trackAsAgentWork)
+    {
+        // Instance never returns null (its setter substitutes an inert instance), so a non-null result
+        // here means "track", and the null-conditional calls at both sites collapse to the untracked case.
+        return trackAsAgentWork ? ContinuousProfilingContext.Instance : null;
+    }
+
     private static Timer PrivateCreateExecuteOnceTimer(Action action, TimeSpan timeUntilExecution, bool trackAsAgentWork)
     {
         var ignoreWorkAction = new TimerCallback(_ =>
         {
-            if (trackAsAgentWork)
-                ContinuousProfilingContext.Instance.SetAgentWork();
+            // Capture Instance ONCE and drive both halves through it -- see CaptureAgentWorkContext.
+            var continuousProfilingContext = CaptureAgentWorkContext(trackAsAgentWork);
+            continuousProfilingContext?.SetAgentWork();
             try
             {
                 using (new IgnoreWork())
@@ -122,8 +144,7 @@ public class Scheduler : IScheduler, IDisposable
             }
             finally
             {
-                if (trackAsAgentWork)
-                    ContinuousProfilingContext.Instance.ResetAgentWork();
+                continuousProfilingContext?.ResetAgentWork();
             }
         });
         return new Timer(ignoreWorkAction, null, timeUntilExecution, DisablePeriodicExecution);
@@ -150,8 +171,9 @@ public class Scheduler : IScheduler, IDisposable
         var timer = null as Timer;
         var ignoreWorkAction = new TimerCallback(_ =>
         {
-            if (trackAsAgentWork)
-                ContinuousProfilingContext.Instance.SetAgentWork();
+            // Capture Instance ONCE and drive both halves through it -- see CaptureAgentWorkContext.
+            var continuousProfilingContext = CaptureAgentWorkContext(trackAsAgentWork);
+            continuousProfilingContext?.SetAgentWork();
             try
             {
                 timer.Change(DisablePeriodicExecution, DisablePeriodicExecution);
@@ -166,8 +188,7 @@ public class Scheduler : IScheduler, IDisposable
             }
             finally
             {
-                if (trackAsAgentWork)
-                    ContinuousProfilingContext.Instance.ResetAgentWork();
+                continuousProfilingContext?.ResetAgentWork();
 
                 try
                 {
