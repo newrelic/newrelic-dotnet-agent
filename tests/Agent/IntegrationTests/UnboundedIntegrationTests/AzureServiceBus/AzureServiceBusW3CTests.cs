@@ -298,7 +298,7 @@ public abstract class AzureServiceBusW3CDTHeaderReplacementTestsBase<TFixture> :
 
         Assertions.MetricsExist(expectedMetrics, metrics);
 
-        // Verify DT propagation — stale headers should have been replaced
+        // Verify DT propagation -- stale headers should have been replaced
         var spanEvents = _fixture.AgentLog.GetSpanEvents().ToList();
         foreach (var span in spanEvents)
         {
