@@ -5674,6 +5674,8 @@ namespace NewRelic.Agent.Core.Config
         
         private bool instrumentField;
         
+        private string appNameField;
+        
         /// <summary>
         /// Fully qualified class name of an exception, such as "System.IO.FileNotFoundException".
         /// </summary>
@@ -5700,6 +5702,19 @@ namespace NewRelic.Agent.Core.Config
             set
             {
                 this.instrumentField = value;
+            }
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string appName
+        {
+            get
+            {
+                return this.appNameField;
+            }
+            set
+            {
+                this.appNameField = value;
             }
         }
         

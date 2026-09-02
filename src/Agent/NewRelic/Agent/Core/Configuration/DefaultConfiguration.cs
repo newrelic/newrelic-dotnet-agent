@@ -340,26 +340,43 @@ public class DefaultConfiguration : IConfiguration
             return true;
         }
 
+        // Resolved before step 8 so that step 8 can report when it shadows a mapping.
+        var appPoolId = GetAppPoolId();
+        var pooledAppName = TryGetApplicationNameForApplicationPool(appPoolId);
+
         // 8. newrelic.config
         if (_localConfiguration.application.name.Count > 0)
         {
+            if (pooledAppName != null)
+            {
+                Log.Warn("Application pool '{0}' is mapped to application name '{1}' in newrelic.config, but the application/name element takes precedence. Remove that element to use the application pool mapping.", appPoolId, pooledAppName);
+            }
+
             Log.Info("Application name from newrelic.config.");
             _applicationNamesSource = "NewRelic Config";
             names = _localConfiguration.application.name;
             return true;
         }
 
-        // 9. Application Pool
-        appName = GetAppPoolId();
-        if (!string.IsNullOrWhiteSpace(appName))
+        // 9. newrelic.config application pool mapping
+        if (pooledAppName != null)
         {
-            Log.Info("Application name from Application Pool name.");
-            _applicationNamesSource = "Application Pool";
-            names = appName.Split(StringSeparators.Comma);
+            Log.Info("Application name from application pool mapping in newrelic.config.");
+            _applicationNamesSource = "NewRelic Config (Application Pool)";
+            names = [pooledAppName];
             return true;
         }
 
-        // 10. Process name (only when AppDomain virtual path is null)
+        // 10. Application Pool
+        if (!string.IsNullOrWhiteSpace(appPoolId))
+        {
+            Log.Info("Application name from Application Pool name.");
+            _applicationNamesSource = "Application Pool";
+            names = appPoolId.Split(StringSeparators.Comma);
+            return true;
+        }
+
+        // 11. Process name (only when AppDomain virtual path is null)
         if (_httpRuntimeStatic.AppDomainAppVirtualPath == null)
         {
             Log.Info("Application name from process name.");
@@ -371,6 +388,39 @@ public class DefaultConfiguration : IConfiguration
         // Failure path
         names = null;
         return false;
+    }
+
+    private string TryGetApplicationNameForApplicationPool(string appPoolId)
+    {
+        if (string.IsNullOrWhiteSpace(appPoolId))
+        {
+            return null;
+        }
+
+        var pools = _localConfiguration.applicationPools?.applicationPool;
+        if (pools == null)
+        {
+            return null;
+        }
+
+        string mappedName = null;
+        foreach (var pool in pools)
+        {
+            if (string.IsNullOrWhiteSpace(pool.appName) || !string.Equals(pool.name, appPoolId, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            if (mappedName != null)
+            {
+                Log.Warn("Application pool '{0}' has more than one appName mapping in newrelic.config. Using '{1}'.", appPoolId, mappedName);
+                break;
+            }
+
+            mappedName = pool.appName.Trim();
+        }
+
+        return mappedName;
     }
 
     private string GetAppPoolId()
