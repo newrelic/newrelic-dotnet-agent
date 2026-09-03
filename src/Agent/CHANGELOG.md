@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.55.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.54.0...v10.55.0) (2026-09-03)
+
+
+### New features
+
+* Allow setting the application name per IIS application pool in `newrelic.config` ([#3794](https://github.com/newrelic/newrelic-dotnet-agent/issues/3794)) ([f1e2dcf](https://github.com/newrelic/newrelic-dotnet-agent/commit/f1e2dcf6ed79cf69e77913c797e511e42cca793c))
+
+
+### Fixes
+
+* Correct cloud.region and ARN partition determination for AWS SDK segments ([#3787](https://github.com/newrelic/newrelic-dotnet-agent/issues/3787)) ([fc279c5](https://github.com/newrelic/newrelic-dotnet-agent/commit/fc279c52d0923313d79ddb0ff7bb175dfbaee13c))
+
 ## [10.54.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.53.1...v10.54.0) (2026-08-25)
 
 
