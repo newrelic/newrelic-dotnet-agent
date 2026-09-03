@@ -37,9 +37,9 @@
     <PackageReference Include="Newtonsoft.Json" />
     <PackageReference Include="Selenium.Support" />
     <PackageReference Include="Selenium.WebDriver" />
-    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="xunit.v3.mtp-off" />
     <PackageReference Include="xunit.v3.assert" />
-    <PackageReference Include="xunit.v3.core" />
+    <PackageReference Include="xunit.v3.core.mtp-off" />
     <PackageReference Include="xunit.v3.runner.console">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
