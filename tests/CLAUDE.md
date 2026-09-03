@@ -51,11 +51,14 @@ tests/Agent/
 
 ### Building the solution
 
-`IntegrationTests.sln` / `UnboundedIntegrationTests.sln` need **VS MSBuild** with all three of these flags -- use the CI invocation verbatim (`all_solutions.yml`):
+`IntegrationTests.sln` / `UnboundedIntegrationTests.sln` need **VS MSBuild** with all three of these flags -- use the CI invocation verbatim (`all_solutions.yml`).
+
+MSBuild is not on PATH outside a Developer Command Prompt. Resolve it with the `vswhere.exe` the repo ships -- the same one `build/build.ps1` uses. Never glob `Program Files\Microsoft Visual Studio\*`.
 
 ```
-"C:\Program Files\Microsoft Visual Studio\<ver>\Enterprise\MSBuild\Current\Bin\MSBuild.exe" \
-  tests/Agent/IntegrationTests/IntegrationTests.sln \
+MSBUILD=$(build/Tools/vswhere.exe -latest -prerelease -products '*' \
+  -requires Microsoft.Component.MSBuild -find 'MSBuild\**\Bin\MSBuild.exe' | tr -d '\r' | head -1)
+"$MSBUILD" tests/Agent/IntegrationTests/IntegrationTests.sln \
   -restore -m -p:Configuration=Debug -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy
 ```
 
