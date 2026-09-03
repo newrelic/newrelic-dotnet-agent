@@ -103,7 +103,7 @@ jobs:
       # other matrix job ever holds AWS credentials in its environment.
       - name: Configure AWS credentials for Bedrock
         if: matrix.namespace == 'LLM'
-        uses: aws-actions/configure-aws-credentials@e6de054238d6b7531b4efff3b6587d9aade6a06c # v6.2.3
+        uses: aws-actions/configure-aws-credentials@cbe3b392738ccf3f987d68400dafcf4b0624a56c # v6.2.4
         with:
           role-to-assume: ${{ secrets.AWS_BEDROCK_TEST_ROLE_ARN }}
           role-duration-seconds: 900
