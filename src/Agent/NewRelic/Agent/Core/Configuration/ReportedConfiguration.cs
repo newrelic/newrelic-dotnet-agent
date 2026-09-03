@@ -602,6 +602,9 @@ public class ReportedConfiguration : IConfiguration
     [JsonProperty("agent.kafka_internal_metrics_enabled")]
     public bool KafkaInternalMetricsEnabled => _configuration.KafkaInternalMetricsEnabled;
 
+    [JsonProperty("agent.kafka_cluster_metrics_enabled")]
+    public bool KafkaClusterMetricsEnabled => _configuration.KafkaClusterMetricsEnabled;
+
     [JsonProperty("agent.sampling_target")]
     public int? SamplingTarget => _configuration.SamplingTarget;
 
