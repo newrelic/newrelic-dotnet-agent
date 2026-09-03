@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using Mono.Cecil;
+using Mono.Cecil.Cil;
 
 if (args.Length == 0)
 {
@@ -30,10 +31,16 @@ try
     var parameters = new ReaderParameters
     {
         AssemblyResolver = resolver,
-        ReadWrite = true
+        ReadWrite = true,
+        ReadSymbols = true,
+        ThrowIfSymbolsAreNotMatching = false,
+        SymbolReaderProvider = new DefaultSymbolReaderProvider(throwIfNoSymbol: false)
     };
 
     using ModuleDefinition module = ModuleDefinition.ReadModule(assemblyPath, parameters);
+
+    var hasEmbeddedPdb = module.GetDebugHeader().Entries
+        .Any(e => e.Directory.Type == ImageDebugType.EmbeddedPortablePdb);
 
     IEnumerable<IModificationJob> jobs = [new InternalizeMetricsEventSourceName(logger)];
 
@@ -47,8 +54,22 @@ try
         }
     }
 
-    // Save the modified assembly
-    module.Write();
+    // Save the modified assembly, preserving whatever debug info the input carried.
+    // Writing without symbols drops the PE debug directory entirely.
+    if (module.HasSymbols)
+    {
+        var writerParameters = new WriterParameters { WriteSymbols = true };
+        if (hasEmbeddedPdb)
+        {
+            writerParameters.SymbolWriterProvider = new EmbeddedPortablePdbWriterProvider();
+        }
+
+        module.Write(writerParameters);
+    }
+    else
+    {
+        module.Write();
+    }
 }
 catch (Exception ex)
 {
