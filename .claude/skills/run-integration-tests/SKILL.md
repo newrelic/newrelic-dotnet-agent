@@ -16,9 +16,8 @@ Start a real app with the agent attached, exercise it, wait for a harvest, asser
 Use full VS `MSBuild.exe` (not `dotnet build` -- legacy non-SDK web projects have `WebPublish` targets the SDK MSBuild can't build), Debug (fixture looks for apps under `Debug`). These flags mirror CI (`all_solutions.yml`) and are the only proven-good set: `-p:DeployOnBuild=true -p:PublishProfile=LocalDeploy` drives the web publish, and **no `-t:Build`** (the web csproj's `<Target Name="Deploy" AfterTargets="Build">` re-invokes `WebPublish`; `-t:Build` -> `error MSB4006: circular dependency ... "Deploy"`). Slow -- background/tee. Swap the `.sln` per layer.
 
 ```bash
-MSBUILD=$("/c/Program Files (x86)/Microsoft Visual Studio/Installer/vswhere.exe" \
-  -latest -prerelease -products '*' -requires Microsoft.Component.MSBuild \
-  -find 'MSBuild/**/Bin/MSBuild.exe')
+MSBUILD=$(build/Tools/vswhere.exe -latest -prerelease -products '*' \
+  -requires Microsoft.Component.MSBuild -find 'MSBuild\**\Bin\MSBuild.exe' | tr -d '\r' | head -1)
 "$MSBUILD" tests/Agent/IntegrationTests/IntegrationTests.sln \
   -restore -m -p:Configuration=Debug -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy
 ```
