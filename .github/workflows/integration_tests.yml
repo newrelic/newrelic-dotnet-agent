@@ -195,109 +195,21 @@ jobs:
           no-parallel-namespaces: AzureFunction
           test-type: integrationTests
 
-      - name: Report flaky retry telemetry
+      - name: Report test results
         if: always()
-        continue-on-error: true
-        env:
-          NR_CI_INGEST_KEY: ${{ secrets.NR_CI_INGEST_KEY }}
-          NR_CI_ACCOUNT_ID: ${{ secrets.NR_CI_ACCOUNT_ID }}
-          CI_BRANCH: ${{ github.ref_name }}
-          CI_COMMIT: ${{ github.sha }}
-          CI_RUN_ID: ${{ github.run_id }}
-          CI_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          CI_TRIGGER: ${{ github.event_name }}
-        run: |
-          $marker = "$Env:RUNNER_TEMP\flaky-retry-${{ matrix.namespace }}.json"
-          if (Test-Path $marker) {
-            $info = Get-Content $marker | ConvertFrom-Json
-            $Env:RETRY_TEST_TYPE = $info.testType
-            $Env:RETRY_TEST_GROUP = $info.testGroup
-            & bash build/Scripts/report-flaky-retry.sh
-            Remove-Item $marker -Force -ErrorAction Ignore
-          }
-        shell: powershell
-
-      - name: Extract payload bytes log from TRX
-        if: inputs.aggregate_payload_data == true || github.event_name == 'schedule'
-        run: |
-          $trxFile = "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.trx"
-          $payloadLog = "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_payload_bytes.json"
-          $countLog = "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_test_count.json"
-
-          Write-Host "Checking for TRX file at: $trxFile"
-
-          $executedTests = 0
-
-          if (Test-Path $trxFile) {
-            $fileSize = (Get-Item $trxFile).Length
-            Write-Host "TRX file found. Size: $fileSize bytes"
-
-            # Read TRX file and extract lines containing payload information from Message elements
-            [xml]$trxContent = Get-Content $trxFile
-            $messageElements = $trxContent.SelectNodes("//*[local-name()='Output']/*[local-name()='TextMessages']/*[local-name()='Message']")
-
-            $payloadData = @{}
-            foreach ($message in $messageElements) {
-              foreach ($line in ($message.InnerText -split "\r?\n")) {
-                if ($line -match '^\s*(.+?):\s+([a-z0-9_]+):\s+(\d+)\s+bytes\s*$') {
-                  $className = $Matches[1].Trim()
-                  $category  = $Matches[2]
-                  $byteCount = [int]$Matches[3]
-                  if (-not $payloadData.ContainsKey($className)) { $payloadData[$className] = @{} }
-                  if ($payloadData[$className].ContainsKey($category)) {
-                    $payloadData[$className][$category] += $byteCount
-                  } else {
-                    $payloadData[$className][$category] = $byteCount
-                  }
-                }
-              }
-            }
-
-            Write-Host "Found $($payloadData.Count) payload log entries"
-
-            if ($payloadData.Count -gt 0) {
-              $payloadData | ConvertTo-Json -Depth 5 | Out-File -FilePath $payloadLog -Encoding UTF8
-              Write-Host "Extracted payload logs to $payloadLog"
-              Write-Host "Content:"
-              Get-Content $payloadLog | ForEach-Object { Write-Host $_ }
-            } else {
-              Write-Host "No payload byte logs found in TRX file"
-              @{} | ConvertTo-Json | Out-File -FilePath $payloadLog -Encoding UTF8
-            }
-
-            # Extract the executed-test count from the TRX ResultSummary/Counters (VSTest
-            # schema, emitted by the xUnit v3 runner). 'executed' counts tests that ran
-            # (any outcome), excluding skipped / not-executed.
-            $counters = $trxContent.SelectSingleNode("//*[local-name()='ResultSummary']/*[local-name()='Counters']")
-            if ($counters -ne $null -and $counters.executed) { $executedTests = [int]$counters.executed }
-          } else {
-            Write-Host "TRX file not found"
-            @{} | ConvertTo-Json | Out-File -FilePath $payloadLog -Encoding UTF8
-          }
-
-          Write-Host "Executed test count: $executedTests"
-          @{ executedTests = $executedTests } | ConvertTo-Json | Out-File -FilePath $countLog -Encoding UTF8
-        shell: powershell
-
-      - name: Upload payload bytes log
-        if: inputs.aggregate_payload_data == true || github.event_name == 'schedule'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: ./.github/actions/report-host-tests
         with:
-          name: integration-payload-bytes-${{ matrix.namespace }}
-          path: |
-            C:\IntegrationTestWorkingDirectory\TestResults\*_payload_bytes.json
-            C:\IntegrationTestWorkingDirectory\TestResults\*_test_count.json
-          if-no-files-found: warn
-
-      - name: Archive integration test results on failure
-        if: ${{ failure() }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: integration-test-results-${{ matrix.namespace }}
-          path: |
+          namespace: ${{ matrix.namespace }}
+          results-dir: C:\IntegrationTestWorkingDirectory\TestResults
+          payload-basename: ${{ matrix.namespace }}
+          payload-artifact-name: integration-payload-bytes-${{ matrix.namespace }}
+          results-artifact-name: integration-test-results-${{ matrix.namespace }}
+          archive-paths: |
             C:\IntegrationTestWorkingDirectory\**\*.log
             C:\IntegrationTestWorkingDirectory\TestResults\**\*TestResults.trx
-          if-no-files-found: error
+          aggregate-payload-data: ${{ inputs.aggregate_payload_data == true || github.event_name == 'schedule' }}
+          nr-ci-ingest-key: ${{ secrets.NR_CI_INGEST_KEY }}
+          nr-ci-account-id: ${{ secrets.NR_CI_ACCOUNT_ID }}
 
   run-integration-tests-linux:
     needs: build-linux
@@ -334,7 +246,7 @@ jobs:
 
       - name: Configure AWS credentials for Bedrock
         if: matrix.namespace == 'LLM'
-        uses: aws-actions/configure-aws-credentials@e6de054238d6b7531b4efff3b6587d9aade6a06c # v6.2.3
+        uses: aws-actions/configure-aws-credentials@cbe3b392738ccf3f987d68400dafcf4b0624a56c # v6.2.4
         with:
           role-to-assume: ${{ secrets.AWS_BEDROCK_TEST_ROLE_ARN }}
           role-duration-seconds: 900
@@ -388,117 +300,21 @@ jobs:
           no-parallel-namespaces: AzureFunction
           test-type: integrationTestsLinux
 
-      - name: Report flaky retry telemetry
+      - name: Report test results
         if: always()
-        continue-on-error: true
-        env:
-          NR_CI_INGEST_KEY: ${{ secrets.NR_CI_INGEST_KEY }}
-          NR_CI_ACCOUNT_ID: ${{ secrets.NR_CI_ACCOUNT_ID }}
-          CI_BRANCH: ${{ github.ref_name }}
-          CI_COMMIT: ${{ github.sha }}
-          CI_RUN_ID: ${{ github.run_id }}
-          CI_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          CI_TRIGGER: ${{ github.event_name }}
-        shell: bash
-        run: |
-          marker="$RUNNER_TEMP/flaky-retry-${{ matrix.namespace }}.json"
-          if [ -f "$marker" ]; then
-            RETRY_TEST_TYPE="$(jq -r .testType "$marker")" \
-            RETRY_TEST_GROUP="$(jq -r .testGroup "$marker")" \
-              bash build/Scripts/report-flaky-retry.sh
-            rm -f "$marker"
-          fi
-
-      - name: Extract payload bytes log from TRX
-        if: inputs.aggregate_payload_data == true || github.event_name == 'schedule'
-        shell: bash
-        run: |
-          TRX_FILE="${{ env.test_results_path }}/${{ matrix.namespace }}_testResults.trx" \
-          PAYLOAD_LOG="${{ env.test_results_path }}/${{ matrix.namespace }}_linux_payload_bytes.json" \
-          COUNT_LOG="${{ env.test_results_path }}/${{ matrix.namespace }}_linux_test_count.json" \
-          python3 - <<'PY'
-          import json
-          import os
-          import re
-          import xml.etree.ElementTree as ET
-
-          trx_file = os.environ["TRX_FILE"]
-          payload_log = os.environ["PAYLOAD_LOG"]
-          count_log = os.environ["COUNT_LOG"]
-
-          print(f"Checking for TRX file at: {trx_file}")
-
-          executed_tests = 0
-          payload_data = {}
-          pattern = re.compile(r'^\s*(.+?):\s+([a-z0-9_]+):\s+(\d+)\s+bytes\s*$')
-
-
-          def local_name(tag):
-              return tag.rsplit('}', 1)[-1]
-
-
-          def children(parent, name):
-              return (e for e in parent if local_name(e.tag) == name)
-
-
-          def descendants(parent, name):
-              return (e for e in parent.iter() if local_name(e.tag) == name)
-
-
-          if os.path.isfile(trx_file):
-              print(f"TRX file found. Size: {os.path.getsize(trx_file)} bytes")
-              root = ET.parse(trx_file).getroot()
-
-              for output in descendants(root, 'Output'):
-                  for text_messages in children(output, 'TextMessages'):
-                      for message in children(text_messages, 'Message'):
-                          for line in re.split(r'\r?\n', message.text or ""):
-                              m = pattern.match(line)
-                              if not m:
-                                  continue
-                              bucket = payload_data.setdefault(m.group(1).strip(), {})
-                              category = m.group(2)
-                              bucket[category] = bucket.get(category, 0) + int(m.group(3))
-
-              print(f"Found {len(payload_data)} payload log entries")
-
-              counters = next(
-                  (c for s in descendants(root, 'ResultSummary') for c in children(s, 'Counters')),
-                  None,
-              )
-              if counters is not None and counters.get('executed'):
-                  executed_tests = int(counters.get('executed'))
-          else:
-              print("TRX file not found")
-
-          print(f"Executed test count: {executed_tests}")
-
-          with open(payload_log, "w", encoding="utf-8", newline="\n") as f:
-              json.dump(payload_data, f)
-
-          with open(count_log, "w", encoding="utf-8", newline="\n") as f:
-              json.dump({"executedTests": executed_tests}, f)
-          PY
-
-      - name: Upload payload bytes log
-        if: inputs.aggregate_payload_data == true || github.event_name == 'schedule'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: ./.github/actions/report-host-tests
         with:
-          name: integration-payload-bytes-linux-${{ matrix.namespace }}
-          path: |
-            ${{ env.test_results_path }}/*_payload_bytes.json
-            ${{ env.test_results_path }}/*_test_count.json
-          if-no-files-found: warn
-
-      - name: Archive integration test results on failure
-        if: ${{ failure() }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: integration-test-results-linux-${{ matrix.namespace }}
-          path: |
+          namespace: ${{ matrix.namespace }}
+          results-dir: ${{ env.test_results_path }}
+          payload-basename: ${{ matrix.namespace }}_linux
+          payload-artifact-name: integration-payload-bytes-linux-${{ matrix.namespace }}
+          results-artifact-name: integration-test-results-linux-${{ matrix.namespace }}
+          archive-paths: |
             /tmp/IntegrationTestWorkingDirectory/**/*.log
             ${{ env.test_results_path }}/**/*.trx
-          if-no-files-found: error
+          aggregate-payload-data: ${{ inputs.aggregate_payload_data == true || github.event_name == 'schedule' }}
+          nr-ci-ingest-key: ${{ secrets.NR_CI_INGEST_KEY }}
+          nr-ci-account-id: ${{ secrets.NR_CI_ACCOUNT_ID }}
 
   run-integration-tests-core-smoke:
     needs: build
@@ -560,7 +376,7 @@ jobs:
       # other matrix job ever holds AWS credentials in its environment.
       - name: Configure AWS credentials for Bedrock
         if: matrix.namespace == 'LLM'
-        uses: aws-actions/configure-aws-credentials@e6de054238d6b7531b4efff3b6587d9aade6a06c # v6.2.3
+        uses: aws-actions/configure-aws-credentials@cbe3b392738ccf3f987d68400dafcf4b0624a56c # v6.2.4
         with:
           role-to-assume: ${{ secrets.AWS_BEDROCK_TEST_ROLE_ARN }}
           role-duration-seconds: 900
@@ -621,109 +437,19 @@ jobs:
           no-parallel-namespaces: AzureFunction
           test-type: integrationTestsCoreSmoke
 
-      - name: Report flaky retry telemetry
+      - name: Report test results
         if: always()
-        continue-on-error: true
-        env:
-          NR_CI_INGEST_KEY: ${{ secrets.NR_CI_INGEST_KEY }}
-          NR_CI_ACCOUNT_ID: ${{ secrets.NR_CI_ACCOUNT_ID }}
-          CI_BRANCH: ${{ github.ref_name }}
-          CI_COMMIT: ${{ github.sha }}
-          CI_RUN_ID: ${{ github.run_id }}
-          CI_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          CI_TRIGGER: ${{ github.event_name }}
-        run: |
-          $marker = "$Env:RUNNER_TEMP\flaky-retry-${{ matrix.namespace }}.json"
-          if (Test-Path $marker) {
-            $info = Get-Content $marker | ConvertFrom-Json
-            $Env:RETRY_TEST_TYPE = $info.testType
-            $Env:RETRY_TEST_GROUP = $info.testGroup
-            & bash build/Scripts/report-flaky-retry.sh
-            Remove-Item $marker -Force -ErrorAction Ignore
-          }
-        shell: powershell
-
-      - name: Extract payload bytes log from TRX
-        if: inputs.aggregate_payload_data == true || github.event_name == 'schedule'
-        run: |
-          $trxFile = "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.trx"
-          # Distinct names: the aggregate job downloads every lane's artifacts into
-          # one directory with merge-multiple, so a shared file name overwrites.
-          $payloadLog = "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_core_smoke_payload_bytes.json"
-          $countLog = "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_core_smoke_test_count.json"
-
-          Write-Host "Checking for TRX file at: $trxFile"
-
-          $executedTests = 0
-
-          if (Test-Path $trxFile) {
-            $fileSize = (Get-Item $trxFile).Length
-            Write-Host "TRX file found. Size: $fileSize bytes"
-
-            # Read TRX file and extract lines containing payload information from Message elements
-            [xml]$trxContent = Get-Content $trxFile
-            $messageElements = $trxContent.SelectNodes("//*[local-name()='Output']/*[local-name()='TextMessages']/*[local-name()='Message']")
-
-            $payloadData = @{}
-            foreach ($message in $messageElements) {
-              foreach ($line in ($message.InnerText -split "\r?\n")) {
-                if ($line -match '^\s*(.+?):\s+([a-z0-9_]+):\s+(\d+)\s+bytes\s*$') {
-                  $className = $Matches[1].Trim()
-                  $category  = $Matches[2]
-                  $byteCount = [int]$Matches[3]
-                  if (-not $payloadData.ContainsKey($className)) { $payloadData[$className] = @{} }
-                  if ($payloadData[$className].ContainsKey($category)) {
-                    $payloadData[$className][$category] += $byteCount
-                  } else {
-                    $payloadData[$className][$category] = $byteCount
-                  }
-                }
-              }
-            }
-
-            Write-Host "Found $($payloadData.Count) payload log entries"
-
-            if ($payloadData.Count -gt 0) {
-              $payloadData | ConvertTo-Json -Depth 5 | Out-File -FilePath $payloadLog -Encoding UTF8
-              Write-Host "Extracted payload logs to $payloadLog"
-              Write-Host "Content:"
-              Get-Content $payloadLog | ForEach-Object { Write-Host $_ }
-            } else {
-              Write-Host "No payload byte logs found in TRX file"
-              @{} | ConvertTo-Json | Out-File -FilePath $payloadLog -Encoding UTF8
-            }
-
-            # Extract the executed-test count from the TRX ResultSummary/Counters (VSTest
-            # schema, emitted by the xUnit v3 runner). 'executed' counts tests that ran
-            # (any outcome), excluding skipped / not-executed.
-            $counters = $trxContent.SelectSingleNode("//*[local-name()='ResultSummary']/*[local-name()='Counters']")
-            if ($counters -ne $null -and $counters.executed) { $executedTests = [int]$counters.executed }
-          } else {
-            Write-Host "TRX file not found"
-            @{} | ConvertTo-Json | Out-File -FilePath $payloadLog -Encoding UTF8
-          }
-
-          Write-Host "Executed test count: $executedTests"
-          @{ executedTests = $executedTests } | ConvertTo-Json | Out-File -FilePath $countLog -Encoding UTF8
-        shell: powershell
-
-      - name: Upload payload bytes log
-        if: inputs.aggregate_payload_data == true || github.event_name == 'schedule'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: ./.github/actions/report-host-tests
         with:
-          name: integration-payload-bytes-core-smoke-${{ matrix.namespace }}
-          path: |
-            C:\IntegrationTestWorkingDirectory\TestResults\*_payload_bytes.json
-            C:\IntegrationTestWorkingDirectory\TestResults\*_test_count.json
-          if-no-files-found: warn
-
-      - name: Archive integration test results on failure
-        if: ${{ failure() }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: integration-test-results-core-smoke-${{ matrix.namespace }}
-          path: |
+          namespace: ${{ matrix.namespace }}
+          results-dir: C:\IntegrationTestWorkingDirectory\TestResults
+          payload-basename: ${{ matrix.namespace }}_core_smoke
+          payload-artifact-name: integration-payload-bytes-core-smoke-${{ matrix.namespace }}
+          results-artifact-name: integration-test-results-core-smoke-${{ matrix.namespace }}
+          archive-paths: |
             C:\IntegrationTestWorkingDirectory\**\*.log
             C:\IntegrationTestWorkingDirectory\TestResults\**\*TestResults.trx
-          if-no-files-found: error
+          aggregate-payload-data: ${{ inputs.aggregate_payload_data == true || github.event_name == 'schedule' }}
+          nr-ci-ingest-key: ${{ secrets.NR_CI_INGEST_KEY }}
+          nr-ci-account-id: ${{ secrets.NR_CI_ACCOUNT_ID }}
 

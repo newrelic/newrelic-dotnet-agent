@@ -1,0 +1,236 @@
+name: Report Host Test Results
+description: >
+  Post-run reporting for a host-run test lane: flaky-retry telemetry, payload-byte
+  and executed-test extraction from the TRX, and artifact uploads. Call this with
+  "if: always()" immediately after the run-host-tests step.
+
+inputs:
+  namespace:
+    description: 'Shard name the lane ran, used for the flaky-retry marker.'
+    required: true
+  results-dir:
+    description: 'Directory holding the TRX; the payload and count JSON are written here.'
+    required: true
+  payload-basename:
+    description: >
+      Basename for the payload and count JSON. Must be unique across lanes of the
+      same suite: the aggregate job downloads every lane with merge-multiple, so a
+      shared file name overwrites.
+    required: true
+  payload-artifact-name:
+    description: 'Artifact name for the payload and count JSON.'
+    required: true
+  results-artifact-name:
+    description: 'Artifact name for the on-failure log and TRX archive.'
+    required: true
+  archive-paths:
+    description: 'Newline-separated globs archived when the lane fails.'
+    required: true
+  aggregate-payload-data:
+    description: 'Whether to extract and upload payload-byte data.'
+    required: true
+  nr-ci-ingest-key:
+    description: 'License key the flaky-retry telemetry reports with.'
+    required: true
+  nr-ci-account-id:
+    description: 'Account the flaky-retry telemetry reports to.'
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Report flaky retry telemetry (Windows)
+      if: always() && runner.os == 'Windows'
+      shell: powershell
+      env:
+        NR_CI_INGEST_KEY: ${{ inputs.nr-ci-ingest-key }}
+        NR_CI_ACCOUNT_ID: ${{ inputs.nr-ci-account-id }}
+        CI_BRANCH: ${{ github.ref_name }}
+        CI_COMMIT: ${{ github.sha }}
+        CI_RUN_ID: ${{ github.run_id }}
+        CI_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        CI_TRIGGER: ${{ github.event_name }}
+      run: |
+        # Telemetry must never fail the lane, so swallow everything and exit 0.
+        try {
+          $marker = "$Env:RUNNER_TEMP\flaky-retry-${{ inputs.namespace }}.json"
+          if (Test-Path $marker) {
+            $info = Get-Content $marker | ConvertFrom-Json
+            $Env:RETRY_TEST_TYPE = $info.testType
+            $Env:RETRY_TEST_GROUP = $info.testGroup
+            & bash "$Env:GITHUB_WORKSPACE/build/Scripts/report-flaky-retry.sh"
+            Remove-Item $marker -Force -ErrorAction Ignore
+          }
+        } catch {
+          Write-Host "::warning::Flaky-retry telemetry failed: $_"
+        }
+        exit 0
+
+    - name: Report flaky retry telemetry (Linux)
+      if: always() && runner.os != 'Windows'
+      shell: bash
+      env:
+        NR_CI_INGEST_KEY: ${{ inputs.nr-ci-ingest-key }}
+        NR_CI_ACCOUNT_ID: ${{ inputs.nr-ci-account-id }}
+        CI_BRANCH: ${{ github.ref_name }}
+        CI_COMMIT: ${{ github.sha }}
+        CI_RUN_ID: ${{ github.run_id }}
+        CI_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        CI_TRIGGER: ${{ github.event_name }}
+      run: |
+        # Telemetry must never fail the lane.
+        marker="$RUNNER_TEMP/flaky-retry-${{ inputs.namespace }}.json"
+        if [ -f "$marker" ]; then
+          RETRY_TEST_TYPE="$(jq -r .testType "$marker")" \
+          RETRY_TEST_GROUP="$(jq -r .testGroup "$marker")" \
+            bash "$GITHUB_WORKSPACE/build/Scripts/report-flaky-retry.sh" || \
+            echo "::warning::Flaky-retry telemetry failed"
+          rm -f "$marker"
+        fi
+        exit 0
+
+    - name: Extract payload bytes log from TRX (Windows)
+      if: inputs.aggregate-payload-data == 'true' && runner.os == 'Windows'
+      shell: powershell
+      run: |
+        $trxFile    = "${{ inputs.results-dir }}\${{ inputs.namespace }}_testResults.trx"
+        $payloadLog = "${{ inputs.results-dir }}\${{ inputs.payload-basename }}_payload_bytes.json"
+        $countLog   = "${{ inputs.results-dir }}\${{ inputs.payload-basename }}_test_count.json"
+
+        Write-Host "Checking for TRX file at: $trxFile"
+
+        $executedTests = 0
+        $payloadData = @{}
+
+        if (Test-Path $trxFile) {
+          Write-Host "TRX file found. Size: $((Get-Item $trxFile).Length) bytes"
+
+          [xml]$trxContent = Get-Content $trxFile
+          $messageElements = $trxContent.SelectNodes("//*[local-name()='Output']/*[local-name()='TextMessages']/*[local-name()='Message']")
+
+          foreach ($message in $messageElements) {
+            foreach ($line in ($message.InnerText -split "\r?\n")) {
+              if ($line -match '^\s*(.+?):\s+([a-z0-9_]+):\s+(\d+)\s+bytes\s*$') {
+                $className = $Matches[1].Trim()
+                $category  = $Matches[2]
+                $byteCount = [int]$Matches[3]
+                if (-not $payloadData.ContainsKey($className)) { $payloadData[$className] = @{} }
+                if ($payloadData[$className].ContainsKey($category)) {
+                  $payloadData[$className][$category] += $byteCount
+                } else {
+                  $payloadData[$className][$category] = $byteCount
+                }
+              }
+            }
+          }
+
+          Write-Host "Found $($payloadData.Count) payload log entries"
+
+          # 'executed' counts tests that ran with any outcome, excluding skipped.
+          $counters = $trxContent.SelectSingleNode("//*[local-name()='ResultSummary']/*[local-name()='Counters']")
+          if ($counters -ne $null -and $counters.executed) { $executedTests = [int]$counters.executed }
+        } else {
+          Write-Host "TRX file not found"
+        }
+
+        $payloadData | ConvertTo-Json -Depth 5 | Out-File -FilePath $payloadLog -Encoding UTF8
+        if ($payloadData.Count -gt 0) {
+          Write-Host "Extracted payload logs to $payloadLog"
+          Write-Host "Content:"
+          Get-Content $payloadLog | ForEach-Object { Write-Host $_ }
+        } else {
+          Write-Host "No payload byte logs found in TRX file"
+        }
+
+        Write-Host "Executed test count: $executedTests"
+        @{ executedTests = $executedTests } | ConvertTo-Json | Out-File -FilePath $countLog -Encoding UTF8
+
+    - name: Extract payload bytes log from TRX (Linux)
+      if: inputs.aggregate-payload-data == 'true' && runner.os != 'Windows'
+      shell: bash
+      env:
+        TRX_FILE: ${{ inputs.results-dir }}/${{ inputs.namespace }}_testResults.trx
+        PAYLOAD_LOG: ${{ inputs.results-dir }}/${{ inputs.payload-basename }}_payload_bytes.json
+        COUNT_LOG: ${{ inputs.results-dir }}/${{ inputs.payload-basename }}_test_count.json
+      run: |
+        python3 - <<'PY'
+        import json
+        import os
+        import re
+        import xml.etree.ElementTree as ET
+
+        trx_file = os.environ["TRX_FILE"]
+        payload_log = os.environ["PAYLOAD_LOG"]
+        count_log = os.environ["COUNT_LOG"]
+
+        print(f"Checking for TRX file at: {trx_file}")
+
+        executed_tests = 0
+        payload_data = {}
+        pattern = re.compile(r'^\s*(.+?):\s+([a-z0-9_]+):\s+(\d+)\s+bytes\s*$')
+
+
+        def local_name(tag):
+            return tag.rsplit('}', 1)[-1]
+
+
+        def children(parent, name):
+            return (e for e in parent if local_name(e.tag) == name)
+
+
+        def descendants(parent, name):
+            return (e for e in parent.iter() if local_name(e.tag) == name)
+
+
+        if os.path.isfile(trx_file):
+            print(f"TRX file found. Size: {os.path.getsize(trx_file)} bytes")
+            root = ET.parse(trx_file).getroot()
+
+            for output in descendants(root, 'Output'):
+                for text_messages in children(output, 'TextMessages'):
+                    for message in children(text_messages, 'Message'):
+                        for line in re.split(r'\r?\n', message.text or ""):
+                            m = pattern.match(line)
+                            if not m:
+                                continue
+                            bucket = payload_data.setdefault(m.group(1).strip(), {})
+                            category = m.group(2)
+                            bucket[category] = bucket.get(category, 0) + int(m.group(3))
+
+            print(f"Found {len(payload_data)} payload log entries")
+
+            counters = next(
+                (c for s in descendants(root, 'ResultSummary') for c in children(s, 'Counters')),
+                None,
+            )
+            if counters is not None and counters.get('executed'):
+                executed_tests = int(counters.get('executed'))
+        else:
+            print("TRX file not found")
+
+        print(f"Executed test count: {executed_tests}")
+
+        with open(payload_log, "w", encoding="utf-8", newline="\n") as f:
+            json.dump(payload_data, f)
+
+        with open(count_log, "w", encoding="utf-8", newline="\n") as f:
+            json.dump({"executedTests": executed_tests}, f)
+        PY
+
+    - name: Upload payload bytes log
+      if: inputs.aggregate-payload-data == 'true'
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      with:
+        name: ${{ inputs.payload-artifact-name }}
+        path: |
+          ${{ inputs.results-dir }}/*_payload_bytes.json
+          ${{ inputs.results-dir }}/*_test_count.json
+        if-no-files-found: warn
+
+    - name: Archive test results on failure
+      if: failure()
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      with:
+        name: ${{ inputs.results-artifact-name }}
+        path: ${{ inputs.archive-paths }}
+        if-no-files-found: error
