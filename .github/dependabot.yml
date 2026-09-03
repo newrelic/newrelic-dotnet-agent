@@ -86,6 +86,10 @@ updates:
     commit-message:
       prefix: "chore(deps):"
     groups:
+      # xunit is its own group so a v3->v4 major bump lands in a separate PR from the other test-package bumps.
+      xunit:
+        patterns:
+          - "xunit*"
       nuget-tests:
         patterns:
           - "*"
