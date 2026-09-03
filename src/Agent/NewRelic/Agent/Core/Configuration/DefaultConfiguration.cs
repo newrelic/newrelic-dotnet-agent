@@ -357,7 +357,7 @@ public class DefaultConfiguration : IConfiguration
         var appPoolId = GetAppPoolId();
 
         // 9. newrelic.config application pool mapping
-        var pooledAppName = TryGetApplicationNameForApplicationPool(appPoolId);
+        var pooledAppName = TryGetMappedApplicationNameForApplicationPool(appPoolId);
         if (pooledAppName != null)
         {
             Log.Info("Application name from application pool mapping in newrelic.config.");
@@ -395,7 +395,7 @@ public class DefaultConfiguration : IConfiguration
         return pools != null && pools.Any(pool => !string.IsNullOrWhiteSpace(pool.appName));
     }
 
-    private string TryGetApplicationNameForApplicationPool(string appPoolId)
+    private string TryGetMappedApplicationNameForApplicationPool(string appPoolId)
     {
         if (string.IsNullOrWhiteSpace(appPoolId))
         {
