@@ -359,6 +359,8 @@
                                         Set this to be the name of your application as you'd like it to show up in New Relic. New Relic will then auto-map instances of your application into an "application" on your home dashboard page.
 
                                         If youw ant to map this instance onto multiple applications, like "AJAX Requests" and "All UI", then specify up to three distinct names.
+
+                                        This element takes precedence over the appName attribute of an applicationPool element. Remove this element to name applications by application pool instead.
                                     </xs:documentation>
                                 </xs:annotation>
                             </xs:element>
@@ -1860,6 +1862,14 @@
                                         <xs:annotation>
                                             <xs:documentation>
                                                 True indicates that this application pool will be instrumented.	False indicates that this pool will not be instrumented.
+                                            </xs:documentation>
+                                        </xs:annotation>
+                                    </xs:attribute>
+                                    <xs:attribute name="appName" type="xs:string" use="optional">
+                                        <xs:annotation>
+                                            <xs:documentation>
+                                                Reports this application pool to New Relic under the given application name. The application/name element takes precedence over this attribut
+e, so remove that element to use this mapping.
                                             </xs:documentation>
                                         </xs:annotation>
                                     </xs:attribute>

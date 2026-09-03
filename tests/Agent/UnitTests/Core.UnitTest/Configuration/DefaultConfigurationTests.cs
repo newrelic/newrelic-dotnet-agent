@@ -1965,6 +1965,261 @@ public class DefaultConfigurationTests
         );
     }
 
+    private void ArrangeApplicationNameFallthrough(string appPoolId)
+    {
+        _runTimeConfig.ApplicationNames = new List<string>();
+        Mock.Arrange(() => _environment.GetEnvironmentVariable(Arg.IsAny<string>())).Returns<string>(null);
+        Mock.Arrange(() => _configurationManagerStatic.GetAppSetting(Constants.AppSettingsAppName)).Returns<string>(null);
+        _localConfig.application.name = new List<string>();
+        Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("APP_POOL_ID", "ASPNETCORE_IIS_APP_POOL_ID")).Returns(appPoolId);
+        Mock.Arrange(() => _httpRuntimeStatic.AppDomainAppVirtualPath).Returns("NotNull");
+        Mock.Arrange(() => _processStatic.GetCurrentProcess().ProcessName).Returns("OtherProcessName");
+    }
+
+    private void AddApplicationPoolMapping(string poolName, string appName)
+    {
+        _localConfig.applicationPools.applicationPool.Add(new configurationApplicationPoolsApplicationPool
+        {
+            name = poolName,
+            instrument = true,
+            appName = appName
+        });
+    }
+
+    [Test]
+    public void ApplicationNamePullsFromApplicationPoolMapping()
+    {
+        ArrangeApplicationNameFallthrough("MyPool");
+        AddApplicationPoolMapping("MyPool", "UnifiedApp");
+
+        NrAssert.Multiple(
+            () => Assert.That(_defaultConfig.ApplicationNames.Count(), Is.EqualTo(1)),
+            () => Assert.That(_defaultConfig.ApplicationNames.FirstOrDefault(), Is.EqualTo("UnifiedApp")),
+            () => Assert.That(_defaultConfig.ApplicationNamesSource, Is.EqualTo("NewRelic Config (Application Pool)"))
+        );
+    }
+
+    [Test]
+    public void ApplicationPoolMappingRollsMultiplePoolsIntoOneName()
+    {
+        ArrangeApplicationNameFallthrough("PoolTwo");
+        AddApplicationPoolMapping("PoolOne", "UnifiedApp");
+        AddApplicationPoolMapping("PoolTwo", "UnifiedApp");
+        AddApplicationPoolMapping("PoolThree", "UnifiedApp");
+
+        NrAssert.Multiple(
+            () => Assert.That(_defaultConfig.ApplicationNames.FirstOrDefault(), Is.EqualTo("UnifiedApp")),
+            () => Assert.That(_defaultConfig.ApplicationNamesSource, Is.EqualTo("NewRelic Config (Application Pool)"))
+        );
+    }
+
+    [TestCase("MYPOOL", "mypool")]
+    [TestCase("mypool", "MYPOOL")]
+    [TestCase("MyPool", "MyPool")]
+    public void ApplicationPoolMappingMatchesPoolNameWithoutRegardToCase(string configuredName, string actualPoolId)
+    {
+        ArrangeApplicationNameFallthrough(actualPoolId);
+        AddApplicationPoolMapping(configuredName, "UnifiedApp");
+
+        Assert.That(_defaultConfig.ApplicationNames.FirstOrDefault(), Is.EqualTo("UnifiedApp"));
+    }
+
+    [Test]
+    public void ApplicationPoolMappingTrimsTheConfiguredName()
+    {
+        ArrangeApplicationNameFallthrough("MyPool");
+        AddApplicationPoolMapping("MyPool", "  UnifiedApp  ");
+
+        Assert.That(_defaultConfig.ApplicationNames.FirstOrDefault(), Is.EqualTo("UnifiedApp"));
+    }
+
+    [Test]
+    public void ApplicationPoolMappingUsesFirstEntryWhenDuplicated()
+    {
+        ArrangeApplicationNameFallthrough("MyPool");
+        AddApplicationPoolMapping("MyPool", "FirstName");
+        AddApplicationPoolMapping("MyPool", "SecondName");
+
+        Assert.That(_defaultConfig.ApplicationNames.FirstOrDefault(), Is.EqualTo("FirstName"));
+    }
+
+    [Test]
+    public void ApplicationPoolMappingIsShadowedByNewRelicConfigApplicationName()
+    {
+        ArrangeApplicationNameFallthrough("MyPool");
+        AddApplicationPoolMapping("MyPool", "UnifiedApp");
+        _localConfig.application.name = new List<string> { "FromApplicationElement" };
+
+        NrAssert.Multiple(
+            () => Assert.That(_defaultConfig.ApplicationNames.FirstOrDefault(), Is.EqualTo("FromApplicationElement")),
+            () => Assert.That(_defaultConfig.ApplicationNamesSource, Is.EqualTo("NewRelic Config"))
+        );
+    }
+
+    [Test]
+    public void NewRelicConfigApplicationNameWinsWhenNoPoolCarriesAnAppName()
+    {
+        ArrangeApplicationNameFallthrough("MyPool");
+        AddApplicationPoolMapping("MyPool", null);
+        _localConfig.application.name = new List<string> { "FromApplicationElement" };
+
+        NrAssert.Multiple(
+            () => Assert.That(_defaultConfig.ApplicationNames.FirstOrDefault(), Is.EqualTo("FromApplicationElement")),
+            () => Assert.That(_defaultConfig.ApplicationNamesSource, Is.EqualTo("NewRelic Config"))
+        );
+    }
+
+    [Test]
+    public void ApplicationPoolMappingIsOutrankedByAppNameEnvironmentVariable()
+    {
+        ArrangeApplicationNameFallthrough("MyPool");
+        AddApplicationPoolMapping("MyPool", "UnifiedApp");
+        Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_APP_NAME")).Returns("FromEnvironmentVariable");
+
+        NrAssert.Multiple(
+            () => Assert.That(_defaultConfig.ApplicationNames.FirstOrDefault(), Is.EqualTo("FromEnvironmentVariable")),
+            () => Assert.That(_defaultConfig.ApplicationNamesSource, Is.EqualTo("Environment Variable (NEW_RELIC_APP_NAME)"))
+        );
+    }
+
+    [Test]
+    public void ApplicationPoolMappingIsOutrankedByApplicationConfig()
+    {
+        ArrangeApplicationNameFallthrough("MyPool");
+        AddApplicationPoolMapping("MyPool", "UnifiedApp");
+        Mock.Arrange(() => _configurationManagerStatic.GetAppSetting(Constants.AppSettingsAppName)).Returns("FromWebConfig");
+
+        NrAssert.Multiple(
+            () => Assert.That(_defaultConfig.ApplicationNames.FirstOrDefault(), Is.EqualTo("FromWebConfig")),
+            () => Assert.That(_defaultConfig.ApplicationNamesSource, Is.EqualTo("Application Config"))
+        );
+    }
+
+    [TestCase(null)]
+    [TestCase("")]
+    [TestCase("   ")]
+    public void ApplicationPoolMappingIsIgnoredWhenAppNameIsBlank(string blankAppName)
+    {
+        ArrangeApplicationNameFallthrough("MyPool");
+        AddApplicationPoolMapping("MyPool", blankAppName);
+
+        NrAssert.Multiple(
+            () => Assert.That(_defaultConfig.ApplicationNames.FirstOrDefault(), Is.EqualTo("MyPool")),
+            () => Assert.That(_defaultConfig.ApplicationNamesSource, Is.EqualTo("Application Pool"))
+        );
+    }
+
+    [Test]
+    public void ApplicationPoolMappingIsIgnoredWhenNoEntryMatches()
+    {
+        ArrangeApplicationNameFallthrough("MyPool");
+        AddApplicationPoolMapping("SomeOtherPool", "UnifiedApp");
+
+        NrAssert.Multiple(
+            () => Assert.That(_defaultConfig.ApplicationNames.FirstOrDefault(), Is.EqualTo("MyPool")),
+            () => Assert.That(_defaultConfig.ApplicationNamesSource, Is.EqualTo("Application Pool"))
+        );
+    }
+
+    [Test]
+    public void ApplicationPoolMappingIsIgnoredWhenNoPoolsAreConfigured()
+    {
+        ArrangeApplicationNameFallthrough("MyPool");
+
+        NrAssert.Multiple(
+            () => Assert.That(_defaultConfig.ApplicationNames.FirstOrDefault(), Is.EqualTo("MyPool")),
+            () => Assert.That(_defaultConfig.ApplicationNamesSource, Is.EqualTo("Application Pool"))
+        );
+    }
+
+    [Test]
+    public void ApplicationPoolMappingIsIgnoredWhenAppPoolIdIsBlank()
+    {
+        ArrangeApplicationNameFallthrough(null);
+        AddApplicationPoolMapping("MyPool", "UnifiedApp");
+        Mock.Arrange(() => _environment.GetCommandLineArgs()).Returns(new[] { "MyProcess.exe" });
+        Mock.Arrange(() => _httpRuntimeStatic.AppDomainAppVirtualPath).Returns<string>(null);
+        Mock.Arrange(() => _processStatic.GetCurrentProcess().ProcessName).Returns("MyProcess");
+
+        NrAssert.Multiple(
+            () => Assert.That(_defaultConfig.ApplicationNames.FirstOrDefault(), Is.EqualTo("MyProcess")),
+            () => Assert.That(_defaultConfig.ApplicationNamesSource, Is.EqualTo("Process Name"))
+        );
+    }
+
+    [Test]
+    public void ApplicationPoolMappingMatchesPoolIdFromCommandLine()
+    {
+        ArrangeApplicationNameFallthrough(null);
+        AddApplicationPoolMapping("MyPool", "UnifiedApp");
+        Mock.Arrange(() => _environment.GetCommandLineArgs()).Returns("w3wp.exe -ap MyPool".Split(new[] { ' ' }));
+        Mock.Arrange(() => _httpRuntimeStatic.AppDomainAppVirtualPath).Returns<string>(null);
+        Mock.Arrange(() => _processStatic.GetCurrentProcess().ProcessName).Returns("W3WP");
+
+        NrAssert.Multiple(
+            () => Assert.That(_defaultConfig.ApplicationNames.FirstOrDefault(), Is.EqualTo("UnifiedApp")),
+            () => Assert.That(_defaultConfig.ApplicationNamesSource, Is.EqualTo("NewRelic Config (Application Pool)"))
+        );
+    }
+
+    [Test]
+    public void ApplicationPoolAppNameBindsFromXml()
+    {
+        _runTimeConfig.ApplicationNames = new List<string>();
+        Mock.Arrange(() => _environment.GetEnvironmentVariable(Arg.IsAny<string>())).Returns<string>(null);
+        Mock.Arrange(() => _configurationManagerStatic.GetAppSetting(Constants.AppSettingsAppName)).Returns<string>(null);
+        Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("APP_POOL_ID", "ASPNETCORE_IIS_APP_POOL_ID")).Returns("CallCenterService_Pool");
+        Mock.Arrange(() => _httpRuntimeStatic.AppDomainAppVirtualPath).Returns("NotNull");
+        Mock.Arrange(() => _processStatic.GetCurrentProcess().ProcessName).Returns("w3wp");
+
+        var xml = @"<?xml version=""1.0""?>
+<configuration xmlns=""urn:newrelic-config"">
+  <service licenseKey=""dude"" />
+  <application />
+  <applicationPools>
+    <applicationPool name=""ComfortSite_Pool"" instrument=""true"" appName=""ComfortSite"" />
+    <applicationPool name=""CallCenterService_Pool"" instrument=""true"" appName=""ComfortSite"" />
+    <applicationPool name=""Uninstrumented_Pool"" instrument=""false"" />
+  </applicationPools>
+</configuration>";
+
+        var config = GenerateConfigFromXml(xml);
+
+        NrAssert.Multiple(
+            () => Assert.That(config.ApplicationNames.Count(), Is.EqualTo(1)),
+            () => Assert.That(config.ApplicationNames.FirstOrDefault(), Is.EqualTo("ComfortSite")),
+            () => Assert.That(config.ApplicationNamesSource, Is.EqualTo("NewRelic Config (Application Pool)"))
+        );
+    }
+
+    [Test]
+    public void ApplicationPoolWithoutAppNameStillBindsFromXml()
+    {
+        _runTimeConfig.ApplicationNames = new List<string>();
+        Mock.Arrange(() => _environment.GetEnvironmentVariable(Arg.IsAny<string>())).Returns<string>(null);
+        Mock.Arrange(() => _configurationManagerStatic.GetAppSetting(Constants.AppSettingsAppName)).Returns<string>(null);
+        Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("APP_POOL_ID", "ASPNETCORE_IIS_APP_POOL_ID")).Returns("LegacyPool");
+        Mock.Arrange(() => _httpRuntimeStatic.AppDomainAppVirtualPath).Returns("NotNull");
+        Mock.Arrange(() => _processStatic.GetCurrentProcess().ProcessName).Returns("w3wp");
+
+        var xml = @"<?xml version=""1.0""?>
+<configuration xmlns=""urn:newrelic-config"">
+  <service licenseKey=""dude"" />
+  <application />
+  <applicationPools>
+    <defaultBehavior instrument=""false"" />
+    <applicationPool name=""LegacyPool"" instrument=""true"" />
+  </applicationPools>
+</configuration>";
+
+        var config = GenerateConfigFromXml(xml);
+
+        NrAssert.Multiple(
+            () => Assert.That(config.ApplicationNames.FirstOrDefault(), Is.EqualTo("LegacyPool")),
+            () => Assert.That(config.ApplicationNamesSource, Is.EqualTo("Application Pool"))
+        );
+    }
+
     [Test]
     public void ApplicationNamesPullsNameFromProcessIdIfAppDomainAppVirtualPathIsNull()
     {

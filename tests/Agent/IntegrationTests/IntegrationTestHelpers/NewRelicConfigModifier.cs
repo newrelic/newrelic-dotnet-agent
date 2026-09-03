@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Xml;
 
 namespace NewRelic.Agent.IntegrationTestHelpers;
 
@@ -673,6 +674,46 @@ public class NewRelicConfigModifier
     public NewRelicConfigModifier SetOpenTelemetryMetricsExportTimeout(int timeoutMs)
     {
         CommonUtils.SetConfigAppSetting(_configFilePath, "OpenTelemetryMetricsExportTimeout", timeoutMs.ToString(), "urn:newrelic-config");
+        return this;
+    }
+
+    public NewRelicConfigModifier DeleteApplicationName()
+    {
+        CommonUtils.DeleteXmlNodeFromNewRelicConfig(_configFilePath, new[] { "configuration", "application" }, "name");
+        return this;
+    }
+
+    public NewRelicConfigModifier AddApplicationPoolMapping(string poolName, string appName)
+    {
+        const string newRelicConfigNamespace = "urn:newrelic-config";
+
+        var document = new XmlDocument();
+        document.Load(_configFilePath);
+
+        var configurationNode = document.DocumentElement;
+
+        var applicationPoolsNode = document.CreateElement("applicationPools", newRelicConfigNamespace);
+        var applicationPoolNode = document.CreateElement("applicationPool", newRelicConfigNamespace);
+        applicationPoolNode.SetAttribute("name", poolName);
+        applicationPoolNode.SetAttribute("instrument", "true");
+        applicationPoolNode.SetAttribute("appName", appName);
+        applicationPoolsNode.AppendChild(applicationPoolNode);
+
+        var namespaceManager = new XmlNamespaceManager(document.NameTable);
+        namespaceManager.AddNamespace("nr", newRelicConfigNamespace);
+        var threadProfilingNode = configurationNode.SelectSingleNode("nr:threadProfiling", namespaceManager);
+
+        // applicationPools must precede threadProfiling per the config XSD sequence
+        if (threadProfilingNode != null)
+        {
+            configurationNode.InsertBefore(applicationPoolsNode, threadProfilingNode);
+        }
+        else
+        {
+            configurationNode.AppendChild(applicationPoolsNode);
+        }
+
+        document.Save(_configFilePath);
         return this;
     }
 }
