@@ -14,6 +14,7 @@
 #include "../MethodRewriter/MethodRewriter.h"
 #include "../SignatureParser/Exceptions.h"
 #include "../ThreadProfiler/ThreadProfiler.h"
+#include "../ContinuousProfiler/ContinuousProfiler.h"
 #include "../Common/FileUtils.h"
 #include "Function.h"
 #include "FunctionResolver.h"
@@ -73,15 +74,13 @@ namespace NewRelic { namespace Profiler {
 
     private:
         std::atomic<int> _referenceCount;
-        // Proxy engagement counter: total JIT compilation events seen by this callback.
-        // Logged every 5000 events alongside helper_invocations to confirm
-        // AppDomainFallbackCache injection code path is engaged. See Section 6 of the
-        // NR-184027 spike doc. A nonzero helper_invocations confirms helper IL injection
-        // fired during JIT; zero means injection has not yet occurred or MethodRewriter
-        // was refreshed after injection (see Instrumentors.h note on refresh-reset).
+        // Proxy engagement counter: total JIT compilation events seen by this callback. Logged every
+        // 5000 events alongside helper_invocations -- a nonzero helper_invocations confirms helper IL
+        // injection fired during JIT; zero means injection hasn't occurred yet, or MethodRewriter was
+        // refreshed after injection (see Instrumentors.h note on refresh-reset).
         std::atomic<uint64_t> _totalJitCount{0};
 
-        // (F) counts corelib injection-failure downgrades to Reflection (native signal; no managed metric).
+        // Counts corelib injection-failure downgrades to Reflection (native signal; no managed metric).
         std::atomic<uint64_t> _injectionDowngradeCount{0};
 
     public:
@@ -251,6 +250,9 @@ namespace NewRelic { namespace Profiler {
 
                 //Init does not start threads or requires cleanup. RequestProfile will create the threads for the TP.
                 _threadProfiler.Init(_corProfilerInfo4);
+                //_isCoreClr (set above by SetClrType) decides whether CP stops the world via
+                //SuspendRuntime/ResumeRuntime -- CoreCLR on every OS, matching OTel's ClrRuntimeCapture.
+                _continuousProfiler.Init(_corProfilerInfo4, _isCoreClr);
 
 
                 HRESULT corePathInitResult = InitializeAndSetAgentCoreDllPath(_productName);
@@ -360,13 +362,12 @@ namespace NewRelic { namespace Profiler {
                 injectionResult = E_FAIL;
             }
 
-            // (F) safety net: after injecting into the core library, confirm both the helper type
-            // AND the helper methods actually took (InjectIntoModule reports the latter via its
-            // return value; VerifyNRHelperTypeInjected re-reads metadata for the former). If not,
-            // downgrade the whole process to Reflection (the corelib is the first module loaded, so
-            // this precedes essentially every app-method JIT). This check runs even when injection
-            // above threw, so a corelib injection failure is never silently ignored. Runtime-agnostic
-            // seam decides.
+            // Safety net: after injecting into the core library, confirm both the helper type AND the
+            // helper methods actually took (InjectIntoModule's return value covers the latter;
+            // VerifyNRHelperTypeInjected re-reads metadata for the former). If not, downgrade the whole
+            // process to Reflection -- corelib is the first module loaded, so this precedes essentially
+            // every app-method JIT. Runs even when injection above threw, so a corelib injection
+            // failure is never silently ignored.
             if (module->GetIsThisTheCoreLibAssembly())
             {
                 const bool injected = injectionSucceeded && module->VerifyNRHelperTypeInjected();
@@ -598,6 +599,13 @@ namespace NewRelic { namespace Profiler {
         {
             LogInfo(L"Profiler shutting down");
             _threadProfiler.Shutdown();
+            // Backstop for the managed ContinuousProfilingService.Dispose() path (which also calls
+            // ContinuousProfilerShutdown()): if managed Dispose doesn't run or doesn't finish before the
+            // CLR tears down (FailFast, unhandled exception, ProcessExit budget exceeded), the CP sampler
+            // thread must not be left calling SuspendRuntime/DoStackSnapshot/GetFunctionInfo after this
+            // callback returns -- that's forbidden by the profiling API. ContinuousProfiler::Shutdown() is
+            // idempotent (safe to call again if managed code already shut it down).
+            _continuousProfiler.Shutdown();
             LogInfo(L"Profiler shutdown");
             return S_OK;
         }
@@ -605,6 +613,10 @@ namespace NewRelic { namespace Profiler {
         // ICorProfilerCallback
         virtual HRESULT __stdcall ThreadDestroyed(ThreadID threadId) override
         {
+            // CLR ThreadIDs are recycled once a Thread is destroyed; without this, a later thread
+            // reusing the same address would inherit a dead thread's trace-context link and/or
+            // agent-work depth (see ContinuousProfiler::ThreadDestroyed).
+            _continuousProfiler.ThreadDestroyed(threadId);
             return _threadProfiler.ThreadDestroyed(threadId);
         }
 
@@ -883,6 +895,46 @@ namespace NewRelic { namespace Profiler {
             _threadProfiler.ReleaseProfile();
         }
 
+        void ContinuousProfilerStart(uint32_t intervalMs) noexcept
+        {
+            _continuousProfiler.Start(intervalMs);
+        }
+
+        void ContinuousProfilerStop() noexcept
+        {
+            _continuousProfiler.Stop();
+        }
+
+        int32_t ContinuousProfilerReadThreadSamples(int32_t len, unsigned char* buf) noexcept
+        {
+            return _continuousProfiler.ReadThreadSamples(len, buf);
+        }
+
+        void ContinuousProfilerSetTraceContext(int64_t traceIdHigh, int64_t traceIdLow, int64_t spanId) noexcept
+        {
+            _continuousProfiler.SetTraceContext(traceIdHigh, traceIdLow, spanId);
+        }
+
+        void ContinuousProfilerResetTraceContext() noexcept
+        {
+            _continuousProfiler.ResetTraceContext();
+        }
+
+        void ContinuousProfilerSetAgentWork() noexcept
+        {
+            _continuousProfiler.SetAgentWork();
+        }
+
+        void ContinuousProfilerResetAgentWork() noexcept
+        {
+            _continuousProfiler.ResetAgentWork();
+        }
+
+        void ContinuousProfilerShutdown() noexcept
+        {
+            _continuousProfiler.Shutdown();
+        }
+
         uintptr_t GetCurrentThreadId() noexcept
         {
             ThreadID tid;
@@ -903,6 +955,7 @@ namespace NewRelic { namespace Profiler {
         MethodRewriter::MethodRewriterPtr _methodRewriter;
         CComPtr<ICorProfilerInfo4> _corProfilerInfo4;
         ThreadProfiler::ThreadProfiler _threadProfiler;
+        ContinuousProfiler::ContinuousProfiler _continuousProfiler;
         std::shared_ptr<SystemCalls> _systemCalls;
         std::shared_ptr<FunctionResolver> _functionResolver;
         MethodRewriter::CustomInstrumentationBuilder _customInstrumentationBuilder;
@@ -1451,6 +1504,96 @@ namespace NewRelic { namespace Profiler {
             return;
         }
         profiler->ShutdownThreadProfiler();
+    }
+
+    // called by managed code to start (or resume) continuous profiler sampling at the given interval
+    extern "C" __declspec(dllexport) void __cdecl ContinuousProfilerStart(int32_t intervalMs) noexcept
+    {
+        auto profiler = CorProfilerCallbackImpl::GetSingletonish();
+        if (profiler == nullptr) {
+            LogError(L"ContinuousProfilerStart: entry point called before the profiler has been initialized");
+            return;
+        }
+        profiler->ContinuousProfilerStart(static_cast<uint32_t>(intervalMs));
+    }
+
+    // called by managed code to stop continuous profiler sampling (the worker thread stays alive, idle)
+    extern "C" __declspec(dllexport) void __cdecl ContinuousProfilerStop() noexcept
+    {
+        auto profiler = CorProfilerCallbackImpl::GetSingletonish();
+        if (profiler == nullptr) {
+            LogError(L"ContinuousProfilerStop: entry point called before the profiler has been initialized");
+            return;
+        }
+        profiler->ContinuousProfilerStop();
+    }
+
+    // called by managed code to drain one filled sample buffer into the caller's array
+    extern "C" __declspec(dllexport) int32_t __cdecl ContinuousProfilerReadThreadSamples(int32_t len, unsigned char* buf) noexcept
+    {
+        auto profiler = CorProfilerCallbackImpl::GetSingletonish();
+        if (profiler == nullptr) {
+            LogError(L"ContinuousProfilerReadThreadSamples: entry point called before the profiler has been initialized");
+            return 0;
+        }
+        return profiler->ContinuousProfilerReadThreadSamples(len, buf);
+    }
+
+    // called by managed code to record the calling thread's active distributed-tracing context
+    extern "C" __declspec(dllexport) void __cdecl ContinuousProfilerSetTraceContext(int64_t traceIdHigh, int64_t traceIdLow, int64_t spanId) noexcept
+    {
+        auto profiler = CorProfilerCallbackImpl::GetSingletonish();
+        if (profiler == nullptr) {
+            LogError(L"ContinuousProfilerSetTraceContext: entry point called before the profiler has been initialized");
+            return;
+        }
+        profiler->ContinuousProfilerSetTraceContext(traceIdHigh, traceIdLow, spanId);
+    }
+
+    // called by managed code to clear the calling thread's active distributed-tracing context
+    extern "C" __declspec(dllexport) void __cdecl ContinuousProfilerResetTraceContext() noexcept
+    {
+        auto profiler = CorProfilerCallbackImpl::GetSingletonish();
+        if (profiler == nullptr) {
+            LogError(L"ContinuousProfilerResetTraceContext: entry point called before the profiler has been initialized");
+            return;
+        }
+        profiler->ContinuousProfilerResetTraceContext();
+    }
+
+    // called by managed code (Scheduler) to mark the calling thread one level deeper into
+    // agent-owned background dispatch -- see AgentWorkMap.h for why identity, not frame text.
+    extern "C" __declspec(dllexport) void __cdecl ContinuousProfilerSetAgentWork() noexcept
+    {
+        auto profiler = CorProfilerCallbackImpl::GetSingletonish();
+        if (profiler == nullptr) {
+            LogError(L"ContinuousProfilerSetAgentWork: entry point called before the profiler has been initialized");
+            return;
+        }
+        profiler->ContinuousProfilerSetAgentWork();
+    }
+
+    // called by managed code (Scheduler) to mark the calling thread one level shallower. Must be
+    // paired 1:1 with ContinuousProfilerSetAgentWork.
+    extern "C" __declspec(dllexport) void __cdecl ContinuousProfilerResetAgentWork() noexcept
+    {
+        auto profiler = CorProfilerCallbackImpl::GetSingletonish();
+        if (profiler == nullptr) {
+            LogError(L"ContinuousProfilerResetAgentWork: entry point called before the profiler has been initialized");
+            return;
+        }
+        profiler->ContinuousProfilerResetAgentWork();
+    }
+
+    // called by managed code to terminate the continuous profiler's worker thread and free resources
+    extern "C" __declspec(dllexport) void __cdecl ContinuousProfilerShutdown() noexcept
+    {
+        auto profiler = CorProfilerCallbackImpl::GetSingletonish();
+        if (profiler == nullptr) {
+            LogError(L"ContinuousProfilerShutdown: entry point called before the profiler has been initialized");
+            return;
+        }
+        profiler->ContinuousProfilerShutdown();
     }
 
     //This method is used only to verify thread profiling.  It is only used by tests in ProfiledMethod project.

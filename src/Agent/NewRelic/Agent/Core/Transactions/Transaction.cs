@@ -16,6 +16,7 @@ using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Api;
 using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.CallStack;
+using NewRelic.Agent.Core.ContinuousProfiling;
 using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.DistributedTracing.Samplers;
 using NewRelic.Agent.Core.Errors;
@@ -177,6 +178,13 @@ public class Transaction : IInternalTransaction, ITransactionSegmentState, IHybr
 
         // We also want to remove the transaction from the transaction context before returning so that it won't be reused
         Agent._transactionService.RemoveOutstandingInternalTransactions(true, true);
+
+        // Continuous profiling: clear this thread's native trace/span context now that the transaction has
+        // ended, so a later unrelated CPU sample on this (often pooled) thread is not misattributed to this
+        // finished span. Runs once per transaction on the completing thread, and is a cheap no-op (a single
+        // volatile read) when continuous profiling is disabled. Only the completing thread is cleared; any
+        // other threads that ran async continuations self-heal on their next instrumented push.
+        ContinuousProfilingContext.Instance.ResetTraceContext();
 
         var timer = Agent._agentTimerService.StartNew("TransformDelay");
         Action transformWork = () =>

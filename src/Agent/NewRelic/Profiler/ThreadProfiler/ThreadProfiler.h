@@ -17,6 +17,7 @@
 
 #include "namecache.h"
 #include "../Logging/Logger.h"
+#include "../ContinuousProfiler/SuspendMutex.h"
 
 #include <corprof.h>
 
@@ -646,13 +647,40 @@ namespace NewRelic { namespace Profiler { namespace ThreadProfiler
                         break;
                     }
 
+                    {
+                        // Serialize the runtime suspend/stack-walk with the always-on ContinuousProfiler:
+                        // both share the single native stack-walk machinery and must never suspend the
+                        // runtime concurrently. This lock is the only coordination between them.
+                        std::lock_guard<NewRelic::Profiler::SuspendMutex> suspendLock(NewRelic::Profiler::SuspendMutex::Shared());
 #ifdef PAL_STDCPP_COMPAT
-                    _corProfilerInfo10->SuspendRuntime();
+                        const HRESULT suspendHr = _corProfilerInfo10->SuspendRuntime();
+                        if (FAILED(suspendHr))
+                        {
+                            // Runtime never actually stopped (e.g. CORPROF_E_SUSPENSION_IN_PROGRESS --
+                            // the CLR's own GC is already suspending). Walking now would read a moving
+                            // target, and calling ResumeRuntime would resume a suspend we never own.
+                            LogDebug(L"TP: SuspendRuntime failed: ", std::hex, std::showbase, suspendHr,
+                                std::resetiosflags(std::ios_base::basefield | std::ios_base::showbase),
+                                L"; skipping this profile request.");
+                        }
+                        else
+                        {
+                            try
+                            {
+                                ProfileAllThreads();
+                            }
+                            catch (...)
+                            {
+                                // The show must go on -- a failed capture is never fatal. Caught here,
+                                // not by the outer catch, so ResumeRuntime below always still runs.
+                                LogError("TP: Exception thrown while profiling.");
+                            }
+                            _corProfilerInfo10->ResumeRuntime();
+                        }
+#else
+                        ProfileAllThreads();
 #endif
-                    ProfileAllThreads();
-#ifdef PAL_STDCPP_COMPAT
-                    _corProfilerInfo10->ResumeRuntime();
-#endif
+                    }
 
                     SignalProfileCompleted();
                 }
@@ -714,7 +742,7 @@ namespace NewRelic { namespace Profiler { namespace ThreadProfiler
                             }
                         }
                     }
-                    //don't overwrite StackTooDeep.  
+                    //don't overwrite StackTooDeep.
                     if (FAILED(hr) && StackTooDeep != threadProfile._errorCode)
                     {
                         threadProfile._errorCode = hr;

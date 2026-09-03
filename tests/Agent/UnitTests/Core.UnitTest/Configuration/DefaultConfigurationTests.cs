@@ -2075,6 +2075,21 @@ public class DefaultConfigurationTests
     }
 
     [Test]
+    [TestCase(null, false)]      // absent -> default false (agent frames excluded)
+    [TestCase("true", true)]
+    [TestCase("false", false)]
+    [TestCase("notabool", false)] // unparseable -> default false
+    public void ContinuousProfilingIncludeAgentCode_readsUndocumentedAppSetting_defaultsFalse(string appSettingValue, bool expected)
+    {
+        if (appSettingValue != null)
+            _localConfig.appSettings.Add(new configurationAdd { key = "NewRelic.ContinuousProfilingIncludeAgentCode", value = appSettingValue });
+
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+        Assert.That(defaultConfig.ContinuousProfilingIncludeAgentCode, Is.EqualTo(expected));
+    }
+
+    [Test]
     [TestCase(false, "My Application", "NewRelic Config")]
     [TestCase(true, "MyAzureFunc", "Azure Function")]
     public void ApplicationNamesUsesAzureFunctionName_IfAzureFunctionMode_IsEnabled(bool functionModeEnabled, string expectedFunctionName, string expectedApplicationNameSource)
@@ -4570,6 +4585,102 @@ public class DefaultConfigurationTests
 
         var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
         return defaultConfig.HybridHttpContextStorageEnabled;
+    }
+
+    [Test]
+    public void ContinuousProfilingEnabled_defaults_false()
+    {
+        Assert.That(_defaultConfig.ContinuousProfilingEnabled, Is.False);
+    }
+
+    [Test]
+    public void ContinuousProfilingDisabledWhenHighSecurityModeEnabled()
+    {
+        _localConfig.highSecurity.enabled = true;
+        Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_CONTINUOUS_PROFILING_ENABLED")).Returns("true");
+
+        _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+        Assert.That(_defaultConfig.ContinuousProfilingEnabled, Is.False);
+    }
+
+    [Test]
+    public void ContinuousProfilingEnabled_server_overrides_env()
+    {
+        Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_CONTINUOUS_PROFILING_ENABLED")).Returns("true");
+        _serverConfig.RpmConfig.ContinuousProfilingEnabled = false; // server disables despite env true
+
+        _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+        Assert.That(_defaultConfig.ContinuousProfilingEnabled, Is.False);
+    }
+
+    [Test]
+    public void ContinuousProfilingEnabled_server_can_enable_when_env_disabled()
+    {
+        _serverConfig.RpmConfig.ContinuousProfilingEnabled = true;
+
+        _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+        Assert.That(_defaultConfig.ContinuousProfilingEnabled, Is.True);
+    }
+
+    [Test]
+    public void ContinuousProfilingEnabled_HSM_overrides_server_enable()
+    {
+        _localConfig.highSecurity.enabled = true;
+        _serverConfig.RpmConfig.ContinuousProfilingEnabled = true; // server tries to enable
+
+        _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+        Assert.That(_defaultConfig.ContinuousProfilingEnabled, Is.False);
+    }
+
+    // No newrelic.config XML / appSettings surface for this setting: env var is the only local override, below server config.
+    [TestCase(null, ExpectedResult = false)]  // unset -> default false
+    [TestCase("true", ExpectedResult = true)]
+    [TestCase("false", ExpectedResult = false)]
+    [TestCase("xyz", ExpectedResult = false)] // unparseable -> falls back to default false
+    public bool ContinuousProfilingEnabled_env_var(string envValue)
+    {
+        Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_CONTINUOUS_PROFILING_ENABLED")).Returns(envValue);
+
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        return defaultConfig.ContinuousProfilingEnabled;
+    }
+
+    // No newrelic.config XML / appSettings surface for this setting: env var only, clamp to [1000, 60000] applied last.
+    // Non-positive values are treated as invalid/unset (fall back to the default) rather than clamped up to
+    // the 1000ms floor -- see ContinuousProfilingSamplingIntervalMs_non_positive_falls_back_to_default below
+    // for the precedence this exercises once SSC/agent-command surfaces exist.
+    [TestCase(null, ExpectedResult = 10000)]   // unset -> default
+    [TestCase("500", ExpectedResult = 1000)]   // below floor, positive -> clamp up
+    [TestCase("99999", ExpectedResult = 60000)] // above ceiling -> clamp down
+    [TestCase("2500", ExpectedResult = 2500)]  // in range -> verbatim
+    [TestCase("xyz", ExpectedResult = 10000)]  // unparseable -> falls back to default
+    [TestCase("0", ExpectedResult = 10000)]    // non-positive -> falls back to default, not the 1000ms floor
+    [TestCase("-1", ExpectedResult = 10000)]   // non-positive -> falls back to default, not the 1000ms floor
+    public int ContinuousProfilingSamplingIntervalMs_env_var(string envValue)
+    {
+        Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_CONTINUOUS_PROFILING_SAMPLING_INTERVAL_MS")).Returns(envValue);
+
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        return defaultConfig.ContinuousProfilingSamplingIntervalMs;
+    }
+
+    // No server-side config or agent-command surface exists for this setting today (RpmConfig only carries
+    // ContinuousProfilingEnabled; start/stop_continuous_profiler agent commands mutate
+    // ContinuousProfilingService's own runtime state, not this getter). This test documents that a
+    // non-positive override currently falls straight through to the hardcoded default, and should be
+    // extended to assert SSC/agent-command precedence if either surface is ever added.
+    [Test]
+    public void ContinuousProfilingSamplingIntervalMs_non_positive_falls_back_to_default()
+    {
+        Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_CONTINUOUS_PROFILING_SAMPLING_INTERVAL_MS")).Returns("-5");
+
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+        Assert.That(defaultConfig.ContinuousProfilingSamplingIntervalMs, Is.EqualTo(10000));
     }
 
 }

@@ -26,10 +26,19 @@ public class ThreadProfilingSampler : IThreadProfilingSampler
     private Thread _samplingWorker = null;
     private readonly INativeMethods _nativeMethods;
 
-    public ThreadProfilingSampler(INativeMethods nativeMethods)
+    private readonly TimeSpan _shutdownJoinTimeout;
+
+    public ThreadProfilingSampler(INativeMethods nativeMethods) : this(nativeMethods, TimeSpan.FromSeconds(5))
+    {
+    }
+
+    public ThreadProfilingSampler(INativeMethods nativeMethods, TimeSpan shutdownJoinTimeout)
     {
         _nativeMethods = nativeMethods;
+        _shutdownJoinTimeout = shutdownJoinTimeout;
     }
+
+    public bool IsRunning => Volatile.Read(ref _workerRunning) == 1;
 
     public bool Start(uint frequencyInMsec, uint durationInMsec, ISampleSink sampleSink, INativeMethods nativeMethods)
     {
@@ -53,16 +62,21 @@ public class ThreadProfilingSampler : IThreadProfilingSampler
     public void Stop()
     {
         //if we have already asked for termination or the background thread is not operational, we are done here.
-        if (_shutdownEvent.Wait(0) || 1 == _workerRunning)
+        if (_shutdownEvent.Wait(0) || 0 == Volatile.Read(ref _workerRunning))
             return;
 
         //signal sampling worker to terminate
         _shutdownEvent.Set();
 
-        //wait for the sampling worker to terminate
+        //wait (bounded) for the sampling worker to terminate -- an unbounded join here can outlast the
+        //OS's process-exit budget and truncate agent shutdown; the worker is a background thread, so a
+        //timeout just means we stop waiting, not that the thread is leaked.
         if (_samplingWorker != null)
         {
-            _samplingWorker.Join();
+            if (!_samplingWorker.Join(_shutdownJoinTimeout))
+            {
+                Log.Warn($"ThreadProfilingSampler.Stop(): sampling worker did not terminate within {_shutdownJoinTimeout}; continuing shutdown without waiting further.");
+            }
             _samplingWorker = null;
         }
     }
@@ -116,7 +130,12 @@ public class ThreadProfilingSampler : IThreadProfilingSampler
             sampleSink.SamplingComplete();
 
             nativeMethods.ShutdownNativeThreadProfiler();
-            _workerRunning = 0;
+
+            // Release write, paired with IsRunning's Volatile.Read: a reader that sees 0 is then also
+            // guaranteed to see the ShutdownNativeThreadProfiler above it. A plain store carries no such
+            // ordering, so the mutual-exclusion guard could observe "not running" while the native
+            // profiler was still being torn down.
+            Volatile.Write(ref _workerRunning, 0);
         }
     }
 

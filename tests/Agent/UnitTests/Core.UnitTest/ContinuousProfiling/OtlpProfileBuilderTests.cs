@@ -1,0 +1,849 @@
+// Copyright 2020 New Relic, Inc. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
+
+using System.Collections.Generic;
+using System.Linq;
+using NewRelic.Agent.Core.ContinuousProfiling;
+using NUnit.Framework;
+using OpenTelemetry.Proto.Profiles.V1Development;
+
+namespace NewRelic.Agent.Core.UnitTest.ContinuousProfiling;
+
+[TestFixture]
+public class OtlpProfileBuilderTests
+{
+    private static ManagedThreadSample Sample(string name, long span, params string[] frames) =>
+        new ManagedThreadSample(name, 1, 0, 0, span, frames, onCpu: false);
+
+    private static ManagedThreadSample AgentWorkSample(string name, long span, params string[] frames) =>
+        new ManagedThreadSample(name, 1, 0, 0, span, frames, onCpu: false, isAgentWork: true);
+
+    [Test]
+    public void Build_emits_one_sample_per_input_and_zero_index_empty_string()
+    {
+        var req = OtlpProfileBuilder.Build(
+            new[] { Sample("t1", 0, "A()", "B()"), Sample("t2", 0, "C()") },
+            startUnixNano: 1000, durationNano: 10_000_000_000, serviceName: "svc", periodNanos: 1_000_000L);
+
+        var dict = req.Dictionary; // ProfilesDictionary
+        Assert.That(dict.StringTable[0], Is.EqualTo("")); // index-0 invariant
+        // Sample() helper is off-CPU, so both land in off_cpu (profiles[0]).
+        var profile = req.ResourceProfiles.Single().ScopeProfiles.Single().Profiles[0];
+        Assert.That(profile.Samples, Has.Count.EqualTo(2));
+    }
+
+    [Test]
+    public void Build_drops_agent_own_thread_samples_when_includeAgentCode_false()
+    {
+        var samples = new[]
+        {
+            Sample("agent", 0, "NewRelic.Agent.Core.DataTransport.ConnectionManager.Connect()"),
+            Sample("app", 0, "MyApp.Work()"),
+        };
+
+        var req = OtlpProfileBuilder.Build(samples, 1000, 1, "svc", periodNanos: 1_000_000L, includeAgentCode: false);
+
+        var dict = req.Dictionary;
+        // Sample() helper is off-CPU, so the surviving sample lands in off_cpu (profiles[0]).
+        var profile = req.ResourceProfiles.Single().ScopeProfiles.Single().Profiles[0];
+        Assert.Multiple(() =>
+        {
+            Assert.That(profile.Samples, Has.Count.EqualTo(1), "The agent-own-thread sample should be dropped.");
+            Assert.That(dict.StringTable.Any(s => s.StartsWith("NewRelic.")), Is.False, "No agent frames should be interned.");
+            Assert.That(dict.StringTable.Any(s => s.Contains("MyApp.Work")), Is.True, "The customer frame should survive.");
+        });
+    }
+
+    [Test]
+    public void Build_drops_isAgentWork_flagged_samples_with_no_matching_frame_text_when_includeAgentCode_false()
+    {
+        // The exact gap follow-up #16 exists for: a thread parked in Monitor.Wait carries no agent frame
+        // anywhere on its captured stack, so frame-text matching alone cannot see it -- the thread-identity
+        // flag must drop it independently.
+        var samples = new[]
+        {
+            AgentWorkSample("agent-parked", 0, "System.Threading.Monitor.Wait()"),
+            Sample("app", 0, "MyApp.Work()"),
+        };
+
+        var req = OtlpProfileBuilder.Build(samples, 1000, 1, "svc", periodNanos: 1_000_000L, includeAgentCode: false);
+
+        var dict = req.Dictionary;
+        var profile = req.ResourceProfiles.Single().ScopeProfiles.Single().Profiles[0];
+        Assert.Multiple(() =>
+        {
+            Assert.That(profile.Samples, Has.Count.EqualTo(1), "The isAgentWork-flagged sample should be dropped.");
+            Assert.That(dict.StringTable.Any(s => s.Contains("MyApp.Work")), Is.True, "The customer frame should survive.");
+        });
+    }
+
+    [Test]
+    public void Build_keeps_isAgentWork_flagged_samples_when_includeAgentCode_true()
+    {
+        // The new signal stays gated by the SAME includeAgentCode toggle as the existing frame-text check.
+        var samples = new[] { AgentWorkSample("agent-parked", 0, "System.Threading.Monitor.Wait()") };
+
+        var req = OtlpProfileBuilder.Build(samples, 1000, 1, "svc", periodNanos: 1_000_000L, includeAgentCode: true);
+
+        var profile = req.ResourceProfiles.Single().ScopeProfiles.Single().Profiles[0];
+        Assert.That(profile.Samples, Has.Count.EqualTo(1));
+    }
+
+    [Test]
+    public void Build_drops_frame_matched_sample_that_is_not_isAgentWork_flagged_when_includeAgentCode_false()
+    {
+        // Existing frame-text behavior must survive unchanged now that it is OR'd with the new flag.
+        var samples = new[] { Sample("agent", 0, "NewRelic.Agent.Core.DataTransport.ConnectionManager.Connect()") };
+
+        var req = OtlpProfileBuilder.Build(samples, 1000, 1, "svc", periodNanos: 1_000_000L, includeAgentCode: false);
+
+        Assert.That(req.ResourceProfiles.Single().ScopeProfiles.Single().Profiles, Is.Empty,
+            "The only sample was dropped -- no non-empty partition side to emit a profile for.");
+    }
+
+    [Test]
+    public void Build_keeps_customer_sample_that_is_neither_frame_matched_nor_isAgentWork_flagged()
+    {
+        var samples = new[] { Sample("app", 0, "MyApp.Work()") };
+
+        var req = OtlpProfileBuilder.Build(samples, 1000, 1, "svc", periodNanos: 1_000_000L, includeAgentCode: false);
+
+        var profile = req.ResourceProfiles.Single().ScopeProfiles.Single().Profiles[0];
+        Assert.That(profile.Samples, Has.Count.EqualTo(1));
+    }
+
+    [Test]
+    public void Build_keeps_non_core_NewRelic_frames_when_includeAgentCode_false()
+    {
+        // Only agent-CORE frames mark an agent-own thread. The public API (NewRelic.Api.Agent.*) and the
+        // integration-test dispatcher (NewRelic.Agent.IntegrationTests.*) sit on CUSTOMER stacks and must NOT
+        // be dropped -- a broad "NewRelic." match wrongly discarded the correlated sample in the host tests.
+        var samples = new[]
+        {
+            Sample("api", 0, "Customer.Work()", "NewRelic.Api.Agent.NewRelic.AddCustomAttribute(System.String, System.String)"),
+            Sample("harness", 0, "Customer.Work()", "NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers.DynamicMethodExecutor.Execute()"),
+            Sample("agent", 0, "NewRelic.Agent.Core.DataTransport.ConnectionManager.Connect()"),
+        };
+
+        var req = OtlpProfileBuilder.Build(samples, 1000, 1, "svc", periodNanos: 1_000_000L, includeAgentCode: false);
+
+        // Sample() helper is off-CPU, so the surviving samples land in off_cpu (profiles[0]).
+        var profile = req.ResourceProfiles.Single().ScopeProfiles.Single().Profiles[0];
+        Assert.Multiple(() =>
+        {
+            Assert.That(profile.Samples, Has.Count.EqualTo(2), "Only the agent-core sample should be dropped.");
+            Assert.That(req.Dictionary.StringTable.Any(s => s.Contains("NewRelic.Api.Agent")), Is.True, "Public-API frame must survive.");
+            Assert.That(req.Dictionary.StringTable.Any(s => s.Contains("IntegrationTests")), Is.True, "Test-harness frame must survive.");
+            Assert.That(req.Dictionary.StringTable.Any(s => s.StartsWith("NewRelic.Agent.Core.")), Is.False, "Agent-core frame must be dropped.");
+        });
+    }
+
+    [Test]
+    public void Build_keeps_a_customer_sample_whose_leaf_frame_only_is_inside_agent_instrumentation()
+    {
+        // Leaf-first: the sample was captured while the customer thread (rooted in MyApp.Controller.Action)
+        // was mid-call inside the agent's own tracer/AgentShim code. The root is the customer's own frame --
+        // this is NOT one of the agent's own background threads, and must not be dropped.
+        var samples = new[]
+        {
+            Sample("customer-in-tracer", 0,
+                "NewRelic.Agent.Core.Wrapper.AgentShim.Finish()",   // leaf: agent instrumentation
+                "MyApp.Controller.Action()"),                        // root: customer code
+        };
+
+        var req = OtlpProfileBuilder.Build(samples, 1000, 1, "svc", periodNanos: 1_000_000L, includeAgentCode: false);
+
+        var profile = req.ResourceProfiles.Single().ScopeProfiles.Single().Profiles[0];
+        Assert.That(profile.Samples, Has.Count.EqualTo(1),
+            "A customer sample must survive even if its leaf frame is inside agent instrumentation -- only an agent-ROOTED thread should be dropped.");
+    }
+
+    [Test]
+    public void Build_drops_an_agent_thread_whose_stack_ends_in_the_native_thread_entry_frame()
+    {
+        // Real captures ALWAYS end in the synthetic native thread-entry frame -- every CLR thread starts in
+        // unmanaged code. So the agent's own background threads are rooted in "Native.Function Call", not in
+        // Core, and a literal last-element check would never drop them. The outermost MANAGED frame is what
+        // identifies the owner. Shape taken from a real capture: the agent's SignalableAction worker parked
+        // in Monitor.Wait.
+        var samples = new[]
+        {
+            Sample("agent-worker", 0,
+                "System.Threading.Monitor.Wait(System.Object)",                                   // leaf
+                "NewRelic.Agent.Core.Utilities.SignalableAction+<>c__DisplayClass4_0.<.ctor>g__Action|0()", // outermost managed
+                "Native.Function Call"),                                                          // root
+        };
+
+        var req = OtlpProfileBuilder.Build(samples, 1000, 1, "svc", periodNanos: 1_000_000L, includeAgentCode: false);
+
+        Assert.That(req.ResourceProfiles.Single().ScopeProfiles.Single().Profiles, Is.Empty,
+            "An agent-owned background thread must still be dropped even though its root frame is the native thread-entry marker.");
+    }
+
+    [Test]
+    public void Build_drops_an_agent_thread_under_runtime_thread_start_plumbing()
+    {
+        // Verbatim shape from a real capture. The SAME agent worker thread as the test above, sampled on a
+        // sweep where the walk also caught System.Threading.Thread.StartCallback OUTWARD of the agent frame.
+        // Runtime dispatch scaffolding is neither agent nor customer code, so it must be skipped when
+        // deciding ownership -- otherwise the identical thread is dropped on one sweep and kept on the next.
+        var samples = new[]
+        {
+            Sample("agent-worker", 0,
+                "System.Threading.Monitor.Wait(System.Object)",                                   // leaf
+                "NewRelic.Agent.Core.Utilities.SignalableAction+<>c__DisplayClass4_0.<.ctor>g__Action|0()", // owner
+                "System.Threading.Thread.StartCallback()",                                        // plumbing
+                "Native.Function Call"),                                                          // root
+        };
+
+        var req = OtlpProfileBuilder.Build(samples, 1000, 1, "svc", periodNanos: 1_000_000L, includeAgentCode: false);
+
+        Assert.That(req.ResourceProfiles.Single().ScopeProfiles.Single().Profiles, Is.Empty,
+            "An agent-owned thread must be dropped even when runtime thread-start plumbing sits outward of the agent frame.");
+    }
+
+    [Test]
+    public void Build_drops_the_agent_scheduler_thread_under_timer_and_threadpool_plumbing()
+    {
+        // Verbatim shape from a real capture: the agent's harvest/CP-drain scheduler timer, buried under six
+        // frames of timer + threadpool dispatch. Enumerating specific plumbing frames would miss shapes like
+        // this, which is why the whole System.Threading.* namespace is skipped.
+        var samples = new[]
+        {
+            Sample("agent-scheduler", 0,
+                "NewRelic.Agent.Core.Time.Scheduler+<>c__DisplayClass9_0.<CreateExecuteEveryTimer>b__0(System.Object)", // owner
+                "System.Threading.ExecutionContext.RunInternal(System.Threading.ExecutionContext)",
+                "System.Threading.TimerQueueTimer.Fire(System.Boolean)",
+                "System.Threading.TimerQueue.FireNextTimers()",
+                "System.Threading.ThreadPoolWorkQueue.Dispatch()",
+                "System.Threading.PortableThreadPool+WorkerThread.WorkerThreadStart()",
+                "Native.Function Call"),                                                          // root
+        };
+
+        var req = OtlpProfileBuilder.Build(samples, 1000, 1, "svc", periodNanos: 1_000_000L, includeAgentCode: false);
+
+        Assert.That(req.ResourceProfiles.Single().ScopeProfiles.Single().Profiles, Is.Empty,
+            "The agent's scheduler thread must be dropped through arbitrarily deep timer/threadpool plumbing.");
+    }
+
+    [Test]
+    public void Build_keeps_an_idle_threadpool_thread_that_has_no_owning_frame()
+    {
+        // A parked BCL threadpool thread: the walk caught only plumbing, so there is no owning frame at all.
+        // This is ordinary customer-process idle time, NOT the agent's -- treating "all plumbing" as agent-owned
+        // would discard the large majority of every profile (measured: 693 of 736 samples).
+        var samples = new[]
+        {
+            Sample("idle-pool-thread", 0,
+                "System.Threading.Monitor.Wait(System.Object)",
+                "System.Threading.PortableThreadPool+WorkerThread.WorkerThreadStart()",
+                "Native.Function Call"),
+        };
+
+        var req = OtlpProfileBuilder.Build(samples, 1000, 1, "svc", periodNanos: 1_000_000L, includeAgentCode: false);
+
+        var profile = req.ResourceProfiles.Single().ScopeProfiles.Single().Profiles[0];
+        Assert.That(profile.Samples, Has.Count.EqualTo(1),
+            "An idle threadpool thread with no owning frame is not the agent's and must be kept.");
+    }
+
+    [Test]
+    public void Build_keeps_a_customer_request_thread_rooted_in_a_non_threading_framework_frame()
+    {
+        // Guards the deliberate narrowness of the plumbing skip. An ASP.NET Core request thread is rooted in
+        // Microsoft.AspNetCore.*; if the skip were widened to all of System.*/Microsoft.*, this stack's owner
+        // would resolve to the agent-core frame and every instrumented request thread would be discarded.
+        var samples = new[]
+        {
+            Sample("customer-request", 0,
+                "MyApp.Controllers.HomeController.Index()",                                       // leaf
+                "NewRelic.Agent.Core.Wrapper.AgentShim.Finish()",                                 // agent, mid-stack
+                "Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http.HttpProtocol.ProcessRequests()", // owner
+                "System.Threading.ThreadPoolWorkQueue.Dispatch()",
+                "Native.Function Call"),
+        };
+
+        var req = OtlpProfileBuilder.Build(samples, 1000, 1, "svc", periodNanos: 1_000_000L, includeAgentCode: false);
+
+        var profile = req.ResourceProfiles.Single().ScopeProfiles.Single().Profiles[0];
+        Assert.That(profile.Samples, Has.Count.EqualTo(1),
+            "A framework-rooted customer request thread must survive; the plumbing skip is System.Threading.* only.");
+    }
+
+    [Test]
+    public void Build_keeps_a_customer_sample_that_ends_in_the_native_thread_entry_frame()
+    {
+        // Same real-capture shape, but the outermost managed frame is the customer's entry point and the
+        // agent-core frames sit mid-stack (thread caught inside instrumentation). Must survive.
+        var samples = new[]
+        {
+            Sample("customer", 0,
+                "ICSharpCode.SharpZipLib.Zip.Compression.Deflater.SetStrategy()",                 // leaf
+                "NewRelic.Agent.Core.DataTransport.RequestBodyCompressor.Compress()",             // mid: agent
+                "MyApp.Program.Main(System.String[])",                                            // outermost managed
+                "Native.Function Call"),                                                          // root
+        };
+
+        var req = OtlpProfileBuilder.Build(samples, 1000, 1, "svc", periodNanos: 1_000_000L, includeAgentCode: false);
+
+        var profile = req.ResourceProfiles.Single().ScopeProfiles.Single().Profiles[0];
+        Assert.That(profile.Samples, Has.Count.EqualTo(1),
+            "A customer-rooted sample with agent frames mid-stack must survive.");
+    }
+
+    [Test]
+    public void Build_all_samples_agent_owned_yields_no_profiles_when_agent_code_excluded()
+    {
+        var samples = new[]
+        {
+            Sample("agent-1", 0, "NewRelic.Agent.Core.DataTransport.ConnectionManager.Connect()"),
+            Sample("agent-2", 0, "NewRelic.Agent.Core.Time.Scheduler.Tick()"),
+        };
+
+        var req = OtlpProfileBuilder.Build(samples, 1000, 1_000_000, "svc", periodNanos: 1_000_000L, includeAgentCode: false);
+
+        Assert.That(req.ResourceProfiles.Single().ScopeProfiles.Single().Profiles, Is.Empty,
+            "when every sample is agent-owned and excluded, no Profile message should be emitted at all -- not an empty one.");
+    }
+
+    [Test]
+    public void Build_keeps_agent_samples_when_includeAgentCode_true()
+    {
+        var samples = new[]
+        {
+            Sample("agent", 0, "NewRelic.Agent.Core.X.Y()"),
+            Sample("app", 0, "MyApp.Work()"),
+        };
+
+        var req = OtlpProfileBuilder.Build(samples, 1000, 1, "svc", periodNanos: 1_000_000L, includeAgentCode: true);
+
+        // Sample() helper is off-CPU, so both samples land in off_cpu (profiles[0]).
+        var profile = req.ResourceProfiles.Single().ScopeProfiles.Single().Profiles[0];
+        Assert.Multiple(() =>
+        {
+            Assert.That(profile.Samples, Has.Count.EqualTo(2));
+            Assert.That(req.Dictionary.StringTable.Any(s => s == "NewRelic.Agent.Core.X.Y()"), Is.True);
+        });
+    }
+
+    [Test]
+    public void Build_distinct_span_contexts_produce_distinct_links()
+    {
+        var req = OtlpProfileBuilder.Build(
+            new[] { Sample("t1", 0xAA, "A()"), Sample("t2", 0xBB, "A()") },
+            1000, 10_000_000_000, "svc");
+        Assert.That(req.Dictionary.LinkTable.Count, Is.GreaterThanOrEqualTo(2));
+    }
+
+    [Test]
+    public void Build_functions_are_name_only_no_filename_or_line()
+    {
+        var req = OtlpProfileBuilder.Build(new[] { Sample("t1", 0, "My.Frame()") }, 1000, 1, "svc");
+        var fn = req.Dictionary.FunctionTable.First(f => f.NameStrindex != 0);
+        Assert.That(fn.FilenameStrindex, Is.EqualTo(0)); // no file path
+        Assert.That(fn.SystemNameStrindex, Is.EqualTo(0));
+        Assert.That(fn.StartLine, Is.EqualTo(0));
+    }
+
+    [Test]
+    public void Build_empty_samples_yields_no_profiles()
+    {
+        // Both partition sides are empty, so neither profile is emitted. An empty Profile message is
+        // rejected by the OTLP profiles ingest as "no_samples", so we must not emit one.
+        var req = OtlpProfileBuilder.Build(new List<ManagedThreadSample>(), 1000, 1, "svc", periodNanos: 1_000_000L);
+        var profiles = req.ResourceProfiles.Single().ScopeProfiles.Single().Profiles;
+        Assert.That(profiles, Is.Empty);
+    }
+
+    [Test]
+    public void Build_all_off_cpu_emits_only_off_cpu_profile_no_empty_cpu()
+    {
+        // A sweep with nothing on-CPU must emit ONLY the off_cpu profile -- never an empty cpu profile,
+        // which the OTLP profiles ingest drops as "no_samples".
+        var samples = new[]
+        {
+            new ManagedThreadSample("off1", 1, 0, 0, 0, new[] { "A.b" }, onCpu: false),
+            new ManagedThreadSample("off2", 2, 0, 0, 0, new[] { "C.d" }, onCpu: false),
+        };
+        var req = OtlpProfileBuilder.Build(samples, 0, 0, "svc", periodNanos: 1_000_000L, includeAgentCode: true);
+        var p = req.ResourceProfiles[0].ScopeProfiles[0].Profiles;
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(p, Has.Count.EqualTo(1));
+            Assert.That(req.Dictionary.StringTable[(int)p[0].SampleType.TypeStrindex], Is.EqualTo("off_cpu"));
+            Assert.That(p[0].Samples, Has.Count.EqualTo(2));
+        });
+    }
+
+    [Test]
+    public void Build_all_on_cpu_emits_only_cpu_profile_no_empty_off_cpu()
+    {
+        // A sweep with everything on-CPU emits ONLY the cpu profile. With off_cpu empty and skipped, cpu is
+        // the sole profile at index 0 -- never an empty off_cpu profile.
+        var samples = new[]
+        {
+            new ManagedThreadSample("on1", 1, 0, 0, 0, new[] { "A.b" }, onCpu: true),
+            new ManagedThreadSample("on2", 2, 0, 0, 0, new[] { "C.d" }, onCpu: true),
+        };
+        var req = OtlpProfileBuilder.Build(samples, 0, 0, "svc", periodNanos: 1_000_000L, includeAgentCode: true);
+        var p = req.ResourceProfiles[0].ScopeProfiles[0].Profiles;
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(p, Has.Count.EqualTo(1));
+            Assert.That(req.Dictionary.StringTable[(int)p[0].SampleType.TypeStrindex], Is.EqualTo("cpu"));
+            Assert.That(p[0].Samples, Has.Count.EqualTo(2));
+        });
+    }
+
+    [Test]
+    public void Build_all_dictionary_tables_have_zero_value_at_index_zero()
+    {
+        var req = OtlpProfileBuilder.Build(new[] { Sample("t1", 0, "A()") }, 1000, 1, "svc");
+        var dict = req.Dictionary;
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(dict.StringTable[0], Is.EqualTo(""));
+            Assert.That(dict.FunctionTable[0].NameStrindex, Is.EqualTo(0));
+            Assert.That(dict.LocationTable[0].Lines, Is.Empty);
+            Assert.That(dict.StackTable[0].LocationIndices, Is.Empty);
+            Assert.That(dict.AttributeTable[0].KeyStrindex, Is.EqualTo(0));
+            Assert.That(dict.LinkTable[0].TraceId.Length, Is.EqualTo(16));
+            Assert.That(dict.LinkTable[0].SpanId.Length, Is.EqualTo(8));
+        });
+    }
+
+    [Test]
+    public void Build_sets_profile_metadata_sample_type_time_and_duration()
+    {
+        var req = OtlpProfileBuilder.Build(new[] { Sample("t1", 0, "A()") }, 1234, 5678, "svc", periodNanos: 1_000_000L);
+        var dict = req.Dictionary;
+        // Sample() helper is off-CPU, so it lands in off_cpu (profiles[0]).
+        var profile = req.ResourceProfiles.Single().ScopeProfiles.Single().Profiles[0];
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(profile.TimeUnixNano, Is.EqualTo(1234UL));
+            Assert.That(profile.DurationNano, Is.EqualTo(5678UL));
+            Assert.That(dict.StringTable[profile.SampleType.TypeStrindex], Is.EqualTo("off_cpu"));
+            Assert.That(dict.StringTable[profile.SampleType.UnitStrindex], Is.EqualTo("nanoseconds"));
+        });
+    }
+
+    [Test]
+    public void Build_sets_period_type_and_period_when_interval_provided()
+    {
+        // periodNanos = 10 s sampling interval in nanoseconds. With a period supplied, Build emits two
+        // profiles (off_cpu/cpu); [0] is off_cpu, whose period_type is "wall_clock" (not "cpu" -- an off-cpu
+        // sample's value is parked wall-clock time, not CPU time).
+        var req = OtlpProfileBuilder.Build(new[] { Sample("t1", 0, "A()") }, 1234, 5678, "svc", periodNanos: 10_000_000_000L);
+        var dict = req.Dictionary;
+        var profile = req.ResourceProfiles.Single().ScopeProfiles.Single().Profiles[0];
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(profile.PeriodType, Is.Not.Null);
+            Assert.That(dict.StringTable[profile.PeriodType.TypeStrindex], Is.EqualTo("wall_clock"));
+            Assert.That(dict.StringTable[profile.PeriodType.UnitStrindex], Is.EqualTo("nanoseconds"));
+            Assert.That(profile.Period, Is.EqualTo(10_000_000_000L));
+        });
+    }
+
+    [Test]
+    public void Build_on_cpu_and_off_cpu_profiles_have_different_period_types()
+    {
+        var samples = new[]
+        {
+            new ManagedThreadSample("on", 1, 0, 0, 0, new[] { "A.b" }, onCpu: true),
+            new ManagedThreadSample("off", 2, 0, 0, 0, new[] { "C.d" }, onCpu: false),
+        };
+        var req = OtlpProfileBuilder.Build(samples, 0, 0, "svc", periodNanos: 1_000_000L, includeAgentCode: true);
+        var dict = req.Dictionary;
+        var p = req.ResourceProfiles[0].ScopeProfiles[0].Profiles;
+        string PeriodTypeName(Profile x) => dict.StringTable[x.PeriodType.TypeStrindex];
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(PeriodTypeName(p[0]), Is.EqualTo("wall_clock")); // off_cpu
+            Assert.That(PeriodTypeName(p[1]), Is.EqualTo("cpu")); // cpu
+            Assert.That(PeriodTypeName(p[0]), Is.Not.EqualTo(PeriodTypeName(p[1])));
+        });
+    }
+
+    // profile.frame.type (OTel semconv, reading-2/per-frame): managed .NET frames -> "dotnet"; the synthetic
+    // native thread-entry boundary frame -> "native".
+    [Test]
+    public void Build_tags_managed_frame_with_frame_type_dotnet()
+    {
+        var req = OtlpProfileBuilder.Build(new[] { Sample("t1", 0, "My.Managed.Method()") }, 1000, 1, "svc");
+        Assert.That(FrameType(req, "My.Managed.Method()"), Is.EqualTo("dotnet"));
+    }
+
+    [Test]
+    public void Build_tags_native_boundary_frame_with_frame_type_native()
+    {
+        var req = OtlpProfileBuilder.Build(new[] { Sample("t1", 0, "Native.Function Call") }, 1000, 1, "svc");
+        Assert.That(FrameType(req, "Native.Function Call"), Is.EqualTo("native"));
+    }
+
+    [Test]
+    public void Build_tags_unresolved_managed_frame_dotnet_not_native()
+    {
+        // A real-but-unresolved managed frame (e.g. a DynamicMethod, rendered UnknownMethod(<id>)) is still a
+        // .NET frame -> "dotnet". Only the exact native boundary label is "native".
+        var req = OtlpProfileBuilder.Build(new[] { Sample("t1", 0, "UnknownClass.UnknownMethod(12345)") }, 1000, 1, "svc");
+        Assert.That(FrameType(req, "UnknownClass.UnknownMethod(12345)"), Is.EqualTo("dotnet"));
+    }
+
+    // Resolve the profile.frame.type attribute value for the location of a given frame name.
+    private static string FrameType(OpenTelemetry.Proto.Collector.Profiles.V1Development.ExportProfilesServiceRequest req, string frameName)
+    {
+        var dict = req.Dictionary;
+        var fnIdx = -1;
+        for (var i = 0; i < dict.FunctionTable.Count; i++)
+            if (dict.StringTable[dict.FunctionTable[i].NameStrindex] == frameName) { fnIdx = i; break; }
+        Assert.That(fnIdx, Is.GreaterThan(0), $"function '{frameName}' not found");
+
+        var loc = dict.LocationTable.First(l => l.Lines.Count > 0 && l.Lines[0].FunctionIndex == fnIdx);
+        foreach (var ai in loc.AttributeIndices)
+        {
+            var kv = dict.AttributeTable[ai];
+            if (dict.StringTable[kv.KeyStrindex] == "profile.frame.type")
+                return kv.Value.StringValue;
+        }
+        return null;
+    }
+
+    [Test]
+    public void Build_each_sample_has_period_value_and_leaf_first_stack()
+    {
+        var req = OtlpProfileBuilder.Build(new[] { Sample("t1", 0, "A()", "B()") }, 1000, 1, "svc", periodNanos: 1_000_000L);
+        var dict = req.Dictionary;
+        // Sample() helper is off-CPU, so it lands in off_cpu (profiles[0]); value = periodNanos.
+        var sample = req.ResourceProfiles.Single().ScopeProfiles.Single().Profiles[0].Samples.Single();
+
+        Assert.That(sample.Values.ToArray(), Is.EqualTo(new long[] { 1_000_000L }));
+
+        var stack = dict.StackTable[sample.StackIndex];
+        var frameNames = stack.LocationIndices
+            .Select(li => dict.LocationTable[li])
+            .Select(loc => dict.StringTable[dict.FunctionTable[loc.Lines.Single().FunctionIndex].NameStrindex])
+            .ToArray();
+        Assert.That(frameNames, Is.EqualTo(new[] { "A()", "B()" })); // leaf-first preserved
+    }
+
+    [Test]
+    public void Build_sample_carries_thread_id_and_thread_name_attributes()
+    {
+        var req = OtlpProfileBuilder.Build(
+            new[] { new ManagedThreadSample("worker-7", 42, 0, 0, 0, new[] { "A()" }, onCpu: false) },
+            1000, 1, "svc", periodNanos: 1_000_000L);
+        var dict = req.Dictionary;
+        // onCpu: false, so it lands in off_cpu (profiles[0]).
+        var sample = req.ResourceProfiles.Single().ScopeProfiles.Single().Profiles[0].Samples.Single();
+
+        var attrs = sample.AttributeIndices
+            .Select(i => dict.AttributeTable[i])
+            .ToDictionary(kv => dict.StringTable[kv.KeyStrindex], kv => kv.Value);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(attrs.ContainsKey("thread.id"));
+            Assert.That(attrs["thread.id"].IntValue, Is.EqualTo(42));
+            Assert.That(attrs.ContainsKey("thread.name"));
+            Assert.That(attrs["thread.name"].StringValue, Is.EqualTo("worker-7"));
+        });
+    }
+
+    [Test]
+    public void Build_link_encodes_trace_and_span_ids()
+    {
+        var req = OtlpProfileBuilder.Build(
+            new[] { new ManagedThreadSample("t1", 1, 0x1122334455667788L, 0x0102030405060708L, unchecked((long)0xAABBCCDDEEFF0011UL), new[] { "A()" }, onCpu: false) },
+            1000, 1, "svc", periodNanos: 1_000_000L);
+        var dict = req.Dictionary;
+        // onCpu: false, so it lands in off_cpu (profiles[0]).
+        var sample = req.ResourceProfiles.Single().ScopeProfiles.Single().Profiles[0].Samples.Single();
+
+        Assert.That(sample.LinkIndex, Is.Not.EqualTo(0));
+        var link = dict.LinkTable[sample.LinkIndex];
+
+        var expectedTrace = new byte[]
+        {
+            0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88,
+            0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08
+        };
+        var expectedSpan = new byte[] { 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF, 0x00, 0x11 };
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(link.TraceId.ToByteArray(), Is.EqualTo(expectedTrace));
+            Assert.That(link.SpanId.ToByteArray(), Is.EqualTo(expectedSpan));
+        });
+    }
+
+    [Test]
+    public void Build_zero_context_sample_has_no_link()
+    {
+        var req = OtlpProfileBuilder.Build(new[] { Sample("t1", 0, "A()") }, 1000, 1, "svc", periodNanos: 1_000_000L);
+        // Sample() helper is off-CPU, so it lands in off_cpu (profiles[0]).
+        var sample = req.ResourceProfiles.Single().ScopeProfiles.Single().Profiles[0].Samples.Single();
+        Assert.That(sample.LinkIndex, Is.EqualTo(0)); // 0 == no link per proto
+    }
+
+    [Test]
+    public void Build_interns_reused_strings_functions_locations_and_stacks()
+    {
+        // Two samples with the identical stack should reuse function/location/stack table entries.
+        var req = OtlpProfileBuilder.Build(
+            new[] { Sample("t1", 0, "A()", "B()"), Sample("t1", 0, "A()", "B()") },
+            1000, 1, "svc");
+        var dict = req.Dictionary;
+
+        // index 0 (zero) + A() + B()
+        Assert.That(dict.FunctionTable, Has.Count.EqualTo(3));
+        Assert.That(dict.LocationTable, Has.Count.EqualTo(3));
+        // index 0 (zero) + one interned stack
+        Assert.That(dict.StackTable, Has.Count.EqualTo(2));
+    }
+
+    [Test]
+    public void Build_interns_reused_link_across_samples()
+    {
+        var req = OtlpProfileBuilder.Build(
+            new[]
+            {
+                new ManagedThreadSample("t1", 1, 1, 2, 3, new[] { "A()" }, onCpu: false),
+                new ManagedThreadSample("t2", 1, 1, 2, 3, new[] { "B()" }, onCpu: false)
+            },
+            1000, 1, "svc");
+        // index 0 (zero) + one shared link (same trace/span context)
+        Assert.That(req.Dictionary.LinkTable, Has.Count.EqualTo(2));
+    }
+
+    [Test]
+    public void Build_shared_frame_across_different_stacks_reuses_function_and_location()
+    {
+        var req = OtlpProfileBuilder.Build(
+            new[] { Sample("t1", 0, "Shared()", "A()"), Sample("t2", 0, "Shared()", "B()") },
+            1000, 1, "svc");
+        var dict = req.Dictionary;
+
+        // index 0 + Shared() + A() + B()
+        Assert.That(dict.FunctionTable, Has.Count.EqualTo(4));
+        Assert.That(dict.LocationTable, Has.Count.EqualTo(4));
+        // index 0 + two distinct stacks
+        Assert.That(dict.StackTable, Has.Count.EqualTo(3));
+    }
+
+    [Test]
+    public void Build_sets_service_name_resource_attribute_and_scope()
+    {
+        var req = OtlpProfileBuilder.Build(new[] { Sample("t1", 0, "A()") }, 1000, 1, "my-service");
+        var resourceProfiles = req.ResourceProfiles.Single();
+
+        var serviceName = resourceProfiles.Resource.Attributes
+            .Single(a => a.Key == "service.name").Value.StringValue;
+        Assert.That(serviceName, Is.EqualTo("my-service"));
+
+        var scope = resourceProfiles.ScopeProfiles.Single().Scope;
+        Assert.That(scope.Name, Is.Not.Empty);
+    }
+
+    [Test]
+    public void Build_sets_entity_guid_resource_attribute_when_provided()
+    {
+        var req = OtlpProfileBuilder.Build(new[] { Sample("t1", 0, "A()") }, 1000, 1, "my-service", entityGuid: "abc123");
+        var resourceProfiles = req.ResourceProfiles.Single();
+
+        var entityGuid = resourceProfiles.Resource.Attributes
+            .Single(a => a.Key == "entity.guid").Value.StringValue;
+        Assert.That(entityGuid, Is.EqualTo("abc123"));
+    }
+
+    [Test]
+    public void Build_omits_entity_guid_resource_attribute_when_not_provided()
+    {
+        var req = OtlpProfileBuilder.Build(new[] { Sample("t1", 0, "A()") }, 1000, 1, "my-service");
+        var resourceProfiles = req.ResourceProfiles.Single();
+
+        Assert.That(resourceProfiles.Resource.Attributes.Any(a => a.Key == "entity.guid"), Is.False);
+    }
+
+    [Test]
+    public void Build_sets_host_resource_attribute_when_provided()
+    {
+        var req = OtlpProfileBuilder.Build(new[] { Sample("t1", 0, "A()") }, 1000, 1, "my-service", host: "my-host");
+        var resourceProfiles = req.ResourceProfiles.Single();
+
+        var host = resourceProfiles.Resource.Attributes
+            .Single(a => a.Key == "host").Value.StringValue;
+        Assert.That(host, Is.EqualTo("my-host"));
+    }
+
+    [Test]
+    public void Build_sets_host_resource_attribute_to_empty_string_when_not_provided()
+    {
+        // Unlike entity.guid, host mirrors the connect payload's "host" field, which is always present --
+        // so the attribute is always emitted, falling back to empty rather than being omitted.
+        var req = OtlpProfileBuilder.Build(new[] { Sample("t1", 0, "A()") }, 1000, 1, "my-service");
+        var resourceProfiles = req.ResourceProfiles.Single();
+
+        var host = resourceProfiles.Resource.Attributes
+            .Single(a => a.Key == "host").Value.StringValue;
+        Assert.That(host, Is.EqualTo(string.Empty));
+    }
+
+    [Test]
+    public void Build_withPeriod_emitsTwoProfiles_offCpuThenCpu()
+    {
+        var samples = new[]
+        {
+            new ManagedThreadSample("on", 1, 0, 0, 0, new[] { "A.b" }, onCpu: true),
+            new ManagedThreadSample("off", 2, 0, 0, 0, new[] { "C.d" }, onCpu: false),
+        };
+        var req = OtlpProfileBuilder.Build(samples, 0, 0, "svc", periodNanos: 1_000_000L, includeAgentCode: true);
+        var p = req.ResourceProfiles[0].ScopeProfiles[0].Profiles;
+        string TypeName(Profile x) => req.Dictionary.StringTable[(int)x.SampleType.TypeStrindex];
+
+        Assert.That(p, Has.Count.EqualTo(2));
+        Assert.That(p.Select(TypeName), Does.Not.Contain("samples")); // legacy dropped
+        Assert.That(TypeName(p[0]), Is.EqualTo("off_cpu"));
+        Assert.That(p[0].Samples, Has.Count.EqualTo(1)); // parked
+        Assert.That(p[0].Samples[0].Values[0], Is.EqualTo(1_000_000L));
+        Assert.That(TypeName(p[1]), Is.EqualTo("cpu"));
+        Assert.That(p[1].Samples, Has.Count.EqualTo(1)); // on-CPU
+        Assert.That(p[1].Samples[0].Values[0], Is.EqualTo(1_000_000L));
+    }
+
+    [Test]
+    public void Build_cpuAndOffCpu_partitionAllIncludedSamples()
+    {
+        var samples = new[]
+        {
+            new ManagedThreadSample("on1", 1, 0, 0, 0, new[] { "A.b" }, onCpu: true),
+            new ManagedThreadSample("off1", 2, 0, 0, 0, new[] { "C.d" }, onCpu: false),
+            new ManagedThreadSample("off2", 3, 0, 0, 0, new[] { "E.f" }, onCpu: false),
+        };
+        var req = OtlpProfileBuilder.Build(samples, 0, 0, "svc", periodNanos: 1_000_000L, includeAgentCode: true);
+        var p = req.ResourceProfiles[0].ScopeProfiles[0].Profiles;
+        // off_cpu[0] + cpu[1] == the number of included (agent-filtered) input samples, no overlap.
+        Assert.That(p[0].Samples.Count + p[1].Samples.Count, Is.EqualTo(samples.Length));
+        Assert.That(p[0].Samples, Has.Count.EqualTo(2)); // off
+        Assert.That(p[1].Samples, Has.Count.EqualTo(1)); // on
+    }
+
+    [Test]
+    public void Build_withoutPeriod_emitsNoProfiles()
+    {
+        var samples = new[] { new ManagedThreadSample("on", 1, 0, 0, 0, new[] { "A.b" }, onCpu: true) };
+        var req = OtlpProfileBuilder.Build(samples, 0, 0, "svc", periodNanos: 0, includeAgentCode: true);
+        Assert.That(req.ResourceProfiles[0].ScopeProfiles[0].Profiles, Is.Empty);
+    }
+
+    [Test]
+    public void Build_sharesDictionary_internsStackOnce()
+    {
+        // Same frame across two samples -> exactly one stack whether referenced by 1 or 2 profiles.
+        var samples = new[]
+        {
+            new ManagedThreadSample("on", 1, 0, 0, 0, new[] { "A.b" }, onCpu: true),
+            new ManagedThreadSample("on2", 2, 0, 0, 0, new[] { "A.b" }, onCpu: true),
+        };
+        var req = OtlpProfileBuilder.Build(samples, 0, 0, "svc", periodNanos: 1_000_000L, includeAgentCode: true);
+        // StackTable[0] zero value + 1 interned stack for "A.b".
+        Assert.That(req.Dictionary.StackTable, Has.Count.EqualTo(2));
+    }
+
+    [Test]
+    public void Build_excludeAgentCode_appliesToBothProfiles()
+    {
+        // Mix of on/off-CPU non-agent samples plus one agent-own-thread sample (on-CPU, so it would otherwise
+        // land in cpu[1]) -- the agent sample must be dropped from every profile, including cpu.
+        var samples = new[]
+        {
+            new ManagedThreadSample("agent", 1, 0, 0, 0, new[] { "NewRelic.Agent.Core.Foo.Bar" }, onCpu: true),
+            new ManagedThreadSample("app-on", 2, 0, 0, 0, new[] { "App.Work" }, onCpu: true),
+            new ManagedThreadSample("app-off", 3, 0, 0, 0, new[] { "App.Idle" }, onCpu: false),
+        };
+        var req = OtlpProfileBuilder.Build(samples, 0, 0, "svc", periodNanos: 1_000_000L, includeAgentCode: false);
+        var profiles = req.ResourceProfiles[0].ScopeProfiles[0].Profiles;
+        Assert.That(profiles, Has.Count.EqualTo(2));
+        Assert.That(profiles[0].Samples, Has.Count.EqualTo(1)); // off_cpu: agent dropped, only app-off remains
+        Assert.That(profiles[1].Samples, Has.Count.EqualTo(1)); // cpu: agent dropped, only app-on remains
+    }
+
+    [Test]
+    public void Build_empty_frame_stack_reuses_stack_table_zero_index_not_a_duplicate()
+    {
+        // A zero-frame sample's stack is identical in value to the reserved stack_table[0] zero value --
+        // it must resolve back to index 0 rather than adding a second all-zero Stack entry.
+        var req = OtlpProfileBuilder.Build(
+            new[] { new ManagedThreadSample("t1", 1, 0, 0, 0, System.Array.Empty<string>(), onCpu: false) },
+            1000, 1, "svc", periodNanos: 1_000_000L);
+        var dict = req.Dictionary;
+        var sample = req.ResourceProfiles.Single().ScopeProfiles.Single().Profiles[0].Samples.Single();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(sample.StackIndex, Is.EqualTo(0));
+            Assert.That(dict.StackTable, Has.Count.EqualTo(1), "no duplicate zero-value stack should be added");
+        });
+    }
+
+    [Test]
+    public void Build_empty_frame_name_reuses_function_table_zero_index_not_a_duplicate()
+    {
+        // A frame whose resolved name is the empty string produces a Function{} identical in value to the
+        // reserved function_table[0] zero value -- it must resolve back to index 0.
+        var req = OtlpProfileBuilder.Build(
+            new[] { Sample("t1", 0, string.Empty) },
+            1000, 1, "svc");
+        var dict = req.Dictionary;
+
+        var stack = dict.StackTable[dict.StackTable.Count - 1];
+        var location = dict.LocationTable[stack.LocationIndices.Single()];
+        Assert.Multiple(() =>
+        {
+            Assert.That(location.Lines.Single().FunctionIndex, Is.EqualTo(0));
+            Assert.That(dict.FunctionTable.Count(f => f.NameStrindex == 0), Is.EqualTo(1), "no duplicate zero-value function should be added");
+        });
+    }
+
+    [Test]
+    public void Build_merges_samples_sharing_the_same_stack_attributes_and_link_identity()
+    {
+        // Two identical off-CPU samples for the same thread/stack (e.g. parked across two sweeps in the same
+        // drain) share {stack, attributes, link} identity and must be combined into one Sample with summed
+        // values, not emitted as two separate entries.
+        var samples = new[]
+        {
+            new ManagedThreadSample("worker", 7, 0, 0, 0, new[] { "A()" }, onCpu: false),
+            new ManagedThreadSample("worker", 7, 0, 0, 0, new[] { "A()" }, onCpu: false),
+        };
+        var req = OtlpProfileBuilder.Build(samples, 1000, 1, "svc", periodNanos: 1_000_000L);
+        var profile = req.ResourceProfiles.Single().ScopeProfiles.Single().Profiles[0];
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(profile.Samples, Has.Count.EqualTo(1), "identical-identity samples should be merged into one Sample");
+            Assert.That(profile.Samples[0].Values.Single(), Is.EqualTo(2_000_000L), "merged values should be summed");
+        });
+    }
+
+    [Test]
+    public void Build_does_not_merge_samples_with_different_stack_identity()
+    {
+        var samples = new[]
+        {
+            new ManagedThreadSample("worker", 7, 0, 0, 0, new[] { "A()" }, onCpu: false),
+            new ManagedThreadSample("worker", 7, 0, 0, 0, new[] { "B()" }, onCpu: false),
+        };
+        var req = OtlpProfileBuilder.Build(samples, 1000, 1, "svc", periodNanos: 1_000_000L);
+        var profile = req.ResourceProfiles.Single().ScopeProfiles.Single().Profiles[0];
+
+        Assert.That(profile.Samples, Has.Count.EqualTo(2));
+    }
+}

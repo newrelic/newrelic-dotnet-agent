@@ -9,7 +9,9 @@ using System.Threading.Tasks;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
+using NewRelic.Agent.Core.ContinuousProfiling;
 using NewRelic.Agent.Core.Tracer;
+using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
@@ -184,6 +186,14 @@ public class WrapperService : IWrapperService
             using (_agentTimerService.StartNew("BeforeWrappedMethod", type.FullName, methodName))
             {
                 var afterWrappedMethod = wrapper.BeforeWrappedMethod(instrumentedMethodCall, _agent, transaction);
+
+                // Continuous profiling correlation: on the executing app thread, record this transaction's
+                // trace/span in the native profiler so CPU samples taken on this thread link to it. Gated on a
+                // single static volatile bool read (AnyEnabled) so the disabled path -- every customer without
+                // continuous profiling -- pays only a not-taken branch and never even calls the helper.
+                if (ContinuousProfilingContext.AnyEnabled)
+                    PushContinuousProfilingContext(transaction);
+
                 return (result, exception) =>
                 {
                     using (_agentTimerService.StartNew("AfterWrappedMethod", type.FullName, methodName))
@@ -199,6 +209,16 @@ public class WrapperService : IWrapperService
                             HandleBeforeWrappedMethodException(functionId, trackedWrapper, instrumentedMethodCall, instrumentedMethodInfo);
                             throw;
                         }
+                        finally
+                        {
+                            // Re-push now that CurrentSegment has popped back to the parent, so native TLS
+                            // tracks the segment actually executing on this thread. Gate the CurrentTransaction
+                            // lookup itself behind AnyEnabled -- it's otherwise evaluated eagerly as a call argument.
+                            if (ContinuousProfilingContext.AnyEnabled)
+                            {
+                                PushContinuousProfilingContext(_agent.CurrentTransaction);
+                            }
+                        }
                     }
                 };
             }
@@ -213,6 +233,40 @@ public class WrapperService : IWrapperService
     public void ClearCaches()
     {
         _functionIdToWrapper.Clear();
+    }
+
+    /// <summary>
+    /// Records the given transaction's current trace/span in the native continuous profiler, keyed by the
+    /// calling (application) thread. Cheap no-op when continuous profiling is disabled (a single field read).
+    /// The <see cref="IContinuousProfilingContext"/> swallows native failures; this method additionally guards
+    /// the id extraction so nothing here can surface in the instrumented application.
+    /// </summary>
+    private static void PushContinuousProfilingContext(ITransaction transaction)
+    {
+        var context = ContinuousProfilingContext.Instance;
+        if (!context.IsEnabled)
+            return;
+
+        // The exit-path caller passes _agent.CurrentTransaction, which is null when the transaction already
+        // ended before this continuation ran (async/ending-transaction cases). Transaction.End already resets
+        // this thread's native trace context on the completing thread; other threads self-heal on their next
+        // push. Nothing to do here -- just avoid the NRE below.
+        if (transaction == null)
+            return;
+
+        try
+        {
+            // TraceId lives on the internal transaction; the public wrapper surface (ITransaction) doesn't expose it.
+            var traceId = (transaction as IInternalTransaction)?.TraceId;
+            var currentSegment = transaction.CurrentSegment;
+            var spanId = (currentSegment != null && currentSegment.IsValid) ? currentSegment.SpanId : null;
+
+            context.PushTraceContext(traceId, spanId);
+        }
+        catch (Exception ex)
+        {
+            Log.Finest(ex, "[ContinuousProfiling] Failed to read the current trace context for the native profiler.");
+        }
     }
 
     public static string ResolveTracerFactoryNameForAttributeInstrumentation(uint tracerArguments, bool isAsync, string tracerFactoryName)

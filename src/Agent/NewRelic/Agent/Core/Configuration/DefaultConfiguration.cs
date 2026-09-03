@@ -2959,6 +2959,68 @@ public class DefaultConfiguration : IConfiguration
 
     public bool HybridHttpContextStorageEnabled => EnvironmentOverrides(TryGetAppSettingAsBoolWithDefault("HybridHttpContextStorageEnabled", false), "NEW_RELIC_HYBRID_HTTP_CONTEXT_STORAGE_ENABLED");
 
+    private const int MinContinuousProfilingSamplingIntervalMs = 1000;
+    private const int MaxContinuousProfilingSamplingIntervalMs = 60000;
+    private const int DefaultContinuousProfilingSamplingIntervalMs = 10000;
+
+    private bool? _continuousProfilingEnabled;
+    // Precedence, matching AiMonitoringEnabled's shape: HSM kills it unconditionally (defense-in-depth,
+    // same as AI monitoring -- there is no server-side "strip the key" backstop for this setting the way
+    // there is for AIM, so the local guard here is the only enforcement). Below that, agent_config
+    // continuous_profiling.enabled (full override, in either direction) > env var. No newrelic.config
+    // XML surface for this setting.
+    //
+    // NOTE: this is deliberately separate from ContinuousProfilingService._commandControlledTypes -- a
+    // start_continuous_profiler/stop_continuous_profiler agent command overrides this property's effect
+    // downstream (ApplyConfigChange skips command-owned types entirely), it does not change what this
+    // property itself resolves to.
+    public bool ContinuousProfilingEnabled => _continuousProfilingEnabled ??=
+        !HighSecurityModeEnabled &&
+        ServerOverrides(_serverConfiguration.RpmConfig.ContinuousProfilingEnabled,
+            EnvironmentOverrides(false, "NEW_RELIC_CONTINUOUS_PROFILING_ENABLED"));
+
+    private int? _continuousProfilingSamplingIntervalMs;
+    public int ContinuousProfilingSamplingIntervalMs
+    {
+        get
+        {
+            if (_continuousProfilingSamplingIntervalMs.HasValue)
+                return _continuousProfilingSamplingIntervalMs.Value;
+
+            // Env var only; no appSettings/XML surface for this setting. The clamp is applied last.
+            var configured = EnvironmentOverrides(DefaultContinuousProfilingSamplingIntervalMs, "NEW_RELIC_CONTINUOUS_PROFILING_SAMPLING_INTERVAL_MS")
+                .GetValueOrDefault();
+
+            int resolved;
+            if (configured <= 0)
+            {
+                // Non-positive is invalid input, not "sample as fast as possible" -- treating it like an
+                // out-of-range positive value and clamping up to the 1000ms floor would make an invalid
+                // override 10x MORE aggressive than the 10000ms default, which is backwards. Fall back
+                // instead, in precedence order: server-side config value > agent-command value > the
+                // hardcoded default. Neither of the first two exists at this layer today -- RpmConfig's
+                // only continuous_profiling.* wire field is ContinuousProfilingEnabled (no interval), and
+                // start_continuous_profiler/stop_continuous_profiler agent commands set
+                // ContinuousProfilingService's own _activeIntervalMs downstream, never routing back through
+                // this getter -- so the chain collapses to the default until one of those surfaces exists.
+                resolved = DefaultContinuousProfilingSamplingIntervalMs;
+            }
+            else
+            {
+                resolved = Math.Min(MaxContinuousProfilingSamplingIntervalMs, Math.Max(MinContinuousProfilingSamplingIntervalMs, configured));
+            }
+
+            _continuousProfilingSamplingIntervalMs = resolved;
+            return resolved;
+        }
+    }
+
+    // Undocumented, appSettings-only (deliberately NOT in the XSD): capture the agent's own threads/frames in
+    // the profile. Default false so agent-internal samples are dropped. No env-var override -- this is an
+    // internal toggle, not a customer-facing setting.
+    public bool ContinuousProfilingIncludeAgentCode =>
+        TryGetAppSettingAsBoolWithDefault("NewRelic.ContinuousProfilingIncludeAgentCode", false);
+
     public static bool GetLoggingEnabledValue(IEnvironment environment, configurationLog localLogConfiguration)
     {
         return EnvironmentOverrides(environment, localLogConfiguration.enabled, "NEW_RELIC_LOG_ENABLED");

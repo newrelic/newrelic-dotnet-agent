@@ -98,6 +98,28 @@ public class MockNewRelicFixture : RemoteApplicationFixture
         GetStringAndIgnoreResult(address);
     }
 
+    public void TriggerStartContinuousProfiler(string include = "cpu", int? sampleIntervalMs = null, int? cpuReportIntervalMs = null)
+    {
+        var query = new List<string> { $"include={include}" };
+        if (sampleIntervalMs.HasValue) query.Add($"sampleInterval={sampleIntervalMs.Value}");
+        if (cpuReportIntervalMs.HasValue) query.Add($"cpuReportInterval={cpuReportIntervalMs.Value}");
+
+        var address = $"https://localhost:{MockNewRelicApplication.Port}/agent_listener/TriggerStartContinuousProfiler?{string.Join("&", query)}";
+
+        TestLogger?.WriteLine($"[MockNewRelicFixture] Trigger start_continuous_profiler via: {address}");
+
+        GetStringAndIgnoreResult(address);
+    }
+
+    public void TriggerStopContinuousProfiler(string include = "cpu")
+    {
+        var address = $"https://localhost:{MockNewRelicApplication.Port}/agent_listener/TriggerStopContinuousProfiler?include={include}";
+
+        TestLogger?.WriteLine($"[MockNewRelicFixture] Trigger stop_continuous_profiler via: {address}");
+
+        GetStringAndIgnoreResult(address);
+    }
+
     public void SetCustomInstrumentationEditorOnConnect()
     {
         var address = $"https://localhost:{MockNewRelicApplication.Port}/agent_listener/SetCustomInstrumentationEditorOnConnect";
