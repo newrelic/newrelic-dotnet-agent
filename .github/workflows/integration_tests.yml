@@ -287,6 +287,19 @@ jobs:
             10.0.x
           dotnet-quality: 'ga'
 
+      - name: Install Azure Functions Core Tools
+        if: matrix.namespace == 'AzureFunction'
+        shell: bash
+        run: |
+          npm install -g azure-functions-core-tools@4 --unsafe-perm true
+          func_path=$(command -v func)
+          if [ -z "$func_path" ]; then
+            echo "::error::Azure Functions Core Tools did not install; func is not on PATH."
+            exit 1
+          fi
+          echo "azure_func_exe_path=$func_path" >> "$GITHUB_ENV"
+          echo "func resolved to $func_path"
+
       - name: Run Integration Tests
         uses: ./.github/actions/run-host-tests
         with:
