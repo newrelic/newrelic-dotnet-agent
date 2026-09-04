@@ -4,15 +4,21 @@ Layout, conventions, and the non-obvious facts for **writing** tests.
 - **Running** integration tests -> `run-integration-tests` skill (build-first, layer pick, CLI, env gotchas, troubleshooting). Don't duplicate it here.
 - **Building** first -> `build-dotnet-agent` skill. CLI build workarounds (`Core.UnitTest` `SolutionDir`, Extensions DLL-direct) and the no-unit-tests-for-wrappers rule -> [root claude.md](../CLAUDE.md). Building the **integration test solutions** themselves needs VS MSBuild + three specific flags -> [Building the solution](#building-the-solution) below.
 
-Five layers, all integration layers read the built `src/Agent/newrelichome_*` dirs (build `FullAgent.sln` first):
+Five layers (seven solutions), all integration layers read the built `src/Agent/newrelichome_*` dirs (build `FullAgent.sln` first):
 
 | Layer | Solution | Needs |
 |-------|----------|-------|
 | Unit | (in `tests/Agent/UnitTests/`) | nothing |
 | Integration (host-run) | `IntegrationTests.sln` | Windows + home dirs |
+| Integration (host-run, Core only) | `IntegrationTests.NetCore.sln` | home dirs; plain `dotnet build` |
 | Unbounded | `UnboundedIntegrationTests.sln` | real DB/broker infra |
+| Unbounded (Core only) | `UnboundedIntegrationTests.NetCore.sln` | as above; plain `dotnet build` |
 | Container | `ContainerIntegrationTests.sln` | Docker Desktop (Linux-agent coverage) |
 | Performance | `PerformanceTests.sln` | Python-driven, not `dotnet test` |
+
+The two `*.NetCore.sln` files are **additive**: they hold the Core-targeted projects only, build with plain `dotnet build`, and exist so the Linux CI lanes need no VS MSBuild. The original solutions are unchanged.
+
+**Lanes and the `Runtime` trait.** CI splits the host-run suites into three lanes -- Linux-Core, Windows-Framework, and a two-shard Windows-Core smoke set -- selected by a `[Trait("Runtime", "Core"|"Framework")]` on every test class. `TestInfrastructure/RuntimeTraitPolicy.cs` (one copy per suite) holds the fixture-to-lane mapping plus the exemption and override tables; the lane lists are in `.github/workflows/test_selection.yml`. Two guard tests fail the build when a class carries no `Runtime` trait, or when its committed trait no longer matches its fixture.
 
 ## Layout
 
@@ -109,7 +115,7 @@ Two shared console hosts dispatch string commands to **exerciser** classes; test
 **Gotchas:**
 - Dispatcher matches command -> method by parameter **count, not type** -- do not overload `[LibraryMethod]` methods; they fail silently.
 - Non-static exercisers need a parameterless ctor (instantiated by reflection).
-- Exercisers must live in the helpers project; external assemblies aren't resolved by the reflection loader unless directly referenced.
+- The reflection loader scans every loaded assembly (`ReflectionHelpers/ReflectionUtil.cs:73-75`, `AppDomain.CurrentDomain.GetAssemblies()`), so an exerciser need not live in the helpers project. The real constraint: an assembly with no static reference is never loaded, so nothing finds its exercisers until a command loads it -- `AssemblyHelper.LoadAssemblyFromFile` is a `[LibraryMethod]` for exactly that (used at `BasicInstrumentation/NetStandardLibraryInstrumentation.cs:81`).
 - Use `Log.Info` / `Log.Error` inside exercisers -- output is timestamped and captured in test logs.
 
 **Fixture variants:** treat `IntegrationTestHelpers/RemoteServiceFixtures/ConsoleDynamicMethodFixture.cs` as authoritative and grep it -- the set drifts as .NET versions roll. Currently FW (`FW462/471/48/481`, `FWLatest`, `FWSpecificVersion`) and Core (`Core80/100`, `CoreOldest/CoreLatest`, `CoreSpecificVersion`), with `AIM`/`HSM` security-mode suffixes on the `Latest` fixtures. To run one scenario across runtimes, make the test class generic on the fixture type and derive concrete classes bound to each variant.
