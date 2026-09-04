@@ -108,4 +108,8 @@ runs:
           tests/Agent/IntegrationTests/**/bin/**/*
           !tests/Agent/IntegrationTests/**/obj/**/*
           !tests/Agent/IntegrationTests/**/bin/**/net4*/**
+        # An isolated function app publishes a .azurefunctions folder, and this
+        # action drops dot-prefixed entries by default. Without it func starts
+        # and then reports no job functions.
+        include-hidden-files: true
         if-no-files-found: error

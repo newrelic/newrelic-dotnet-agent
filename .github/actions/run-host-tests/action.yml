@@ -45,6 +45,7 @@ runs:
       shell: powershell
       env:
         NR_DOTNET_TEST_LIVE_LOG: '1' # fixture progress lines reach the log as they happen
+        NR_DOTNET_TEST_MAX_TRIES: '1' # TEMPORARY: fail fast while the Linux lane is being stabilised
       run: |
         $ErrorActionPreference = "Continue"
         $testsPath = "${{ inputs.tests-path }}"
@@ -96,6 +97,7 @@ runs:
       shell: bash
       env:
         NR_DOTNET_TEST_LIVE_LOG: '1' # fixture progress lines reach the log as they happen
+        NR_DOTNET_TEST_MAX_TRIES: '1' # TEMPORARY: fail fast while the Linux lane is being stabilised
       run: |
         tests_path="${{ inputs.tests-path }}"
         namespace="${{ inputs.namespace-prefix }}.${{ inputs.namespace }}"

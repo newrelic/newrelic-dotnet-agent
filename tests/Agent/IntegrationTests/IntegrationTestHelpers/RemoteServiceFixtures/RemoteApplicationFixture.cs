@@ -118,8 +118,12 @@ public abstract class RemoteApplicationFixture : IDisposable
         set { RemoteApplication.KeepWorkingDirectory = value; }
     }
 
-    // Tests are only retried if they return a known error not related to the test
-    protected virtual int MaxTries => 3;
+    // Tests are only retried if they return a known error not related to the test.
+    // NR_DOTNET_TEST_MAX_TRIES=1 fails fast while iterating on a broken lane.
+    protected virtual int MaxTries =>
+        int.TryParse(Environment.GetEnvironmentVariable("NR_DOTNET_TEST_MAX_TRIES"), out var configuredTries) && configuredTries > 0
+            ? configuredTries
+            : 3;
 
     public void DisableAsyncLocalCallStack()
     {

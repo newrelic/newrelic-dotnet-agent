@@ -120,4 +120,5 @@ runs:
           ${{ github.workspace }}\tests\Agent\IntegrationTests\**\bin\**\*
           ${{ github.workspace }}\tests\Agent\IntegrationTests\**\Deploy\**\*
           !${{ github.workspace }}\tests\Agent\IntegrationTests\**\obj\**\*
+        include-hidden-files: true
         if-no-files-found: error
