@@ -27,6 +27,11 @@ on:
         type: string
         required: false
         default: '[]'
+      max_tries:
+        description: 'Attempts a test gets when it fails with a known transient error. Empty falls back to the TEST_MAX_TRIES repository variable, then to 3. Set to 1 to fail fast.'
+        type: string
+        required: false
+        default: ''
 
 permissions:
   contents: read
@@ -193,6 +198,7 @@ jobs:
           parallelize: ${{ inputs.parallelize }}
           no-parallel-namespaces: AzureFunction
           test-type: integrationTests
+          max-tries: ${{ inputs.max_tries || vars.TEST_MAX_TRIES }}
 
       - name: Report test results
         if: always()
@@ -324,6 +330,7 @@ jobs:
           parallelize: ${{ inputs.parallelize }}
           no-parallel-namespaces: AzureFunction
           test-type: integrationTestsLinux
+          max-tries: ${{ inputs.max_tries || vars.TEST_MAX_TRIES }}
 
       - name: Report test results
         if: always()
@@ -463,6 +470,7 @@ jobs:
           parallelize: ${{ inputs.parallelize }}
           no-parallel-namespaces: AzureFunction
           test-type: integrationTestsCoreSmoke
+          max-tries: ${{ inputs.max_tries || vars.TEST_MAX_TRIES }}
 
       - name: Report test results
         if: always()

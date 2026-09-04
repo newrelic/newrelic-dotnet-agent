@@ -22,6 +22,11 @@ on:
         type: string
         required: false
         default: '[]'
+      max_tries:
+        description: 'Attempts a test gets when it fails with a known transient error. Empty falls back to the TEST_MAX_TRIES repository variable, then to 3. Set to 1 to fail fast.'
+        type: string
+        required: false
+        default: ''
 
 permissions:
   contents: read
@@ -262,6 +267,7 @@ jobs:
           trx-path: C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.trx
           no-parallel-namespaces: NServiceBus NServiceBus5
           test-type: unboundedTests
+          max-tries: ${{ inputs.max_tries || vars.TEST_MAX_TRIES }}
 
       - name: Check event log for errors (enhanced logging)
         run: |
@@ -390,6 +396,7 @@ jobs:
           trx-path: ${{ env.test_results_path }}/${{ matrix.namespace }}_testResults.trx
           no-parallel-namespaces: NServiceBus NServiceBus5
           test-type: unboundedTestsLinux
+          max-tries: ${{ inputs.max_tries || vars.TEST_MAX_TRIES }}
 
       - name: Report test results
         if: always()
@@ -531,6 +538,7 @@ jobs:
           trx-path: C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.trx
           no-parallel-namespaces: NServiceBus NServiceBus5
           test-type: unboundedTestsCoreSmoke
+          max-tries: ${{ inputs.max_tries || vars.TEST_MAX_TRIES }}
 
       - name: Report test results
         if: always()

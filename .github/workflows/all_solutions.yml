@@ -21,6 +21,11 @@ on:
         required: false
         type: boolean
         default: true
+      max_tries:
+        description: 'Attempts per test on a known transient failure. Empty uses the TEST_MAX_TRIES repository variable, then 3. Set to 1 to fail fast.'
+        required: false
+        type: string
+        default: ''
 
   schedule:
     - cron: "0 9 * * 1-5"
@@ -194,6 +199,7 @@ jobs:
       smoke_namespaces: ${{ needs.get-test-namespaces.outputs.integration-smoke-namespaces }}
       aggregate_payload_data: ${{ inputs.aggregate_payload_data == true || github.event_name == 'schedule' }}
       parallelize: ${{ inputs.parallelize_integration_tests == true || github.event_name != 'workflow_dispatch' }}
+      max_tries: ${{ inputs.max_tries }}
 
   run-unbounded-tests:
     name: Run Unbounded Tests
@@ -207,6 +213,7 @@ jobs:
       linux_namespaces: ${{ needs.get-test-namespaces.outputs.unbounded-linux-namespaces }}
       smoke_namespaces: ${{ needs.get-test-namespaces.outputs.unbounded-smoke-namespaces }}
       aggregate_payload_data: ${{ inputs.aggregate_payload_data == true || github.event_name == 'schedule' }}
+      max_tries: ${{ inputs.max_tries }}
 
   create-package-rpm:
     needs: build-fullagent-msi

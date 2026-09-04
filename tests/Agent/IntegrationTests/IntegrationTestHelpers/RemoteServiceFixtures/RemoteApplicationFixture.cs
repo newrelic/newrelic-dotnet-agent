@@ -119,7 +119,7 @@ public abstract class RemoteApplicationFixture : IDisposable
     }
 
     // Tests are only retried if they return a known error not related to the test.
-    // NR_DOTNET_TEST_MAX_TRIES=1 fails fast while iterating on a broken lane.
+    // CI sets NR_DOTNET_TEST_MAX_TRIES through the run-host-tests max-tries input; 1 fails fast.
     protected virtual int MaxTries =>
         int.TryParse(Environment.GetEnvironmentVariable("NR_DOTNET_TEST_MAX_TRIES"), out var configuredTries) && configuredTries > 0
             ? configuredTries

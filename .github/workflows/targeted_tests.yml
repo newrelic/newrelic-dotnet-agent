@@ -28,6 +28,11 @@ on:
         type: boolean
         required: false
         default: false
+      max_tries:
+        description: 'Attempts per test on a known transient failure. Empty uses the TEST_MAX_TRIES repository variable, then 3. Set to 1 to fail fast.'
+        type: string
+        required: false
+        default: ''
 
 permissions: {}
 
@@ -73,6 +78,7 @@ jobs:
       smoke_namespaces: ${{ needs.resolve.outputs.integration-smoke-namespaces }}
       parallelize: ${{ inputs.parallelize_integration_tests }}
       aggregate_payload_data: ${{ inputs.aggregate_payload_data }}
+      max_tries: ${{ inputs.max_tries }}
 
   unbounded:
     name: Run Unbounded Tests
@@ -87,6 +93,7 @@ jobs:
       linux_namespaces: ${{ needs.resolve.outputs.unbounded-linux-namespaces }}
       smoke_namespaces: ${{ needs.resolve.outputs.unbounded-smoke-namespaces }}
       aggregate_payload_data: ${{ inputs.aggregate_payload_data }}
+      max_tries: ${{ inputs.max_tries }}
 
   container:
     name: Run Linux Container Tests

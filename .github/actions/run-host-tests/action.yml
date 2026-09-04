@@ -1,9 +1,9 @@
 name: Run Host Tests
 description: >
   Runs a self-executing xunit v3 host-run test assembly for one namespace and
-  one runtime lane, retries once to absorb transient blips, then fails the lane
-  on a zero-match filter or a pre-built publish miss. The caller must have
-  downloaded the test artifacts and the agent home folders first.
+  one runtime lane, retries a known transient failure up to max-tries times, then
+  fails the lane on a zero-match filter or a pre-built publish miss. The caller
+  must have downloaded the test artifacts and the agent home folders first.
 
 inputs:
   tests-path:
@@ -36,6 +36,10 @@ inputs:
   test-type:
     description: 'Label used in flaky-retry telemetry.'
     required: true
+  max-tries:
+    description: 'Attempts a test gets when it fails with a known transient error. Empty uses the fixture default of 3. Set to 1 to fail fast.'
+    required: false
+    default: ''
 
 runs:
   using: composite
@@ -45,7 +49,7 @@ runs:
       shell: powershell
       env:
         NR_DOTNET_TEST_LIVE_LOG: '1' # fixture progress lines reach the log as they happen
-        NR_DOTNET_TEST_MAX_TRIES: '1' # TEMPORARY: fail fast while the Linux lane is being stabilised
+        NR_DOTNET_TEST_MAX_TRIES: ${{ inputs.max-tries }}
       run: |
         $ErrorActionPreference = "Continue"
         $testsPath = "${{ inputs.tests-path }}"
@@ -97,7 +101,7 @@ runs:
       shell: bash
       env:
         NR_DOTNET_TEST_LIVE_LOG: '1' # fixture progress lines reach the log as they happen
-        NR_DOTNET_TEST_MAX_TRIES: '1' # TEMPORARY: fail fast while the Linux lane is being stabilised
+        NR_DOTNET_TEST_MAX_TRIES: ${{ inputs.max-tries }}
       run: |
         tests_path="${{ inputs.tests-path }}"
         namespace="${{ inputs.namespace-prefix }}.${{ inputs.namespace }}"
