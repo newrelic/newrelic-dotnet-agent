@@ -133,32 +133,14 @@ function Copy-AgentRoot {
     Copy-Item -Path "$RootDirectory\src\Agent\NewRelic\Agent\Core\Config\Configuration.xsd" -Destination "$Destination\newrelic.xsd" -Force 
     
     if ($Type -like "Framework") {
-        Copy-Item -Path "$RootDirectory\src\_build\AnyCPU-$Configuration\NewRelic.Agent.Extensions\net462-ILRepacked\NewRelic.Agent.Extensions.dll" -Destination "$Destination" -Force
-        Copy-Item -Path "$RootDirectory\src\_build\AnyCPU-$Configuration\NewRelic.Agent.Core\net462-ILRepacked\NewRelic.Agent.Core.dll" -Destination "$Destination" -Force
-
-        $extensionsPdb = "$RootDirectory\src\_build\AnyCPU-$Configuration\NewRelic.Agent.Extensions\net462-ILRepacked\NewRelic.Agent.Extensions.pdb"
-        if (Test-Path $extensionsPdb) {
-            Copy-Item -Path $extensionsPdb -Destination "$Destination" -Force
-        }
-        $corePdb = "$RootDirectory\src\_build\AnyCPU-$Configuration\NewRelic.Agent.Core\net462-ILRepacked\NewRelic.Agent.Core.pdb"
-        if (Test-Path $corePdb) {
-            Copy-Item -Path $corePdb -Destination "$Destination" -Force
-        }
+        Copy-Item -Path "$RootDirectory\src\_build\AnyCPU-$Configuration\NewRelic.Agent.Extensions\net462-ILRepacked\NewRelic.Agent.Extensions.dll" -Destination "$Destination" -Force 
+        Copy-Item -Path "$RootDirectory\src\_build\AnyCPU-$Configuration\NewRelic.Agent.Core\net462-ILRepacked\NewRelic.Agent.Core.dll" -Destination "$Destination" -Force 
     }
 
     if ($Type -like "Core") {
-        Copy-Item -Path "$RootDirectory\src\_build\AnyCPU-$Configuration\NewRelic.Agent.Extensions\netstandard2.0-ILRepacked\NewRelic.Agent.Extensions.dll" -Destination "$Destination" -Force
-        Copy-Item -Path "$RootDirectory\src\_build\AnyCPU-$Configuration\NewRelic.Agent.Core\netstandard2.0-ILRepacked\NewRelic.Agent.Core.dll" -Destination "$Destination" -Force
-        Copy-Item -Path "$RootDirectory\src\Agent\Miscellaneous\core-agent-readme.md" -Destination "$Destination\README.md" -Force
-
-        $extensionsPdb = "$RootDirectory\src\_build\AnyCPU-$Configuration\NewRelic.Agent.Extensions\netstandard2.0-ILRepacked\NewRelic.Agent.Extensions.pdb"
-        if (Test-Path $extensionsPdb) {
-            Copy-Item -Path $extensionsPdb -Destination "$Destination" -Force
-        }
-        $corePdb = "$RootDirectory\src\_build\AnyCPU-$Configuration\NewRelic.Agent.Core\netstandard2.0-ILRepacked\NewRelic.Agent.Core.pdb"
-        if (Test-Path $corePdb) {
-            Copy-Item -Path $corePdb -Destination "$Destination" -Force
-        }
+        Copy-Item -Path "$RootDirectory\src\_build\AnyCPU-$Configuration\NewRelic.Agent.Extensions\netstandard2.0-ILRepacked\NewRelic.Agent.Extensions.dll" -Destination "$Destination" -Force 
+        Copy-Item -Path "$RootDirectory\src\_build\AnyCPU-$Configuration\NewRelic.Agent.Core\netstandard2.0-ILRepacked\NewRelic.Agent.Core.dll" -Destination "$Destination" -Force 
+        Copy-Item -Path "$RootDirectory\src\Agent\Miscellaneous\core-agent-readme.md" -Destination "$Destination\README.md" -Force 
     }
 
     
