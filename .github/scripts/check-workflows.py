@@ -239,14 +239,12 @@ def check_lane_lists():
                     "stale lane entry that never fires" % (suite, label, suite, stale),
                 )
 
-        both = sorted(set(windows_only) & set(smoke))
-        if both:
-            fail(
-                "lane-lists",
-                "%s shard(s) %s are in both %s_windows_only and %s_core_smoke. windows_only means the shard has "
-                "no Core tests; core_smoke means it has Core tests worth running on Windows. It cannot be both"
-                % (suite, both, suite, suite),
-            )
+        # windows_only and core_smoke compose: windows_only keeps a shard off the
+        # Linux-Core lane, core_smoke runs its Core tests on the Windows-Core lane.
+        # A shard in both is Windows-pinned on both legs, which is how a shard with
+        # Core tests that cannot pass on Linux keeps all of its coverage. A shard
+        # listed in core_smoke with no Core tests is caught at run time by
+        # build/Scripts/check-test-run.sh as a zero-match lane.
 
         neither = sorted(set(windows_only) & set(linux_only))
         if neither:

@@ -118,11 +118,13 @@ jobs:
             "CustomInstrumentation",
             "DataTransmission",
             "DistributedTracing",
+            "DistributedTracing.W3CInstrumentationTests",
             "Errors",
             "Grpc",
             "Hangfire",
             "HSM",
             "HttpClientInstrumentation",
+            "HttpClientInstrumentation.NetFramework",
             "HybridHttpContextStorage",
             "InfiniteTracing",
             "LLM",
@@ -173,6 +175,7 @@ jobs:
             "Oracle",
             "Postgres",
             "RabbitMq",
+            "RabbitMq.Legacy",
             "Redis",
             "TestInfrastructure"
           ]'
@@ -196,11 +199,15 @@ jobs:
 
           # Lane membership, derived from the canonical lists above and
           # validated against them by .github/scripts/check-workflows.py.
-          # windows_only: shards with no Runtime=Core tests at all.
+          # windows_only: shards excluded from the Linux-Core lane. Normally shards
+          # with no Runtime=Core tests. The two Logging shards are Windows-pinned
+          # instead, and pair with core_smoke so their Core tests still run.
           integration_windows_only='[
             "CatInbound",
             "CatOutbound",
             "HybridHttpContextStorage",
+            "Logging.ContextData",
+            "Logging.LocalDecoration",
             "MultiAppDomain",
             "Owin",
             "ReJit.NetFramework",
@@ -218,11 +225,14 @@ jobs:
             "WCF.Service.Self"
           ]'
 
-          # core_smoke: Core shards that also run on Windows, because their
-          # coverage is Windows-specific. Additive -- the Linux lane keeps them.
+          # core_smoke: shards whose Core tests run on the Windows-Core lane.
+          # Additive, so the Linux lane keeps them unless also in windows_only.
           integration_core_smoke='[
             "AgentFeatures",
-            "AspNetCore"
+            "AspNetCore",
+            "Logging.ContextData",
+            "Logging.LocalDecoration",
+            "OpenTelemetry"
           ]'
 
           # linux_only: shards with no Runtime=Framework tests. Excluded from
@@ -257,7 +267,11 @@ jobs:
 
           # The unbounded census found no Core-only shard, so every shard keeps a
           # Windows-Framework leg. The Linux lane is selected by trait, not by shard.
-          unbounded_linux_only='[]'
+          # RabbitMq resolves to a single Core class; -namespace is an exact
+          # match, so its Framework tests live in RabbitMq.Legacy.
+          unbounded_linux_only='[
+            "RabbitMq"
+          ]'
 
           if [ "$MODE" = "all" ]; then
             # ── Read exclusion variables (default to empty array) ─────────
