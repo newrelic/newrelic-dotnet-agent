@@ -158,12 +158,40 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             _instructions->AppendStoreLocal(_userExceptionLocalIndex);
         }
 
+        // Pushes whatever precedes the argument array for the configured strategy.
+        // AppDomainFallbackCache invokes a cached delegate and needs only the core path.
+        // Reflection resolves a MethodInfo and needs the null invocation target for MethodBase.Invoke.
+        void LoadGetTracerTarget()
+        {
+            if (_agentCallStrategy == AgentCallStyle::Strategy::AppDomainFallbackCache)
+            {
+                _instructions->AppendString(_instrumentationSettings->GetCorePath());
+            }
+            else
+            {
+                LoadMethodInfo(_instrumentationSettings->GetCorePath(), _X("NewRelic.Agent.Core.AgentShim"), _X("GetFinishTracerDelegate"), nullptr);
+                _instructions->Append(_X("ldnull"));
+            }
+        }
+
+        // Consumes what LoadGetTracerTarget pushed plus the argument array, leaving the tracer delegate.
+        void InvokeGetTracer()
+        {
+            if (_agentCallStrategy == AgentCallStyle::Strategy::AppDomainFallbackCache)
+            {
+                _instructions->Append(CEE_CALL, _X("object [") + _instructions->GetCoreLibAssemblyName() + _X("]System.CannotUnloadAppDomainException::InvokeAgentShimFinishTracerDelegateFunc(string,object[])"));
+            }
+            else
+            {
+                InvokeMethodInfo();
+            }
+        }
+
         void CallGetTracer(NewRelic::Profiler::Configuration::InstrumentationPointPtr instrumentationPoint)
         {
-            LoadMethodInfo(_instrumentationSettings->GetCorePath(), _X("NewRelic.Agent.Core.AgentShim"), _X("GetFinishTracerDelegate"), 0, nullptr);
-              
-            // tracer = delegates[0].Invoke(null, new object[] { tracerFactoryName, tracerFactoryArgs, metricName, assemblyName, type, typeName, functionName, argumentSignatureString, this, new object[], functionId });
-            _instructions->Append(_X("ldnull"));
+            LoadGetTracerTarget();
+
+            // tracer = <target>(new object[] { tracerFactoryName, tracerFactoryArgs, metricName, assemblyName, type, typeName, functionName, argumentSignatureString, this, new object[], functionId });
             _instructions->Append(_X("ldc.i4.s   11"));
             _instructions->Append(_X("newarr     [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Object"));
             _instructions->Append(_X("dup"));
@@ -219,7 +247,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             _instructions->Append(_X("box [") + _instructions->GetCoreLibAssemblyName() + _X("]System.UInt64"));
             _instructions->Append(_X("stelem.ref"));
             // make the call to GetTracer
-            InvokeMethodInfo();
+            InvokeGetTracer();
 
             _instructions->AppendStoreLocal(_tracerLocalIndex);
         }

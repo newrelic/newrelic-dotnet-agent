@@ -144,20 +144,18 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
 
         void AssertHelperMethodsWereInjected(const bool isCoreClr, const bool throwsException)
         {
-            std::array<xstring_t, 13> expectedMethods = {
+            std::array<xstring_t, 11> expectedMethods = {
                 _X("System.CannotUnloadAppDomainException.LoadAssemblyOrThrow"),
                 _X("System.CannotUnloadAppDomainException.GetTypeViaReflectionOrThrow"),
                 _X("System.CannotUnloadAppDomainException.GetMethodViaReflectionOrThrow"),
-                _X("System.CannotUnloadAppDomainException.GetMethodFromAppDomainStorage"),
-                _X("System.CannotUnloadAppDomainException.GetMethodFromAppDomainStorageOrReflectionOrThrow"),
-                _X("System.CannotUnloadAppDomainException.GetAgentShimMethodFromAppDomainStorageOrReflectionOrThrow"),
                 _X("System.CannotUnloadAppDomainException.StoreMethodInAppDomainStorageOrThrow"),
                 _X("System.CannotUnloadAppDomainException.EnsureInitialized"),
                 _X("System.CannotUnloadAppDomainException.InvokeAgentMethodInvokerFunc"),
                 _X("System.CannotUnloadAppDomainException.GetAgentMethodInvokerObject"),
                 _X("System.CannotUnloadAppDomainException.GetAgentShimFinishTracerDelegateFunc"),
                 _X("System.CannotUnloadAppDomainException.StoreAgentShimFinishTracerDelegateFunc"),
-                _X("System.CannotUnloadAppDomainException.StoreAgentMethodInvokerFunc")
+                _X("System.CannotUnloadAppDomainException.StoreAgentMethodInvokerFunc"),
+                _X("System.CannotUnloadAppDomainException.InvokeAgentShimFinishTracerDelegateFunc")
             };
 
             auto modulePtr = std::make_shared<MockModule>();
@@ -194,20 +192,18 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
         void AssertHelperMethodReferencesWereInjected(const bool isCoreClr, const bool throwsException)
         {
             const xstring_t expectedAssembly = isCoreClr ? _X("[System.Private.CoreLib]") : _X("[mscorlib]");
-            std::array<xstring_t, 13> expectedMethods = {
+            std::array<xstring_t, 11> expectedMethods = {
                 expectedAssembly + _X("System.CannotUnloadAppDomainException.LoadAssemblyOrThrow"),
                 expectedAssembly + _X("System.CannotUnloadAppDomainException.GetTypeViaReflectionOrThrow"),
                 expectedAssembly + _X("System.CannotUnloadAppDomainException.GetMethodViaReflectionOrThrow"),
-                expectedAssembly + _X("System.CannotUnloadAppDomainException.GetMethodFromAppDomainStorage"),
-                expectedAssembly + _X("System.CannotUnloadAppDomainException.GetMethodFromAppDomainStorageOrReflectionOrThrow"),
-                expectedAssembly + _X("System.CannotUnloadAppDomainException.GetAgentShimMethodFromAppDomainStorageOrReflectionOrThrow"),
                 expectedAssembly + _X("System.CannotUnloadAppDomainException.StoreMethodInAppDomainStorageOrThrow"),
                 expectedAssembly + _X("System.CannotUnloadAppDomainException.EnsureInitialized"),
                 expectedAssembly + _X("System.CannotUnloadAppDomainException.GetAgentMethodInvokerObject"),
                 expectedAssembly + _X("System.CannotUnloadAppDomainException.InvokeAgentMethodInvokerFunc"),
                 expectedAssembly + _X("System.CannotUnloadAppDomainException.GetAgentShimFinishTracerDelegateFunc"),
                 expectedAssembly + _X("System.CannotUnloadAppDomainException.StoreAgentShimFinishTracerDelegateFunc"),
-                expectedAssembly + _X("System.CannotUnloadAppDomainException.StoreAgentMethodInvokerFunc")
+                expectedAssembly + _X("System.CannotUnloadAppDomainException.StoreAgentMethodInvokerFunc"),
+                expectedAssembly + _X("System.CannotUnloadAppDomainException.InvokeAgentShimFinishTracerDelegateFunc")
             };
 
             auto modulePtr = std::make_shared<MockModule>();

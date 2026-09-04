@@ -24,12 +24,12 @@ public class AwsSdkKinesisExerciser : IDisposable
 
     private AmazonKinesisClient GetKinesisClient()
     {
-        // configure the client to use LocalStack
+        // configure the client to use floci
         // use plausible (but fake) access key and fake secret key so account id parsing can be tested
         var creds = new BasicAWSCredentials("FOOIHSHSDNNAEXAMPLE", "MOREGIBBERISH");
         var config = new AmazonKinesisConfig
         {
-            ServiceURL = "http://localstack:4566",
+            ServiceURL = "http://floci:4566",
             AuthenticationRegion = "us-west-2"
         };
 

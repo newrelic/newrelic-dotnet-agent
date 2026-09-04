@@ -81,7 +81,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             tokenizer->_fieldDefinitionToken = 0xDEADBEEF;
             auto instructionSet = InstructionSet(tokenizer, nullptr);
 
-            instructionSet.Append(_X("ldsfld object __NRInitializer__::_agentShimMethodInfo"));
+            instructionSet.Append(_X("ldsfld object __NRInitializer__::_agentShimFunc"));
 
             BYTEVECTOR(expectedBytes,
                 CEE_LDSFLD,

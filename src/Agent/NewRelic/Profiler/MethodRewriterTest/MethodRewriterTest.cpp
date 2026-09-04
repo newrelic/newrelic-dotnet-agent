@@ -133,17 +133,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             Assert::IsTrue(rewriter->ShouldInstrumentFunction(_X("SetThreadLocalBoolean")));
         }
 
-        TEST_METHOD(ShouldInstrumentFunction_GetMethodFromAppDomainStorageOrReflectionOrThrow_returns_true)
-        {
-            auto rewriter = MakeRewriter();
-            Assert::IsTrue(rewriter->ShouldInstrumentFunction(_X("GetMethodFromAppDomainStorageOrReflectionOrThrow")));
-        }
 
-        TEST_METHOD(ShouldInstrumentFunction_GetMethodFromAppDomainStorage_returns_true)
-        {
-            auto rewriter = MakeRewriter();
-            Assert::IsTrue(rewriter->ShouldInstrumentFunction(_X("GetMethodFromAppDomainStorage")));
-        }
 
         TEST_METHOD(ShouldInstrumentFunction_GetMethodViaReflectionOrThrow_returns_true)
         {
@@ -167,6 +157,15 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
         {
             auto rewriter = MakeRewriter();
             Assert::IsTrue(rewriter->ShouldInstrumentFunction(_X("StoreMethodInAppDomainStorageOrThrow")));
+        }
+
+        // This gate is not compile-checked. If the name is missing from the instrumented set
+        // the helper keeps its injected stub body, gets no real IL, and the hot path silently
+        // stops tracing.
+        TEST_METHOD(ShouldInstrumentFunction_InvokeAgentShimFinishTracerDelegateFunc_returns_true)
+        {
+            auto rewriter = MakeRewriter();
+            Assert::IsTrue(rewriter->ShouldInstrumentFunction(_X("InvokeAgentShimFinishTracerDelegateFunc")));
         }
 
         TEST_METHOD(ShouldInstrumentFunction_cctor_returns_false)

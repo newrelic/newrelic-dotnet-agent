@@ -51,11 +51,14 @@ tests/Agent/
 
 ### Building the solution
 
-`IntegrationTests.sln` / `UnboundedIntegrationTests.sln` need **VS MSBuild** with all three of these flags -- use the CI invocation verbatim (`all_solutions.yml`):
+`IntegrationTests.sln` / `UnboundedIntegrationTests.sln` need **VS MSBuild** with all three of these flags -- use the CI invocation verbatim (`all_solutions.yml`).
+
+MSBuild is not on PATH outside a Developer Command Prompt. Resolve it with the `vswhere.exe` the repo ships -- the same one `build/build.ps1` uses. Never glob `Program Files\Microsoft Visual Studio\*`.
 
 ```
-"C:\Program Files\Microsoft Visual Studio\<ver>\Enterprise\MSBuild\Current\Bin\MSBuild.exe" \
-  tests/Agent/IntegrationTests/IntegrationTests.sln \
+MSBUILD=$(build/Tools/vswhere.exe -latest -prerelease -products '*' \
+  -requires Microsoft.Component.MSBuild -find 'MSBuild\**\Bin\MSBuild.exe' | tr -d '\r' | head -1)
+"$MSBUILD" tests/Agent/IntegrationTests/IntegrationTests.sln \
   -restore -m -p:Configuration=Debug -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy
 ```
 
@@ -192,6 +195,44 @@ Agent-overhead harness under `tests/Agent/PerformanceTests/` -- Python-orchestra
 ## CI
 
 GitHub Actions runs unit + integration tests on every PR via [`all_solutions.yml`](../.github/workflows/all_solutions.yml); coverage to Codecov.
+
+### Targeted CI runs (`targeted_tests.yml`)
+
+`all_solutions.yml` runs all 93 test legs plus the MSI, both Linux packages, and
+ArtifactBuilder. To run a few namespaces in CI, dispatch
+[`targeted_tests.yml`](../.github/workflows/targeted_tests.yml) instead. It builds
+the agent fresh from the branch and runs only what you name; no MSI, no packages,
+no ArtifactBuilder.
+
+Three inputs, each a comma-separated list, each defaulting to empty:
+
+- `integration_namespaces` - e.g. `Errors, Api`. Validated against the 66
+  canonical integration namespaces.
+- `unbounded_namespaces` - e.g. `MsSql`. Validated against the 15 canonical
+  unbounded namespaces. These still contend for the shared AKS
+  `UnboundedServices` deployment, so two runs at once can interfere.
+- `container_groups` - `name/arch` pairs, e.g. `Ubuntu/amd64, Core/amd64`. The 12
+  valid pairs are the `name` and `arch` values listed in the `select-matrix` job
+  in [`linux_container_tests.yml`](../.github/workflows/linux_container_tests.yml).
+
+How the inputs behave:
+
+- **Empty means none**, per input. There is no `all` keyword; running everything
+  is what `all_solutions.yml` is for. All three empty fails the run.
+- **An unknown name fails the run before the agent build starts**, and the error
+  names the unknown value, often with a nearest match. Container groups are
+  validated too, so a typo there also fails early.
+- **The repo exclusion variables do not apply.** `INTEGRATION_EXCLUDE_NAMESPACES`
+  and `UNBOUNDED_EXCLUDE_NAMESPACES` gate the nightly, not a targeted run, so this
+  is how an excluded namespace gets re-tested.
+- **Selection is by namespace only.** There is no test-name filter, and no
+  payload-data aggregation.
+
+The canonical lists live in
+[`test_selection.yml`](../.github/workflows/test_selection.yml), which both
+`all_solutions.yml` and `targeted_tests.yml` call. `.github/scripts/check-workflows.py`
+runs on any pull request touching `.github/**` and asserts, among other things,
+that the container list there matches the `select-matrix` list.
 
 ## Related
 

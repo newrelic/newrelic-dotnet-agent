@@ -24,6 +24,7 @@ public abstract class AppDomainCachingContainerTest<T> : NewRelicIntegrationTest
         _fixture.Actions(setupConfiguration: () =>
             {
                 var configModifier = new NewRelicConfigModifier(_fixture.DestinationNewRelicConfigFilePath);
+                configModifier.SetLogLevel("finest");
                 configModifier.ConfigureFasterMetricsHarvestCycle(10);
             },
             exerciseApplication: () =>

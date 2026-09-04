@@ -32,7 +32,7 @@ public class AuditLogTests : NewRelicIntegrationTest<RemoteServiceFixtures.AspNe
             {
                 _fixture.Get();
 
-                _fixture.AgentLog.WaitForLogLine(AgentLogBase.ShutdownLogLineRegex, TimeSpan.FromMinutes(2));
+                _fixture.AuditLog.WaitForLogLine(AuditLogFile.AuditDataReceivedLogLineRegex, TimeSpan.FromMinutes(1));
             }
         );
 
@@ -48,9 +48,10 @@ public class AuditLogTests : NewRelicIntegrationTest<RemoteServiceFixtures.AspNe
         var dataSentLogLines =  _fixture.AuditLog.TryGetLogLines(AuditLogFile.AuditDataSentLogLineRegex).ToList();
         var dataReceivedLogLines = _fixture.AuditLog.TryGetLogLines(AuditLogFile.AuditDataReceivedLogLineRegex).ToList();
 
-        Assert.Multiple(() =>
-        {
-            Assert.True(dataSentLogLines.Count == 2 * dataReceivedLogLines.Count); // audit log always contains 2 "sent" lines for every "received" line
-        });
+        Assert.Multiple(
+            () => Assert.NotEmpty(dataSentLogLines),
+            () => Assert.NotEmpty(dataReceivedLogLines),
+            () => Assert.True(dataSentLogLines.Count == 2 * dataReceivedLogLines.Count) // audit log always contains 2 "sent" lines for every "received" line
+        );
     }
 }

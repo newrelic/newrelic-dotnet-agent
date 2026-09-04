@@ -55,7 +55,7 @@ jobs:
       image: ghcr.io/newrelic/s3indexer # Built from https://github.com/newrelic/s3-indexer
     steps:
       - name: Login to AWS
-        uses: aws-actions/configure-aws-credentials@e6de054238d6b7531b4efff3b6587d9aade6a06c # v6.2.3
+        uses: aws-actions/configure-aws-credentials@cbe3b392738ccf3f987d68400dafcf4b0624a56c # v6.2.4
         with:
           aws-region: ${{ inputs.aws-region }}
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}

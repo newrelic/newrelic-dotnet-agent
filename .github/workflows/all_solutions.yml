@@ -62,9 +62,11 @@ jobs:
     name: Validate shell scripts
     needs: check-modified-files
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
         with:
           disable-sudo: true
           egress-policy: audit
@@ -79,6 +81,8 @@ jobs:
   build-fullagent-msi:
     name: Build FullAgent and MSIInstaller
     runs-on: windows-2022
+    permissions:
+      contents: read
     needs:
       - check-modified-files
       - shellcheck
@@ -90,11 +94,10 @@ jobs:
     if: (github.event_name == 'workflow_dispatch' || github.actor != 'dependabot[bot]') && (needs.check-modified-files.outputs.source-files-changed == 'true' || github.event.release || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule')
 
     env:
-      fullagent_solution_path: ${{ github.workspace }}\FullAgent.sln
       msi_solution_path: ${{ github.workspace }}\src\Agent\MsiInstaller\MsiInstaller.sln
 
     outputs:
-      agentVersion: ${{ steps.agentVersion.outputs.version }}
+      agentVersion: ${{ steps.build-agent.outputs.agent-version }}
       # Re-exported so the packaging jobs can gate on it: job-level `if` cannot read `env`.
       skipSigning: ${{ env.skip_signing }}
 
@@ -105,50 +108,9 @@ jobs:
           fetch-depth: 0
           filter: blob:none
 
-      - name: Cache NuGet packages
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ~/.nuget/packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/Directory.Packages.props') }}
-          restore-keys: ${{ runner.os }}-nuget-
-
-      - name: Install latest .NET 10 SDK
-        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
-        with:
-          dotnet-version: '10.0.x'
-          dotnet-quality: 'ga'
-
-      - name: Install .NET 11 Preview SDK
-        uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7 # v5.2.0
-        with:
-          dotnet-version: '11.0.x'
-          dotnet-quality: 'preview'
-
-      - name: Build FullAgent.sln
-        run: |
-          Write-Host "dotnet build --force --configuration Release -p:AllowUnsafeBlocks=true ${{ env.fullagent_solution_path }}"
-          dotnet build --force --configuration Release -p:AllowUnsafeBlocks=true ${{ env.fullagent_solution_path }}
-        shell: powershell
-
-      - name: Create agentVersion
-        id: agentVersion
-        run: |
-          $agentVersion = (Get-Item "${{ github.workspace }}\src\_build\AnyCPU-Release\NewRelic.Agent.Core\net462\NewRelic.Agent.Core.dll").VersionInfo.FileVersion
-          echo "version=$agentVersion" >> $env:GITHUB_OUTPUT
-        shell: powershell
-          
-      - name: Archive FullAgent Home folders
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: homefolders
-          path: |
-            ${{ github.workspace }}\src\Agent\newrelichome_x64
-            ${{ github.workspace }}\src\Agent\newrelichome_x64_coreclr
-            ${{ github.workspace }}\src\Agent\newrelichome_x64_coreclr_linux
-            ${{ github.workspace }}\src\Agent\newrelichome_arm64_coreclr_linux
-            ${{ github.workspace }}\src\Agent\newrelichome_x86
-            ${{ github.workspace }}\src\Agent\newrelichome_x86_coreclr
-          if-no-files-found: error
+      - name: Build agent
+        id: build-agent
+        uses: ./.github/actions/build-agent
 
       # Signing and MSI build are skipped for the Dependabot dispatch (see note above the jobs).
       # The build and homefolders artifact above are all the test suites need.
@@ -219,1017 +181,57 @@ jobs:
     # which is a larger restructuring of this workflow than warranted for a preview-SDK bug.
     # Re-enable once the .NET 11 preview SDK's vstest.console integration fixes this, or once
     # linux_container_tests.yml is restructured to filter via the native xUnit runner.
+    # NOTE: integration_tests.yml / unbounded_tests.yml are NOT affected -- they invoke the
+    # built test .exe with xUnit's native -namespace filter rather than `dotnet test --filter`.
     if: false
     uses: ./.github/workflows/linux_container_tests.yml
     with:
       aggregate_payload_data: ${{ inputs.aggregate_payload_data == true || github.event_name == 'schedule' }}
+      groups: ''
     secrets: inherit
     permissions:
       actions: write
       contents: read
         
-  # ---------------------------------------------------------------------------
-  # Compute the set of test namespaces to run, after applying exclusions from
-  # GitHub repo variables.  To skip a namespace, add it to the JSON-array
-  # variable in Settings > Secrets and variables > Actions > Variables:
-  #   INTEGRATION_EXCLUDE_NAMESPACES  (e.g. ["LLM","OpenTelemetry"])
-  #   UNBOUNDED_EXCLUDE_NAMESPACES    (e.g. ["Couchbase"])
-  # ---------------------------------------------------------------------------
   get-test-namespaces:
     name: Get Test Namespaces
     needs: check-modified-files
     if: (github.event_name == 'workflow_dispatch' || github.actor != 'dependabot[bot]') && (needs.check-modified-files.outputs.source-files-changed == 'true' || github.event.release || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule')
-    runs-on: ubuntu-latest
-    outputs:
-      integration-namespaces: ${{ steps.compute.outputs.integration }}
-      unbounded-namespaces: ${{ steps.compute.outputs.unbounded }}
-    steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
-        with:
-          disable-sudo: true
-          egress-policy: audit
-
-      - name: Compute namespace lists
-        id: compute
-        env:
-          INTEGRATION_EXCLUDE: ${{ vars.INTEGRATION_EXCLUDE_NAMESPACES }}
-          UNBOUNDED_EXCLUDE: ${{ vars.UNBOUNDED_EXCLUDE_NAMESPACES }}
-        run: |
-          # ── Canonical namespace lists ──────────────────────────────────
-          # maintain alphabetical order, please!
-          integration_all='[
-            "AgentFeatures",
-            "AgentLogs",
-            "AgentMetrics",
-            "Api",
-            "AppDomainCaching",
-            "AspNetCore",
-            "AwsLambda.AutoInstrumentation",
-            "AwsLambda.CloudWatch",
-            "AwsLambda.Custom",
-            "AwsLambda.DynamoDb",
-            "AwsLambda.General",
-            "AwsLambda.Kinesis",
-            "AwsLambda.S3",
-            "AwsLambda.Ses",
-            "AwsLambda.Sns",
-            "AwsLambda.Sqs",
-            "AwsLambda.WebRequest",
-            "AwsSdk",
-            "AzureFunction",
-            "BasicInstrumentation",
-            "Blazor",
-            "CatInbound",
-            "CatOutbound",
-            "CodeLevelMetrics",
-            "Configuration",
-            "CustomAttributes",
-            "CustomInstrumentation",
-            "DataTransmission",
-            "DistributedTracing",
-            "Errors",
-            "Grpc",
-            "Hangfire",
-            "HSM",
-            "HttpClientInstrumentation",
-            "HybridHttpContextStorage",
-            "InfiniteTracing",
-            "LLM",
-            "Logging.AuditLog",
-            "Logging.ContextData",
-            "Logging.Hsm",
-            "Logging.Labels",
-            "Logging.LocalDecoration",
-            "Logging.LogLevelDetection",
-            "Logging.MaxSamplesStored",
-            "Logging.MetricsAndForwarding",
-            "Logging.StructuredLogArgContextData",
-            "Logging.ZeroMaxSamplesStored",
-            "MassTransit",
-            "MultiAppDomain",
-            "OpenTelemetry",
-            "Owin",
-            "ReJit.NetCore",
-            "ReJit.NetFramework",
-            "RequestHandling",
-            "RequestHeadersCapture.AspNet",
-            "RequestHeadersCapture.AspNetCore",
-            "RequestHeadersCapture.EnvironmentVariables",
-            "RequestHeadersCapture.Owin",
-            "RequestHeadersCapture.WCF",
-            "RestSharp",
-            "WCF.Client.IIS.ASPDisabled",
-            "WCF.Client.IIS.ASPEnabled",
-            "WCF.Client.Self",
-            "WCF.Service.IIS.ASPDisabled",
-            "WCF.Service.IIS.ASPEnabled",
-            "WCF.Service.Self"
-          ]'
-
-          unbounded_all='[
-            "AzureServiceBus",
-            "CosmosDB",
-            "Couchbase",
-            "Elasticsearch",
-            "MongoDB",
-            "Msmq",
-            "MsSql",
-            "MySql",
-            "NServiceBus",
-            "NServiceBus5",
-            "OpenSearch",
-            "Oracle",
-            "Postgres",
-            "RabbitMq",
-            "Redis"
-          ]'
-
-          # ── Read exclusion variables (default to empty array) ─────────
-          integration_exclude="${INTEGRATION_EXCLUDE:-[]}"
-          unbounded_exclude="${UNBOUNDED_EXCLUDE:-[]}"
-
-          # ── Apply exclusions ──────────────────────────────────────────
-          integration=$(jq -c '. - $ex' --argjson ex "$integration_exclude" <<< "$integration_all")
-          unbounded=$(jq -c '. - $ex' --argjson ex "$unbounded_exclude" <<< "$unbounded_all")
-
-          # ── Log what was excluded ─────────────────────────────────────
-          int_removed=$(jq -c '. as $all | $all - ($all - $ex)' --argjson ex "$integration_exclude" <<< "$integration_all")
-          unb_removed=$(jq -c '. as $all | $all - ($all - $ex)' --argjson ex "$unbounded_exclude" <<< "$unbounded_all")
-
-          echo "::group::Integration test namespaces"
-          echo "Excluded: $int_removed"
-          echo "Running:  $integration"
-          echo "::endgroup::"
-
-          echo "::group::Unbounded test namespaces"
-          echo "Excluded: $unb_removed"
-          echo "Running:  $unbounded"
-          echo "::endgroup::"
-
-          echo "integration=$integration" >> "$GITHUB_OUTPUT"
-          echo "unbounded=$unbounded" >> "$GITHUB_OUTPUT"
-        shell: bash
-
-  build-integration-tests:
-    needs: build-fullagent-msi
-    name: Build IntegrationTests
-    runs-on: windows-2025-vs2026 
-
-    env:
-      integration_solution_path: ${{ github.workspace }}\tests\Agent\IntegrationTests\IntegrationTests.sln
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0
-          filter: blob:none
-
-      - name: Cache NuGet packages
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ~/.nuget/packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/Directory.Packages.props') }}
-          restore-keys: ${{ runner.os }}-nuget-
-
-      - name: Install latest .NET 10 SDK
-        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
-        with:
-          dotnet-version: '10.0.x'
-          dotnet-quality: 'ga'
-
-      - name: Install .NET 11 Preview SDK
-        uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7 # v5.2.0
-        with:
-          dotnet-version: '11.0.x'
-          dotnet-quality: 'preview'
-
-      - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@30375c66a4eea26614e0d39710365f22f8b0af57 # v3.0.0
-        # if needed for future .NET preview builds:
-        #with:
-        #  vs-prerelease: true
-
-      - name: List SDKS
-        run: dotnet --list-sdks
-        shell: powershell
-
-      - name: Build IntegrationTests.sln
-        run: |
-          Write-Host "List NuGet Sources"
-          dotnet nuget list source # For unknown reasons, this step is necessary to avoid subsequent problems with NuGet package restore
-          Write-Host "MSBuild.exe -restore -m -p:Configuration=Release -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy ${{ env.integration_solution_path }}"
-          MSBuild.exe -restore -m -p:Configuration=Release -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy ${{ env.integration_solution_path }}
-        shell: powershell
-
-      - name: Pre-publish .NET Core test apps
-        run: |
-          # Pre-publish .NET Core test apps so test fixtures can copy pre-built output
-          # instead of invoking dotnet publish at runtime. This eliminates file-lock
-          # collisions on shared dependency obj/ directories during parallel test execution.
-          # We skip class libraries and Azure Function apps (func.exe requires the original
-          # build output structure, not RID-specific publish output).
-          $runtime = "win-x64"
-          $searchPaths = @("Applications", "SharedApplications")
-          $basePath = "${{ github.workspace }}\tests\Agent\IntegrationTests"
-          # Azure Function apps are incompatible with pre-publish: func.exe start --no-build
-          # expects framework-dependent build output, not RID-specific publish output
-          $skipProjects = @("AzureFunctionApplication", "AzureFunctionInProcApplication")
-          $published = 0; $skipped = 0; $failed = 0
-          foreach ($searchPath in $searchPaths) {
-            $fullPath = Join-Path $basePath $searchPath
-            if (-not (Test-Path $fullPath)) { continue }
-            $projects = Get-ChildItem -Path $fullPath -Filter "*.csproj" -Recurse
-            foreach ($project in $projects) {
-              $content = Get-Content $project.FullName -Raw
-              # Skip explicit class libraries and excluded projects
-              if ($content -match '<OutputType>\s*Library\s*</OutputType>') { $skipped++; continue }
-              if ($skipProjects -contains $project.BaseName) { $skipped++; continue }
-              if ($content -match '<TargetFrameworks?>(.*?)</TargetFrameworks?>') {
-                $tfms = $Matches[1] -split ';'
-                foreach ($tfm in $tfms) {
-                  if ($tfm -match '^net\d+\.\d+$') {
-                    Write-Host "Pre-publishing $($project.Name) for $tfm/$runtime"
-                    $output = dotnet publish --configuration Release --runtime $runtime --framework $tfm $project.FullName 2>&1
-                    if ($LASTEXITCODE -ne 0) {
-                      Write-Warning "Failed to pre-publish $($project.Name) for $tfm/$runtime"
-                      $output | Where-Object { $_ -match "error" } | ForEach-Object { Write-Host "  $_" }
-                      $failed++
-                    } else {
-                      $published++
-                    }
-                  }
-                }
-              }
-            }
-          }
-          Write-Host "Pre-publish complete: $published succeeded, $skipped skipped (libraries), $failed failed"
-
-          # Clean up intermediate RID-specific build artifacts to reduce artifact size.
-          # dotnet publish --runtime creates large intermediate files alongside the publish/
-          # subdirectory (including self-contained runtime copies). Only publish/ is needed.
-          $cleaned = 0
-          foreach ($searchPath in $searchPaths) {
-            $fullPath = Join-Path $basePath $searchPath
-            if (-not (Test-Path $fullPath)) { continue }
-            Get-ChildItem -Path $fullPath -Directory -Recurse -Filter $runtime | ForEach-Object {
-              Get-ChildItem -Path $_.FullName -Exclude "publish" | Remove-Item -Recurse -Force
-              $cleaned++
-            }
-          }
-          Write-Host "Cleaned intermediate build artifacts from $cleaned RID directories"
-        shell: powershell
-
-      - name: Archive Artifacts
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: integrationtests
-          path: |
-            ${{ github.workspace }}\test.runsettings  # Force the artifacts to use repo root as root of package.
-            ${{ github.workspace }}\tests\Agent\IntegrationTests\**\bin\**\*
-            ${{ github.workspace }}\tests\Agent\IntegrationTests\**\Deploy\**\*
-            !${{ github.workspace }}\tests\Agent\IntegrationTests\**\obj\**\*
-          if-no-files-found: error
-
-  build-unbounded-tests:
-    needs: build-fullagent-msi
-    name: Build UnboundedIntegrationTests
-    runs-on: windows-2025-vs2026
-
-    env:
-      unbounded_solution_path: ${{ github.workspace }}\tests\Agent\IntegrationTests\UnboundedIntegrationTests.sln
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0
-          filter: blob:none
-
-      - name: Cache NuGet packages
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ~/.nuget/packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/Directory.Packages.props') }}
-          restore-keys: ${{ runner.os }}-nuget-
-
-      - name: Install latest .NET 10 SDK
-        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
-        with:
-          dotnet-version: '10.0.x'
-          dotnet-quality: 'ga'
-
-      - name: Install .NET 11 Preview SDK
-        uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7 # v5.2.0
-        with:
-          dotnet-version: '11.0.x'
-          dotnet-quality: 'preview'
-
-      - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@30375c66a4eea26614e0d39710365f22f8b0af57 # v3.0.0
-        # if needed for future .NET preview builds:
-        #with:
-        #  vs-prerelease: true
-
-      - name: Build UnboundedIntegrationTests.sln
-        run: |
-          Write-Host "List NuGet Sources"
-          dotnet nuget list source # For unknown reasons, this step is necessary to avoid subsequent problems with NuGet package restore
-          Write-Host "MSBuild.exe -restore -m -p:Configuration=Release -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy ${{ env.unbounded_solution_path }}"
-          MSBuild.exe -restore -m -p:Configuration=Release -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy ${{ env.unbounded_solution_path }}
-        shell: powershell
-
-      - name: Pre-publish .NET Core test apps
-        run: |
-          # Pre-publish .NET Core test apps so test fixtures can copy pre-built output
-          # instead of invoking dotnet publish at runtime. This eliminates file-lock
-          # collisions on shared dependency obj/ directories during parallel test execution.
-          # We skip class libraries (OutputType=Library or netstandard-only targets).
-          $runtime = "win-x64"
-          $searchPaths = @("UnboundedApplications", "SharedApplications")
-          $basePath = "${{ github.workspace }}\tests\Agent\IntegrationTests"
-          $published = 0; $skipped = 0; $failed = 0
-          foreach ($searchPath in $searchPaths) {
-            $fullPath = Join-Path $basePath $searchPath
-            if (-not (Test-Path $fullPath)) { continue }
-            $projects = Get-ChildItem -Path $fullPath -Filter "*.csproj" -Recurse
-            foreach ($project in $projects) {
-              $content = Get-Content $project.FullName -Raw
-              # Skip explicit class libraries
-              if ($content -match '<OutputType>\s*Library\s*</OutputType>') { $skipped++; continue }
-              if ($content -match '<TargetFrameworks?>(.*?)</TargetFrameworks?>') {
-                $tfms = $Matches[1] -split ';'
-                foreach ($tfm in $tfms) {
-                  if ($tfm -match '^net\d+\.\d+$') {
-                    Write-Host "Pre-publishing $($project.Name) for $tfm/$runtime"
-                    $output = dotnet publish --configuration Release --runtime $runtime --framework $tfm $project.FullName 2>&1
-                    if ($LASTEXITCODE -ne 0) {
-                      Write-Warning "Failed to pre-publish $($project.Name) for $tfm/$runtime"
-                      $output | Where-Object { $_ -match "error" } | ForEach-Object { Write-Host "  $_" }
-                      $failed++
-                    } else {
-                      $published++
-                    }
-                  }
-                }
-              }
-            }
-          }
-          Write-Host "Pre-publish complete: $published succeeded, $skipped skipped (libraries), $failed failed"
-
-          # Clean up intermediate RID-specific build artifacts to reduce artifact size.
-          $cleaned = 0
-          foreach ($searchPath in $searchPaths) {
-            $fullPath = Join-Path $basePath $searchPath
-            if (-not (Test-Path $fullPath)) { continue }
-            Get-ChildItem -Path $fullPath -Directory -Recurse -Filter $runtime | ForEach-Object {
-              Get-ChildItem -Path $_.FullName -Exclude "publish" | Remove-Item -Recurse -Force
-              $cleaned++
-            }
-          }
-          Write-Host "Cleaned intermediate build artifacts from $cleaned RID directories"
-        shell: powershell
-
-      - name: Archive Artifacts
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: unboundedintegrationtests
-          path: |
-            ${{ github.workspace }}\test.runsettings  # Force the artifacts to use repo root as root of package.
-            ${{ github.workspace }}\tests\Agent\IntegrationTests\**\bin\**\*
-            ${{ github.workspace }}\tests\Agent\IntegrationTests\**\Deploy\**\*
-            !${{ github.workspace }}\tests\Agent\IntegrationTests\**\obj\**\*
-          if-no-files-found: error
+    uses: ./.github/workflows/test_selection.yml
+    permissions: {}
+    with:
+      mode: all
 
   run-integration-tests:
-    needs: [build-integration-tests, get-test-namespaces]
     name: Run IntegrationTests
-    runs-on: windows-2025-vs2026
+    needs: [build-fullagent-msi, get-test-namespaces]
+    uses: ./.github/workflows/integration_tests.yml
     permissions:
-      contents: read   # required: a job-level block replaces the workflow-level one
-      id-token: write  # required for OIDC role assumption (LLM namespace only)
-    strategy:
-      matrix:
-        namespace: ${{ fromJson(needs.get-test-namespaces.outputs.integration-namespaces) }}
-      fail-fast: false # we don't want one test failure in one namespace to kill the other runs
-
-    env:
-      integration_tests_shared_project: ${{ github.workspace }}/tests/Agent/IntegrationTests/Shared
-      integration_tests_path: ${{ github.workspace }}/tests/Agent/IntegrationTests/IntegrationTests/bin/Release/net11.0
-      # Make this variable true to enable extra data-gathering and logging to help troubleshoot test failures, at the cost of additional time and resources
-      enhanced_logging: false
-      NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY: 1
-      NR_DOTNET_TEST_PREBUILT_APPS: 1 # use pre-published test app output instead of dotnet publish at runtime
-      azure_func_exe_path: C:\ProgramData\chocolatey\lib\azure-functions-core-tools\tools\func.exe
-      NEW_RELIC_AZURE_FUNCTION_LOG_LEVEL_OVERRIDE: 1 # enables profiler debug logs when testing an azure function
-      # Set an environment variable that the tests will use to set the application name.
-      CI_NEW_RELIC_APP_NAME: ${{ github.event_name == 'schedule' && 'DotNetIngestTracking' || '' }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0
-          filter: blob:none
-
-      - name: Disable TLS 1.3
-        run: |
-          $registryPath = "HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS 1.3\Client"
-          if(!(Test-Path $registryPath)) {
-            New-Item -Path $registryPath -Force
-          }
-          New-ItemProperty -Path $registryPath -Name "DisabledByDefault" -Value "1" -PropertyType DWORD -Force
-          New-ItemProperty -Path $registryPath -Name "Enabled" -Value "0" -PropertyType DWORD -Force
-        shell: powershell
-
-      - name: Create and trust .NET development SSL certificate
-        run: |
-          dotnet dev-certs https --clean
-          dotnet dev-certs https --export-path ./devcert.pfx --password "password1"
-          $pwd = ConvertTo-SecureString -String "password1" -Force -AsPlainText
-          Import-PfxCertificate -FilePath ./devcert.pfx -CertStoreLocation Cert:\LocalMachine\Root -Password $pwd
-          dotnet dev-certs https --check --trust
-        shell: powershell
-
-      - name: Set up secrets
-        env:
-          INTEGRATION_TEST_SECRETS: ${{ secrets.TEST_SECRETS }}
-        run: |
-          "$Env:INTEGRATION_TEST_SECRETS" | dotnet user-secrets set --project ${{ env.integration_tests_shared_project }}
-        shell: pwsh #this doesn't work with normal powershell due to UTF-8 BOM handling
-
-      # Bedrock tests authenticate via short-lived OIDC credentials rather than a
-      # long-lived access key (NR-601301).  Gated to the LLM namespace so that no
-      # other matrix job ever holds AWS credentials in its environment.
-      - name: Configure AWS credentials for Bedrock
-        if: matrix.namespace == 'LLM'
-        uses: aws-actions/configure-aws-credentials@e6de054238d6b7531b4efff3b6587d9aade6a06c # v6.2.3
-        with:
-          role-to-assume: ${{ secrets.AWS_BEDROCK_TEST_ROLE_ARN }}
-          role-duration-seconds: 900
-          # Must match DefaultSetting.AwsRegion in TEST_SECRETS.  A mismatch fails
-          # confusingly: STS succeeds in one region while the SDK calls Bedrock in
-          # another.
-          aws-region: us-west-2
-
-      - name: Download Agent Home Folders
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          name: homefolders
-          path: src/Agent
-
-      - name: Download Integration Test Artifacts
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          name: integrationtests
-          # Should not need a path because the integration test artifacts are archived with the full directory structure
-
-      - name: Install HostableWebCore Feature
-        if: | # only install for the required namespaces
-          matrix.namespace == 'AgentFeatures' || matrix.namespace == 'AgentLogs' || matrix.namespace == 'AgentMetrics' || matrix.namespace == 'BasicInstrumentation' || 
-          matrix.namespace == 'CatInbound' || matrix.namespace == 'CatOutbound' || matrix.namespace == 'CodeLevelMetrics' ||
-          matrix.namespace == 'CustomAttributes' || matrix.namespace == 'CustomInstrumentation' || matrix.namespace == 'DataTransmission' || 
-          matrix.namespace == 'DistributedTracing' || matrix.namespace == 'Errors' || matrix.namespace == 'HSM' || matrix.namespace == 'HttpClientInstrumentation' || matrix.namespace == 'HybridHttpContextStorage' ||
-          matrix.namespace == 'LLM' || matrix.namespace == 'MultiAppDomain' || matrix.namespace == 'Rejit.NetFramework' || matrix.namespace == 'RequestHandling' || matrix.namespace == 'RequestHeadersCapture.AspNet' ||
-          matrix.namespace == 'RequestHeadersCapture.AspNetCore' || matrix.namespace == 'RequestHeadersCapture.EnvironmentVariables' ||
-          matrix.namespace == 'RequestHeadersCapture.WCF' || matrix.namespace == 'WCF.Client.IIS.ASPDisabled' ||
-          matrix.namespace == 'WCF.Client.IIS.ASPEnabled' || matrix.namespace == 'WCF.Service.IIS.ASPDisabled' ||
-          matrix.namespace == 'WCF.Service.IIS.ASPEnabled'
-        run: |
-          Enable-WindowsOptionalFeature -Online -FeatureName IIS-HostableWebCore
-        shell: powershell
-
-      - name: Install Azure Functions Core Tools
-        if: matrix.namespace == 'AzureFunction'
-        run: |
-          choco install azure-functions-core-tools -y --params "'/x64'"
-        shell: powershell
-
-      - name: Install latest .NET 10 SDK
-        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
-        with:
-          dotnet-version: '10.0.x'
-          dotnet-quality: 'ga'
-
-      - name: Install .NET 11 Preview SDK
-        uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7 # v5.2.0
-        with:
-          dotnet-version: '11.0.x'
-          dotnet-quality: 'preview'
-
-      - name: Run Integration Tests
-        run: |
-          if ($Env:enhanced_logging -eq $True) {
-            Write-Host "List ports in use"
-            netstat -no
-          }
-
-          Write-Host "Run tests"
-
-          # Most integration tests can run in parallel with pre-built test apps.
-          # Some namespaces must remain serial because they use shared external tools
-          # that don't support concurrent instances (e.g., Azure Functions Core Tools
-          # func.exe crashes when multiple instances launch simultaneously due to shared
-          # state in storage emulator/lock files). To parallelize these, the shared tool
-          # contention would need to be resolved.
-          $noParallelNamespaces = @("AzureFunction")
-          $parallelize = "${{ inputs.parallelize_integration_tests }}"
-          if ($parallelize -eq "" -or $parallelize -eq "true") { $parallelize = $true } else { $parallelize = $false }
-          if ($noParallelNamespaces -contains "${{ matrix.namespace }}") { $parallelize = $false }
-          $json = Get-Content "${{ env.integration_tests_path }}/xunit.runner.json" | ConvertFrom-Json
-          $json | Add-Member -Name "parallelizeAssembly" -Value $parallelize -MemberType NoteProperty
-          $json | Add-Member -Name "parallelizeTestCollections" -Value $parallelize -MemberType NoteProperty
-          $json | ConvertTo-Json | Out-File "${{ env.integration_tests_path }}/xunit.runner.json"
-
-          # Retry once on failure to absorb transient infrastructure blips (e.g. port
-          # contention, SSL cert / tooling startup races, or a flaky test-app launch) that
-          # can surface as a spurious failure while the code under test is healthy. A
-          # retried-but-passing job still emits a ::warning:: so genuine regressions /
-          # flake churn stay visible in the UI.
-          $maxAttempts = 2
-          $attempt = 1
-          while ($true) {
-            & "${{ env.integration_tests_path }}/NewRelic.Agent.IntegrationTests.exe" -namespace NewRelic.Agent.IntegrationTests.${{ matrix.namespace }} -trx "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.trx"
-            $exitCode = $LASTEXITCODE
-            if ($exitCode -eq 0) {
-              if ($attempt -gt 1) {
-                Write-Host "::warning::Integration tests for ${{ matrix.namespace }} passed on attempt $attempt after a transient failure. Investigate if this recurs."
-                # Record the flaky retry to a marker file under RUNNER_TEMP, which the
-                # failure-artifact upload globs never collect. Reporting runs in the separate
-                # step below so that no secret is in scope for this step: HostedWebCore and
-                # other test hosts launched here write their environment to the console, and
-                # that console output is captured into the test results.
-                $marker = "$Env:RUNNER_TEMP\flaky-retry-${{ matrix.namespace }}.json"
-                @{ testType = "integrationTests"; testGroup = "${{ matrix.namespace }}" } | ConvertTo-Json | Out-File -FilePath $marker -Encoding UTF8
-              }
-              break
-            }
-            if ($attempt -ge $maxAttempts) {
-              Write-Host "Integration tests for ${{ matrix.namespace }} failed after $attempt attempt(s) (exit code $exitCode)."
-              exit $exitCode
-            }
-            Write-Host "Integration tests for ${{ matrix.namespace }} failed on attempt $attempt (exit code $exitCode); retrying once to absorb a possible transient blip..."
-            $attempt++
-            Start-Sleep -Seconds 10
-          }
-
-          if ($Env:enhanced_logging -eq $True) {
-            Write-Host "Get HostableWebCore errors (if any)"
-            Get-EventLog -LogName Application -Source HostableWebCore -ErrorAction:Ignore
-
-            Write-Host "Get .NET Runtime errors (if any)"
-            Get-EventLog -LogName Application -Source ".NET Runtime" -EntryType "Error","Warning" -ErrorAction:Ignore
-          }
-        shell: powershell
-
-      - name: Report flaky retry telemetry
-        if: always()
-        continue-on-error: true
-        env:
-          NR_CI_INGEST_KEY: ${{ secrets.NR_CI_INGEST_KEY }}
-          NR_CI_ACCOUNT_ID: ${{ secrets.NR_CI_ACCOUNT_ID }}
-          CI_BRANCH: ${{ github.ref_name }}
-          CI_COMMIT: ${{ github.sha }}
-          CI_RUN_ID: ${{ github.run_id }}
-          CI_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          CI_TRIGGER: ${{ github.event_name }}
-        run: |
-          $marker = "$Env:RUNNER_TEMP\flaky-retry-${{ matrix.namespace }}.json"
-          if (Test-Path $marker) {
-            $info = Get-Content $marker | ConvertFrom-Json
-            $Env:RETRY_TEST_TYPE = $info.testType
-            $Env:RETRY_TEST_GROUP = $info.testGroup
-            & bash build/Scripts/report-flaky-retry.sh
-            Remove-Item $marker -Force -ErrorAction Ignore
-          }
-        shell: powershell
-
-      - name: Extract payload bytes log from TRX
-        if: inputs.aggregate_payload_data == true || github.event_name == 'schedule'
-        run: |
-          $trxFile = "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.trx"
-          $payloadLog = "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_payload_bytes.json"
-          $countLog = "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_test_count.json"
-
-          Write-Host "Checking for TRX file at: $trxFile"
-
-          $executedTests = 0
-
-          if (Test-Path $trxFile) {
-            $fileSize = (Get-Item $trxFile).Length
-            Write-Host "TRX file found. Size: $fileSize bytes"
-
-            # Read TRX file and extract lines containing payload information from Message elements
-            [xml]$trxContent = Get-Content $trxFile
-            $messageElements = $trxContent.SelectNodes("//*[local-name()='Output']/*[local-name()='TextMessages']/*[local-name()='Message']")
-
-            $payloadData = @{}
-            foreach ($message in $messageElements) {
-              foreach ($line in ($message.InnerText -split "\r?\n")) {
-                if ($line -match '^\s*(.+?):\s+([a-z0-9_]+):\s+(\d+)\s+bytes\s*$') {
-                  $className = $Matches[1].Trim()
-                  $category  = $Matches[2]
-                  $byteCount = [int]$Matches[3]
-                  if (-not $payloadData.ContainsKey($className)) { $payloadData[$className] = @{} }
-                  if ($payloadData[$className].ContainsKey($category)) {
-                    $payloadData[$className][$category] += $byteCount
-                  } else {
-                    $payloadData[$className][$category] = $byteCount
-                  }
-                }
-              }
-            }
-
-            Write-Host "Found $($payloadData.Count) payload log entries"
-
-            if ($payloadData.Count -gt 0) {
-              $payloadData | ConvertTo-Json -Depth 5 | Out-File -FilePath $payloadLog -Encoding UTF8
-              Write-Host "Extracted payload logs to $payloadLog"
-              Write-Host "Content:"
-              Get-Content $payloadLog | ForEach-Object { Write-Host $_ }
-            } else {
-              Write-Host "No payload byte logs found in TRX file"
-              @{} | ConvertTo-Json | Out-File -FilePath $payloadLog -Encoding UTF8
-            }
-
-            # Extract the executed-test count from the TRX ResultSummary/Counters (VSTest
-            # schema, emitted by the xUnit v3 runner). 'executed' counts tests that ran
-            # (any outcome), excluding skipped / not-executed.
-            $counters = $trxContent.SelectSingleNode("//*[local-name()='ResultSummary']/*[local-name()='Counters']")
-            if ($counters -ne $null -and $counters.executed) { $executedTests = [int]$counters.executed }
-          } else {
-            Write-Host "TRX file not found"
-            @{} | ConvertTo-Json | Out-File -FilePath $payloadLog -Encoding UTF8
-          }
-
-          Write-Host "Executed test count: $executedTests"
-          @{ executedTests = $executedTests } | ConvertTo-Json | Out-File -FilePath $countLog -Encoding UTF8
-        shell: powershell
-
-      - name: Upload payload bytes log
-        if: inputs.aggregate_payload_data == true || github.event_name == 'schedule'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: integration-payload-bytes-${{ matrix.namespace }}
-          path: |
-            C:\IntegrationTestWorkingDirectory\TestResults\*_payload_bytes.json
-            C:\IntegrationTestWorkingDirectory\TestResults\*_test_count.json
-          if-no-files-found: warn
-
-      - name: Archive integration test results on failure
-        if: ${{ failure() }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: integration-test-results-${{ matrix.namespace }}
-          path: |
-            C:\IntegrationTestWorkingDirectory\**\*.log
-            C:\IntegrationTestWorkingDirectory\TestResults\**\*TestResults.trx
-          if-no-files-found: error
+      contents: read
+      id-token: write
+    secrets: inherit
+    with:
+      namespaces: ${{ needs.get-test-namespaces.outputs.integration-namespaces }}
+      aggregate_payload_data: ${{ inputs.aggregate_payload_data == true || github.event_name == 'schedule' }}
+      parallelize: ${{ inputs.parallelize_integration_tests == true || github.event_name != 'workflow_dispatch' }}
 
   run-unbounded-tests:
-    needs: [build-unbounded-tests, get-test-namespaces]
     name: Run Unbounded Tests
-    runs-on: windows-2025-vs2026
-    strategy:
-      matrix:
-        namespace: ${{ fromJson(needs.get-test-namespaces.outputs.unbounded-namespaces) }}
-      fail-fast: false # we don't want one test failure in one namespace to kill the other runs
-
-    env:
-      integration_tests_shared_project: ${{ github.workspace }}/tests/Agent/IntegrationTests/Shared
-      unbounded_tests_path: ${{ github.workspace }}/tests/Agent/IntegrationTests/UnboundedIntegrationTests/bin/Release/net11.0
-      NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY: 1
-      NR_DOTNET_TEST_PREBUILT_APPS: 1 # use pre-published test app output instead of dotnet publish at runtime
-      # Make this variable true to enable extra data-gathering and logging to help troubleshoot test failures, at the cost of additional time and resources
-      enhanced_logging: false
-      # Set an environment variable that the tests will use to set the application name.
-      CI_NEW_RELIC_APP_NAME: ${{ github.event_name == 'schedule' && 'DotNetIngestTracking' || '' }}
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0
-          filter: blob:none
-
-      - name: Download Agent Home Folders
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          name: homefolders
-          path: src/Agent
-
-      - name: Download Unbounded Integration Test Artifacts
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          name: unboundedintegrationtests
-          # Should not need a path because the integration test artifacts are archived with the full directory structure
-
-      - name: Disable TLS 1.3
-        run: |
-          $registryPath = "HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS 1.3\Client"
-          if(!(Test-Path $registryPath)) {
-            New-Item -Path $registryPath -Force
-          }
-          New-ItemProperty -Path $registryPath -Name "DisabledByDefault" -Value "1" -PropertyType DWORD -Force
-          New-ItemProperty -Path $registryPath -Name "Enabled" -Value "0" -PropertyType DWORD -Force
-        shell: powershell
-
-      - name: Install HostableWebCore Feature
-        if: | # only install for the required namespaces
-          matrix.namespace == 'MongoDB' || matrix.namespace == 'Oracle'
-        run: |
-          Enable-WindowsOptionalFeature -Online -FeatureName IIS-HostableWebCore
-        shell: powershell
-
-      - name: Install MSMQ dependencies
-        if: matrix.namespace == 'Msmq'
-        run: |
-          Write-Host "Installing Msmq Features"
-          Enable-WindowsOptionalFeature -Online -FeatureName MSMQ-Server -All
-          Enable-WindowsOptionalFeature -Online -FeatureName MSMQ-HTTP -All
-          Enable-WindowsOptionalFeature -Online -FeatureName MSMQ-Triggers -All
-        shell: powershell
-
-      - name: Install MsSql dependencies
-        if: matrix.namespace == 'MsSql'
-        run: |
-          Write-Host "Installing MSSQL CLI"
-          $msi = "${{ github.workspace }}\build\Tools\sqlncli.msi"
-
-          # Wait on the installer itself instead of sleeping a fixed interval.
-          $proc = Start-Process msiexec.exe -Wait -PassThru -ArgumentList @(
-            '/i', "`"$msi`"", 'IACCEPTSQLNCLILICENSETERMS=YES', '/quiet', '/qn', '/norestart'
-          )
-          if ($proc.ExitCode -ne 0) {
-            throw "msiexec failed with exit code $($proc.ExitCode)."
-          }
-
-          # Assert the provider registered. Without this the job goes green and the failure
-          # resurfaces far away from its cause, inside an OleDb test connection.
-          $providers = (New-Object System.Data.OleDb.OleDbEnumerator).GetElements() | ForEach-Object { $_.SOURCES_NAME }
-          Write-Host "Registered OLE DB providers:"
-          $providers | ForEach-Object { Write-Host "  $_" }
-          if ($providers -notcontains 'SQLNCLI11') {
-            throw "SQLNCLI11 did not register. The OleDb tests connect with PROVIDER=SQLNCLI11."
-          }
-        shell: powershell
-
-      # SQL Server Native Client 11.0 (installed above) is still needed by the OleDb tests,
-      # which connect with PROVIDER=SQLNCLI11, so this adds a driver rather than replacing one.
-      #
-      # The ODBC tests connect with DRIVER={ODBC Driver 18 for SQL Server}. The runner image
-      # ships the Visual Studio component Microsoft.VisualStudio.Component.MSODBC.SQL, but the
-      # image readme records only that component's Visual Studio version, never the ODBC driver
-      # version it delivers, and the readme's standalone driver list carries OLE DB drivers
-      # rather than ODBC ones. So probe for the driver by the exact name the connection string
-      # asks for and install only when it is missing: no-op on an image that already has it,
-      # self-repairing on one that does not. The listing also records what the image really
-      # provides, which is otherwise undocumented.
-      - name: Ensure Microsoft ODBC Driver 18 for SQL Server
-        if: matrix.namespace == 'MsSql'
-        run: |
-          $ErrorActionPreference = 'Stop'
-          # Invoke-WebRequest is very slow on Windows PowerShell while it renders progress.
-          $ProgressPreference = 'SilentlyContinue'
-          $driverName = 'ODBC Driver 18 for SQL Server'
-
-          Write-Host "Registered 64-bit ODBC drivers on this image:"
-          Get-OdbcDriver -Platform '64-bit' | ForEach-Object { Write-Host "  $($_.Name)" }
-
-          if (Get-OdbcDriver -Name $driverName -Platform '64-bit' -ErrorAction SilentlyContinue) {
-            Write-Host "$driverName is already present. Nothing to install."
-            exit 0
-          }
-
-          # x64 only: the ODBC test fixtures (FWLatest, CoreLatest) both run 64-bit. This link
-          # resolves to the latest GA 18.x, so the installed patch version can move without
-          # notice. Pin the download.microsoft.com URL it redirects to if that ever matters.
-          $url = 'https://go.microsoft.com/fwlink/?linkid=2358430'
-          $msi = Join-Path $env:RUNNER_TEMP 'msodbcsql18.msi'
-
-          Write-Host "$driverName not found. Downloading from $url"
-          Invoke-WebRequest -Uri $url -OutFile $msi -UseBasicParsing
-
-          # A wrong or redirected-to-HTML URL yields a small text file that msiexec silently
-          # refuses, so fail here instead of hours later with a confusing IM002 in a test log.
-          $size = (Get-Item $msi).Length
-          Write-Host "Downloaded $size bytes"
-          if ($size -lt 1MB) {
-            throw "Expected an MSI of several MB but got $size bytes. The download URL is probably wrong."
-          }
-
-          $proc = Start-Process msiexec.exe -Wait -PassThru -ArgumentList @(
-            '/i', "`"$msi`"", '/quiet', '/qn', '/norestart', 'IACCEPTMSODBCSQLLICENSETERMS=YES'
-          )
-          if ($proc.ExitCode -ne 0) {
-            throw "msiexec failed with exit code $($proc.ExitCode)."
-          }
-
-          # Assert it registered. Without this the job goes green and the failure resurfaces as
-          # ERROR [IM002] Data source name not found, far away from its cause.
-          if (-not (Get-OdbcDriver -Name $driverName -Platform '64-bit' -ErrorAction SilentlyContinue)) {
-            Write-Host "Registered 64-bit ODBC drivers after install:"
-            Get-OdbcDriver -Platform '64-bit' | ForEach-Object { Write-Host "  $($_.Name)" }
-            throw "$driverName did not register. Try adding ADDLOCAL=ALL to the msiexec arguments."
-          }
-          Write-Host "$driverName installed."
-        shell: powershell
-
-      - name: Set up secrets
-        env:
-          INTEGRATION_TEST_SECRETS: ${{ secrets.TEST_SECRETS }}
-        run: |
-          "$Env:INTEGRATION_TEST_SECRETS" | dotnet user-secrets set --project ${{ env.integration_tests_shared_project }}
-        shell: pwsh #this doesn't work with normal powershell due to UTF-8 BOM handling
-        
-# save in case we move back to using the emulator
-#      - name: Start Local CosmosDB Emulator for CosmosDB Tests
-#        if: matrix.namespace == 'CosmosDB'
-#        run: |
-#          Write-Host "Launching Cosmos DB Emulator"
-#          Import-Module "$env:ProgramFiles\Azure Cosmos DB Emulator\PSModules\Microsoft.Azure.CosmosDB.Emulator"
-#          Start-CosmosDbEmulator
-#        shell: pwsh
-
-      - name: Install latest .NET 10 SDK
-        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
-        with:
-          dotnet-version: '10.0.x'
-          dotnet-quality: 'ga'
-
-      - name: Install .NET 11 Preview SDK
-        uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7 # v5.2.0
-        with:
-          dotnet-version: '11.0.x'
-          dotnet-quality: 'preview'
-
-      - name: Run Unbounded Integration Tests
-        run: |
-          if ($Env:enhanced_logging -eq $True) {
-            Write-Host "List ports in use"
-            netstat -no
-          }
-
-          # Most unbounded tests can run in parallel with pre-built test apps.
-          # Some namespaces must remain serial because they use shared external infrastructure
-          # with hard-coded object names (e.g., NServiceBus5 tests share MSMQ queues). To
-          # parallelize these, each test fixture would need isolated resources
-          # (per-test databases/tables/queues).
-          $noParallelNamespaces = @("NServiceBus", "NServiceBus5")
-          $parallelize = $noParallelNamespaces -notcontains "${{ matrix.namespace }}"
-          $json = Get-Content "${{ env.unbounded_tests_path }}/xunit.runner.json" | ConvertFrom-Json
-          $json | Add-Member -Name "parallelizeAssembly" -Value $parallelize -MemberType NoteProperty
-          $json | Add-Member -Name "parallelizeTestCollections" -Value $parallelize -MemberType NoteProperty
-          $json | ConvertTo-Json | Out-File "${{ env.unbounded_tests_path }}/xunit.runner.json"
-
-          # Retry once on failure to absorb transient WAN/infra blips between the GitHub-hosted
-          # runner and the Azure-hosted unbounded services (e.g. brief packet loss surfacing as a
-          # client command timeout while the service itself is healthy). A retried-but-passing job
-          # still emits a ::warning:: so genuine regressions / flake churn stay visible in the UI.
-          $maxAttempts = 2
-          $attempt = 1
-          while ($true) {
-            & "${{ env.unbounded_tests_path }}/NewRelic.Agent.UnboundedIntegrationTests.exe" -namespace NewRelic.Agent.UnboundedIntegrationTests.${{ matrix.namespace }} -trx "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.trx"
-            $exitCode = $LASTEXITCODE
-            if ($exitCode -eq 0) {
-              if ($attempt -gt 1) {
-                Write-Host "::warning::Unbounded tests for ${{ matrix.namespace }} passed on attempt $attempt after a transient failure. Investigate if this recurs."
-                # Record the flaky retry to a marker file under RUNNER_TEMP, which the
-                # failure-artifact upload globs never collect. Reporting runs in the separate
-                # step below so that no secret is in scope for this step: HostedWebCore and
-                # other test hosts launched here write their environment to the console, and
-                # that console output is captured into the test results.
-                $marker = "$Env:RUNNER_TEMP\flaky-retry-${{ matrix.namespace }}.json"
-                @{ testType = "unboundedTests"; testGroup = "${{ matrix.namespace }}" } | ConvertTo-Json | Out-File -FilePath $marker -Encoding UTF8
-              }
-              break
-            }
-            if ($attempt -ge $maxAttempts) {
-              Write-Host "Unbounded tests for ${{ matrix.namespace }} failed after $attempt attempt(s) (exit code $exitCode)."
-              exit $exitCode
-            }
-            Write-Host "Unbounded tests for ${{ matrix.namespace }} failed on attempt $attempt (exit code $exitCode); retrying once to absorb a possible transient blip..."
-            $attempt++
-            Start-Sleep -Seconds 10
-          }
-
-          if ($Env:enhanced_logging -eq $True) {
-            Write-Host "Get HostableWebCore errors (if any)"
-            Get-EventLog -LogName Application -Source HostableWebCore -ErrorAction:Ignore
-
-            Write-Host "Get .NET Runtime errors (if any)"
-            Get-EventLog -LogName Application -Source ".NET Runtime" -EntryType "Error","Warning" -ErrorAction:Ignore
-          }
-        shell: powershell
-
-      - name: Report flaky retry telemetry
-        if: always()
-        continue-on-error: true
-        env:
-          NR_CI_INGEST_KEY: ${{ secrets.NR_CI_INGEST_KEY }}
-          NR_CI_ACCOUNT_ID: ${{ secrets.NR_CI_ACCOUNT_ID }}
-          CI_BRANCH: ${{ github.ref_name }}
-          CI_COMMIT: ${{ github.sha }}
-          CI_RUN_ID: ${{ github.run_id }}
-          CI_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          CI_TRIGGER: ${{ github.event_name }}
-        run: |
-          $marker = "$Env:RUNNER_TEMP\flaky-retry-${{ matrix.namespace }}.json"
-          if (Test-Path $marker) {
-            $info = Get-Content $marker | ConvertFrom-Json
-            $Env:RETRY_TEST_TYPE = $info.testType
-            $Env:RETRY_TEST_GROUP = $info.testGroup
-            & bash build/Scripts/report-flaky-retry.sh
-            Remove-Item $marker -Force -ErrorAction Ignore
-          }
-        shell: powershell
-
-      - name: Extract payload bytes log from TRX
-        if: inputs.aggregate_payload_data == true || github.event_name == 'schedule'
-        run: |
-          $trxFile = "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.trx"
-          $payloadLog = "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_payload_bytes.json"
-          $countLog = "C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_test_count.json"
-
-          Write-Host "Checking for TRX file at: $trxFile"
-
-          $executedTests = 0
-
-          if (Test-Path $trxFile) {
-            $fileSize = (Get-Item $trxFile).Length
-            Write-Host "TRX file found. Size: $fileSize bytes"
-
-            # Read TRX file and extract lines containing payload information from Message elements
-            [xml]$trxContent = Get-Content $trxFile
-            $messageElements = $trxContent.SelectNodes("//*[local-name()='Output']/*[local-name()='TextMessages']/*[local-name()='Message']")
-
-            $payloadData = @{}
-            foreach ($message in $messageElements) {
-              foreach ($line in ($message.InnerText -split "\r?\n")) {
-                if ($line -match '^\s*(.+?):\s+([a-z0-9_]+):\s+(\d+)\s+bytes\s*$') {
-                  $className = $Matches[1].Trim()
-                  $category  = $Matches[2]
-                  $byteCount = [int]$Matches[3]
-                  if (-not $payloadData.ContainsKey($className)) { $payloadData[$className] = @{} }
-                  if ($payloadData[$className].ContainsKey($category)) {
-                    $payloadData[$className][$category] += $byteCount
-                  } else {
-                    $payloadData[$className][$category] = $byteCount
-                  }
-                }
-              }
-            }
-
-            Write-Host "Found $($payloadData.Count) payload log entries"
-
-            if ($payloadData.Count -gt 0) {
-              $payloadData | ConvertTo-Json -Depth 5 | Out-File -FilePath $payloadLog -Encoding UTF8
-              Write-Host "Extracted payload logs to $payloadLog"
-              Write-Host "Content:"
-              Get-Content $payloadLog | ForEach-Object { Write-Host $_ }
-            } else {
-              Write-Host "No payload byte logs found in TRX file"
-              @{} | ConvertTo-Json | Out-File -FilePath $payloadLog -Encoding UTF8
-            }
-
-            # Extract the executed-test count from the TRX ResultSummary/Counters (VSTest
-            # schema, emitted by the xUnit v3 runner). 'executed' counts tests that ran
-            # (any outcome), excluding skipped / not-executed.
-            $counters = $trxContent.SelectSingleNode("//*[local-name()='ResultSummary']/*[local-name()='Counters']")
-            if ($counters -ne $null -and $counters.executed) { $executedTests = [int]$counters.executed }
-          } else {
-            Write-Host "TRX file not found"
-            @{} | ConvertTo-Json | Out-File -FilePath $payloadLog -Encoding UTF8
-          }
-
-          Write-Host "Executed test count: $executedTests"
-          @{ executedTests = $executedTests } | ConvertTo-Json | Out-File -FilePath $countLog -Encoding UTF8
-        shell: powershell
-
-      - name: Upload payload bytes log
-        if: inputs.aggregate_payload_data == true || github.event_name == 'schedule'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: unbounded-payload-bytes-${{ matrix.namespace }}
-          path: |
-            C:\IntegrationTestWorkingDirectory\TestResults\*_payload_bytes.json
-            C:\IntegrationTestWorkingDirectory\TestResults\*_test_count.json
-          if-no-files-found: warn
-
-      - name: Archive unbounded test results on failure
-        if: ${{ failure() }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: unbounded-test-working-directory-${{ matrix.namespace }}
-          path: |
-            C:\IntegrationTestWorkingDirectory\**\*.log
-            C:\IntegrationTestWorkingDirectory\TestResults\**\*TestResults.trx
-          if-no-files-found: error
+    needs: [build-fullagent-msi, get-test-namespaces]
+    uses: ./.github/workflows/unbounded_tests.yml
+    permissions:
+      contents: read
+    secrets: inherit
+    with:
+      namespaces: ${{ needs.get-test-namespaces.outputs.unbounded-namespaces }}
+      aggregate_payload_data: ${{ inputs.aggregate_payload_data == true || github.event_name == 'schedule' }}
 
   create-package-rpm:
     needs: build-fullagent-msi
     name: Create RPM Package
     runs-on: ubuntu-22.04
+    permissions:
+      contents: read
     # Skipped for the Dependabot dispatch: signs with NEW_GPG_KEY, and needs an MSI artifact
     # that run does not produce. Compared against 'false' so an unresolved output skips this
     # job rather than running it with the signing key.
@@ -1237,7 +239,7 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
         with:
           disable-sudo: true
           egress-policy: audit
@@ -1299,6 +301,8 @@ jobs:
     needs: build-fullagent-msi
     name: Create Debian package
     runs-on: ubuntu-22.04
+    permissions:
+      contents: read
     # Skipped for the Dependabot dispatch: signs with NEW_GPG_KEY, and needs an MSI artifact
     # that run does not produce. Compared against 'false' so an unresolved output skips this
     # job rather than running it with the signing key.
@@ -1306,7 +310,7 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
         with:
           disable-sudo: true
           egress-policy: audit
@@ -1354,6 +358,8 @@ jobs:
     needs: [create-package-rpm, create-package-deb]
     name: Run ArtifactBuilder
     runs-on: windows-2022
+    permissions:
+      contents: read
     # No explicit gate needed: both packaging jobs it needs are skipped for the Dependabot
     # dispatch, which skips this job with them.
 
@@ -1412,11 +418,12 @@ jobs:
   integration-test-status:
     name: Check Test Matrix Status
     runs-on: ubuntu-latest
+    permissions: {}
     needs: [run-linux-container-tests, run-integration-tests, run-unbounded-tests]
     if: always()
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
         with:
           disable-sudo: true
           egress-policy: audit
@@ -1437,7 +444,7 @@ jobs:
       contents: read
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
         with:
           disable-sudo: true
           egress-policy: audit
@@ -1489,7 +496,7 @@ jobs:
       contents: read
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
         with:
           disable-sudo: true
           egress-policy: audit
@@ -1541,7 +548,7 @@ jobs:
       contents: read
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
         with:
           disable-sudo: true
           egress-policy: audit
@@ -1658,7 +665,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
         with:
           disable-sudo: true
           egress-policy: audit

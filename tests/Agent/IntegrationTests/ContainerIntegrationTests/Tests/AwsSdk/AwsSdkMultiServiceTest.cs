@@ -22,6 +22,7 @@ public class AwsSdkMultiServiceTest : NewRelicIntegrationTest<AwsSdkContainerMul
 
     private const string _expectedAccountId = "520056171328"; // matches the account ID parsed from the fake access key used in AwsSdkDynamoDBExerciser
     private const string _unxpectedAccountId = "520198777664"; // matches the account ID parsed from the fake access key used in AwsSdkSQSExerciser
+    private const string _region = "us-east-2"; // matches AuthenticationRegion in AwsSdkDynamoDBExerciser
 
 
     public AwsSdkMultiServiceTest(AwsSdkContainerMultiServiceTestFixture fixture, ITestOutputHelper output) : base(fixture)
@@ -61,8 +62,8 @@ public class AwsSdkMultiServiceTest : NewRelicIntegrationTest<AwsSdkContainerMul
         // select all span events having an Agent attribute with a key of "cloud.resource_id"
         var cloudResourceIdSpanEvents = spanEvents.Where(spanEvent => spanEvent.AgentAttributes.ContainsKey("cloud.resource_id")).ToList();
 
-        string expectedArn = $"arn:aws:dynamodb:(unknown):{_expectedAccountId}:table/{_tableName}";
-        string unExpectedArn = $"arn:aws:dynamodb:(unknown):{_unxpectedAccountId}:table/{_tableName}";
+        string expectedArn = $"arn:aws:dynamodb:{_region}:{_expectedAccountId}:table/{_tableName}";
+        string unExpectedArn = $"arn:aws:dynamodb:{_region}:{_unxpectedAccountId}:table/{_tableName}";
 
         // verify all span events contain the expected arn, and do not contain the unexpected arn and all are of category datastore
         Assert.Multiple(

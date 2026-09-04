@@ -48,16 +48,14 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter {
             _instrumentedFunctionNames->emplace(_X("GetAppDomainBoolean"));
             _instrumentedFunctionNames->emplace(_X("GetThreadLocalBoolean"));
             _instrumentedFunctionNames->emplace(_X("SetThreadLocalBoolean"));
-            _instrumentedFunctionNames->emplace(_X("GetMethodFromAppDomainStorageOrReflectionOrThrow"));
-            _instrumentedFunctionNames->emplace(_X("GetMethodFromAppDomainStorage"));
             _instrumentedFunctionNames->emplace(_X("GetMethodViaReflectionOrThrow"));
             _instrumentedFunctionNames->emplace(_X("GetTypeViaReflectionOrThrow"));
             _instrumentedFunctionNames->emplace(_X("LoadAssemblyOrThrow"));
             _instrumentedFunctionNames->emplace(_X("StoreMethodInAppDomainStorageOrThrow"));
-            _instrumentedFunctionNames->emplace(_X("GetAgentShimMethodFromAppDomainStorageOrReflectionOrThrow"));
             _instrumentedFunctionNames->emplace(_X("GetAgentMethodInvokerObject"));
             _instrumentedFunctionNames->emplace(_X("GetAgentShimFinishTracerDelegateFunc"));
             _instrumentedFunctionNames->emplace(_X("StoreAgentShimFinishTracerDelegateFunc"));
+            _instrumentedFunctionNames->emplace(_X("InvokeAgentShimFinishTracerDelegateFunc"));
             _instrumentedFunctionNames->emplace(_X("StoreAgentMethodInvokerFunc"));
             _instrumentedFunctionNames->emplace(_X("EnsureInitialized"));
             _instrumentedFunctionNames->emplace(_X("InvokeAgentMethodInvokerFunc"));

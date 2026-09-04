@@ -17,6 +17,7 @@ Debug is default -- never pass `-c Release`. It's slow; run in background or tee
 
 - **Never build a single `.csproj`.** `Core.csproj` and its dependents have a post-build step (ILRepack + `AssemblyModifier.exe`) whose ordering only the solution provides. Building one project alone yields `AssemblyModifier.exe not found`, exit code 3, or `$(SolutionDir)`/`*Undefined*` errors.
 - **Debug, never Release** (Release is for CI/releases).
+- **`IntegrationTests.sln` / `UnboundedIntegrationTests.sln` build with VS MSBuild**, not the `dotnet build` above; the `dotnet` SDK cannot build their legacy ASP.NET FW web apps. Invocation and required flags: [tests/CLAUDE.md](../../../tests/CLAUDE.md#building-the-solution).
 - **`Core.UnitTest` from the CLI needs `SolutionDir`** (VS sets it, `dotnet` doesn't), trailing backslash required. Both forms below pass the same value (`<repo-root>\`):
   ```bash
   # bash (Git Bash)

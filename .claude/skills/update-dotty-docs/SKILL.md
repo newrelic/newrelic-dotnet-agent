@@ -16,9 +16,25 @@ Every subagent prompt MUST tell the subagent to:
 - NOT invoke any skill and NOT spawn further subagents.
 - Return ONLY the compact schema specified - not raw command output.
 
-## Step 0: Prerequisites
+## Step 0: Prerequisites, then sync the docs fork
 
-Run `gh auth status`; if it fails, report the error and stop (covers gh-missing and not-authenticated). Git is assumed.
+1. Run `gh auth status`; if it fails, report the error and stop (covers
+   gh-missing and not-authenticated). Git is assumed.
+2. Capture the user's GitHub login: `gh api user --jq '.login'` -> `$GH_USER`.
+   Verify the fork exists: `gh api repos/$GH_USER/docs-website --jq '.full_name'`.
+   If no fork, stop (do not create one).
+3. Sync the fork's `develop` to `newrelic/docs-website:develop` before anything
+   else. The fork is often hundreds of commits behind, and a stale base makes
+   the later PR diff misleading:
+   ```
+   gh api --method POST repos/$GH_USER/docs-website/merge-upstream -f branch=develop
+   ```
+   Read `merge_type` in the response: `fast-forward` means it synced, `none`
+   with `"not behind the upstream"` means it was already current. Both are
+   success. Report which one to the user. Any other result - stop and report.
+
+This API call needs no clone, so it runs before Step 5 clones the fork. Do not
+sync with `git reset --hard`: settings deny it, and it needs a clone anyway.
 
 ## Step 1: Find the open Dotty PR
 
@@ -95,18 +111,16 @@ From the slim table (Step 2 & 3), for any major version change (e.g., 3.x -> 4.x
 
 ## Step 5: Prepare the docs repo
 
-1. Capture the user's GitHub login: `gh api user --jq '.login'` -> `$GH_USER`. Verify fork exists: `gh api repos/$GH_USER/docs-website --jq '.full_name'`. If no fork, stop (do not create one).
-2. Clone to a known path (not a bash tempdir - the path must survive across tool calls). Use `~/tmp/docs-website-dotty-<date>` or similar; **record the absolute path** for later steps.
-   ```
-   git clone --branch develop https://github.com/$GH_USER/docs-website.git <path>
-   cd <path>
-   git remote add upstream https://github.com/newrelic/docs-website.git
-   git fetch upstream develop
-   git reset --hard upstream/develop
-   git push origin develop
-   git checkout -b dotnet/dotty-updates-YYYY-MM-DD
-   ```
-   (`reset --hard` is safe - the fork's `develop` has no local commits to preserve.)
+Step 0 already synced the fork, so a plain clone of `develop` gives a current
+base. Clone to a known path (not a bash tempdir - the path must survive across
+tool calls). Use `C:\tmp\docs-website-dotty-<date>` or similar; **record the
+absolute path** for later steps.
+
+```
+git clone --branch develop https://github.com/$GH_USER/docs-website.git <path>
+cd <path>
+git checkout -b dotnet/dotty-updates-YYYY-MM-DD
+```
 
 All subsequent steps run inside the clone path.
 
@@ -158,7 +172,7 @@ use "latest supported library versions" phrasing. Branch name may keep `dotty`.*
 
 1. Commit: `chore(.net agent): Update compatibility docs for latest supported library versions`
 2. Push the branch to origin.
-3. Create PR against upstream:
+3. Create PR against upstream, **ready for review** (no `--draft`):
    ```
    gh pr create --repo newrelic/docs-website --base develop --head $GH_USER:<branch> \
      --title "chore(.net agent): Update compatibility docs for latest supported library versions" \

@@ -1,0 +1,58 @@
+name: Build Agent
+description: >
+  Builds FullAgent.sln in Release, computes the agent version from the built
+  NewRelic.Agent.Core.dll, and uploads the six agent home directories as the
+  "homefolders" artifact. The caller must check out the repository first.
+
+outputs:
+  agent-version:
+    description: 'FileVersion of the built NewRelic.Agent.Core.dll, e.g. 10.49.0.0'
+    value: ${{ steps.agentVersion.outputs.version }}
+
+runs:
+  using: composite
+  steps:
+    - name: Cache NuGet packages
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/Directory.Packages.props') }}
+        restore-keys: ${{ runner.os }}-nuget-
+
+    - name: Install latest .NET 10 SDK
+      uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+      with:
+        dotnet-version: '10.0.x'
+        dotnet-quality: 'ga'
+
+    - name: Install .NET 11 Preview SDK
+      uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7 # v5.2.0
+      with:
+        dotnet-version: '11.0.x'
+        dotnet-quality: 'preview'
+
+    - name: Build FullAgent.sln
+      run: |
+        Write-Host "dotnet build --force --configuration Release -p:AllowUnsafeBlocks=true ${{ github.workspace }}\FullAgent.sln"
+        dotnet build --force --configuration Release -p:AllowUnsafeBlocks=true ${{ github.workspace }}\FullAgent.sln
+      shell: powershell
+
+    - name: Create agentVersion
+      id: agentVersion
+      run: |
+        $agentVersion = (Get-Item "${{ github.workspace }}\src\_build\AnyCPU-Release\NewRelic.Agent.Core\net462\NewRelic.Agent.Core.dll").VersionInfo.FileVersion
+        echo "version=$agentVersion" >> $env:GITHUB_OUTPUT
+      shell: powershell
+        
+    - name: Archive FullAgent Home folders
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      with:
+        name: homefolders
+        path: |
+          ${{ github.workspace }}\src\Agent\newrelichome_x64
+          ${{ github.workspace }}\src\Agent\newrelichome_x64_coreclr
+          ${{ github.workspace }}\src\Agent\newrelichome_x64_coreclr_linux
+          ${{ github.workspace }}\src\Agent\newrelichome_arm64_coreclr_linux
+          ${{ github.workspace }}\src\Agent\newrelichome_x86
+          ${{ github.workspace }}\src\Agent\newrelichome_x86_coreclr
+        if-no-files-found: error
