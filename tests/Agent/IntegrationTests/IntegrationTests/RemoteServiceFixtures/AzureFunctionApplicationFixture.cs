@@ -29,9 +29,20 @@ public abstract class AzureFunctionApplicationFixture : RemoteApplicationFixture
     private const string Priority = "1.23456";
     private const string Timestamp = "1518469636025";
 
+    private readonly bool _inProc;
+
+    // func is instrumented as well as the worker, and it keeps logging after the
+    // worker goes quiet. Choosing the most recently written agent log therefore
+    // lands on func's log, which never holds the worker's transactions.
+    protected override string AgentLogFileName => _inProc
+        ? "newrelic_agent_func.log"
+        : "newrelic_agent_AzureFunctionApplication.log";
+
     protected AzureFunctionApplicationFixture(string functionNames, string targetFramework, bool enableAzureFunctionMode, bool isCoreApp = true, bool inProc = false)
         : base(new AzureFuncTool(inProc ? InProcApplicationDirectoryName : ApplicationDirectoryName, inProc ? InProcExecutableName : ExecutableName, targetFramework, ApplicationType.Bounded, true, isCoreApp, true, enableAzureFunctionMode, inProc))
     {
+        _inProc = inProc;
+
         CommandLineArguments = $"start --no-build --functions {functionNames} --language-worker ";
 
         CommandLineArguments += inProc ? "dotnet --dotnet " : "dotnet-isolated --dotnet-isolated ";
