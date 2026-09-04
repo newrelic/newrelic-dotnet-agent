@@ -293,15 +293,26 @@ jobs:
       - name: Install Azure Functions Core Tools
         if: matrix.namespace == 'AzureFunction'
         shell: bash
+        env:
+          # The native binary, not the npm package. The npm package installs a
+          # node shim that spawns the real host, so killing the process the
+          # fixture started leaves the host alive holding its output pipe.
+          FUNC_VERSION: 4.14.0
         run: |
-          npm install -g azure-functions-core-tools@4.14.0 --unsafe-perm true
-          func_path=$(command -v func)
-          if [ -z "$func_path" ]; then
-            echo "::error::Azure Functions Core Tools did not install; func is not on PATH."
+          base=https://github.com/Azure/azure-functions-core-tools/releases/download/$FUNC_VERSION
+          zip=Azure.Functions.Cli.linux-x64.$FUNC_VERSION.zip
+          curl -fsSL -o "$RUNNER_TEMP/$zip" "$base/$zip"
+          curl -fsSL -o "$RUNNER_TEMP/$zip.sha2" "$base/$zip.sha2"
+          echo "$(tr -d '\r\n ' < "$RUNNER_TEMP/$zip.sha2")  $RUNNER_TEMP/$zip" | sha256sum -c -
+          unzip -q "$RUNNER_TEMP/$zip" -d "$RUNNER_TEMP/func"
+          find "$RUNNER_TEMP/func" -name func -exec chmod +x {} +
+          func_path="$RUNNER_TEMP/func/func"
+          if [ ! -x "$func_path" ]; then
+            echo "::error::Azure Functions Core Tools did not install; $func_path is not executable."
             exit 1
           fi
           echo "azure_func_exe_path=$func_path" >> "$GITHUB_ENV"
-          echo "func resolved to $func_path"
+          "$func_path" --version
 
       - name: Run Integration Tests
         uses: ./.github/actions/run-host-tests

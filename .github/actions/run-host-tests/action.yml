@@ -102,16 +102,11 @@ runs:
         for serial in ${{ inputs.no-parallel-namespaces }}; do
           if [ "$serial" = "${{ inputs.namespace }}" ]; then parallelize=false; fi
         done
-        python3 - "$tests_path/xunit.runner.json" "$parallelize" <<'PY'
-        import json, sys
-        path, flag = sys.argv[1], sys.argv[2] == 'true'
-        with open(path) as fh:
-            doc = json.load(fh)
-        doc['parallelizeAssembly'] = flag
-        doc['parallelizeTestCollections'] = flag
-        with open(path, 'w') as fh:
-            json.dump(doc, fh, indent=2)
-        PY
+        runner_json="$tests_path/xunit.runner.json"
+        jq --argjson flag "$parallelize" \
+          '.parallelizeAssembly = $flag | .parallelizeTestCollections = $flag' \
+          "$runner_json" > "$runner_json.tmp"
+        mv "$runner_json.tmp" "$runner_json"
 
         trait_args=()
         if [ -n "${{ inputs.trait }}" ]; then trait_args=(-trait "${{ inputs.trait }}"); fi
