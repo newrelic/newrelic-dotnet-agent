@@ -43,6 +43,8 @@ runs:
     - name: Run tests (Windows)
       if: runner.os == 'Windows'
       shell: powershell
+      env:
+        NR_DOTNET_TEST_LIVE_LOG: '1' # fixture progress lines reach the log as they happen
       run: |
         $ErrorActionPreference = "Continue"
         $testsPath = "${{ inputs.tests-path }}"
@@ -92,6 +94,8 @@ runs:
     - name: Run tests (Linux)
       if: runner.os != 'Windows'
       shell: bash
+      env:
+        NR_DOTNET_TEST_LIVE_LOG: '1' # fixture progress lines reach the log as they happen
       run: |
         tests_path="${{ inputs.tests-path }}"
         namespace="${{ inputs.namespace-prefix }}.${{ inputs.namespace }}"
@@ -116,14 +120,20 @@ runs:
         attempt=1
         while true; do
           set +e
-          # Redirect rather than pipe to tee. A test app that outlives the test
-          # host, such as the Lambda test tool, inherits the pipe's write end, so
-          # tee never sees EOF and the step hangs after the run has finished.
+          # Redirect to a file, never a pipe. A test app that outlives the test
+          # host inherits a pipe's write end, so tee never sees EOF and the step
+          # hangs after the run has finished. tail reads the file instead, which
+          # streams the run live without handing anyone the host's stdout.
+          : > "$run_log"
           dotnet "$tests_path/${{ inputs.assembly-name }}.dll" \
-            -namespace "$namespace" "${trait_args[@]}" -trx "$trx" > "$run_log" 2>&1
+            -namespace "$namespace" "${trait_args[@]}" -trx "$trx" > "$run_log" 2>&1 &
+          test_pid=$!
+          tail -n +1 -f --pid="$test_pid" "$run_log" &
+          tail_pid=$!
+          wait "$test_pid"
           exit_code=$?
+          wait "$tail_pid" 2>/dev/null
           set -e
-          cat "$run_log"
           if [ "$exit_code" -eq 0 ]; then
             if [ "$attempt" -gt 1 ]; then
               echo "::warning::${{ inputs.test-type }} for ${{ inputs.namespace }} passed on attempt $attempt after a transient failure. Investigate if this recurs."
