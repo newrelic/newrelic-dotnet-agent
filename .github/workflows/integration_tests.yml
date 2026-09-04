@@ -79,6 +79,7 @@ jobs:
     name: Run IntegrationTests
     if: inputs.namespaces != '[]'
     runs-on: windows-2025-vs2026
+    timeout-minutes: 30 # the longest healthy lane runs 10 minutes; a hang must not burn the 6 hour default
     permissions:
       contents: read   # required: a job-level block replaces the workflow-level one
       id-token: write  # required for OIDC role assumption (LLM namespace only)
@@ -207,6 +208,7 @@ jobs:
           archive-paths: |
             C:\IntegrationTestWorkingDirectory\**\*.log
             C:\IntegrationTestWorkingDirectory\TestResults\**\*TestResults.trx
+            ${{ runner.temp }}\run-${{ matrix.namespace }}.log
           aggregate-payload-data: ${{ inputs.aggregate_payload_data == true || github.event_name == 'schedule' }}
           nr-ci-ingest-key: ${{ secrets.NR_CI_INGEST_KEY }}
           nr-ci-account-id: ${{ secrets.NR_CI_ACCOUNT_ID }}
@@ -216,6 +218,7 @@ jobs:
     name: Run IntegrationTests (Linux-Core)
     if: inputs.linux_namespaces != '[]'
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     permissions:
       contents: read
       id-token: write
@@ -291,7 +294,7 @@ jobs:
         if: matrix.namespace == 'AzureFunction'
         shell: bash
         run: |
-          npm install -g azure-functions-core-tools@4 --unsafe-perm true
+          npm install -g azure-functions-core-tools@4.14.0 --unsafe-perm true
           func_path=$(command -v func)
           if [ -z "$func_path" ]; then
             echo "::error::Azure Functions Core Tools did not install; func is not on PATH."
@@ -325,6 +328,7 @@ jobs:
           archive-paths: |
             /tmp/IntegrationTestWorkingDirectory/**/*.log
             ${{ env.test_results_path }}/**/*.trx
+            ${{ runner.temp }}/run-${{ matrix.namespace }}.log
           aggregate-payload-data: ${{ inputs.aggregate_payload_data == true || github.event_name == 'schedule' }}
           nr-ci-ingest-key: ${{ secrets.NR_CI_INGEST_KEY }}
           nr-ci-account-id: ${{ secrets.NR_CI_ACCOUNT_ID }}
@@ -334,6 +338,7 @@ jobs:
     name: Run IntegrationTests (Windows-Core Smoke)
     if: inputs.smoke_namespaces != '[]'
     runs-on: windows-2025-vs2026
+    timeout-minutes: 30
     permissions:
       contents: read   # required: a job-level block replaces the workflow-level one
       id-token: write  # required for OIDC role assumption (LLM namespace only)
@@ -462,6 +467,7 @@ jobs:
           archive-paths: |
             C:\IntegrationTestWorkingDirectory\**\*.log
             C:\IntegrationTestWorkingDirectory\TestResults\**\*TestResults.trx
+            ${{ runner.temp }}\run-${{ matrix.namespace }}.log
           aggregate-payload-data: ${{ inputs.aggregate_payload_data == true || github.event_name == 'schedule' }}
           nr-ci-ingest-key: ${{ secrets.NR_CI_INGEST_KEY }}
           nr-ci-account-id: ${{ secrets.NR_CI_ACCOUNT_ID }}
