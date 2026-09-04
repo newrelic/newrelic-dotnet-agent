@@ -294,6 +294,21 @@ jobs:
             10.0.x
           dotnet-quality: 'ga'
 
+      - name: Create and trust .NET development SSL certificate
+        shell: bash
+        # MockNewRelic serves HTTPS on localhost. Do not gate on
+        # "dev-certs https --check --trust": on Linux it reports the cert
+        # untrusted (exit 7) even when HttpClient trusts it through the CA store.
+        run: |
+          dotnet dev-certs https --clean
+          dotnet dev-certs https --export-path "$RUNNER_TEMP/devcert.crt" --format Pem --no-password
+          sudo cp "$RUNNER_TEMP/devcert.crt" /usr/local/share/ca-certificates/aspnet-devcert.crt
+          sudo update-ca-certificates
+          if [ ! -e /etc/ssl/certs/aspnet-devcert.pem ]; then
+            echo "::error::The dev certificate did not land in the system CA store."
+            exit 1
+          fi
+
       - name: Install Azure Functions Core Tools
         if: matrix.namespace == 'AzureFunction'
         shell: bash
