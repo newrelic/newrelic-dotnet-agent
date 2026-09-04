@@ -33,10 +33,21 @@ public abstract class AzureFunctionApplicationFixture : RemoteApplicationFixture
 
     // func is instrumented as well as the worker, and it keeps logging after the
     // worker goes quiet. Choosing the most recently written agent log therefore
-    // lands on func's log, which never holds the worker's transactions.
-    protected override string AgentLogFileName => _inProc
-        ? "newrelic_agent_func.log"
-        : "newrelic_agent_AzureFunctionApplication.log";
+    // lands on func's log, which never holds the worker's transactions. A test
+    // that names its own log file through SetLogFileName still wins.
+    protected override string AgentLogFileName
+    {
+        get
+        {
+            var configuredName = base.AgentLogFileName;
+            if (!string.IsNullOrEmpty(configuredName))
+            {
+                return configuredName;
+            }
+
+            return _inProc ? "newrelic_agent_func.log" : "newrelic_agent_AzureFunctionApplication.log";
+        }
+    }
 
     protected AzureFunctionApplicationFixture(string functionNames, string targetFramework, bool enableAzureFunctionMode, bool isCoreApp = true, bool inProc = false)
         : base(new AzureFuncTool(inProc ? InProcApplicationDirectoryName : ApplicationDirectoryName, inProc ? InProcExecutableName : ExecutableName, targetFramework, ApplicationType.Bounded, true, isCoreApp, true, enableAzureFunctionMode, inProc))
