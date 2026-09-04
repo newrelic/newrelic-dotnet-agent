@@ -20,6 +20,7 @@ public class Class_WrapperService
     private const uint EmptyTracerArgs = 0;
     private const uint AsyncTracerArgs = 1 << 23;
     private const uint AttributeInstrumentation = 1 << 20;
+    private const uint RuntimeAsyncTracerArgs = 1 << 19;
 
     private WrapperService _wrapperService;
 
@@ -339,4 +340,128 @@ public class Class_WrapperService
             Assert.That(logging.HasMessageThatContains("is not supported"), Is.False);
         }
     }
+
+    #region runtime-async (NR-610232)
+
+    // Test subjects for the normalizer's reflection. The normalizer reads only the declared
+    // return type, so ordinary methods stand in faithfully for runtime-async ones.
+    public Task<int> RuntimeAsyncTaskOfIntMethod() => Task.FromResult(0);
+
+    public Task RuntimeAsyncTaskMethod() => Task.CompletedTask;
+
+    public int RuntimeAsyncUnclassifiableMethod() => 0;
+
+    [Test]
+    public void BeforeWrappedMethod_TreatsClassifiableRuntimeAsyncMethodAsAsync()
+    {
+        InstrumentedMethodInfo capturedInfo = null;
+        Mock.Arrange(() => _wrapperMap.Get(Arg.IsAny<InstrumentedMethodInfo>()))
+            .Returns((InstrumentedMethodInfo info) =>
+            {
+                capturedInfo = info;
+                return new TrackedWrapper(Mock.Create<IWrapper>());
+            });
+
+        _wrapperService.BeforeWrappedMethod(typeof(Class_WrapperService), nameof(RuntimeAsyncTaskOfIntMethod),
+            string.Empty, new object(), new object[0], "MyTracer", null, RuntimeAsyncTracerArgs, 100);
+
+        Assert.That(capturedInfo.IsAsync, Is.True);
+    }
+
+    [Test]
+    public void BeforeWrappedMethod_DoesNotTreatUnclassifiableRuntimeAsyncMethodAsAsync()
+    {
+        InstrumentedMethodInfo capturedInfo = null;
+        Mock.Arrange(() => _wrapperMap.Get(Arg.IsAny<InstrumentedMethodInfo>()))
+            .Returns((InstrumentedMethodInfo info) =>
+            {
+                capturedInfo = info;
+                return new TrackedWrapper(Mock.Create<IWrapper>());
+            });
+
+        _wrapperService.BeforeWrappedMethod(typeof(Class_WrapperService), nameof(RuntimeAsyncUnclassifiableMethod),
+            string.Empty, new object(), new object[0], "MyTracer", null, RuntimeAsyncTracerArgs, 101);
+
+        Assert.That(capturedInfo.IsAsync, Is.False);
+    }
+
+    [Test]
+    public void BeforeWrappedMethod_NormalizesRuntimeAsyncResultToACompletedTask()
+    {
+        object capturedResult = null;
+        ArrangeWrapperCapturingAfterDelegateResult(r => capturedResult = r);
+
+        var afterWrappedMethod = _wrapperService.BeforeWrappedMethod(typeof(Class_WrapperService),
+            nameof(RuntimeAsyncTaskOfIntMethod), string.Empty, new object(), new object[0],
+            "MyTracer", null, RuntimeAsyncTracerArgs, 102);
+
+        afterWrappedMethod(42, null);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(capturedResult, Is.TypeOf<Task<int>>());
+            Assert.That(((Task<int>)capturedResult).Result, Is.EqualTo(42));
+            Assert.That(((Task<int>)capturedResult).IsCompleted, Is.True);
+        });
+    }
+
+    [Test]
+    public void BeforeWrappedMethod_NormalizesVoidEffectiveRuntimeAsyncResult()
+    {
+        object capturedResult = null;
+        ArrangeWrapperCapturingAfterDelegateResult(r => capturedResult = r);
+
+        var afterWrappedMethod = _wrapperService.BeforeWrappedMethod(typeof(Class_WrapperService),
+            nameof(RuntimeAsyncTaskMethod), string.Empty, new object(), new object[0],
+            "MyTracer", null, RuntimeAsyncTracerArgs, 103);
+
+        afterWrappedMethod(null, null);
+
+        Assert.That(capturedResult, Is.SameAs(Task.CompletedTask));
+    }
+
+    [Test]
+    public void BeforeWrappedMethod_LeavesTheResultAlone_WhenAnExceptionWasThrown()
+    {
+        // exception != null routes to onFailure, which ends the segment synchronously. That is
+        // already correct for runtime-async, so the result must not be rewritten.
+        object capturedResult = null;
+        var thrown = new InvalidOperationException("boom");
+        ArrangeWrapperCapturingAfterDelegateResult(r => capturedResult = r);
+
+        var afterWrappedMethod = _wrapperService.BeforeWrappedMethod(typeof(Class_WrapperService),
+            nameof(RuntimeAsyncTaskOfIntMethod), string.Empty, new object(), new object[0],
+            "MyTracer", null, RuntimeAsyncTracerArgs, 104);
+
+        afterWrappedMethod(null, thrown);
+
+        Assert.That(capturedResult, Is.Null);
+    }
+
+    [Test]
+    public void BeforeWrappedMethod_LeavesTheResultAlone_WhenNotRuntimeAsync()
+    {
+        object capturedResult = null;
+        ArrangeWrapperCapturingAfterDelegateResult(r => capturedResult = r);
+
+        var afterWrappedMethod = _wrapperService.BeforeWrappedMethod(typeof(Class_WrapperService),
+            nameof(RuntimeAsyncTaskOfIntMethod), string.Empty, new object(), new object[0],
+            "MyTracer", null, EmptyTracerArgs, 105);
+
+        afterWrappedMethod(42, null);
+
+        Assert.That(capturedResult, Is.EqualTo(42));
+    }
+
+    private void ArrangeWrapperCapturingAfterDelegateResult(Action<object> capture)
+    {
+        var wrapper = Mock.Create<IWrapper>();
+        Mock.Arrange(() => wrapper.BeforeWrappedMethod(Arg.IsAny<InstrumentedMethodCall>(),
+                Arg.IsAny<IAgent>(), Arg.IsAny<ITransaction>()))
+            .Returns(new AfterWrappedMethodDelegate((result, _) => capture(result)));
+        Mock.Arrange(() => _wrapperMap.Get(Arg.IsAny<InstrumentedMethodInfo>()))
+            .Returns(new TrackedWrapper(wrapper));
+    }
+
+    #endregion
 }

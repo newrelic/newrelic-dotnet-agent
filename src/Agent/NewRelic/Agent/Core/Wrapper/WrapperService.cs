@@ -35,11 +35,13 @@ public class WrapperService : IWrapperService
     {
         public readonly InstrumentedMethodInfo instrumentedMethodInfo;
         public readonly TrackedWrapper wrapper;
+        public readonly Func<object, Task> resultNormalizer;
 
-        public InstrumentedMethodInfoWrapper(InstrumentedMethodInfo instrumentedMethodInfo, TrackedWrapper wrapper)
+        public InstrumentedMethodInfoWrapper(InstrumentedMethodInfo instrumentedMethodInfo, TrackedWrapper wrapper, Func<object, Task> resultNormalizer)
         {
             this.wrapper = wrapper;
             this.instrumentedMethodInfo = instrumentedMethodInfo;
+            this.resultNormalizer = resultNormalizer;
         }
     }
 
@@ -70,15 +72,47 @@ public class WrapperService : IWrapperService
     {
         InstrumentedMethodInfo instrumentedMethodInfo = default(InstrumentedMethodInfo);
         TrackedWrapper trackedWrapper;
+        Func<object, Task> resultNormalizer;
         if (_functionIdToWrapper.TryGetValue(functionId, out InstrumentedMethodInfoWrapper methodAndWrapper))
         {
             instrumentedMethodInfo = methodAndWrapper.instrumentedMethodInfo;
             trackedWrapper = methodAndWrapper.wrapper;
+            resultNormalizer = methodAndWrapper.resultNormalizer;
         }
         else
         {
             bool isCustom = KnownCustomTracerNames.Contains(tracerFactoryName);
             var isAsync = TracerArgument.IsAsync(tracerArguments);
+
+            // A .NET 11 runtime-async method is async in every way the wrappers care about, but its
+            // IL body returns the unwrapped result rather than a Task, so the profiler deliberately
+            // withholds TracerFlags.Async. Build a normalizer that restores the Task the wrappers
+            // expect; only if that succeeds may we call the method async, because IsAsync is a
+            // promise about the result slot and not a description of the method. See NR-610232.
+            var isRuntimeAsync = TracerArgument.IsRuntimeAsync(tracerArguments);
+            var normalization = isRuntimeAsync
+                ? RuntimeAsyncResultNormalizer.TryCreate(type, methodName, argumentSignature)
+                : null;
+            resultNormalizer = normalization?.Normalize;
+
+            if (normalization != null)
+            {
+                isAsync = true;
+
+                if (!normalization.IsExactlyTyped)
+                {
+                    // Open generic result type -- Task<object> was substituted. Harmless for every
+                    // current wrapper, but this line is the only signal if a wrapper ever pairs a
+                    // typed onComplete with a generic method, which would fail silently.
+                    Log.Debug("Runtime-async method {0}.{1}({2}) has an open generic result type; using Task<object> for result normalization.",
+                        type.FullName, methodName, argumentSignature);
+                }
+            }
+            else if (isRuntimeAsync)
+            {
+                Log.Debug("Could not classify the return shape of runtime-async method {0}.{1}({2}); instrumenting it with synchronous completion semantics.",
+                    type.FullName, methodName, argumentSignature);
+            }
 
             if (TracerArgument.IsFlagSet(tracerArguments, TracerFlags.AttributeInstrumentation))
             {
@@ -121,7 +155,7 @@ public class WrapperService : IWrapperService
                 }
             }
 
-            _functionIdToWrapper[functionId] = new InstrumentedMethodInfoWrapper(instrumentedMethodInfo, trackedWrapper);
+            _functionIdToWrapper[functionId] = new InstrumentedMethodInfoWrapper(instrumentedMethodInfo, trackedWrapper, resultNormalizer);
             GenerateSupportabilityMetrics(instrumentedMethodInfo, isCustom);
         }
 
@@ -188,10 +222,17 @@ public class WrapperService : IWrapperService
                 {
                     using (_agentTimerService.StartNew("AfterWrappedMethod", type.FullName, methodName))
                     {
+                        // A thrown exception routes to onFailure, which ends the segment
+                        // synchronously and is already correct for runtime-async. Only the success
+                        // result needs restoring to the Task shape the wrappers expect.
+                        var normalizedResult = resultNormalizer != null && exception == null
+                            ? resultNormalizer(result)
+                            : result;
+
                         // if the wrapper throws an exception when executing the post-method code, make sure the wrapper isn't called again in the future
                         try
                         {
-                            afterWrappedMethod(result, exception);
+                            afterWrappedMethod(normalizedResult, exception);
                             trackedWrapper.NoticeSuccess();
                         }
                         catch (Exception)
@@ -238,7 +279,9 @@ public class WrapperService : IWrapperService
         if (trackedWrapper.NumberOfConsecutiveFailures >= _maxConsecutiveFailures)
         {
             _agentHealthReporter.ReportWrapperShutdown(trackedWrapper.Wrapper, instrumentedMethodCall.MethodCall.Method);
-            _functionIdToWrapper[functionId] = new InstrumentedMethodInfoWrapper(instrumetedMethodInfo, _wrapperMap.GetNoOpWrapper());
+            // No normalizer: this entry replaces a misbehaving wrapper with the no-op wrapper, whose
+            // after-delegate ignores the result entirely, so there is nothing to normalize for.
+            _functionIdToWrapper[functionId] = new InstrumentedMethodInfoWrapper(instrumetedMethodInfo, _wrapperMap.GetNoOpWrapper(), null);
         }
     }
 
