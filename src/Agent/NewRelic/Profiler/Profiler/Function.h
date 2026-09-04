@@ -350,25 +350,36 @@ namespace NewRelic { namespace Profiler
 
             // This is the ONLY place TracerFlags::AsyncMethod is set, and it must stay gated on
             // AsyncStateMachineAttribute alone. A .NET 11 runtime-async method does not carry that
-            // attribute, so it correctly does NOT get the flag -- and must not be made to.
+            // attribute, so it correctly does NOT get this flag -- it gets RuntimeAsyncMethod
+            // (below) instead.
             //
-            // The flag reaches InstrumentedMethodInfo.IsAsync, which selects DefaultWrapperAsync
-            // over DefaultWrapper and returns Delegates.GetAsyncDelegateFor<Task>, i.e. it attaches
-            // a continuation to a Task the method returned. A runtime-async method's IL body has no
-            // Task to hand over: for Task the result is null (segment popped but never ended) and
-            // for Task<T> it is an unwrapped T that fails the `result is Task` check (segment
-            // neither popped nor ended). Both leak segments and leave the transaction unfinished --
-            // a crash traded for silent data corruption.
+            // The distinction matters because AsyncMethod is a promise about the result slot, not a
+            // description of the method: it tells the managed agent that the value passed to
+            // FinishTracer is a Task which has NOT yet completed, so the segment must be ended from
+            // a continuation on it. A runtime-async body never produces such a Task -- nothing for
+            // Task/ValueTask, an unwrapped T for Task<T>/ValueTask<T>. Setting AsyncMethod here
+            // would make DefaultWrapperAsync attach a continuation to a null or a boxed T, leaking
+            // the segment and stranding the transaction.
             //
-            // Synchronous finish semantics are the correct ones here: under runtime-async the
-            // instrumented method IS the async body, so the injected FinishTracer call after the
-            // body already runs at async completion. See NR-610232 and RuntimeAsyncReturnType.h.
+            // WrapperService restores that promise for RuntimeAsyncMethod methods by synthesising a
+            // completed Task from the real result, and only then treats them as async. See
+            // NR-610232, RuntimeAsyncReturnType.h, and Core/Wrapper/RuntimeAsyncResultNormalizer.cs.
             HRESULT attributeResult = _metaDataImport->GetCustomAttributeByName(_metaDataToken, _X("System.Runtime.CompilerServices.AsyncStateMachineAttribute"), (const void**)&pVal, &cbVal);
             // It is not safe for us to use the SUCCEEDED macro on the result returned from GetCustomAttributeByName
             if (attributeResult == S_OK)
             {
                 LogDebug(L"Async method detected: ", this->ToString());
                 _tracerFlags |= NewRelic::Profiler::Configuration::TracerFlags::AsyncMethod;
+            }
+
+            // Runtime-async is signalled by a method impl flag rather than an attribute. Test the
+            // member directly instead of calling the virtual IsRuntimeAsync() -- _methodImplFlags is
+            // initialised in the member-init list so it is already valid here, and this avoids a
+            // virtual dispatch from inside a constructor.
+            if ((_methodImplFlags & CorMethodImplAsync) != 0)
+            {
+                LogDebug(L"Runtime-async method detected: ", this->ToString());
+                _tracerFlags |= NewRelic::Profiler::Configuration::TracerFlags::RuntimeAsyncMethod;
             }
 
             mdAssembly mda = 0;
