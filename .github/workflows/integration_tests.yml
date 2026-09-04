@@ -71,7 +71,6 @@ jobs:
         with:
           solution-path: tests/Agent/IntegrationTests/IntegrationTests.NetCore.sln
           search-paths: Applications SharedApplications
-          skip-projects: AzureFunctionApplication AzureFunctionInProcApplication
           artifact-name: integrationtests-linux
 
   run-integration-tests:
