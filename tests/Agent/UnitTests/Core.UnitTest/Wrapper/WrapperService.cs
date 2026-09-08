@@ -453,6 +453,44 @@ public class Class_WrapperService
         Assert.That(capturedResult, Is.EqualTo(42));
     }
 
+    [Test]
+    public void BeforeWrappedMethod_PropagatesIsRuntimeAsyncToInstrumentedMethodInfo()
+    {
+        InstrumentedMethodInfo capturedInfo = null;
+        Mock.Arrange(() => _wrapperMap.Get(Arg.IsAny<InstrumentedMethodInfo>()))
+            .Returns((InstrumentedMethodInfo info) =>
+            {
+                capturedInfo = info;
+                return new TrackedWrapper(Mock.Create<IWrapper>());
+            });
+
+        _wrapperService.BeforeWrappedMethod(typeof(Class_WrapperService), nameof(RuntimeAsyncTaskOfIntMethod),
+            string.Empty, new object(), new object[0], "MyTracer", null, RuntimeAsyncTracerArgs, 106);
+
+        Assert.That(capturedInfo.IsRuntimeAsync, Is.True);
+    }
+
+    [Test]
+    public void BeforeWrappedMethod_IsRuntimeAsyncIsFalse_ForStateMachineAsyncMethods()
+    {
+        InstrumentedMethodInfo capturedInfo = null;
+        Mock.Arrange(() => _wrapperMap.Get(Arg.IsAny<InstrumentedMethodInfo>()))
+            .Returns((InstrumentedMethodInfo info) =>
+            {
+                capturedInfo = info;
+                return new TrackedWrapper(Mock.Create<IWrapper>());
+            });
+
+        _wrapperService.BeforeWrappedMethod(typeof(Class_WrapperService), nameof(RuntimeAsyncTaskOfIntMethod),
+            string.Empty, new object(), new object[0], "MyTracer", null, AsyncTracerArgs, 107);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(capturedInfo.IsRuntimeAsync, Is.False);
+            Assert.That(capturedInfo.IsAsync, Is.True);
+        });
+    }
+
     private void ArrangeWrapperCapturingAfterDelegateResult(Action<object> capture)
     {
         var wrapper = Mock.Create<IWrapper>();
