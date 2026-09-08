@@ -10,27 +10,17 @@ using Xunit;
 namespace NewRelic.Agent.ContainerIntegrationTests;
 
 /// <summary>
-/// Assembly-level fixture that removes orphaned docker networks left behind by container
-/// test fixtures once ALL tests in this assembly have finished running.
-///
-/// This intentionally replaces the old per-fixture, unscoped "docker network prune -f" call
-/// that used to run inside ContainerApplication.CleanupContainer() before every fixture start
-/// (and on the retry path). With many fixtures starting/retrying in parallel, that global
-/// prune would delete another fixture's just-created compose network in the window between
-/// network creation and container attach, causing
-/// "Error response from daemon: network &lt;project&gt;_default not found" flakes. Running
-/// the prune exactly once, after every test has completed, removes that race entirely.
+/// Assembly-level fixture that removes orphaned docker networks left behind by container test fixtures
+/// once ALL tests in this assembly have finished running. A global prune run per-fixture (or mid-run) would
+/// race and delete another fixture's just-created compose network before it attaches, causing
+/// "network &lt;project&gt;_default not found" flakes -- running it once, after everything completes, avoids that.
 /// </summary>
 public sealed class ContainerNetworkPruneFixture : IDisposable
 {
     public void Dispose()
     {
-        // Never run this in CI. Even scoped to "after all tests", a global prune only makes
-        // sense for a single dev-laptop-style run of this assembly. On CI, other jobs/agents
-        // sharing the same docker daemon (or a future change reintroducing parallel assemblies)
-        // could still be relying on a network we would delete out from under them - the exact
-        // class of race this fixture exists to avoid. Local/dev runs are single-assembly and
-        // safe to clean up after.
+        // CI runs multiple jobs/agents against the same docker daemon, so even a post-run global prune
+        // could delete a network another job still needs. Only single-assembly local/dev runs are safe.
         if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("GITHUB_ACTIONS")))
         {
             return;

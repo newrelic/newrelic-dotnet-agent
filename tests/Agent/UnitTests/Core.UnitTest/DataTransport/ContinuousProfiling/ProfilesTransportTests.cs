@@ -1,0 +1,484 @@
+// Copyright 2020 New Relic, Inc. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
+
+using Google.Protobuf;
+using NewRelic.Agent.Core.AgentHealth;
+using NewRelic.Agent.Core.DataTransport.ContinuousProfiling;
+using NewRelic.Agent.Core.Logging;
+using NewRelic.Agent.Extensions.Logging;
+using Newtonsoft.Json.Linq;
+using NUnit.Framework;
+using OpenTelemetry.Proto.Collector.Profiles.V1Development;
+using OpenTelemetry.Proto.Common.V1;
+using OpenTelemetry.Proto.Profiles.V1Development;
+using OpenTelemetry.Proto.Resource.V1;
+using Telerik.JustMock;
+
+namespace NewRelic.Agent.Core.UnitTest.DataTransport.ContinuousProfiling;
+
+[TestFixture]
+public class ProfilesTransportTests
+{
+    private ILogger _nrLogger;
+
+    [SetUp]
+    public void SetUp()
+    {
+        // The agent's Log facade is independent of Serilog's static logger; initialize it so calls are mockable.
+        _nrLogger = Mock.Create<ILogger>();
+        Log.Initialize(_nrLogger);
+    }
+
+    [TearDown]
+    public void TearDown()
+    {
+        Log.Initialize(new NoOpLogger());
+        AuditLog.IsAuditLogEnabled = false;
+    }
+
+    [Test]
+    public void Send_logs_partial_success_at_finest_when_rejected_profiles_reported()
+    {
+        var transport = new ProfilesTransport(
+            (bytes, endpoint) => new ProfilesSendResult(true, 200, string.Empty, 3, "schema drift"),
+            "http://unused", null);
+
+        transport.Send(BuildNonEmptyRequest());
+
+        // Log.Finest(message, args) keeps the format template and args separate -- match the template
+        // and assert the substituted values landed in args, not in the (still-unformatted) message string.
+        Mock.Assert(() => _nrLogger.Finest(
+                Arg.Matches<string>(m => m.Contains("partial success")),
+                Arg.Matches<object[]>(a => System.Linq.Enumerable.Contains(a, (object)3L) && System.Linq.Enumerable.Contains(a, (object)"schema drift"))),
+            Occurs.Once());
+    }
+
+    [Test]
+    public void Send_does_not_log_partial_success_when_none_reported()
+    {
+        var transport = new ProfilesTransport(
+            (bytes, endpoint) => new ProfilesSendResult(true, 200, string.Empty),
+            "http://unused", null);
+
+        transport.Send(BuildNonEmptyRequest());
+
+        Mock.Assert(() => _nrLogger.Finest(Arg.Matches<string>(m => m.Contains("partial success")), Arg.IsAny<object[]>()), Occurs.Never());
+    }
+
+    [Test]
+    public void Send_does_not_flip_accepted_when_partial_success_reports_rejections()
+    {
+        var transport = new ProfilesTransport(
+            (bytes, endpoint) => new ProfilesSendResult(true, 200, string.Empty, 3, "schema drift"),
+            "http://unused", null);
+
+        Assert.That(transport.Send(BuildNonEmptyRequest()), Is.True, "Partial success is diagnostics only; Accepted stays HTTP-status-only.");
+    }
+
+    [Test]
+    public void Send_invokes_http_dispatch_with_the_serialized_request_bytes_and_endpoint()
+    {
+        byte[] dispatchedBytes = null;
+        string dispatchedEndpoint = null;
+        var transport = new ProfilesTransport((bytes, endpoint) =>
+        {
+            dispatchedBytes = bytes;
+            dispatchedEndpoint = endpoint;
+            return new ProfilesSendResult(true, 200, string.Empty);
+        }, "https://otlp.nr-data.net/v1/profiles", null);
+
+        var request = BuildNonEmptyRequest();
+        transport.Send(request);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(dispatchedEndpoint, Is.EqualTo("https://otlp.nr-data.net/v1/profiles"));
+            Assert.That(dispatchedBytes, Is.EqualTo(request.ToByteArray()), "The dispatched bytes must be the serialized request.");
+        });
+    }
+
+    [Test]
+    public void Send_invokes_http_dispatch_even_for_an_empty_request()
+    {
+        var dispatched = false;
+        var transport = new ProfilesTransport((bytes, endpoint) => { dispatched = true; return new ProfilesSendResult(true, 200, string.Empty); }, "http://unused", null);
+
+        transport.Send(new ExportProfilesServiceRequest());
+
+        Assert.That(dispatched, Is.True, "Send must post whatever it built; gating happens upstream (CP-enabled), not here.");
+    }
+
+    [Test]
+    public void Send_does_not_throw_when_the_dispatch_reports_failure()
+    {
+        var transport = new ProfilesTransport((bytes, endpoint) => new ProfilesSendResult(false, 500, "error"), "http://unused", null);
+        Assert.That(() => transport.Send(BuildNonEmptyRequest()), Throws.Nothing);
+    }
+
+    [TestCase(401)]
+    [TestCase(403)]
+    public void Send_warns_on_the_first_auth_failure(int statusCode)
+    {
+        var transport = new ProfilesTransport((bytes, endpoint) => new ProfilesSendResult(false, statusCode, "error"), "http://unused", null);
+
+        transport.Send(BuildNonEmptyRequest());
+
+        Mock.Assert(() => _nrLogger.Warn(Arg.Matches<string>(m => m.Contains("license key")), Arg.IsAny<object[]>()), Occurs.Once());
+    }
+
+    [Test]
+    public void Send_does_not_repeat_the_auth_failure_warn_within_the_rate_limit_window()
+    {
+        var transport = new ProfilesTransport((bytes, endpoint) => new ProfilesSendResult(false, 401, "error"), "http://unused", null);
+
+        transport.Send(BuildNonEmptyRequest());
+        transport.Send(BuildNonEmptyRequest());
+        transport.Send(BuildNonEmptyRequest());
+
+        // Three consecutive failures within the same rate-limit window must warn exactly once.
+        Mock.Assert(() => _nrLogger.Warn(Arg.Matches<string>(m => m.Contains("license key")), Arg.IsAny<object[]>()), Occurs.Once());
+    }
+
+    [Test]
+    public void Send_repeats_the_rejection_warn_once_the_rate_limit_window_elapses()
+    {
+        // Stopwatch.Frequency ticks-per-second times 5 minutes plus 1 tick -- one tick past the window
+        // rather than a wall-clock sleep.
+        var windowTicks = (long)(System.TimeSpan.FromMinutes(5).TotalSeconds * System.Diagnostics.Stopwatch.Frequency);
+        var currentTicks = 1_000_000L;
+        var transport = new ProfilesTransport((bytes, endpoint) => new ProfilesSendResult(false, 401, "error"),
+            "http://unused", null, () => currentTicks);
+
+        transport.Send(BuildNonEmptyRequest()); // first rejection: warns, arms the window
+
+        currentTicks += windowTicks - 1;
+        transport.Send(BuildNonEmptyRequest()); // still inside the window: suppressed
+
+        currentTicks += 2; // now past the window
+        transport.Send(BuildNonEmptyRequest()); // window elapsed: warns again
+
+        Mock.Assert(() => _nrLogger.Warn(Arg.Matches<string>(m => m.Contains("license key")), Arg.IsAny<object[]>()), Occurs.Exactly(2));
+    }
+
+    [TestCase(404)]
+    [TestCase(413)]
+    [TestCase(400)]
+    [TestCase(500)]
+    public void Send_warns_on_the_first_non_auth_rejection_too(int statusCode)
+    {
+        // Every non-2xx rejection mode -- not just 401/403 -- must escalate above Debug on the first
+        // occurrence, otherwise a permanently-rejected drain produces zero delivered data silently.
+        var transport = new ProfilesTransport((bytes, endpoint) => new ProfilesSendResult(false, statusCode, "error"), "http://unused", null);
+
+        transport.Send(BuildNonEmptyRequest());
+
+        Mock.Assert(() => _nrLogger.Warn(Arg.Matches<string>(m => m.Contains("rejected")), Arg.IsAny<object[]>()), Occurs.Once());
+    }
+
+    [Test]
+    public void Send_uses_generic_rejection_wording_for_a_non_auth_status()
+    {
+        var transport = new ProfilesTransport((bytes, endpoint) => new ProfilesSendResult(false, 413, "error"), "http://unused", null);
+
+        transport.Send(BuildNonEmptyRequest());
+
+        Mock.Assert(() => _nrLogger.Warn(Arg.Matches<string>(m => !m.Contains("license key")), Arg.IsAny<object[]>()), Occurs.Once());
+    }
+
+    [Test]
+    public void Send_does_not_repeat_a_non_auth_rejection_warn_within_the_rate_limit_window()
+    {
+        var transport = new ProfilesTransport((bytes, endpoint) => new ProfilesSendResult(false, 404, "error"), "http://unused", null);
+
+        transport.Send(BuildNonEmptyRequest());
+        transport.Send(BuildNonEmptyRequest());
+        transport.Send(BuildNonEmptyRequest());
+
+        Mock.Assert(() => _nrLogger.Warn(Arg.IsAny<string>(), Arg.IsAny<object[]>()), Occurs.Once());
+    }
+
+    [Test]
+    public void Send_shares_the_rate_limit_window_across_different_rejection_statuses()
+    {
+        // A 401 warn and a subsequent 404 within the same window share one rate-limit gate per
+        // transport instance -- the second status must not warn again.
+        var statusCode = 401;
+        var transport = new ProfilesTransport((bytes, endpoint) => new ProfilesSendResult(false, statusCode, "error"), "http://unused", null);
+
+        transport.Send(BuildNonEmptyRequest());
+        statusCode = 404;
+        transport.Send(BuildNonEmptyRequest());
+
+        Mock.Assert(() => _nrLogger.Warn(Arg.IsAny<string>(), Arg.IsAny<object[]>()), Occurs.Once());
+    }
+
+    [Test]
+    public void Send_does_not_warn_when_accepted()
+    {
+        var transport = new ProfilesTransport((bytes, endpoint) => new ProfilesSendResult(true, 200, string.Empty), "http://unused", null);
+
+        transport.Send(BuildNonEmptyRequest());
+
+        Mock.Assert(() => _nrLogger.Warn(Arg.IsAny<string>(), Arg.IsAny<object[]>()), Occurs.Never());
+    }
+
+    [Test]
+    public void Send_returns_true_when_the_dispatch_reports_accepted()
+    {
+        var transport = new ProfilesTransport((bytes, endpoint) => new ProfilesSendResult(true, 200, string.Empty), "http://unused", null);
+        Assert.That(transport.Send(BuildNonEmptyRequest()), Is.True);
+    }
+
+    [Test]
+    public void Send_returns_false_when_the_dispatch_reports_not_accepted()
+    {
+        var transport = new ProfilesTransport((bytes, endpoint) => new ProfilesSendResult(false, 500, "error"), "http://unused", null);
+        Assert.That(transport.Send(BuildNonEmptyRequest()), Is.False);
+    }
+
+    [Test]
+    public void Send_reports_data_usage_on_acceptance_same_as_other_otlp_and_collector_sends()
+    {
+        var health = Mock.Create<IAgentHealthReporter>();
+        var request = BuildNonEmptyRequest();
+        var expectedBytesSent = request.ToByteArray().Length;
+        var transport = new ProfilesTransport((bytes, endpoint) => new ProfilesSendResult(true, 200, "ok"), "http://unused", health);
+
+        transport.Send(request);
+
+        // "OTLP"/"Profiles" mirrors OtlpAuditHandler's ("OTLP", "Metrics") for the Meter bridge -- CP's
+        // closest sibling send path.
+        Mock.Assert(() => health.ReportSupportabilityDataUsage("OTLP", "Profiles", expectedBytesSent, 2), Occurs.Once());
+    }
+
+    [Test]
+    public void Send_does_not_report_data_usage_when_not_accepted()
+    {
+        var health = Mock.Create<IAgentHealthReporter>();
+        var transport = new ProfilesTransport((bytes, endpoint) => new ProfilesSendResult(false, 500, "error"), "http://unused", health);
+
+        transport.Send(BuildNonEmptyRequest());
+
+        Mock.Assert(() => health.ReportSupportabilityDataUsage(Arg.IsAny<string>(), Arg.IsAny<string>(), Arg.IsAny<long>(), Arg.IsAny<long>()), Occurs.Never());
+    }
+
+    [Test]
+    public void Send_tolerates_a_null_agent_health_reporter()
+    {
+        var transport = new ProfilesTransport((bytes, endpoint) => new ProfilesSendResult(true, 200, "ok"), "http://unused", null);
+        Assert.That(() => transport.Send(BuildNonEmptyRequest()), Throws.Nothing);
+    }
+
+    [Test]
+    public void Send_constructs_without_throwing_given_endpoint_and_dispatch_delegate()
+    {
+        Assert.That(() => new ProfilesTransport((bytes, endpoint) => new ProfilesSendResult(true, 200, string.Empty), "https://otlp.nr-data.net/v1/profiles", null),
+            Throws.Nothing);
+    }
+
+    [Test]
+    public void Send_handles_null_resource_profiles_without_throwing()
+    {
+        var transport = new ProfilesTransport((bytes, endpoint) => new ProfilesSendResult(true, 200, string.Empty), "http://unused", null);
+        Assert.That(() => transport.Send(new ExportProfilesServiceRequest()), Throws.Nothing);
+    }
+
+    [Test]
+    public void UpdateEndpoint_changes_the_endpoint_subsequent_sends_post_to()
+    {
+        string dispatchedEndpoint = null;
+        var transport = new ProfilesTransport((bytes, endpoint) =>
+        {
+            dispatchedEndpoint = endpoint;
+            return new ProfilesSendResult(true, 200, string.Empty);
+        }, "https://otlp.nr-data.net/v1/profiles", null);
+
+        transport.UpdateEndpoint("https://collector.eu01.nr-data.net/v1/profiles");
+        transport.Send(BuildNonEmptyRequest());
+
+        Assert.That(dispatchedEndpoint, Is.EqualTo("https://collector.eu01.nr-data.net/v1/profiles"));
+    }
+
+    [TestCase(null)]
+    [TestCase("")]
+    public void UpdateEndpoint_ignores_a_null_or_empty_value(string newEndpoint)
+    {
+        string dispatchedEndpoint = null;
+        var transport = new ProfilesTransport((bytes, endpoint) =>
+        {
+            dispatchedEndpoint = endpoint;
+            return new ProfilesSendResult(true, 200, string.Empty);
+        }, "https://otlp.nr-data.net/v1/profiles", null);
+
+        transport.UpdateEndpoint(newEndpoint);
+        transport.Send(BuildNonEmptyRequest());
+
+        Assert.That(dispatchedEndpoint, Is.EqualTo("https://otlp.nr-data.net/v1/profiles"));
+    }
+
+    [Test]
+    public void Send_does_not_render_diagnostic_json_when_only_debug_is_enabled()
+    {
+        // L17: rendering ToDiagnosticJson (protobuf -> JsonFormatter -> JToken DOM -> truncate) must be
+        // gated behind something stricter than plain Debug -- rendering it unconditionally at Debug level
+        // would allocate several MB per drain for a log line that routine `NEWRELIC_LOG_LEVEL=debug`
+        // troubleshooting would otherwise trigger every drain.
+        Mock.Arrange(() => _nrLogger.IsDebugEnabled).Returns(true);
+        Mock.Arrange(() => _nrLogger.IsFinestEnabled).Returns(false);
+        AuditLog.IsAuditLogEnabled = false;
+
+        var transport = new ProfilesTransport((bytes, endpoint) => new ProfilesSendResult(true, 200, string.Empty), "http://unused", null);
+        transport.Send(BuildNonEmptyRequest());
+
+        // The payload-json arg passed to the Debug log line must be null, not a rendered JSON string --
+        // proves ToDiagnosticJson was never invoked.
+        Mock.Assert(() => _nrLogger.Debug(
+                Arg.Matches<string>(m => m.Contains("Invoked")),
+                Arg.Matches<object[]>(a => System.Linq.Enumerable.Contains(a, (object)null))),
+            Occurs.Once());
+    }
+
+    [Test]
+    public void Send_renders_diagnostic_json_when_finest_is_enabled()
+    {
+        Mock.Arrange(() => _nrLogger.IsDebugEnabled).Returns(true);
+        Mock.Arrange(() => _nrLogger.IsFinestEnabled).Returns(true);
+        AuditLog.IsAuditLogEnabled = false;
+
+        var transport = new ProfilesTransport((bytes, endpoint) => new ProfilesSendResult(true, 200, string.Empty), "http://unused", null);
+        transport.Send(BuildNonEmptyRequest());
+
+        Mock.Assert(() => _nrLogger.Debug(
+                Arg.Matches<string>(m => m.Contains("Invoked")),
+                Arg.Matches<object[]>(a => System.Linq.Enumerable.Any(a, x => (x as string) != null && ((string)x).Contains("resourceProfiles")))),
+            Occurs.Once());
+    }
+
+    // The Finest diagnostic log line carries ToDiagnosticJson(request); testing the serialization directly
+    // avoids capturing the static logger while still pinning the payload's shape.
+
+    [Test]
+    public void ToDiagnosticJson_is_compact_single_line_valid_json()
+    {
+        var json = ProfilesTransport.ToDiagnosticJson(BuildNonEmptyRequest());
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(json, Does.Not.Contain("\n"), "Diagnostic JSON must be compact (single line), like other collector payloads.");
+            Assert.That(json, Does.Contain("worker-1"), "The sample's thread.name attribute value should be present.");
+            // Valid JSON with the proto3 top-level shape (camelCase field names).
+            var root = JObject.Parse(json);
+            Assert.That(root["resourceProfiles"], Is.Not.Null, "Serialized request should carry resourceProfiles.");
+        });
+    }
+
+    [Test]
+    public void ToDiagnosticJson_emits_frame_name_special_chars_literally_not_unicode_escaped()
+    {
+        // JsonFormatter emits printable ASCII literally, so the chars common in .NET frame names -- nested
+        // '+', closure '<'/'>', generic-arity backtick, byref '&' -- must appear as-is, not \uXXXX escaped.
+        const string frameName = "Ns.Outer`1+<>c.<M>b__0(System.Int32&)";
+
+        var dictionary = new ProfilesDictionary();
+        dictionary.StringTable.Add(frameName);
+        var request = new ExportProfilesServiceRequest { Dictionary = dictionary };
+
+        var json = ProfilesTransport.ToDiagnosticJson(request);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(json, Does.Contain(frameName), "Frame-name special chars should be emitted literally.");
+            Assert.That(json, Does.Not.Contain("\\u00"), "No \\uXXXX HTML-escaping of printable ASCII.");
+        });
+    }
+
+    [Test]
+    public void ToDiagnosticJson_truncates_output_beyond_the_configured_cap()
+    {
+        // L10: a large batch's rendered JSON must not be logged/allocated unbounded.
+        var dictionary = new ProfilesDictionary();
+        for (var i = 0; i < 10_000; i++)
+            dictionary.StringTable.Add($"NewRelic.Agent.Core.SomeClass.SomeVeryLongMethodNameForPadding_{i}()");
+        var request = new ExportProfilesServiceRequest { Dictionary = dictionary };
+
+        var json = ProfilesTransport.ToDiagnosticJson(request);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(json.Length, Is.LessThanOrEqualTo(ProfilesTransport.MaxDiagnosticJsonLength + 64), "Truncated output plus marker should stay close to the cap.");
+            Assert.That(json, Does.Contain("truncated"), "A truncation marker should be present.");
+        });
+    }
+
+    [Test]
+    public void ToDiagnosticJson_renders_link_ids_as_lowercase_hex_not_base64()
+    {
+        // trace_id/span_id are proto `bytes` -> proto3 JSON base64. The diagnostic log rewrites them to
+        // lowercase hex so they're greppable against the W3C-hex ids used elsewhere in the logs.
+        var traceId = new byte[] { 0x1c, 0xb9, 0xb2, 0x2a, 0x7b, 0xfd, 0x43, 0x3d, 0x29, 0xdc, 0xdf, 0xe1, 0x1a, 0xb7, 0xfe, 0x27 };
+        var spanId = new byte[] { 0x37, 0x83, 0xcc, 0xde, 0xba, 0x84, 0x13, 0x91 };
+
+        var dictionary = new ProfilesDictionary();
+        dictionary.LinkTable.Add(new Link
+        {
+            TraceId = ByteString.CopyFrom(traceId),
+            SpanId = ByteString.CopyFrom(spanId),
+        });
+        var request = new ExportProfilesServiceRequest { Dictionary = dictionary };
+
+        var json = ProfilesTransport.ToDiagnosticJson(request);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(json, Does.Contain("\"traceId\":\"1cb9b22a7bfd433d29dcdfe11ab7fe27\""), "traceId should be lowercase hex.");
+            Assert.That(json, Does.Contain("\"spanId\":\"3783ccdeba841391\""), "spanId should be lowercase hex.");
+            Assert.That(json, Does.Not.Contain("=="), "No base64-padded ids should remain.");
+        });
+    }
+
+    private static ExportProfilesServiceRequest BuildNonEmptyRequest()
+    {
+        var dictionary = new ProfilesDictionary();
+        dictionary.StringTable.Add(string.Empty);
+        dictionary.StringTable.Add("thread.name");
+        dictionary.StringTable.Add("worker-1");
+        dictionary.StringTable.Add("A()");
+
+        dictionary.FunctionTable.Add(new Function());
+        dictionary.FunctionTable.Add(new Function { NameStrindex = 3 });
+
+        dictionary.LocationTable.Add(new Location());
+        var location = new Location();
+        location.Lines.Add(new Line { FunctionIndex = 1 });
+        dictionary.LocationTable.Add(location);
+
+        dictionary.StackTable.Add(new Stack());
+        var stack = new Stack();
+        stack.LocationIndices.Add(1);
+        dictionary.StackTable.Add(stack);
+
+        dictionary.AttributeTable.Add(new KeyValueAndUnit());
+        dictionary.AttributeTable.Add(new KeyValueAndUnit
+        {
+            KeyStrindex = 1,
+            Value = new AnyValue { StringValue = "worker-1" }
+        });
+
+        var sample = new Sample { StackIndex = 1 };
+        sample.Values.Add(1L);
+        sample.AttributeIndices.Add(1);
+
+        var profile = new Profile();
+        profile.Samples.Add(sample);
+
+        var scopeProfiles = new ScopeProfiles();
+        scopeProfiles.Profiles.Add(profile);
+
+        var resourceProfiles = new ResourceProfiles { Resource = new Resource() };
+        resourceProfiles.ScopeProfiles.Add(scopeProfiles);
+
+        var request = new ExportProfilesServiceRequest { Dictionary = dictionary };
+        request.ResourceProfiles.Add(resourceProfiles);
+        return request;
+    }
+}

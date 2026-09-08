@@ -121,6 +121,29 @@ public class Method_FromDeserializedReturnValue
         });
     }
 
+    [Test]
+    public void continuous_profiling_agent_config_key_deserializes_correctly()
+    {
+        var agentConfig = new Dictionary<string, object>
+        {
+            { "continuous_profiling.enabled", true }
+        };
+
+        var serverConfiguration = ServerConfiguration.FromDeserializedReturnValue(
+            new Dictionary<string, object> { { "agent_run_id", 0 }, { "agent_config", agentConfig } });
+
+        Assert.That(serverConfiguration.RpmConfig.ContinuousProfilingEnabled, Is.True);
+    }
+
+    [Test]
+    public void continuous_profiling_agent_config_key_is_null_when_absent()
+    {
+        var serverConfiguration = ServerConfiguration.FromDeserializedReturnValue(
+            new Dictionary<string, object> { { "agent_run_id", 0 } });
+
+        Assert.That(serverConfiguration.RpmConfig.ContinuousProfilingEnabled, Is.Null);
+    }
+
 }
 
 [TestFixture, Category("Configuration")]

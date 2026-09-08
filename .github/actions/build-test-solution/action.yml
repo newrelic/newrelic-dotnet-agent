@@ -15,6 +15,10 @@ inputs:
     description: 'Space-separated project base names to skip during pre-publish. Empty means skip nothing.'
     required: false
     default: ''
+  x86-projects:
+    description: 'Space-separated project base names to additionally pre-publish self-contained for win-x86 (net10.0), forcing a genuinely 32-bit host process. Empty means none.'
+    required: false
+    default: ''
   artifact-name:
     description: 'Name of the uploaded artifact, e.g. "integrationtests"'
     required: true
@@ -96,6 +100,56 @@ runs:
         }
         Write-Host "Pre-publish complete: $published succeeded, $skipped skipped (libraries), $failed failed"
 
+        # Additionally pre-publish the named projects self-contained for win-x86 (net10.0),
+        # forcing a genuinely 32-bit host process regardless of the runner's architecture.
+        # RemoteService.TryCopyPrebuiltPublishOutput falls back to a live `dotnet publish` at
+        # test time if this isn't staged, which works but forgoes the parallel-execution
+        # lock-collision protection this step exists for. Scoped to just the named projects/TFM/RID
+        # -- every other test app only needs win-x64, so publishing all of them for x86 would be waste.
+        $x86Runtime = "win-x86"
+        $x86Projects = @("${{ inputs.x86-projects }}" -split ' ' | Where-Object { $_ })
+        $x86Published = 0; $x86Failed = 0
+        $x86Matched = @()
+        if ($x86Projects.Count -gt 0) {
+          foreach ($searchPath in $searchPaths) {
+            $fullPath = Join-Path $basePath $searchPath
+            if (-not (Test-Path $fullPath)) { continue }
+            Get-ChildItem -Path $fullPath -Filter "*.csproj" -Recurse |
+              Where-Object { $x86Projects -contains $_.BaseName } |
+              ForEach-Object {
+                $x86Matched += $_.BaseName
+                $content = Get-Content $_.FullName -Raw
+                if ($content -match '<TargetFrameworks?>(.*?)</TargetFrameworks?>') {
+                  $x86Tfm = ($Matches[1] -split ';') | Where-Object { $_ -match '^net\d+\.\d+$' } | Select-Object -Last 1
+                } else {
+                  $x86Tfm = $null
+                }
+                if (-not $x86Tfm) {
+                  Write-Warning "Could not determine a net TFM for $($_.Name); skipping x86 pre-publish"
+                  $x86Failed++
+                  return
+                }
+                Write-Host "Pre-publishing $($_.Name) for $x86Tfm/$x86Runtime"
+                $output = dotnet publish --configuration Release --runtime $x86Runtime --framework $x86Tfm --self-contained true $_.FullName 2>&1
+                if ($LASTEXITCODE -ne 0) {
+                  Write-Warning "Failed to pre-publish $($_.Name) for $x86Tfm/$x86Runtime"
+                  $output | Where-Object { $_ -match "error" } | ForEach-Object { Write-Host "  $_" }
+                  $x86Failed++
+                } else {
+                  $x86Published++
+                }
+              }
+          }
+          Write-Host "x86 pre-publish complete: $x86Published succeeded, $x86Failed failed"
+          if ($x86Failed -gt 0) {
+            throw "x86 pre-publish failed for $x86Failed project(s); see warnings above."
+          }
+          $x86Missing = $x86Projects | Where-Object { $x86Matched -notcontains $_ }
+          if ($x86Missing.Count -gt 0) {
+            throw "x86-projects requested but not found under any search path: $($x86Missing -join ', ')"
+          }
+        }
+
         # Clean up intermediate RID-specific build artifacts to reduce artifact size.
         # dotnet publish --runtime creates large intermediate files alongside the publish/
         # subdirectory (including self-contained runtime copies). Only publish/ is needed.
@@ -106,6 +160,12 @@ runs:
           Get-ChildItem -Path $fullPath -Directory -Recurse -Filter $runtime | ForEach-Object {
             Get-ChildItem -Path $_.FullName -Exclude "publish" | Remove-Item -Recurse -Force
             $cleaned++
+          }
+          if ($x86Projects.Count -gt 0) {
+            Get-ChildItem -Path $fullPath -Directory -Recurse -Filter $x86Runtime | ForEach-Object {
+              Get-ChildItem -Path $_.FullName -Exclude "publish" | Remove-Item -Recurse -Force
+              $cleaned++
+            }
           }
         }
         Write-Host "Cleaned intermediate build artifacts from $cleaned RID directories"

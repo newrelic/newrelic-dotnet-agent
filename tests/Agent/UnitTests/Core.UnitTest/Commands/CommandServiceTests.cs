@@ -90,6 +90,40 @@ public class CommandServiceTests
         commandService.ProcessCommands(commands);
         Assert.That(command.Attempts, Is.EqualTo(1));
     }
+
+    [Test]
+    public void a_command_that_throws_reports_an_error_instead_of_aborting_the_batch()
+    {
+        var throwingCommand = new ThrowingCommand("throws");
+        var pingCommand = new PingCommand();
+        var commandService = new CommandService(_dataTransportService, Mock.Create<IScheduler>(), Mock.Create<IConfigurationService>());
+        commandService.AddCommands(throwingCommand, pingCommand);
+        var commands = JsonConvert.DeserializeObject<IEnumerable<CommandModel>>(
+            "[[1,{name:\"throws\",arguments:{}}],[2,{name:\"ping\",arguments:{}}]]");
+
+        var results = commandService.ProcessCommands(commands);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(results, Has.Count.EqualTo(2));
+            Assert.That(((IDictionary<string, object>)results["1"]).ContainsKey("error"), Is.True);
+            Assert.That(((IDictionary<string, object>)results["1"]).ContainsKey("errors"), Is.True);
+            Assert.That(pingCommand.Count, Is.EqualTo(1));
+        });
+    }
+}
+
+public class ThrowingCommand : AbstractCommand
+{
+    public ThrowingCommand(string commandName)
+    {
+        Name = commandName;
+    }
+
+    public override object Process(IDictionary<string, object> arguments)
+    {
+        throw new System.InvalidOperationException("boom");
+    }
 }
 
 public class MockCommand : AbstractCommand

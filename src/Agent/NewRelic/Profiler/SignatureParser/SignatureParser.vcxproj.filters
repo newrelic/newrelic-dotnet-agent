@@ -7,6 +7,7 @@
     <ClInclude Include="Types.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="ByteVectorManipulator.h" />
+    <ClInclude Include="SignatureFormatting.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="$(MSBuildThisFileDirectory)newrelic-icon.png" />

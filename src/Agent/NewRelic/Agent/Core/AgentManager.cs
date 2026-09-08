@@ -12,6 +12,7 @@ using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Commands;
 using NewRelic.Agent.Core.Config;
 using NewRelic.Agent.Core.Configuration;
+using NewRelic.Agent.Core.ContinuousProfiling;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.DependencyInjection;
 using NewRelic.Agent.Core.Events;
@@ -88,6 +89,7 @@ public sealed class AgentManager : IAgentManager, IDisposable
 
     private IConfiguration Configuration { get { return _configurationSubscription.Configuration; } }
     private ThreadProfilingService _threadProfilingService;
+    private ContinuousProfilingService _continuousProfilingService;
     private readonly IWrapperService _wrapperService;
     private readonly IAgentHealthReporter _agentHealthReporter;
 
@@ -161,51 +163,100 @@ public sealed class AgentManager : IAgentManager, IDisposable
 
         EventBus<KillAgentEvent>.Subscribe(OnShutdownAgent);
 
-        //Initialize the extensions loader with extensions folder based on the the install path
-        ExtensionsLoader.Initialize(AgentInstallConfiguration.InstallPathExtensionsDirectory);
-
-        // Resolve all services once we've ensured that the agent is enabled
-        // The AgentApiImplementation needs to be resolved before the WrapperService, because
-        // resolving the WrapperService triggers an agent connect but it doesn't instantiate
-        // the CustomEventAggregator, so we need to resolve the AgentApiImplementation to
-        // get the CustomEventAggregator instantiated before the connect process is triggered.
-        // If that doesn't happen the CustomEventAggregator will not start its harvest timer
-        // when the agent connect response comes back. The agent DI, startup, and connect
-        // process really needs to be refactored so that it's more explicit in its behavior.
-        var agentApi = _container.Resolve<IAgentApi>();
-        _wrapperService = _container.Resolve<IWrapperService>();
-
-        if (Configuration.OpenTelemetryEnabled)
+        // AgentSingleton.CreateInstance's catch swaps in the DisabledAgentManager but never gets a
+        // reference to this half-built manager, so it can't clean up whatever background work already
+        // started below. Guard the startup sequence and route any failure through the same Shutdown(false)
+        // the other teardown paths use, so a throw here still stops/disposes what's already running.
+        try
         {
-            _container.Resolve<OpenTelemetryBridge.Tracing.ActivityBridge>().Start();
+            //Initialize the extensions loader with extensions folder based on the the install path
+            ExtensionsLoader.Initialize(AgentInstallConfiguration.InstallPathExtensionsDirectory);
 
+            // Resolve all services once we've ensured that the agent is enabled
+            // The AgentApiImplementation needs to be resolved before the WrapperService, because
+            // resolving the WrapperService triggers an agent connect but it doesn't instantiate
+            // the CustomEventAggregator, so we need to resolve the AgentApiImplementation to
+            // get the CustomEventAggregator instantiated before the connect process is triggered.
+            // If that doesn't happen the CustomEventAggregator will not start its harvest timer
+            // when the agent connect response comes back. The agent DI, startup, and connect
+            // process really needs to be refactored so that it's more explicit in its behavior.
+            var agentApi = _container.Resolve<IAgentApi>();
+            _wrapperService = _container.Resolve<IWrapperService>();
+
+            if (Configuration.OpenTelemetryEnabled)
+            {
+                _container.Resolve<OpenTelemetryBridge.Tracing.ActivityBridge>().Start();
+
+                if (!bootstrapConfig.ServerlessModeEnabled)
+                {
+                    // We need to resolve the MeterListenerBridge before the connect event is triggered so that
+                    // the MeterListenerBridge is ready to receive the connect event and start listening for
+                    // metrics.
+                    _container.Resolve<OpenTelemetryBridge.Metrics.MeterListenerBridge>().Start();
+                }
+            }
+
+            // Must be constructed -- and therefore subscribed to AgentConnectedEvent -- BEFORE
+            // AttemptAutoStart() below: ConnectionManager.Start() schedules the actual connect
+            // asynchronously, so a fast connect can publish AgentConnectedEvent before a later-constructed
+            // subscriber ever attaches, and EventBus does not replay missed events.
+            //
+            // Never construct in serverless mode: AttemptAutoStart() never runs there, so a constructed CP
+            // would run full stop-the-world sampling sweeps every tick with every drain permanently
+            // no-op'ing on !_isConnected -- pure overhead, no data ever shipped. This also forecloses CP's
+            // agent commands in serverless (registered only when _continuousProfilingService != null).
             if (!bootstrapConfig.ServerlessModeEnabled)
             {
-                // We need to resolve the MeterListenerBridge before the connect event is triggered so that
-                // the MeterListenerBridge is ready to receive the connect event and start listening for
-                // metrics.
-                _container.Resolve<OpenTelemetryBridge.Metrics.MeterListenerBridge>().Start();
+                _continuousProfilingService = ContinuousProfilingServiceFactory.TryCreate(_container, Configuration, _agentHealthReporter);
+                _continuousProfilingService?.StartIfEnabled();
             }
-        }
 
-        // Attempt to auto start the agent once all services have resolved, except in serverless mode
-        if (!bootstrapConfig.ServerlessModeEnabled)
+            // Attempt to auto start the agent once all services have resolved, except in serverless mode
+            if (!bootstrapConfig.ServerlessModeEnabled)
+            {
+                _container.Resolve<IConnectionManager>().AttemptAutoStart();
+            }
+            else
+            {
+                Log.Info("The New Relic agent is operating in serverless mode.");
+            }
+
+            AgentServices.StartServices(_container, bootstrapConfig.ServerlessModeEnabled, bootstrapConfig.GCSamplerV2Enabled);
+
+            // Setup the internal API first so that AgentApi can use it.
+            InternalApi.SetAgentApiImplementation(agentApi);
+            AgentApi.SetSupportabilityMetricCounters(_container.Resolve<IApiSupportabilityMetricCounters>());
+
+            Initialize(bootstrapConfig.ServerlessModeEnabled);
+            _isInitialized = true;
+        }
+        catch
         {
-            _container.Resolve<IConnectionManager>().AttemptAutoStart();
+            // Drop the KillAgentEvent subscription so this abandoned manager isn't kept alive (and called)
+            // by the static event bus after we hand back the DisabledAgentManager.
+            EventBus<KillAgentEvent>.Unsubscribe(OnShutdownAgent);
+
+            try
+            {
+                Shutdown(false, closeLogging: false);
+            }
+            catch
+            {
+                // ignored -- a cleanup failure must never mask the original startup exception below
+            }
+            finally
+            {
+                // Serilog's file/console sinks are wrapped in Serilog.Sinks.Async, which buffers
+                // events on a background thread with no public flush other than Dispose. CloseAndFlush
+                // guarantees the failure logged above actually reaches disk before the process
+                // potentially exits; re-initializing right after restores a live (startup) logger so
+                // the DisabledAgentManager that AgentSingleton swaps in next can still log.
+                Serilog.Log.CloseAndFlush();
+                LoggerBootstrapper.Initialize();
+            }
+
+            throw;
         }
-        else
-        {
-            Log.Info("The New Relic agent is operating in serverless mode.");
-        }
-
-        AgentServices.StartServices(_container, bootstrapConfig.ServerlessModeEnabled, bootstrapConfig.GCSamplerV2Enabled);
-
-        // Setup the internal API first so that AgentApi can use it.
-        InternalApi.SetAgentApiImplementation(agentApi);
-        AgentApi.SetSupportabilityMetricCounters(_container.Resolve<IApiSupportabilityMetricCounters>());
-
-        Initialize(bootstrapConfig.ServerlessModeEnabled);
-        _isInitialized = true;
     }
 
     private void Initialize(bool serverlessModeEnabled)
@@ -217,6 +268,15 @@ public sealed class AgentManager : IAgentManager, IDisposable
 
         _threadProfilingService = new ThreadProfilingService(_container.Resolve<IDataTransportService>(), nativeMethods);
 
+        // Mutually exclude the two profilers: the thread profiler refuses to start while continuous
+        // profiling is active, and continuous profiling defers its start while a thread-profiling session
+        // is in-flight. Wired here, post-construction (both were already constructed earlier in Start()),
+        // rather than through constructors, since mutual constructor injection would be a cycle. A failed
+        // CP construction leaves the field null, which both sides' guards already treat as "not running."
+        _threadProfilingService.SetContinuousProfilingSessionControl(_continuousProfilingService);
+        if (_continuousProfilingService != null)
+            _continuousProfilingService.ThreadProfilingStatus = _threadProfilingService;
+
         if (!serverlessModeEnabled)
         {
             var commandService = _container.Resolve<CommandService>();
@@ -227,6 +287,17 @@ public sealed class AgentManager : IAgentManager, IDisposable
                 new StopThreadProfilerCommand(_threadProfilingService),
                 new InstrumentationUpdateCommand(instrumentationService)
             );
+
+            // Null only if construction itself threw; the commands are simply not registered in that
+            // case (CommandService.ProcessCommands handles an unknown command name gracefully).
+            if (_continuousProfilingService != null)
+            {
+                var continuousProfilerResponseFormatter = new AckOnlyContinuousProfilerResponseFormatter();
+                commandService.AddCommands(
+                    new StartContinuousProfilerCommand(_continuousProfilingService, continuousProfilerResponseFormatter),
+                    new StopContinuousProfilerCommand(_continuousProfilingService, continuousProfilerResponseFormatter)
+                );
+            }
         }
 
         StartServices();
@@ -349,7 +420,29 @@ public sealed class AgentManager : IAgentManager, IDisposable
 
     private void StopServices()
     {
-        _threadProfilingService?.Stop();
+        StopProfilerServices(
+            () => _threadProfilingService?.Stop(),
+            () => _continuousProfilingService?.Dispose());
+    }
+
+    // Best-effort two-step profiler teardown. The continuous-profiling dispose MUST run even when stopping
+    // thread profiling throws: ThreadProfilingService.Stop() joins a sampling worker and can throw, and the
+    // original unguarded `Stop(); Dispose();` would then skip Dispose() and orphan the continuous-profiling
+    // native sampler thread for the rest of the process (Shutdown()'s outer catch never compensates -- its
+    // finally only disposes the container, not the CP service). The finally guarantees the CP dispose runs
+    // while still letting a Stop() failure propagate so the shutdown path's error/health reporting is
+    // preserved. Public static so the ordering/null-safety/isolation is unit-testable without constructing
+    // AgentManager (whose ctor drives the full static startup path).
+    public static void StopProfilerServices(Action stopThreadProfiler, Action disposeContinuousProfiler)
+    {
+        try
+        {
+            stopThreadProfiler?.Invoke();
+        }
+        finally
+        {
+            disposeContinuousProfiler?.Invoke();
+        }
     }
 
     /// <summary>
@@ -396,7 +489,7 @@ public sealed class AgentManager : IAgentManager, IDisposable
         Shutdown(true);
     }
 
-    private void Shutdown(bool cleanShutdown)
+    private void Shutdown(bool cleanShutdown, bool closeLogging = true)
     {
         Agent.IsAgentShuttingDown = true;
 
@@ -434,7 +527,9 @@ public sealed class AgentManager : IAgentManager, IDisposable
             Dispose();
 
             Log.Info("The New Relic .NET Agent v{Version} has shutdown (pid {pid}) on app domain '{appDomain}'", AgentInstallConfiguration.AgentVersion, AgentInstallConfiguration.ProcessId, AgentInstallConfiguration.AppDomainAppVirtualPath ?? AgentInstallConfiguration.AppDomainName);
-            Serilog.Log.CloseAndFlush();
+
+            if (closeLogging)
+                Serilog.Log.CloseAndFlush();
         }
     }
 

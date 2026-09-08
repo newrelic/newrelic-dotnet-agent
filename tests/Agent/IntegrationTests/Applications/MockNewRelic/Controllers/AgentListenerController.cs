@@ -201,6 +201,36 @@ public class AgentListenerController : Controller
     }
 
     [HttpGet]
+    [Route("TriggerStartContinuousProfiler")]
+    public void TriggerStartContinuousProfiler(string include = "cpu", int? sampleInterval = null, int? cpuReportInterval = null)
+    {
+        var arguments = new Dictionary<string, object>
+        {
+            ["include"] = include.Split(',')
+        };
+        if (sampleInterval.HasValue)
+            arguments["sample_interval"] = sampleInterval.Value;
+        if (cpuReportInterval.HasValue)
+            arguments["cpu_report_interval"] = cpuReportInterval.Value;
+
+        var details = new CommandDetails("start_continuous_profiler", arguments);
+        _queuedCommands.Add(new AgentCommand(-1, details));
+    }
+
+    [HttpGet]
+    [Route("TriggerStopContinuousProfiler")]
+    public void TriggerStopContinuousProfiler(string include = "cpu")
+    {
+        var arguments = new Dictionary<string, object>
+        {
+            ["include"] = include.Split(',')
+        };
+
+        var details = new CommandDetails("stop_continuous_profiler", arguments);
+        _queuedCommands.Add(new AgentCommand(-1, details));
+    }
+
+    [HttpGet]
     [Route("SetCustomInstrumentationEditorOnConnect")]
     public string SetCustomInstrumentationEditorOnConnect()
     {

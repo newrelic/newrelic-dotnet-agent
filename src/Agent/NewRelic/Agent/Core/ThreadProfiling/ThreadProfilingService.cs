@@ -6,6 +6,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
+using NewRelic.Agent.Core.ContinuousProfiling;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Utilities;
@@ -16,12 +17,23 @@ using NewRelic.Agent.Extensions.SystemExtensions.Collections.Generic;
 
 namespace NewRelic.Agent.Core.ThreadProfiling;
 
-public class ThreadProfilingService : ConfigurationBasedService, IThreadProfilingSessionControl, IThreadProfilingProcessing, ISampleSink
+public class ThreadProfilingService : ConfigurationBasedService, IThreadProfilingSessionControl, IThreadProfilingProcessing, ISampleSink, IThreadProfilingStatus
 {
     private const int InvalidSessionId = 0;
     private readonly INativeMethods _nativeMethods;
     private readonly IDataTransportService _dataTransportService;
-    private ThreadProfilingSampler _sampler;
+
+    // Set (optionally via ctor, otherwise post-construction by AgentManager) so the thread profiler can
+    // refuse to start while continuous profiling is active. Nullable: no reference wired == no guard.
+    // volatile: the post-construction wiring in AgentManager.Initialize runs on the startup thread with
+    // no lock, while the read in StartThreadProfilingSession happens on the collector-command thread
+    // under ProfilingMutualExclusionGate.Acquire(). Without the release/acquire that read could see a stale
+    // null, skip the "CP is active" guard, and let both profilers arm concurrently.
+    private volatile IContinuousProfilingSessionControl _continuousProfilingSessionControl;
+    // volatile: assigned on the collector-command thread that starts a session, read on the
+    // continuous-profiling scheduler thread through IsThreadProfilingActive. Without the release/acquire
+    // that read could see a stale null and report "no thread-profiling session" while one is starting.
+    private volatile IThreadProfilingSampler _sampler;
     private int _profileSessionId;
     private DateTime _startSessionTime;
     private DateTime _stopSessionTime;
@@ -39,6 +51,13 @@ public class ThreadProfilingService : ConfigurationBasedService, IThreadProfilin
     /// It's used primarily by the sampling completing method to control whether or not we send the profile samples to the collector.
     /// </summary>
     private volatile bool _reportData = true;
+
+    // Guards Dispose() against running its teardown more than once. Dispose() is not called anywhere in
+    // production today -- AgentManager.StopServices() calls Stop(), not Dispose(), and this service is
+    // constructed once for the process lifetime and never re-registered/re-disposed. This guard exists
+    // for test callers (unit test TearDown, and tests that call Dispose() directly) that can invoke
+    // Dispose() more than once; base.Dispose() releases subscriptions that must not be released again.
+    private volatile bool _disposed;
 
     // i.e.,  this is a dictionary of ManagedThreadId, Total Call Count
     private readonly Dictionary<UIntPtr, int> _managedThreadsFromProfiler = new Dictionary<UIntPtr, int>();
@@ -68,15 +87,38 @@ public class ThreadProfilingService : ConfigurationBasedService, IThreadProfilin
 
     #region Construction and Initializations
 
-    public ThreadProfilingService(IDataTransportService dataTransportService, INativeMethods nativeMethods, int maxAggregatedNodes = 20000)
+    public ThreadProfilingService(IDataTransportService dataTransportService, INativeMethods nativeMethods, int maxAggregatedNodes = 20000, IContinuousProfilingSessionControl continuousProfilingSessionControl = null, IThreadProfilingSampler sampler = null)
     {
         _dataTransportService = dataTransportService;
         _maxAggregatedNodes = maxAggregatedNodes;
         _nativeMethods = nativeMethods;
+        _continuousProfilingSessionControl = continuousProfilingSessionControl;
+        _sampler = sampler;
 
         _threadProfilingBucket = new ThreadProfilingBucket(this);
         PruningList = new ArrayList();
     }
+
+    /// <summary>
+    /// Wires the continuous-profiling session control after construction. Both services are constructed
+    /// manually in <c>AgentManager.Initialize</c>; because the thread profiler is built first, this seam
+    /// lets the continuous-profiling reference be set once that service exists, avoiding a constructor cycle.
+    /// </summary>
+    public void SetContinuousProfilingSessionControl(IContinuousProfilingSessionControl continuousProfilingSessionControl)
+    {
+        _continuousProfilingSessionControl = continuousProfilingSessionControl;
+    }
+
+    /// <summary>
+    /// True while the sampling worker is actually running. Derived from the sampler's own running flag,
+    /// not the reported session id (<see cref="_profileSessionId"/>): the session id is set at request
+    /// time and only cleared at completion time, so it does not track the worker's real lifetime. It can
+    /// latch non-zero if aggregation throws before clearing it (stranding it for the process lifetime),
+    /// and it reads clear the instant a stop request lands even though the worker keeps running until it
+    /// winds down. Read by the continuous-profiling service so it can defer its own start rather than run
+    /// concurrently. Null sampler (no session ever started) reads as not active.
+    /// </summary>
+    public bool IsThreadProfilingActive => _sampler?.IsRunning == true;
 
     #endregion
 
@@ -97,13 +139,37 @@ public class ThreadProfilingService : ConfigurationBasedService, IThreadProfilin
     }
 
     /// <summary>
-    /// Stops the <see cref="ThreadProfilingService"/> service. This will halt a 
+    /// Stops the <see cref="ThreadProfilingService"/> service. This will halt a
     /// thread profiling session that might be running.
     /// </summary>
     public void Stop()
     {
-        // Shutdown a running thread profiling session.
-        StopThreadProfilingSession(_profileSessionId);
+        // Agent-shutdown path (AgentManager.StopServices). Signal and join any running sampling worker,
+        // but suppress the outbound profile report: SamplingComplete's send is a synchronous collector
+        // POST, and a slow or hung network call on process shutdown would stall CLR exit. The
+        // stop_profiler collector command keeps its own reportData behavior by calling
+        // StopThreadProfilingSession directly (StopThreadProfilerCommand), so this suppression is
+        // specific to shutdown and does not change how a collector-requested stop reports.
+        StopThreadProfilingSession(_profileSessionId, reportData: false);
+    }
+
+    /// <summary>
+    /// Deterministically stops any in-flight session so a disposed service never orphans a live sampling
+    /// worker thread, then chains <see cref="ConfigurationBasedService.Dispose"/>. Idempotent: safe to call
+    /// with no session active and safe to call more than once. Not invoked in production -- see the
+    /// <see cref="_disposed"/> comment; kept for test callers and as a correct implementation should a
+    /// future caller ever need it.
+    /// </summary>
+    public override void Dispose()
+    {
+        if (_disposed)
+            return;
+        _disposed = true;
+
+        // Stop() already suppresses the report send, so disposal never blocks CLR exit.
+        Stop();
+
+        base.Dispose();
     }
 
     protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)
@@ -125,36 +191,52 @@ public class ThreadProfilingService : ConfigurationBasedService, IThreadProfilin
     /// <returns>true if a new thread profiling session is started. false if one already exists.</returns>
     public bool StartThreadProfilingSession(int profileSessionId, uint frequencyInMsec, uint durationInMsec)
     {
-        Log.Info($"Starting a thread profiling session {{ SessionId: {profileSessionId}, SamplePeriodMs: {frequencyInMsec}, DurationMs: {durationInMsec} }}");
-        var startedNewSession = false;
-
-        try
+        // Forward mutual-exclusion guard: refuse to start while continuous profiling is active.
+        // See ProfilingMutualExclusionGate for the full handshake with CP's reverse guard.
+        using (ProfilingMutualExclusionGate.Acquire())
         {
-            if (_sampler == null)
+            if (_continuousProfilingSessionControl?.IsActive == true)
             {
-                _sampler = new ThreadProfilingSampler(_nativeMethods);
+                Log.Info("Thread profiling start refused: continuous profiling is active.");
+                return false;
             }
 
-            // Remove existing data in tree and cache buffers
-            ResetCache();
+            Log.Info($"Starting a thread profiling session {{ SessionId: {profileSessionId}, SamplePeriodMs: {frequencyInMsec}, DurationMs: {durationInMsec} }}");
+            var startedNewSession = false;
 
-            _reportData = true;
-
-            startedNewSession = _sampler.Start(frequencyInMsec, durationInMsec, this, _nativeMethods);
-
-            if (startedNewSession)
+            try
             {
-                _startSessionTime = DateTime.UtcNow;
-                _profileSessionId = profileSessionId;
-                _numberSamplesInSession = 0;
-            }
-        }
-        catch (Exception e)
-        {
-            Log.Error(e, "Failed to start thread profiler");
-        }
+                if (_sampler == null)
+                {
+                    _sampler = new ThreadProfilingSampler(_nativeMethods);
+                }
 
-        return startedNewSession;
+                ResetCache();
+
+                _reportData = true;
+
+                startedNewSession = _sampler.Start(frequencyInMsec, durationInMsec, this, _nativeMethods);
+
+                if (startedNewSession)
+                {
+                    // The reverse mutual-exclusion guard (ContinuousProfilingService reading
+                    // IsThreadProfilingActive) derives liveness from the sampler's own running flag, which the
+                    // sampler sets atomically inside Start() before its worker walks any threads -- so it is
+                    // already published by the time we get here, and while still holding the gate above.
+                    // The assignments below are session bookkeeping for the reported wire model, not part of
+                    // the mutual-exclusion handshake.
+                    _profileSessionId = profileSessionId;
+                    _startSessionTime = DateTime.UtcNow;
+                    _numberSamplesInSession = 0;
+                }
+            }
+            catch (Exception e)
+            {
+                Log.Error(e, "Failed to start thread profiler");
+            }
+
+            return startedNewSession;
+        }
     }
 
     public bool StopThreadProfilingSession(int profileId, bool reportData = true)

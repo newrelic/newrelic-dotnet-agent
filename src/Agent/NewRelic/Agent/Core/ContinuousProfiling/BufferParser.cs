@@ -1,0 +1,225 @@
+// Copyright 2020 New Relic, Inc. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
+
+using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace NewRelic.Agent.Core.ContinuousProfiling;
+
+public static class BufferParser
+{
+    private const byte StartBatch = 0x01;
+    private const byte StartSample = 0x02;
+    private const byte EndBatch = 0x06;
+    private const byte BatchStatsOpcode = 0x07;
+
+    // v1: base layout. v2 adds a 1-byte OnCpu flag after spanId. v3 adds a 1-byte IsAgentWork flag
+    // after OnCpu. Keep in sync with SampleBufferWriter.h's BatchVersion.
+    private const byte MinSupportedBatchVersion = 1;
+    private const byte MaxSupportedBatchVersion = 3;
+
+    // StartBatch payload: 1 version byte + int64 timestamp.
+    private const int StartBatchHeaderSize = 9;
+
+    /// <summary>
+    /// Per-sweep native BatchStats (opcode 0x07). <see cref="MicrosSuspended"/> is the actual runtime-suspend
+    /// (stop-the-world) window for this sample sweep; <see cref="Skipped"/> is threads/frames the stack walk
+    /// couldn't capture. These are the direct CP overhead + fidelity signals, and mirror OTel's FinalStats
+    /// (microsSuspended / threads / frames / cache-misses) for like-for-like comparison.
+    /// </summary>
+    public sealed class BatchStats
+    {
+        public long MicrosSuspended { get; }
+        public int Threads { get; }
+        public int Frames { get; }
+        public int Skipped { get; }
+
+        public BatchStats(long microsSuspended, int threads, int frames, int skipped)
+        {
+            MicrosSuspended = microsSuspended;
+            Threads = threads;
+            Frames = frames;
+            Skipped = skipped;
+        }
+    }
+
+    public static IReadOnlyList<ManagedThreadSample> Parse(byte[] buffer, int length)
+        => Parse(buffer, length, out _, out _);
+
+    /// <summary>
+    /// Parse overload that also captures the batch's <see cref="BatchStats"/> (null when the batch carried
+    /// none). Callers use it to surface the suspend-window / coverage counters.
+    /// </summary>
+    public static IReadOnlyList<ManagedThreadSample> Parse(byte[] buffer, int length, out BatchStats stats)
+        => Parse(buffer, length, out stats, out _);
+
+    /// <summary>
+    /// Parse overload that also reports whether the batch was rejected as corrupt (truncated header,
+    /// unknown/future <c>BatchVersion</c>, or a sample/stats opcode seen before <c>StartBatch</c>).
+    /// A rejected batch never returns fabricated samples parsed under the wrong layout assumptions --
+    /// <paramref name="parseFailed"/> is the caller's signal to log and increment an error metric
+    /// instead of treating an empty/partial result as "nothing to report".
+    /// </summary>
+    public static IReadOnlyList<ManagedThreadSample> Parse(byte[] buffer, int length, out BatchStats stats, out bool parseFailed)
+    {
+        stats = null;
+        parseFailed = false;
+        var samples = new List<ManagedThreadSample>();
+        if (buffer == null || length <= 0)
+            return samples;
+
+        var frameDictionary = new Dictionary<int, string>();
+        var pos = 0;
+        var version = 0;
+        var batchStarted = false;
+        try
+        {
+            while (pos < length)
+            {
+                var opcode = buffer[pos++];
+                switch (opcode)
+                {
+                    case StartBatch:
+                        RequireBound(pos, StartBatchHeaderSize, length);
+                        version = buffer[pos];
+                        pos += StartBatchHeaderSize;
+                        if (version < MinSupportedBatchVersion || version > MaxSupportedBatchVersion)
+                        {
+                            parseFailed = true;
+                            return samples;
+                        }
+                        batchStarted = true;
+                        break;
+                    case StartSample:
+                        if (!batchStarted)
+                        {
+                            parseFailed = true;
+                            return samples;
+                        }
+                        samples.Add(ReadSample(buffer, ref pos, frameDictionary, version, length));
+                        break;
+                    case BatchStatsOpcode:
+                        {
+                            if (!batchStarted)
+                            {
+                                parseFailed = true;
+                                return samples;
+                            }
+                            var micros = ReadLong(buffer, ref pos, length);   // microsSuspended (int64)
+                            var threads = ReadInt(buffer, ref pos, length);   // threads
+                            var frames = ReadInt(buffer, ref pos, length);    // frames
+                            var skipped = ReadInt(buffer, ref pos, length);   // skipped
+                            stats = new BatchStats(micros, threads, frames, skipped);
+                            break;
+                        }
+                    case EndBatch:
+                        return samples;
+                    default:
+                        return samples; // unknown opcode -> stop cleanly
+                }
+            }
+        }
+        catch (Exception)
+        {
+            // truncated/garbage past `length`: stop and report rather than fabricating a batch from
+            // whatever happened to parse before the cut (Global Constraint: never throw out to the caller)
+            parseFailed = true;
+        }
+        return samples;
+    }
+
+    private static ManagedThreadSample ReadSample(byte[] b, ref int pos, Dictionary<int, string> dict, int version, int length)
+    {
+        var threadName = ReadString(b, ref pos, length);
+        var osThreadId = ReadLong(b, ref pos, length);
+        var traceHigh = ReadLong(b, ref pos, length);
+        var traceLow = ReadLong(b, ref pos, length);
+        var spanId = ReadLong(b, ref pos, length);
+        var onCpu = version >= 2 && ReadBool(b, ref pos, length);
+        var isAgentWork = version >= 3 && ReadBool(b, ref pos, length);
+
+        var frames = new List<string>();
+        while (true)
+        {
+            var code = ReadShort(b, ref pos, length);
+            if (code == 0) break;
+            if (code < 0)
+            {
+                var value = ReadString(b, ref pos, length);
+                dict[-code] = value;
+                frames.Add(value);
+            }
+            else
+            {
+                frames.Add(dict.TryGetValue(code, out var v) ? v : "<unknown>");
+            }
+        }
+        return new ManagedThreadSample(threadName, osThreadId, traceHigh, traceLow, spanId, frames, onCpu, isAgentWork);
+    }
+
+    // `length` is the logical bound for this parse and may be smaller than the physical buffer
+    // (a reused, oversized array). Field reads must stay inside it -- not just inside the array --
+    // so a future writer that ever emits a partial record can't read stale bytes from a prior batch.
+    private static void RequireBound(int pos, int size, int length)
+    {
+        if (pos + size > length)
+            throw new IndexOutOfRangeException();
+    }
+
+    private static bool ReadBool(byte[] b, ref int pos, int length)
+    {
+        RequireBound(pos, 1, length);
+        var v = b[pos];
+        pos += 1;
+        return v != 0;
+    }
+
+    private static short ReadShort(byte[] b, ref int pos, int length)
+    {
+        RequireBound(pos, 2, length);
+        var v = (short)((b[pos] << 8) | b[pos + 1]);
+        pos += 2;
+        return v;
+    }
+
+    private static int ReadInt(byte[] b, ref int pos, int length)
+    {
+        RequireBound(pos, 4, length);
+        var v = 0;
+        for (var i = 0; i < 4; i++) v = (v << 8) | b[pos + i];
+        pos += 4;
+        return v;
+    }
+
+    private static long ReadLong(byte[] b, ref int pos, int length)
+    {
+        RequireBound(pos, 8, length);
+        long v = 0;
+        for (var i = 0; i < 8; i++) v = (v << 8) | b[pos + i];
+        pos += 8;
+        return v;
+    }
+
+    private static string ReadString(byte[] b, ref int pos, int length)
+    {
+        // Length prefix is unsigned (0..65535 chars) -- unlike ReadShort's callers in ReadSample, where
+        // the sign carries the interned-vs-inline distinction, so this can't reuse ReadShort directly.
+        // Reading it as signed would make a >32767-char string (or a version/format-skewed writer)
+        // decode a negative charCount, which GetString then throws on.
+        var charCount = ReadUShort(b, ref pos, length);
+        var byteCount = charCount * 2;
+        RequireBound(pos, byteCount, length);
+        var s = Encoding.Unicode.GetString(b, pos, byteCount);
+        pos += byteCount;
+        return s;
+    }
+
+    private static ushort ReadUShort(byte[] b, ref int pos, int length)
+    {
+        RequireBound(pos, 2, length);
+        var v = (ushort)((b[pos] << 8) | b[pos + 1]);
+        pos += 2;
+        return v;
+    }
+}

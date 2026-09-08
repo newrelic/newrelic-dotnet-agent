@@ -15,12 +15,12 @@ namespace NewRelic.Agent.Core.AgentHealth;
 internal class FakeScheduler : IScheduler
 {
     protected Action _action;
-    public void ExecuteOnce(Action action, TimeSpan timeUntilExecution)
+    public void ExecuteOnce(Action action, TimeSpan timeUntilExecution, bool trackAsAgentWork = true)
     {
         _action = action;
     }
 
-    public void ExecuteEvery(Action action, TimeSpan timeBetweenExecutions, TimeSpan? optionalInitialDelay = null)
+    public void ExecuteEvery(Action action, TimeSpan timeBetweenExecutions, TimeSpan? optionalInitialDelay = null, bool trackAsAgentWork = true)
     {
         _action = action;
     }

@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using NewRelic.Agent.Core.ContinuousProfiling;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Extensions.Collections;
 using NewRelic.Agent.Extensions.Logging;
@@ -24,7 +25,7 @@ public class Scheduler : IScheduler, IDisposable
 
     #region Public API
 
-    public void ExecuteOnce(Action action, TimeSpan timeUntilExecution)
+    public void ExecuteOnce(Action action, TimeSpan timeUntilExecution, bool trackAsAgentWork = true)
     {
         if (timeUntilExecution < TimeSpan.Zero)
             throw new ArgumentException("Must be non-negative", "timeUntilExecution");
@@ -54,7 +55,7 @@ public class Scheduler : IScheduler, IDisposable
                 action();
                 newExecution.HasRun = true;
             });
-            var timer = CreateExecuteOnceTimer(flaggingAction, timeUntilExecution);
+            var timer = CreateExecuteOnceTimer(flaggingAction, timeUntilExecution, trackAsAgentWork);
             newExecution.Timer = timer;
 
             _oneTimeTimers.Add(newExecution);
@@ -65,7 +66,7 @@ public class Scheduler : IScheduler, IDisposable
         }
     }
 
-    public void ExecuteEvery(Action action, TimeSpan timeBetweenExecutions, TimeSpan? optionalInitialDelay = null)
+    public void ExecuteEvery(Action action, TimeSpan timeBetweenExecutions, TimeSpan? optionalInitialDelay = null, bool trackAsAgentWork = true)
     {
         if (timeBetweenExecutions < TimeSpan.Zero)
             throw new ArgumentException("Must be non-negative", "timeBetweenExecutions");
@@ -80,7 +81,7 @@ public class Scheduler : IScheduler, IDisposable
                 existingTimer.Dispose();
             }
 
-            var timer = CreateExecuteEveryTimer(action, timeBetweenExecutions, optionalInitialDelay);
+            var timer = CreateExecuteEveryTimer(action, timeBetweenExecutions, optionalInitialDelay, trackAsAgentWork);
             _recurringTimers[action] = timer;
         }
         finally
@@ -91,7 +92,7 @@ public class Scheduler : IScheduler, IDisposable
 
     public static Timer CreateExecuteOnceTimer(Action action)
     {
-        return PrivateCreateExecuteOnceTimer(action, DisablePeriodicExecution);
+        return PrivateCreateExecuteOnceTimer(action, DisablePeriodicExecution, trackAsAgentWork: true);
     }
 
     /// <summary>
@@ -99,33 +100,66 @@ public class Scheduler : IScheduler, IDisposable
     /// </summary>
     /// <param name="action">The action to execute</param>
     /// <param name="timeUntilExecution">The delay until execution. Must be non-negative.</param>
-    public static Timer CreateExecuteOnceTimer(Action action, TimeSpan timeUntilExecution)
+    /// <param name="trackAsAgentWork">Whether to mark the execution as agent work for continuous profiling.</param>
+    public static Timer CreateExecuteOnceTimer(Action action, TimeSpan timeUntilExecution, bool trackAsAgentWork = true)
     {
         if (timeUntilExecution < TimeSpan.Zero)
             throw new ArgumentException("Must be non-negative", "timeUntilExecution");
 
-        return PrivateCreateExecuteOnceTimer(action, timeUntilExecution);
+        return PrivateCreateExecuteOnceTimer(action, timeUntilExecution, trackAsAgentWork);
     }
 
-    private static Timer PrivateCreateExecuteOnceTimer(Action action, TimeSpan timeUntilExecution)
+    /// <summary>
+    /// Resolves the continuous-profiling context a single timer callback will use for BOTH its
+    /// <see cref="IContinuousProfilingContext.SetAgentWork"/> and its matching
+    /// <see cref="IContinuousProfilingContext.ResetAgentWork"/>, or <c>null</c> when this timer does not
+    /// track agent work.
+    ///
+    /// <para>Capturing once is load-bearing, not a micro-optimization. Those two calls are the halves of a
+    /// native per-thread nesting-DEPTH counter that demands strict 1:1 pairing. Reading the static
+    /// <see cref="ContinuousProfilingContext.Instance"/> separately for each half let a CP stop/retune
+    /// landing mid-callback (a server-side config change is enough) send the set to the live context and
+    /// the reset to the inert replacement instance published in its place -- leaving this ThreadPool
+    /// thread's native slot stuck at depth >= 1 for the rest of the process, so every subsequent sample on
+    /// it, application work included, was silently filtered out as agent work.</para>
+    /// </summary>
+    private static IContinuousProfilingContext CaptureAgentWorkContext(bool trackAsAgentWork)
+    {
+        // Instance never returns null (its setter substitutes an inert instance), so a non-null result
+        // here means "track", and the null-conditional calls at both sites collapse to the untracked case.
+        return trackAsAgentWork ? ContinuousProfilingContext.Instance : null;
+    }
+
+    private static Timer PrivateCreateExecuteOnceTimer(Action action, TimeSpan timeUntilExecution, bool trackAsAgentWork)
     {
         var ignoreWorkAction = new TimerCallback(_ =>
         {
-            using (new IgnoreWork())
-                action.CatchAndLog();
+            // Capture Instance ONCE and drive both halves through it -- see CaptureAgentWorkContext.
+            var continuousProfilingContext = CaptureAgentWorkContext(trackAsAgentWork);
+            continuousProfilingContext?.SetAgentWork();
+            try
+            {
+                using (new IgnoreWork())
+                    action.CatchAndLog();
+            }
+            finally
+            {
+                continuousProfilingContext?.ResetAgentWork();
+            }
         });
         return new Timer(ignoreWorkAction, null, timeUntilExecution, DisablePeriodicExecution);
     }
 
     /// <summary>
     /// Create a timer that will execute <paramref name="action"/> asynchronously once per <paramref name="timeBetweenExecutions"/>. First execution is delayed until <paramref name="optionalInitialDelay"/>.
-    /// 
+    ///
     /// The timer will be paused while the action is executing.
     /// </summary>
     /// <param name="action">The action to execute</param>
     /// <param name="timeBetweenExecutions">The delay until execution and between executions. Must be non-negative.</param>
     /// <param name="optionalInitialDelay">A specific time delay before the first execution. Must be non-negative. Defaults to <paramref name="timeBetweenExecutions"/> if unspecified.</param>
-    public static Timer CreateExecuteEveryTimer(Action action, TimeSpan timeBetweenExecutions, TimeSpan? optionalInitialDelay = null)
+    /// <param name="trackAsAgentWork">Whether to mark each execution as agent work for continuous profiling.</param>
+    public static Timer CreateExecuteEveryTimer(Action action, TimeSpan timeBetweenExecutions, TimeSpan? optionalInitialDelay = null, bool trackAsAgentWork = true)
     {
         var initialDelay = optionalInitialDelay ?? timeBetweenExecutions;
 
@@ -137,6 +171,9 @@ public class Scheduler : IScheduler, IDisposable
         var timer = null as Timer;
         var ignoreWorkAction = new TimerCallback(_ =>
         {
+            // Capture Instance ONCE and drive both halves through it -- see CaptureAgentWorkContext.
+            var continuousProfilingContext = CaptureAgentWorkContext(trackAsAgentWork);
+            continuousProfilingContext?.SetAgentWork();
             try
             {
                 timer.Change(DisablePeriodicExecution, DisablePeriodicExecution);
@@ -151,10 +188,10 @@ public class Scheduler : IScheduler, IDisposable
             }
             finally
             {
+                continuousProfilingContext?.ResetAgentWork();
+
                 try
                 {
-                    // Change timer in finally so its enabled even if there was an exception
-                    // while executing Action. 
                     timer.Change(timeBetweenExecutions, DisablePeriodicExecution);
                 }
                 catch (ObjectDisposedException)
