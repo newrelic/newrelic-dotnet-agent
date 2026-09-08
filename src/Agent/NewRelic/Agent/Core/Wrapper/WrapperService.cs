@@ -122,7 +122,7 @@ public class WrapperService : IWrapperService
 
             var method = new Method(type, methodName, argumentSignature, functionId.GetHashCode());
             var transactionNamePriority = TracerArgument.GetTransactionNamingPriority(tracerArguments);
-            instrumentedMethodInfo = new InstrumentedMethodInfo((long)functionId, method, tracerFactoryName, isAsync, metricName, transactionNamePriority, TracerArgument.IsFlagSet(tracerArguments, TracerFlags.WebTransaction));
+            instrumentedMethodInfo = new InstrumentedMethodInfo((long)functionId, method, tracerFactoryName, isAsync, metricName, transactionNamePriority, TracerArgument.IsFlagSet(tracerArguments, TracerFlags.WebTransaction), isRuntimeAsync);
 
             trackedWrapper = _wrapperMap.Get(instrumentedMethodInfo);
 
