@@ -51,13 +51,12 @@ public class MultithreadedTrackingWrapperTests
     }
 
     /// <summary>
-    /// NR-610232. This wrapper creates a transaction and calls AttachToAsync() without the paired
-    /// DetachFromPrimary(). For a runtime-async method that combination is the bug fixed in
-    /// OtherTransactionWrapper: because a runtime-async method's after-delegate fires only at true
-    /// completion, the transaction would sit in the creating thread's primary (thread-local) storage
-    /// for the method's whole life, and completing on a different thread would strand it there
-    /// finished forever -- silently dropping the segments of any later continuation that lands on
-    /// that thread.
+    /// This wrapper creates a transaction and calls AttachToAsync() without the paired
+    /// DetachFromPrimary(). For a runtime-async method this is problematic: a
+    /// runtime-async method's after-delegate fires only at true completion, meaning the transaction
+    /// will sit in the creating thread's primary (thread-local) storage for the method's whole life,
+    /// and completing on a different thread will strand it there finished forever, silently dropping the
+    /// segments of any later continuation that lands on that thread.
     ///
     /// This wrapper is safe today only because the async guard above rejects runtime-async methods:
     /// WrapperService sets IsAsync = true for them once result normalization is in place, so they
@@ -76,7 +75,7 @@ public class MultithreadedTrackingWrapperTests
 
         Assert.Multiple(() =>
         {
-            Assert.That(response.CanWrap, Is.False, "a runtime-async method must never reach this wrapper -- see NR-610232");
+            Assert.That(response.CanWrap, Is.False, "a runtime-async method must never reach this wrapper");
             Assert.That(response.AdditionalInformation, Does.Contain("not intended to be used with async-await"));
         });
     }

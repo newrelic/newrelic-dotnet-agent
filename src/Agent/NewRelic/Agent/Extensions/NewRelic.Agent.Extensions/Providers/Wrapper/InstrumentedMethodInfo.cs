@@ -12,17 +12,15 @@ public class InstrumentedMethodInfo
     public readonly Method Method;
     public readonly string RequestedWrapperName;
     public readonly bool IsAsync;
+
+    /// <summary>
+    /// True for a .NET 11 runtime-async method. Used in OtherTransactionWrapper to determine
+    /// whether to call DetachFromPrimary() in the after-delegate.
+    /// </summary>
+    public readonly bool IsRuntimeAsync;
     public readonly string RequestedMetricName;
     public readonly TransactionNamePriority? RequestedTransactionNamePriority;
     public readonly bool StartWebTransaction;
-
-    /// <summary>
-    /// True for a .NET 11 runtime-async method. Distinct from <see cref="IsAsync"/>: such a method
-    /// is async, but its after-delegate fires at true completion rather than at a stub return, so a
-    /// transaction created for it would otherwise linger in primary (thread-local) storage for the
-    /// method's whole life. See NR-610232.
-    /// </summary>
-    public readonly bool IsRuntimeAsync;
 
     public InstrumentedMethodInfo(long functionId, Method method, string requestedWrapperName, bool isAsync, string requestedMetricName, TransactionNamePriority? requestedTransactionNamePriority, bool startWebTransaction, bool isRuntimeAsync = false)
     {
@@ -30,10 +28,10 @@ public class InstrumentedMethodInfo
         RequestedWrapperName = requestedWrapperName;
         _functionId = functionId;
         IsAsync = isAsync;
+        IsRuntimeAsync = isRuntimeAsync;
         RequestedMetricName = requestedMetricName;
         RequestedTransactionNamePriority = requestedTransactionNamePriority;
         StartWebTransaction = startWebTransaction;
-        IsRuntimeAsync = isRuntimeAsync;
     }
 
     public override int GetHashCode()

@@ -88,7 +88,7 @@ public class WrapperService : IWrapperService
             // IL body returns the unwrapped result rather than a Task, so the profiler deliberately
             // withholds TracerFlags.Async. Build a normalizer that restores the Task the wrappers
             // expect; only if that succeeds may we call the method async, because IsAsync is a
-            // promise about the result slot and not a description of the method. See NR-610232.
+            // promise about the result slot as well as a description of the method.
             var isRuntimeAsync = TracerArgument.IsRuntimeAsync(tracerArguments);
             var normalization = isRuntimeAsync
                 ? RuntimeAsyncResultNormalizer.TryCreate(type, methodName, argumentSignature)
@@ -104,13 +104,13 @@ public class WrapperService : IWrapperService
                     // Open generic result type -- Task<object> was substituted. Harmless for every
                     // current wrapper, but this line is the only signal if a wrapper ever pairs a
                     // typed onComplete with a generic method, which would fail silently.
-                    Log.Debug("Runtime-async method {0}.{1}({2}) has an open generic result type; using Task<object> for result normalization.",
+                    Log.Finest("Runtime-async method {0}.{1}({2}) has an open generic result type; using Task<object> for result normalization.",
                         type.FullName, methodName, argumentSignature);
                 }
             }
             else if (isRuntimeAsync)
             {
-                Log.Debug("Could not classify the return shape of runtime-async method {0}.{1}({2}); instrumenting it with synchronous completion semantics.",
+                Log.Finest("Could not classify the return shape of runtime-async method {0}.{1}({2}); instrumenting it with synchronous completion semantics.",
                     type.FullName, methodName, argumentSignature);
             }
 

@@ -65,7 +65,7 @@ public class OtherTransactionWrapper : IWrapper
         {
             agent.CurrentTransaction.AttachToAsync();
 
-            // NR-610232: a runtime-async method's after-delegate fires only at true completion, not at
+            // A runtime-async method's after-delegate fires only at true completion, not at
             // a stub return, so this transaction would otherwise sit in the creating thread's primary
             // (thread-local) storage for the method's entire life. ThreadLocalStorage.Clear() clears
             // only the calling thread, so a transaction completing on a different thread would strand

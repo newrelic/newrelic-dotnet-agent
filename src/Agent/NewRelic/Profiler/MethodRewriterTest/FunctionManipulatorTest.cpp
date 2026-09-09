@@ -71,7 +71,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
         }
 
         // ---------------------------------------------------------------------------------------
-        // .NET 11 runtime-async return handling. See NR-610232 and RuntimeAsyncReturnType.h.
+        // .NET 11 runtime-async return handling. See RuntimeAsyncReturnType.h.
         //
         // A runtime-async method's IL body does not honour the return convention its signature
         // declares: Task/ValueTask push nothing before `ret`, Task<T>/ValueTask<T> push an

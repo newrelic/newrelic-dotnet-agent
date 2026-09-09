@@ -77,7 +77,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             // is the safe trade; the warning tells us if it ever actually happens.
             //
             // Must stay above the ShouldInjectMethodInstrumentation() call so we don't request a
-            // rejit we won't honor. See NR-610232.
+            // rejit we won't honor.
             if (function->IsRuntimeAsync() &&
                     RuntimeAsync::GetEffectiveReturnTypeFromSignature(function->GetSignature(), function->GetTokenResolver()) == nullptr) {
                 LogWarn(L"Skipping runtime-async method with an unrecognized return type: ", function->ToString());

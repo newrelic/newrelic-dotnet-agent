@@ -159,7 +159,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
         // .NET 11 runtime-async methods (MethodImplAttributes.Async, 0x2000 in ImplFlags -- note
         // that mdPinvokeImpl above is also 0x2000, but in methodAttributes, a different field) do
         // not follow the return convention their signature declares: the body pushes nothing for
-        // Task/ValueTask and an unwrapped T for Task<T>/ValueTask<T>. See NR-610232.
+        // Task/ValueTask and an unwrapped T for Task<T>/ValueTask<T>.
         //
         // The rewriter handles those four shapes (RuntimeAsyncReturnType.h). Anything else is
         // declined, because the Async flag can be set but inert and rewriting a method that really
