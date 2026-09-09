@@ -270,6 +270,19 @@ an SDK thread before a transaction exists) will be silently skipped --
 `transaction` would be null, so the agent bypasses the wrapper entirely.
 Wrappers that *start* transactions must return `false`.
 
+**A wrapper that creates a transaction and calls `AttachToAsync()` must also
+call `DetachFromPrimary()`.** Creating a transaction stores it in the primary
+context -- thread-local on .NET Core -- and `ThreadLocalStorage.Clear()` clears
+only the calling thread, so a transaction that completes on a different thread
+strands a *finished* one in the creating thread's slot permanently. Because
+`GetCurrentInternalTransaction()` checks primary storage before the async
+context, later continuations landing on that thread find the dead transaction
+and their segments are silently dropped. `AttachToAsync()` keeps the live
+transaction reachable through the async context, so dropping it from primary is
+safe. See `Core/Wrapper/OtherTransactionWrapper` and NR-610232; the entry-point
+wrappers (AspNetCore, AwsLambda, AzureFunction, Hangfire, MassTransit,
+NServiceBus, Owin) all follow this pairing.
+
 `maxVersion` in instrumentation XML is **exclusive**. Prefer
 `VisibilityBypasser` over reflection / `dynamic` when reaching into
 instrumented types; cache generated delegates per type. Both conventions
