@@ -58,13 +58,10 @@ public class MultithreadedTrackingWrapperTests
     /// and completing on a different thread will strand it there finished forever, silently dropping the
     /// segments of any later continuation that lands on that thread.
     ///
-    /// This wrapper is safe today only because the async guard above rejects runtime-async methods:
-    /// WrapperService sets IsAsync = true for them once result normalization is in place, so they
-    /// take the same "not intended to be used with async-await" path as state-machine async.
-    ///
-    /// If that guard is ever relaxed to admit async methods, this wrapper needs DetachFromPrimary()
-    /// after its AttachToAsync() in the same change. Do not simply delete this test to make a
-    /// relaxation compile.
+    /// The guard above therefore rejects runtime-async methods on their own merits, independent of
+    /// how they are classified as async. If it is ever relaxed to admit them, this wrapper needs
+    /// DetachFromPrimary() after its AttachToAsync() in the same change. Do not simply delete this
+    /// test or the one below to make a relaxation compile.
     /// </summary>
     [Test]
     public void CanWrap_IsFalse_ForARuntimeAsyncMethod()
@@ -76,6 +73,24 @@ public class MultithreadedTrackingWrapperTests
         Assert.Multiple(() =>
         {
             Assert.That(response.CanWrap, Is.False, "a runtime-async method must never reach this wrapper");
+            Assert.That(response.AdditionalInformation, Does.Contain("not intended to be used with async-await"));
+        });
+    }
+
+    /// <summary>
+    /// The runtime-async rejection must not depend on IsAsync also being set. WrapperService
+    /// promotes IsAsync for runtime-async methods today, but a future change that decoupled the
+    /// two would otherwise let a runtime-async method through this wrapper and reproduce the
+    /// stranded-transaction bug described above.
+    /// </summary>
+    [Test]
+    public void CanWrap_IsFalse_ForARuntimeAsyncMethodNotMarkedAsync()
+    {
+        var response = _wrapper.CanWrap(MakeInfo(WrapperName, isAsync: false, isRuntimeAsync: true));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(response.CanWrap, Is.False, "IsRuntimeAsync alone must be enough to reject");
             Assert.That(response.AdditionalInformation, Does.Contain("not intended to be used with async-await"));
         });
     }
