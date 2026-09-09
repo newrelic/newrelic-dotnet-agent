@@ -341,7 +341,7 @@ public class Class_WrapperService
         }
     }
 
-    #region runtime-async (NR-610232)
+    // Runtime-async support tests
 
     // Test subjects for the normalizer's reflection. The normalizer reads only the declared
     // return type, so ordinary methods stand in faithfully for runtime-async ones.
@@ -500,6 +500,4 @@ public class Class_WrapperService
         Mock.Arrange(() => _wrapperMap.Get(Arg.IsAny<InstrumentedMethodInfo>()))
             .Returns(new TrackedWrapper(wrapper));
     }
-
-    #endregion
 }

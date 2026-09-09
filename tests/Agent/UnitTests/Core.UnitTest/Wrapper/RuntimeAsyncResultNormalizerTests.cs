@@ -11,8 +11,8 @@ namespace NewRelic.Agent.Core.Wrapper;
 [TestFixture]
 public class RuntimeAsyncResultNormalizerTests
 {
-    // The normalizer reads only the DECLARED return type, so an ordinary method is a faithful
-    // stand-in for a runtime-async one -- no preview SDK needed to test this.
+    // The RuntimeAsyncResultNormalizer reads only the DECLARED return type, so an ordinary method is a faithful
+    // stand-in for a runtime-async one; an actual runtime-async-capable .NET runtime is not required to test the normalizer's behavior.
     private class Subject
     {
         public Task ReturnsTask() => Task.CompletedTask;

@@ -58,7 +58,15 @@ public class OtherTransactionWrapperTests
         return new InstrumentedMethodCall(methodCall, info);
     }
 
-    // NR-610232. A runtime-async method's after-delegate fires only at true completion, so without
+    [Test]
+    public void BeforeWrappedMethod_StillAttachesToAsync_WhenRuntimeAsync()
+    {
+        _wrapper.BeforeWrappedMethod(MakeCall(isAsync: true, isRuntimeAsync: true), _agent, _noTransaction);
+
+        Mock.Assert(() => _createdTransaction.AttachToAsync(), Occurs.Once());
+    }
+
+    // A runtime-async method's after-delegate fires only at true completion, so without
     // this the transaction would sit in the creating thread's primary (thread-local) storage for the
     // method's whole life and be stranded there, finished, once it completed on another thread.
     [Test]
@@ -67,14 +75,6 @@ public class OtherTransactionWrapperTests
         _wrapper.BeforeWrappedMethod(MakeCall(isAsync: true, isRuntimeAsync: true), _agent, _noTransaction);
 
         Mock.Assert(() => _createdTransaction.DetachFromPrimary(), Occurs.Once());
-    }
-
-    [Test]
-    public void BeforeWrappedMethod_StillAttachesToAsync_WhenRuntimeAsync()
-    {
-        _wrapper.BeforeWrappedMethod(MakeCall(isAsync: true, isRuntimeAsync: true), _agent, _noTransaction);
-
-        Mock.Assert(() => _createdTransaction.AttachToAsync(), Occurs.Once());
     }
 
     // State-machine async gets the same effect for free from its early Detach(), so it must be

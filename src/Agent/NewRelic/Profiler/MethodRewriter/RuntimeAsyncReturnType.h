@@ -19,7 +19,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace R
     //
     // These helpers map a declared return type onto the type the IL body actually produces, so
     // the rewriter can size its result local, store, box and return against reality instead of
-    // against the signature. See NR-610232.
+    // against the signature.
 
     // Names come from IMetaDataImport::GetTypeDefProps / GetTypeRefProps via CorTokenResolver,
     // i.e. raw ECMA-335 metadata names -- so the generic forms carry the `1 arity suffix and the

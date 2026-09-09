@@ -53,7 +53,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
         // nullptr means the method is runtime-async in a shape we do not understand. The
         // instrumentors decline such methods before constructing a manipulator, so this is a
         // guard against that check and this one disagreeing, not an expected state. See
-        // NR-610232 and RuntimeAsyncReturnType.h.
+        // RuntimeAsyncReturnType.h.
         SignatureParser::ReturnTypePtr _effectiveReturnType;
         bool _isCoreClr;
         const AgentCallStyle::Strategy _agentCallStrategy;

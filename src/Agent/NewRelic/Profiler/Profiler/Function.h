@@ -363,7 +363,7 @@ namespace NewRelic { namespace Profiler
             //
             // WrapperService restores that promise for RuntimeAsyncMethod methods by synthesising a
             // completed Task from the real result, and only then treats them as async. See
-            // NR-610232, RuntimeAsyncReturnType.h, and Core/Wrapper/RuntimeAsyncResultNormalizer.cs.
+            // RuntimeAsyncReturnType.h and Core/Wrapper/RuntimeAsyncResultNormalizer.cs.
             HRESULT attributeResult = _metaDataImport->GetCustomAttributeByName(_metaDataToken, _X("System.Runtime.CompilerServices.AsyncStateMachineAttribute"), (const void**)&pVal, &cbVal);
             // It is not safe for us to use the SUCCEEDED macro on the result returned from GetCustomAttributeByName
             if (attributeResult == S_OK)
@@ -447,7 +447,7 @@ namespace NewRelic { namespace Profiler
         // emits the body directly on the method and flags it here instead. Such a method returns
         // its unwrapped type (nothing for Task/ValueTask, T for Task<T>/ValueTask<T>) even though
         // its signature declares the task type, so the default instrumentation's signature-derived
-        // return handling would produce unverifiable IL. See NR-610232.
+        // return handling would produce unverifiable IL.
         virtual bool IsRuntimeAsync() override
         {
             return (_methodImplFlags & CorMethodImplAsync) != 0;

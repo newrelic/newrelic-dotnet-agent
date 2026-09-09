@@ -44,8 +44,8 @@ public sealed class RuntimeAsyncNormalization
 /// Per the ECMA-335 augment (I.8.4.5) a runtime-async body pushes nothing before `ret` for
 /// Task/ValueTask and an unwrapped T for Task&lt;T&gt;/ValueTask&lt;T&gt;, so the profiler hands
 /// FinishTracer a null or a boxed T where every wrapper expects a Task. Restoring the Task here --
-/// once, at the single choke point in WrapperService -- is what lets all 47 GetAsyncDelegateFor
-/// call sites keep working unchanged. See NR-610232.
+/// once, at the single choke point in WrapperService -- is what lets existing GetAsyncDelegateFor
+/// call sites keep working unchanged.
 /// </summary>
 public static class RuntimeAsyncResultNormalizer
 {
@@ -90,12 +90,11 @@ public static class RuntimeAsyncResultNormalizer
 
         var resultType = returnType.GetGenericArguments()[0];
 
-        // An open generic (Task<T> on a generic method, Task<IAsyncCursor<TDoc>> on a generic type,
-        // ...) cannot be bound to an invokable delegate: CreateDelegate throws for any method whose
+        // An open generic (Task<T> on a generic method / Task<IAsyncCursor<TDoc>> on a generic type)
+        // cannot be bound to an invokable delegate: CreateDelegate throws for any method whose
         // ContainsGenericParameters is true. Fall back to Task<object>, which still satisfies the
-        // `result is Task` gate that every wrapper but HttpClient/SendAsync uses, and which the
-        // reflective result readers handle unchanged. NOT null -- declining here would leave IsAsync
-        // false and preserve the original defect for these methods.
+        // `result is Task` gate that most wrappers for async methods use, and which those wrappers'
+        // reflective result readers handle unchanged.
         var isExactlyTyped = !resultType.ContainsGenericParameters;
         if (!isExactlyTyped)
         {

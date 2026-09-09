@@ -25,7 +25,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
     // The nullptr cases matter as much as the positive ones. The Async impl flag can be set but
     // inert -- the spec says it "only has effect" on Task/ValueTask returns -- and rewriting the
     // return handling of a method whose flag is inert would *introduce* an InvalidProgramException
-    // into a method the profiler handles correctly today. See NR-610232.
+    // into a method the profiler handles correctly today.
     TEST_CLASS(RuntimeAsyncReturnTypeTest)
     {
     private:
