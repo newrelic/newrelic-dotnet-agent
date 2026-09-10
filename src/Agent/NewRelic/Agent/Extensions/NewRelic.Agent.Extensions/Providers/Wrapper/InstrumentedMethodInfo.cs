@@ -14,8 +14,22 @@ public class InstrumentedMethodInfo
     public readonly bool IsAsync;
 
     /// <summary>
-    /// True for a .NET 11 runtime-async method. Used in OtherTransactionWrapper to determine
-    /// whether to call DetachFromPrimary() in the after-delegate.
+    /// True for a .NET 11 runtime-async method. Distinct from <see cref="IsAsync"/>, which
+    /// WrapperService also sets for these methods once it can restore the Task their body does not
+    /// return; this flag says the method is runtime-async specifically.
+    ///
+    /// Two wrappers read it, both while deciding what to do rather than when cleaning up:
+    ///
+    /// OtherTransactionWrapper, in BeforeWrappedMethod immediately after AttachToAsync(), to decide
+    /// whether to also call DetachFromPrimary() -- and only when this wrapper is what created the
+    /// transaction. Clearing primary storage that early is the whole point: a runtime-async method's
+    /// after-delegate does not fire until true completion, so deferring it would leave the
+    /// transaction in the creating thread's thread-local slot for the method's entire life.
+    ///
+    /// MultithreadedTrackingWrapper, in CanWrap, to refuse these methods outright, because it calls
+    /// AttachToAsync() with no paired DetachFromPrimary().
+    ///
+    /// See those two wrappers for the full reasoning.
     /// </summary>
     public readonly bool IsRuntimeAsync;
     public readonly string RequestedMetricName;
