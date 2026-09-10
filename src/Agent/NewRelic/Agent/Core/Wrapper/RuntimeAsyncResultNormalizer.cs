@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
+using NewRelic.Agent.Extensions.Logging;
 
 namespace NewRelic.Agent.Core.Wrapper;
 
@@ -57,12 +58,34 @@ public static class RuntimeAsyncResultNormalizer
 
     /// <summary>
     /// Builds a result normalizer for one instrumented method, or returns null when the method's
-    /// declared return type is not a task type at all (or the method cannot be resolved). A null
-    /// return means the caller must keep synchronous completion semantics -- never guess, because
-    /// guessing wrong strands transactions. Intended to be called once per functionId and the
-    /// result cached; it reflects.
+    /// declared return type is not a task type at all, the method cannot be resolved, or reflecting
+    /// over the declaring type throws. A null return means the caller must keep synchronous
+    /// completion semantics -- never guess, because guessing wrong strands transactions. Intended to
+    /// be called once per functionId and the result cached; it reflects.
     /// </summary>
     public static RuntimeAsyncNormalization TryCreate(Type declaringType, string methodName, string parameterTypeNames)
+    {
+        // Every reflection call below reaches the loader, so a customer type with a member whose
+        // signature references an assembly that cannot be loaded throws FileNotFoundException or
+        // TypeLoadException -- the classic GetMethods() failure with optional dependencies. No frame
+        // above this one handles that: AgentShim.GetTracer would swallow it and return a null
+        // tracer, leaving the functionId uncached, so every later call to the method would repeat
+        // the whole enumeration AND the throw. Degrading to null keeps that cost one-time and lands
+        // on the outcome the caller already handles.
+        try
+        {
+            return Classify(declaringType, methodName, parameterTypeNames);
+        }
+        catch (Exception ex)
+        {
+            Log.Debug(ex, "Failed to classify the return shape of runtime-async method {0}.{1}({2}); instrumenting it with synchronous completion semantics.",
+                declaringType?.FullName, methodName, parameterTypeNames);
+
+            return null;
+        }
+    }
+
+    private static RuntimeAsyncNormalization Classify(Type declaringType, string methodName, string parameterTypeNames)
     {
         var method = TryResolveMethod(declaringType, methodName, parameterTypeNames);
         if (method == null)

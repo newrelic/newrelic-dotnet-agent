@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Threading.Tasks;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Configuration;
@@ -351,6 +352,23 @@ public class Class_WrapperService
 
     public int RuntimeAsyncUnclassifiableMethod() => 0;
 
+    // Stands in for a customer type whose member signatures reference an assembly that cannot be
+    // loaded, and counts the attempts so the test can prove the failure is not retried per call.
+    private class ReflectionHostileType : TypeDelegator
+    {
+        public ReflectionHostileType() : base(typeof(Class_WrapperService))
+        {
+        }
+
+        public int GetMethodsCallCount { get; private set; }
+
+        public override MethodInfo[] GetMethods(BindingFlags bindingAttr)
+        {
+            GetMethodsCallCount++;
+            throw new TypeLoadException("could not load a parameter type");
+        }
+    }
+
     [Test]
     public void BeforeWrappedMethod_TreatsClassifiableRuntimeAsyncMethodAsAsync()
     {
@@ -488,6 +506,37 @@ public class Class_WrapperService
         {
             Assert.That(capturedInfo.IsRuntimeAsync, Is.False);
             Assert.That(capturedInfo.IsAsync, Is.True);
+        });
+    }
+
+    [Test]
+    public void BeforeWrappedMethod_ClassifiesOnce_WhenRuntimeAsyncClassificationThrows()
+    {
+        // A classification failure must still cache the functionId. If the exception escaped
+        // instead, AgentShim.GetTracer would swallow it and the entry would never be written, so
+        // every later call to this method would repeat the full reflection plus the throw.
+        var declaringType = new ReflectionHostileType();
+        InstrumentedMethodInfo capturedInfo = null;
+        Mock.Arrange(() => _wrapperMap.Get(Arg.IsAny<InstrumentedMethodInfo>()))
+            .Returns((InstrumentedMethodInfo info) =>
+            {
+                capturedInfo = info;
+                return new TrackedWrapper(Mock.Create<IWrapper>());
+            });
+
+        Assert.DoesNotThrow(() =>
+        {
+            _wrapperService.BeforeWrappedMethod(declaringType, nameof(RuntimeAsyncTaskOfIntMethod),
+                string.Empty, new object(), new object[0], "MyTracer", null, RuntimeAsyncTracerArgs, 108);
+            _wrapperService.BeforeWrappedMethod(declaringType, nameof(RuntimeAsyncTaskOfIntMethod),
+                string.Empty, new object(), new object[0], "MyTracer", null, RuntimeAsyncTracerArgs, 108);
+        });
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(declaringType.GetMethodsCallCount, Is.EqualTo(1));
+            Assert.That(capturedInfo.IsAsync, Is.False);
+            Assert.That(capturedInfo.IsRuntimeAsync, Is.True);
         });
     }
 

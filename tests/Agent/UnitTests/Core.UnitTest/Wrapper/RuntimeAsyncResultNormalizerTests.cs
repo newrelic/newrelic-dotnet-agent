@@ -3,6 +3,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
 using System.Threading.Tasks;
 using NUnit.Framework;
 
@@ -40,6 +42,25 @@ public class RuntimeAsyncResultNormalizerTests
     {
         public Task<TDoc> ReturnsTaskOfTypeParameter() => Task.FromResult(default(TDoc));
         public Task<long> ReturnsClosedTaskOnGenericType() => Task.FromResult(0L);
+    }
+
+    // A real Type whose member reflection throws, the way the CLR does when a member signature
+    // references an assembly that cannot be loaded. TypeDelegator forwards everything else to the
+    // wrapped type, so this fails exactly where a customer type with a missing optional dependency
+    // would, and nowhere else.
+    private class ReflectionHostileType : TypeDelegator
+    {
+        private readonly Exception _toThrow;
+
+        public ReflectionHostileType(Exception toThrow) : base(typeof(Subject))
+        {
+            _toThrow = toThrow;
+        }
+
+        public override MethodInfo[] GetMethods(BindingFlags bindingAttr)
+        {
+            throw _toThrow;
+        }
     }
 
     private static Func<object, Task> Create(string methodName, string parameterTypeNames = "")
@@ -255,5 +276,30 @@ public class RuntimeAsyncResultNormalizerTests
     public void TryCreate_TreatsNullParameterTypeNames_AsAnEmptySignature()
     {
         Assert.That(RuntimeAsyncResultNormalizer.TryCreate(typeof(Subject), nameof(Subject.ReturnsTask), null), Is.Not.Null);
+    }
+
+    // The reflection here runs outside the try in WrapperService.BeforeWrappedMethod, so an escaping
+    // exception would reach AgentShim.GetTracer, which swallows it and returns a null tracer --
+    // leaving the functionId uncached and re-reflecting on every subsequent call.
+    [Test]
+    public void TryCreate_ReturnsNull_WhenMemberReflectionThrows()
+    {
+        var declaringType = new ReflectionHostileType(new TypeLoadException("could not load a parameter type"));
+
+        RuntimeAsyncNormalization normalization = null;
+        Assert.DoesNotThrow(() => normalization = RuntimeAsyncResultNormalizer.TryCreate(declaringType, nameof(Subject.ReturnsTaskOfInt), string.Empty));
+        Assert.That(normalization, Is.Null);
+    }
+
+    [Test]
+    public void TryCreate_ReturnsNull_WhenAnAssemblyCannotBeLoadedDuringReflection()
+    {
+        // Not filtered by exception type: a missing optional dependency surfaces as
+        // FileNotFoundException rather than TypeLoadException, and must degrade the same way.
+        var declaringType = new ReflectionHostileType(new FileNotFoundException("optional dependency is not present"));
+
+        RuntimeAsyncNormalization normalization = null;
+        Assert.DoesNotThrow(() => normalization = RuntimeAsyncResultNormalizer.TryCreate(declaringType, nameof(Subject.ReturnsTaskOfInt), string.Empty));
+        Assert.That(normalization, Is.Null);
     }
 }
