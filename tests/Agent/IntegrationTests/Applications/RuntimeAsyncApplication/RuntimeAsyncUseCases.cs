@@ -80,4 +80,17 @@ public class RuntimeAsyncUseCases
 
         Console.WriteLine($"InnerAsync({value}) completed on thread {Environment.CurrentManagedThreadId}");
     }
+
+    /// <summary>
+    /// A plain synchronous transaction, present purely as a positive control for the thread.id
+    /// span attribute. The agent records thread.id only for non-async segments, so without a
+    /// segment that is genuinely expected to carry it, asserting its absence on the async
+    /// segments would pass just as happily if the attribute were never emitted at all.
+    /// </summary>
+    [Transaction]
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public void SynchronousControl()
+    {
+        Console.WriteLine($"SynchronousControl ran on thread {Environment.CurrentManagedThreadId}");
+    }
 }

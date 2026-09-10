@@ -47,6 +47,12 @@ class Program
         // Repeat so the nested-segment assertion is a count, not a single sighting. The failure
         // this guards against dropped roughly a quarter of nested segments rather than all of
         // them, so one invocation would pass even with the bug present.
+        // Runs before the loop on purpose. Span events are only produced for sampled
+        // transactions and adaptive sampling takes roughly ten per minute, so a single
+        // transaction queued behind Iterations async ones does not get sampled and produces
+        // metrics but no span -- which silently removes the thread.id positive control.
+        useCases.SynchronousControl();
+
         for (var i = 0; i < RuntimeAsyncUseCases.Iterations; i++)
         {
             await useCases.OuterAsync(i);
