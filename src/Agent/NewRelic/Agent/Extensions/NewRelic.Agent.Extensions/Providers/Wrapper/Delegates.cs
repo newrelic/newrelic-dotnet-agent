@@ -80,7 +80,14 @@ public static class Delegates
 
     public static AfterWrappedMethodDelegate GetAsyncDelegateFor<T>(IAgent agent, ISegment segment, bool holdTransactionOpen, Action<T> onComplete, TaskContinuationOptions? continuationOptions = null) where T : Task
     {
-        return GetDelegateFor<T>(
+        // Gate on Task, not on T, exactly as the three sibling overloads below do. GetDelegateFor
+        // skips onSuccess outright when the result is not of its type argument, and onFailure needs
+        // an exception -- so gating on a concrete Task<TResult> meant a result that was some other
+        // Task ran NOTHING: the segment was never ended, never removed from the call stack (leaving
+        // a stale frame to misparent later segments), and onComplete never fired. OnSuccess only
+        // ever needs a Task, and it already narrows to T defensively with `as` before handing the
+        // task to onComplete.
+        return GetDelegateFor<Task>(
             onFailure: segment.End,
             onSuccess: InvokeOnSuccess
         );

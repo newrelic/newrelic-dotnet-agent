@@ -101,10 +101,12 @@ public class WrapperService : IWrapperService
 
                 if (!normalization.IsExactlyTyped)
                 {
-                    // Open generic result type -- Task<object> was substituted. Harmless for every
-                    // current wrapper, but this line is the only signal if a wrapper ever pairs a
-                    // typed onComplete with a generic method, which would fail silently.
-                    Log.Finest("Runtime-async method {0}.{1}({2}) has an open generic result type; using Task<object> for result normalization.",
+                    // Open generic result type -- Task<object> was substituted. Every async delegate
+                    // gates on Task rather than a concrete Task<TResult>, so the segment still ends
+                    // normally; the residual effect is that a wrapper pairing a typed onComplete with
+                    // a generic method receives null for the task, because Delegates.OnSuccess
+                    // narrows with `as`. This line is the only signal that happened.
+                    Log.Debug("Runtime-async method {0}.{1}({2}) has an open generic result type; using Task<object> for result normalization.",
                         type.FullName, methodName, argumentSignature);
                 }
             }
