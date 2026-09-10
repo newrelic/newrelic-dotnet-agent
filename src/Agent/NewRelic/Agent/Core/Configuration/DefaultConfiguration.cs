@@ -42,6 +42,7 @@ public class DefaultConfiguration : IConfiguration
     private const string ServerConfigSource = "Server Configuration";
     private const int MaxExptectedErrorConfigEntries = 50;
     private const int MaxIgnoreErrorConfigEntries = 50;
+    private const int MinKafkaMetricsIntervalSeconds = 5;
 
     private static long _currentConfigurationVersion;
     private readonly IEnvironment _environment = new EnvironmentMock();
@@ -110,7 +111,6 @@ public class DefaultConfiguration : IConfiguration
         UseResourceBasedNamingForWCFEnabled = TryGetAppSettingAsBoolWithDefault("NewRelic.UseResourceBasedNamingForWCF", false);
 
         EventListenerSamplersEnabled = TryGetAppSettingAsBoolWithDefault("NewRelic.EventListenerSamplersEnabled", true);
-        KafkaInternalMetricsEnabled = TryGetAppSettingAsBoolWithDefault("NewRelic.KafkaInternalMetricsEnabled", true);
 
         ParseExpectedErrorConfigurations();
         ParseIgnoreErrorConfigurations();
@@ -3010,7 +3010,30 @@ public class DefaultConfiguration : IConfiguration
     }
     #endregion
 
-    public bool KafkaInternalMetricsEnabled { get; private set; }
+    public bool KafkaInternalMetricsEnabled => EnvironmentOverrides(
+        _localConfiguration.kafka.metrics.debugEnabledSpecified
+            ? _localConfiguration.kafka.metrics.debugEnabled
+            : TryGetAppSettingAsBoolWithDefault("NewRelic.KafkaInternalMetricsEnabled", true),
+        "NEW_RELIC_KAFKA_METRICS_DEBUG_ENABLED");
+
+    public bool KafkaClusterMetricsEnabled => EnvironmentOverrides(
+        _localConfiguration.kafka.metrics.clusterMetricsEnabledSpecified
+            && _localConfiguration.kafka.metrics.clusterMetricsEnabled,
+        "NEW_RELIC_KAFKA_METRICS_CLUSTER_METRICS_ENABLED");
+
+    public int? KafkaMetricsInterval
+    {
+        get
+        {
+            var local = _localConfiguration.kafka.metrics.intervalSpecified
+                ? _localConfiguration.kafka.metrics.interval
+                : (int?)null;
+
+            var configured = EnvironmentOverrides(local, "NEW_RELIC_KAFKA_METRICS_INTERVAL");
+
+            return configured.HasValue ? Math.Max(MinKafkaMetricsIntervalSeconds, configured.Value) : null;
+        }
+    }
 
     public bool HybridHttpContextStorageEnabled => EnvironmentOverrides(TryGetAppSettingAsBoolWithDefault("HybridHttpContextStorageEnabled", false), "NEW_RELIC_HYBRID_HTTP_CONTEXT_STORAGE_ENABLED");
 

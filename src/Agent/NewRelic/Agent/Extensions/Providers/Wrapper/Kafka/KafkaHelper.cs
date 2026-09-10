@@ -1,46 +1,56 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System.Collections.Concurrent;
-using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using NewRelic.Agent.Api;
 
 namespace NewRelic.Providers.Wrapper.Kafka;
 
+internal sealed class KafkaClientInfo
+{
+    public string BootstrapServers { get; }
+    public string[] Servers { get; }
+
+    public KafkaClientInfo(string bootstrapServers)
+    {
+        BootstrapServers = bootstrapServers;
+        Servers = bootstrapServers.Split(',');
+    }
+}
+
 internal static class KafkaHelper
 {
-    private static readonly ConcurrentDictionary<object, List<string>> _bootstrapServerCache = new();
+    private static readonly ConditionalWeakTable<object, KafkaClientInfo> _clientInfoCache = new();
+    private static readonly object _clientInfoCacheLock = new();
 
-    public static void AddBootstrapServersToCache(object producerOrConsumerInstance, string bootStrapServers)
+    public static void AddClientToCache(object producerOrConsumerInstance, string bootStrapServers)
     {
         if (string.IsNullOrEmpty(bootStrapServers))
             return;
-        var kafkaBootstrapServers = new List<string>();
 
-        // parse bootStrapServers - it's a comma separated list of host:port pairs
-        var servers = bootStrapServers.Split(',');
-        foreach (var server in servers)
+        var clientInfo = new KafkaClientInfo(bootStrapServers);
+
+        // Remove first: ConditionalWeakTable.Add throws if the key is already present.
+        lock (_clientInfoCacheLock)
         {
-            kafkaBootstrapServers.Add(server);
+            _clientInfoCache.Remove(producerOrConsumerInstance);
+            _clientInfoCache.Add(producerOrConsumerInstance, clientInfo);
         }
-
-        _bootstrapServerCache[producerOrConsumerInstance] = kafkaBootstrapServers;
     }
 
-    public static bool TryGetBootstrapServersFromCache(object producerOrConsumerInstance, out List<string> kafkaBootstrapServers)
+    public static bool TryGetClientInfo(object producerOrConsumerInstance, out KafkaClientInfo clientInfo)
     {
-        return _bootstrapServerCache.TryGetValue(producerOrConsumerInstance, out kafkaBootstrapServers);
+        return _clientInfoCache.TryGetValue(producerOrConsumerInstance, out clientInfo);
     }
 
-    public static void RecordKafkaNodeMetrics(IAgent agent, string topicName, List<string> bootstrapServers, bool isProducer)
+    public static void RecordKafkaNodeMetrics(IAgent agent, string topicName, KafkaClientInfo clientInfo, bool isProducer)
     {
-        foreach (var server in bootstrapServers)
+        var mode = (isProducer ? "Produce" : "Consume");
+
+        foreach (var server in clientInfo.Servers)
         {
-            var mode = (isProducer? "Produce" : "Consume");
-
             agent.RecordCountMetric($"MessageBroker/Kafka/Nodes/{server}");
             agent.RecordCountMetric($"MessageBroker/Kafka/Nodes/{server}/{mode}/{topicName}");
         }
-            
     }
 }

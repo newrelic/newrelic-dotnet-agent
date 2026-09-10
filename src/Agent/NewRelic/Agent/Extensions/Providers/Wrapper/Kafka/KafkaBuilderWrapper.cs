@@ -41,6 +41,7 @@ public class KafkaBuilderWrapper : IWrapper
     private readonly ConcurrentDictionary<Type, Func<object, object, object>> _setStatisticsCallerCache = new();
     private readonly ConcurrentDictionary<Type, Func<object, object>> _statisticsHandlerGetterCache = new();
     private readonly ConcurrentDictionary<Type, Action<object, object>> _statisticsHandlerFieldWriterCache = new();
+    private readonly ConcurrentDictionary<Type, Action<object, object>> _builderConfigWriterCache = new();
     private readonly ConcurrentDictionary<WeakReferenceKey<object>, DateTime> _clientLastSeen = new();
     private int _drainStarted;
     private volatile bool _metricsCollectionDisabled;
@@ -89,7 +90,12 @@ public class KafkaBuilderWrapper : IWrapper
             // Store bootstrap servers for node metrics
             if (!string.IsNullOrEmpty(bootstrapServers))
             {
-                KafkaHelper.AddBootstrapServersToCache(clientAsObject, bootstrapServers);
+                KafkaHelper.AddClientToCache(clientAsObject, bootstrapServers);
+
+                if (agent.Configuration.KafkaClusterMetricsEnabled)
+                {
+                    KafkaClusterIdResolver.Register(clientAsObject, bootstrapServers, agent);
+                }
             }
         });
     }
@@ -441,12 +447,23 @@ public class KafkaBuilderWrapper : IWrapper
             return;
         }
 
-        var setConfigMethod = builder.GetType().GetMethod("SetConfig", [typeof(string), typeof(string)]);
-        if (setConfigMethod != null)
+        var configuredSeconds = agent.Configuration.KafkaMetricsInterval;
+        var intervalMs = configuredSeconds.HasValue
+            ? configuredSeconds.Value * 1000
+            : Math.Max(MinStatisticsIntervalMs, harvestMs / 2);
+
+        try
         {
-            var intervalMs = Math.Max(MinStatisticsIntervalMs, harvestMs / 2);
-            setConfigMethod.Invoke(builder, [StatisticsIntervalKey, intervalMs.ToString()]);
+            var updatedConfig = KafkaStatisticsHelper.WithStatisticsInterval(GetBuilderConfig(builder), intervalMs);
+            var configWriter = _builderConfigWriterCache.GetOrAdd(builder.GetType(), t =>
+                VisibilityBypasser.Instance.GenerateFieldWriteAccessor<object>(t, "<Config>k__BackingField"));
+            configWriter(builder, updatedConfig);
+
             Log.Finest("KafkaBuilderWrapper: Set statistics interval to {0}ms (harvest cycle: {1}ms)", intervalMs, harvestMs);
+        }
+        catch (Exception ex)
+        {
+            Log.Debug(ex, "KafkaBuilderWrapper: could not set the statistics interval on the builder.");
         }
     }
 

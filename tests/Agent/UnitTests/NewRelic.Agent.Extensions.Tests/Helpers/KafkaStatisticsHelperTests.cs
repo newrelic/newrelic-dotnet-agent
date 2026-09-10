@@ -1,6 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System.Collections.Generic;
 using NewRelic.Agent.Extensions.Helpers;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
@@ -1242,6 +1243,140 @@ public class KafkaStatisticsHelperTests
 
         MetricAssertions.ExpectKey(metrics, "MessageBroker/Kafka/Internal/consumer-fetch-manager-metrics/topic/test-topic/client/consumer-test/bytes-consumed-total");
         Assert.That(metrics["MessageBroker/Kafka/Internal/consumer-fetch-manager-metrics/topic/test-topic/client/consumer-test/bytes-consumed-total"].Value, Is.EqualTo(7500));
+    }
+
+    #endregion
+
+    #region WithStatisticsInterval Tests
+
+    private const string StatisticsIntervalKey = "statistics.interval.ms";
+
+    private static int CountEntriesWithKey(List<KeyValuePair<string, string>> config, string key)
+    {
+        var count = 0;
+        foreach (var kvp in config)
+        {
+            if (kvp.Key == key)
+                count++;
+        }
+        return count;
+    }
+
+    [Test]
+    public void WithStatisticsInterval_NullConfig_ReturnsSingleIntervalEntry()
+    {
+        var result = KafkaStatisticsHelper.WithStatisticsInterval(null, 10000);
+
+        Assert.That(result.Count, Is.EqualTo(1));
+        Assert.That(result[0].Key, Is.EqualTo(StatisticsIntervalKey));
+        Assert.That(result[0].Value, Is.EqualTo("10000"));
+    }
+
+    [Test]
+    public void WithStatisticsInterval_EmptyConfig_ReturnsSingleIntervalEntry()
+    {
+        var existingConfig = new List<KeyValuePair<string, string>>();
+
+        var result = KafkaStatisticsHelper.WithStatisticsInterval(existingConfig, 10000);
+
+        Assert.That(result.Count, Is.EqualTo(1));
+        Assert.That(result[0].Key, Is.EqualTo(StatisticsIntervalKey));
+        Assert.That(result[0].Value, Is.EqualTo("10000"));
+    }
+
+    [Test]
+    public void WithStatisticsInterval_ConfigWithoutKey_PreservesOriginalsAndAppendsInterval()
+    {
+        var existingConfig = new List<KeyValuePair<string, string>>
+        {
+            new KeyValuePair<string, string>("bootstrap.servers", "localhost:9092"),
+            new KeyValuePair<string, string>("group.id", "my-group")
+        };
+
+        var result = KafkaStatisticsHelper.WithStatisticsInterval(existingConfig, 5000);
+
+        Assert.That(result.Count, Is.EqualTo(3));
+        Assert.That(result[0].Key, Is.EqualTo("bootstrap.servers"));
+        Assert.That(result[1].Key, Is.EqualTo("group.id"));
+        Assert.That(result[2].Key, Is.EqualTo(StatisticsIntervalKey));
+        Assert.That(result[2].Value, Is.EqualTo("5000"));
+    }
+
+    [Test]
+    public void WithStatisticsInterval_ConfigAlreadyHasKey_ReplacesOldEntryWithNewValue()
+    {
+        var existingConfig = new List<KeyValuePair<string, string>>
+        {
+            new KeyValuePair<string, string>("bootstrap.servers", "localhost:9092"),
+            new KeyValuePair<string, string>(StatisticsIntervalKey, "30000")
+        };
+
+        var result = KafkaStatisticsHelper.WithStatisticsInterval(existingConfig, 5000);
+
+        Assert.That(result.Count, Is.EqualTo(2));
+        Assert.That(CountEntriesWithKey(result, StatisticsIntervalKey), Is.EqualTo(1));
+        Assert.That(result[1].Value, Is.EqualTo("5000"));
+    }
+
+    [Test]
+    public void WithStatisticsInterval_ExistingValueIsZero_StillReplacedWithSingleEntry()
+    {
+        var existingConfig = new List<KeyValuePair<string, string>>
+        {
+            new KeyValuePair<string, string>(StatisticsIntervalKey, "0")
+        };
+
+        var result = KafkaStatisticsHelper.WithStatisticsInterval(existingConfig, 5000);
+
+        Assert.That(result.Count, Is.EqualTo(1));
+        Assert.That(result[0].Key, Is.EqualTo(StatisticsIntervalKey));
+        Assert.That(result[0].Value, Is.EqualTo("5000"));
+    }
+
+    [Test]
+    public void WithStatisticsInterval_ExistingValueIsEmpty_StillReplacedWithSingleEntry()
+    {
+        var existingConfig = new List<KeyValuePair<string, string>>
+        {
+            new KeyValuePair<string, string>(StatisticsIntervalKey, string.Empty)
+        };
+
+        var result = KafkaStatisticsHelper.WithStatisticsInterval(existingConfig, 5000);
+
+        Assert.That(result.Count, Is.EqualTo(1));
+        Assert.That(result[0].Key, Is.EqualTo(StatisticsIntervalKey));
+        Assert.That(result[0].Value, Is.EqualTo("5000"));
+    }
+
+    [Test]
+    public void WithStatisticsInterval_ConfigContainsNonKeyValuePairElement_SkipsItWithoutThrowing()
+    {
+        var existingConfig = new object[]
+        {
+            new KeyValuePair<string, string>("bootstrap.servers", "localhost:9092"),
+            "not-a-key-value-pair",
+            42
+        };
+
+        var result = KafkaStatisticsHelper.WithStatisticsInterval(existingConfig, 5000);
+
+        Assert.That(result.Count, Is.EqualTo(2));
+        Assert.That(result[0].Key, Is.EqualTo("bootstrap.servers"));
+        Assert.That(result[1].Key, Is.EqualTo(StatisticsIntervalKey));
+    }
+
+    [Test]
+    public void WithStatisticsInterval_DoesNotMutateOriginalInput()
+    {
+        var existingConfig = new List<KeyValuePair<string, string>>
+        {
+            new KeyValuePair<string, string>("bootstrap.servers", "localhost:9092")
+        };
+
+        KafkaStatisticsHelper.WithStatisticsInterval(existingConfig, 5000);
+
+        Assert.That(existingConfig.Count, Is.EqualTo(1));
+        Assert.That(existingConfig[0].Key, Is.EqualTo("bootstrap.servers"));
     }
 
     #endregion

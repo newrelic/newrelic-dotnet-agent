@@ -61,6 +61,7 @@ public abstract class RemoteApplicationFixture : IDisposable
 
     private AgentLogFile _agentLogFile;
     public bool AgentLogExpected { get; set; } = true;
+    public bool RetainAgentLogOnExerciseException { get; set; }
 
     public AgentLogFile AgentLog => _agentLogFile ?? (_agentLogFile = new AgentLogFile(DestinationNewRelicLogFileDirectoryPath, TestLogger, AgentLogFileName, Timing.TimeToWaitForLog, AgentLogExpected));
 
@@ -398,7 +399,7 @@ public abstract class RemoteApplicationFixture : IDisposable
             catch (Exception ex)
             {
                 TestLogger?.WriteLine("Exception occurred in Initialize: " + ex.ToString());
-                AgentLogExpected = false;
+                AgentLogExpected = RetainAgentLogOnExerciseException;
                 throw;
             }
             finally

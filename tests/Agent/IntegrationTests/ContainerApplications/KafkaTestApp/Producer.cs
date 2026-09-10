@@ -30,12 +30,12 @@ public class Producer
     //
     // These produces are NOT counted in messageBrokerProduce / TraceContext/Create/Success
     // metrics because KafkaProducerWrapper.IsTransactionRequired == true and Task.Run lacks a
-    // transaction. They go to a SEPARATE topic from _topic so the work consumer — which
-    // subscribes only to _topic — never sees them; otherwise the burst would fill the consume
+    // transaction. They go to a SEPARATE topic from _topic so the work consumer -- which
+    // subscribes only to _topic -- never sees them; otherwise the burst would fill the consume
     // buffer with DT-header-less messages, starving the real DT-header-bearing produces and
     // breaking Supportability/TraceContext/Accept/Success. The same _producer client handles
     // both topics, so librdkafka aggregates batchsize across them in stats.topics, which is
-    // what AddProducerMetrics averages → batch-size-avg reliably > 0.
+    // what AddProducerMetrics averages -> batch-size-avg reliably > 0.
     private const string BurstTopicSuffix = "-burst";
     private readonly string _burstTopic;
     private readonly CancellationTokenSource _burstCts = new();
@@ -48,16 +48,17 @@ public class Producer
         _logger = logger;
 
         var configDict = configuration.AsEnumerable().ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-        configDict["statistics.interval.ms"] = "5000";
 
         _producer = new ProducerBuilder<string, string>(configDict).Build();
 
-        // Long-lived producer with a customer-installed statistics handler — exercises the
+        // Long-lived producer with a customer-installed statistics handler -- exercises the
         // composite-handler path in KafkaBuilderWrapper. Built at construction so librdkafka
         // stats callbacks accumulate for the full lifetime of the test container; the
         // customstatisticsstatus endpoint can be queried at any time and will see a
         // monotonically growing ProducerCallbackCount.
-        var customStatsBuilder = new ProducerBuilder<string, string>(configDict);
+        var customStatsConfigDict = configuration.AsEnumerable().ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+        customStatsConfigDict["statistics.interval.ms"] = "5000";
+        var customStatsBuilder = new ProducerBuilder<string, string>(customStatsConfigDict);
         customStatsBuilder.SetStatisticsHandler(CustomerStatisticsCallbacks.ProducerStatisticsHandler);
         _customStatsProducer = customStatsBuilder.Build();
 
@@ -72,7 +73,7 @@ public class Producer
             while (!ct.IsCancellationRequested)
             {
                 // Five rapid fire-and-forget produces per pass. linger.ms defaults to 5ms, so
-                // librdkafka coalesces them into a single message set → batchsize.cnt > 0 in
+                // librdkafka coalesces them into a single message set -> batchsize.cnt > 0 in
                 // the enclosing stats window.
                 for (int i = 0; i < 5 && !ct.IsCancellationRequested; i++)
                 {
@@ -94,7 +95,7 @@ public class Producer
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "BackgroundBurstProduceLoop: unexpected error — loop exiting");
+            _logger.LogWarning(ex, "BackgroundBurstProduceLoop: unexpected error -- loop exiting");
         }
     }
 
@@ -115,7 +116,7 @@ public class Producer
             attempt++;
             try
             {
-                // GetMetadata waits for a cluster-level metadata response — a positive answer
+                // GetMetadata waits for a cluster-level metadata response -- a positive answer
                 // means the controller is up and the broker is registered. Without this gate,
                 // CreateTopicsAsync occasionally returns "success" before the topic is
                 // discoverable, and subsequent Produce calls hit UnknownTopicOrPartition.
@@ -182,7 +183,7 @@ public class Producer
     /// <summary>
     /// Produces via the long-lived producer whose builder had a customer statistics handler
     /// installed before Build(). The long-lived client means librdkafka statistics callbacks
-    /// have been firing on the customer's handler since container startup — so the callback
+    /// have been firing on the customer's handler since container startup -- so the callback
     /// count visible via /customstatisticsstatus is reliably > 0 by the time the test reads it.
     /// </summary>
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -217,7 +218,7 @@ public class Producer
 
 /// <summary>
 /// Tracks customer statistics callback invocations for the composite-handler integration test.
-/// Counters are monotonic across the process lifetime — incremented with Interlocked so
+/// Counters are monotonic across the process lifetime -- incremented with Interlocked so
 /// callbacks on the librdkafka poll thread stay correct under concurrent producer+consumer use.
 /// The integration test asserts only that counts are > 0, so never resetting is safe.
 /// </summary>

@@ -29,6 +29,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_docker", "_docker", "{FB10
 		ContainerApplications\docker-compose-awssdk.yml = ContainerApplications\docker-compose-awssdk.yml
 		ContainerApplications\docker-compose-base.yml = ContainerApplications\docker-compose-base.yml
 		ContainerApplications\docker-compose-kafka.yml = ContainerApplications\docker-compose-kafka.yml
+		ContainerApplications\docker-compose-kafka-multicluster.yml = ContainerApplications\docker-compose-kafka-multicluster.yml
 		ContainerApplications\docker-compose-masstransit.yml = ContainerApplications\docker-compose-masstransit.yml
 		ContainerApplications\docker-compose-memcached.yml = ContainerApplications\docker-compose-memcached.yml
 		ContainerApplications\docker-compose-w3c.yml = ContainerApplications\docker-compose-w3c.yml

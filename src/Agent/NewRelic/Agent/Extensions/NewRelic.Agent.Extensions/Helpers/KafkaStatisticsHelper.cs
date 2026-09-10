@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using NewRelic.Agent.Extensions.Logging;
 using Newtonsoft.Json;
@@ -699,5 +700,28 @@ public static class KafkaStatisticsHelper
         }
 
         return broker.NodeId.ToString();
+    }
+
+    /// <summary>
+    /// Returns a new config list built from existingConfig, with any existing
+    /// statistics.interval.ms entry removed and a single fresh entry appended with intervalMs.
+    /// A null existingConfig is treated as empty. Elements that are not
+    /// KeyValuePair&lt;string, string&gt; are skipped rather than throwing.
+    /// </summary>
+    public static List<KeyValuePair<string, string>> WithStatisticsInterval(IEnumerable existingConfig, int intervalMs)
+    {
+        var result = new List<KeyValuePair<string, string>>();
+
+        if (existingConfig != null)
+        {
+            foreach (var item in existingConfig)
+            {
+                if (item is KeyValuePair<string, string> kvp && kvp.Key != "statistics.interval.ms")
+                    result.Add(kvp);
+            }
+        }
+
+        result.Add(new KeyValuePair<string, string>("statistics.interval.ms", intervalMs.ToString()));
+        return result;
     }
 }

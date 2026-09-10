@@ -9,6 +9,7 @@ using System.Threading;
 using Confluent.Kafka;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Api.Experimental;
+using NewRelic.Agent.Extensions.Helpers;
 using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Reflection;
@@ -30,6 +31,8 @@ public class KafkaConsumerWrapper : IWrapper
         new ConcurrentDictionary<Type, Func<object, object>>();
     private static readonly ConcurrentDictionary<Type, Func<object, object>> ValueAccessorDictionary =
         new ConcurrentDictionary<Type, Func<object, object>>();
+
+    private static readonly ClusterIdLookup ClusterIdLookupFunc = KafkaClusterIdResolver.TryGetClusterId;
 
     public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
     {
@@ -83,9 +86,12 @@ public class KafkaConsumerWrapper : IWrapper
                 segment.SetMessageBrokerDestination(topic);
                 Log.Finest("KafkaConsumerWrapper: Updated segment destination to: '{0}'", topic);
 
-                if (KafkaHelper.TryGetBootstrapServersFromCache(instrumentedMethodCall.MethodCall.InvocationTarget, out var bootstrapServers))
+                if (KafkaHelper.TryGetClientInfo(instrumentedMethodCall.MethodCall.InvocationTarget, out var clientInfo))
                 {
-                    KafkaHelper.RecordKafkaNodeMetrics(agent, topic, bootstrapServers, false);
+                    KafkaHelper.RecordKafkaNodeMetrics(agent, topic, clientInfo, false);
+
+                    KafkaClusterIdResolver.RefreshClientReference(clientInfo.BootstrapServers, instrumentedMethodCall.MethodCall.InvocationTarget);
+                    KafkaClusterMetricsHelper.RecordClusterMetrics(agent, segment, clientInfo.BootstrapServers, topic, KafkaClusterOperation.Consume, ClusterIdLookupFunc);
                 }
 
                 // get the Message.Headers property and process distributed trace headers

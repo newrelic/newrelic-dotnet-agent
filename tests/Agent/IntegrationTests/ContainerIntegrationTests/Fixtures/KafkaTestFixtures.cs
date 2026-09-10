@@ -47,6 +47,8 @@ public abstract class KafkaTestFixtureBase : RemoteApplicationFixture
         return builder.ToString();
     }
 
+    protected static string GenerateTopic2() => GenerateTopic();
+
     public virtual void ExerciseApplication()
     {
         var address = $"http://localhost:{Port}/kafka/";
@@ -116,4 +118,54 @@ public class KafkaDotNet10TestFixture : KafkaTestFixtureBase
     private const string DotnetVersion = "10.0";
 
     public KafkaDotNet10TestFixture() : base(DistroTag, Architecture, Dockerfile, DotnetVersion) { }
+}
+
+public class KafkaClusterMetricsEnabledTestFixture : KafkaTestFixtureBase
+{
+    private const string Dockerfile = "KafkaTestApp/Dockerfile";
+    private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
+    private const string DistroTag = "noble";
+    private const string DotnetVersion = "10.0";
+
+    public KafkaClusterMetricsEnabledTestFixture() : base(DistroTag, Architecture, Dockerfile, DotnetVersion) { }
+}
+
+public class KafkaMultiClusterTestFixture : KafkaTestFixtureBase
+{
+    private const string Dockerfile = "KafkaTestApp/Dockerfile";
+    private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
+    private const string DistroTag = "noble";
+    private const string DotnetVersion = "10.0";
+    private const string ComposeFile = "docker-compose-kafka-multicluster.yml";
+
+    public string TopicName2 { get; } = GenerateTopic2();
+
+    public KafkaMultiClusterTestFixture() : base(DistroTag, Architecture, Dockerfile, DotnetVersion, ComposeFile) { }
+
+    public override void ExerciseApplication()
+    {
+        base.ExerciseApplication();
+
+        var address = $"http://localhost:{Port}/kafka/";
+        GetAndAssertStatusCode(address + "produce2", System.Net.HttpStatusCode.OK);
+        GetAndAssertStatusCode(address + "consumewithtimeout2", System.Net.HttpStatusCode.OK);
+
+        // Cluster 2 registers after the first scheduler tick, so its id resolves a tick later
+        // than cluster 1's. Gate on the resolution itself; a fixed delay would be time-dependent.
+        AgentLog.WaitForLogLine(
+            @"KafkaClusterIdCache: resolved cluster id \S+ for bootstrap servers kafka-broker-2:9092",
+            TimeSpan.FromSeconds(90));
+
+        // Several produces so a span carrying the cluster id cannot be lost to span sampling.
+        // Consumes are kept to one per cluster: each queues a request that polls for up to 5
+        // seconds, and a backlog of them delays the app's shutdown past the test's budget.
+        for (var i = 0; i < 3; i++)
+        {
+            GetAndAssertStatusCode(address + "produce", System.Net.HttpStatusCode.OK);
+            GetAndAssertStatusCode(address + "produce2", System.Net.HttpStatusCode.OK);
+        }
+
+        GetAndAssertStatusCode(address + "consumewithtimeout", System.Net.HttpStatusCode.OK);
+        GetAndAssertStatusCode(address + "consumewithtimeout2", System.Net.HttpStatusCode.OK);
+    }
 }

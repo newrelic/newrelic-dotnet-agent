@@ -8,8 +8,8 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Hosting.Server;                 // Added
-using Microsoft.AspNetCore.Hosting.Server.Features;        // Added
+using Microsoft.AspNetCore.Hosting.Server;
+using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -19,6 +19,10 @@ namespace KafkaTestApp;
 
 public class Program
 {
+    // Cluster numbers double as the keyed-service keys for the secondary cluster's clients.
+    public const int PrimaryCluster = 1;
+    public const int SecondaryCluster = 2;
+
     private const int TopicNameLength = 15;
     private static string _topic;
     private static IConfiguration _kafkaConfig;
@@ -31,8 +35,8 @@ public class Program
         builder.Services.AddControllers();
 
         // Build Kafka config + topic before DI registrations that depend on them.
-        _kafkaConfig = BuildKafkaConfiguration();
-        _topic = GenerateTopic();
+        _kafkaConfig = BuildKafkaConfiguration(PrimaryCluster);
+        _topic = GenerateTopic(PrimaryCluster);
 
         // Register Producer + Consumer (BackgroundService) + signal service.
         builder.Services.AddSingleton(_kafkaConfig);
@@ -41,6 +45,20 @@ public class Program
         builder.Services.AddSingleton<IConsumerSignalService>(sp =>
             new Consumer(_kafkaConfig, _topic, sp.GetRequiredService<ILogger<Consumer>>()));
         builder.Services.AddHostedService(sp => (Consumer)sp.GetRequiredService<IConsumerSignalService>());
+
+        if (GetBootstrapServer(SecondaryCluster) != null)
+        {
+            var kafkaConfig2 = BuildKafkaConfiguration(SecondaryCluster);
+            var topic2 = GenerateTopic(SecondaryCluster);
+
+            builder.Services.AddKeyedSingleton<Producer>(SecondaryCluster, (sp, key) =>
+                new Producer(kafkaConfig2, topic2, sp.GetRequiredService<ILogger<Producer>>()));
+            builder.Services.AddKeyedSingleton<Consumer>(SecondaryCluster, (sp, key) =>
+                new Consumer(kafkaConfig2, topic2, sp.GetRequiredService<ILogger<Consumer>>()));
+            // Not AddHostedService: it registers via TryAddEnumerable, which dedupes on
+            // implementation type, so a second Consumer would be silently dropped.
+            builder.Services.AddSingleton<IHostedService>(sp => sp.GetRequiredKeyedService<Consumer>(SecondaryCluster));
+        }
 
         var configuredPort = ResolvePort();
         builder.Logging.AddFilter("Microsoft.Hosting.Lifetime", LogLevel.Information);
@@ -94,18 +112,29 @@ public class Program
         return 80;
     }
 
-    public static string GetBootstrapServer()
+    public static string GetBootstrapServer(int cluster)
     {
-        var broker = Environment.GetEnvironmentVariable("NEW_RELIC_KAFKA_BROKER_NAME");
+        var broker = Environment.GetEnvironmentVariable("NEW_RELIC_KAFKA_BROKER_NAME" + EnvVariableSuffix(cluster));
+
+        // Only the primary cluster is mandatory. A missing secondary broker name disables it.
+        if (cluster != PrimaryCluster && string.IsNullOrEmpty(broker))
+        {
+            return null;
+        }
+
         return $"{broker}:9092";
     }
 
-    private static IConfiguration BuildKafkaConfiguration()
+    private static string EnvVariableSuffix(int cluster) =>
+        cluster == PrimaryCluster ? string.Empty : $"_{cluster}";
+
+    private static IConfiguration BuildKafkaConfiguration(int cluster)
     {
+        var groupIdSuffix = cluster == PrimaryCluster ? string.Empty : $"-{cluster}";
         var dict = new Dictionary<string, string>
         {
-            ["bootstrap.servers"] = GetBootstrapServer(),
-            ["group.id"] = "kafka-dotnet-getting-started",
+            ["bootstrap.servers"] = GetBootstrapServer(cluster),
+            ["group.id"] = "kafka-dotnet-getting-started" + groupIdSuffix,
             ["auto.offset.reset"] = "earliest",
             ["dotnet.cancellation.delay.max.ms"] = "10000"
         };
@@ -120,12 +149,12 @@ public class Program
         file.WriteLine(pid);
     }
 
-    private static string GenerateTopic()
+    private static string GenerateTopic(int cluster)
     {
-        var topic = Environment.GetEnvironmentVariable("NEW_RELIC_KAFKA_TOPIC");
+        var topic = Environment.GetEnvironmentVariable("NEW_RELIC_KAFKA_TOPIC" + EnvVariableSuffix(cluster));
         if (!string.IsNullOrEmpty(topic))
         {
-            Console.WriteLine("Using provided topic name " + topic);
+            Console.WriteLine($"Using provided topic name for cluster {cluster}: {topic}");
             return topic;
         }
 
@@ -137,7 +166,7 @@ public class Program
             builder.Append(Convert.ToChar(shifter + 65));
         }
         topic = builder.ToString();
-        Console.WriteLine("No topic name provided; using auto-generated topic name " + topic);
+        Console.WriteLine($"No topic name provided for cluster {cluster}; using auto-generated topic name {topic}");
         return topic;
     }
 }
