@@ -73,7 +73,7 @@ public class KafkaClusterIdCache
         {
             try
             {
-                ResolveKey(pair.Key);
+                ResolveKey(pair.Key, pair.Value);
             }
             catch (Exception ex)
             {
@@ -82,17 +82,13 @@ public class KafkaClusterIdCache
         }
     }
 
-    private void ResolveKey(string key)
+    private void ResolveKey(string key, WeakReference weakRef)
     {
         if (_clusterIdByKey.TryGetValue(key, out var existing) && _utcTicksProvider() - existing.ResolvedAtTicks < TtlTicks)
             return;
 
-        if (!_clientByKey.TryGetValue(key, out var weakRef) || !weakRef.IsAlive)
-        {
-            _clientByKey.TryRemove(key, out _);
-            return;
-        }
-
+        // A single Target read decides liveness. IsAlive followed by Target read the same
+        // field twice, so the target could be collected between the two reads.
         var client = weakRef.Target;
 
         if (client == null)
