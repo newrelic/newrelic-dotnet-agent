@@ -30,10 +30,50 @@ public class RuntimeAsyncResultNormalizerTests
         public Task<string> Overloaded(int a) => Task.FromResult("two");
         public List<int> ReturnsGenericNonTask() => null;
 
-        // Both have one generic-typed parameter, and a generic parameter's FullName is null, so
-        // both render as an empty signature string and cannot be told apart.
+        // Both have one generic-typed parameter. They render as !!0 and !!1, neither of which is
+        // what a caller passing an empty signature is looking for -- but both return Task<int>, so
+        // the result-shape fallback can still answer.
         public Task<int> AmbiguousGeneric<T>(T a) => Task.FromResult(1);
         public Task<int> AmbiguousGeneric<T, TOther>(TOther a) => Task.FromResult(2);
+
+        // Overload groups exercising one parameter-type rendering each. Every group pairs a
+        // non-trivially-rendered overload with a plain string one, so resolution has to pick
+        // correctly rather than fall through to the result-shape agreement path -- the two
+        // overloads in each group deliberately return DIFFERENT task types so a wrong pick shows.
+        public Task<int> Rendered(List<int> a) => Task.FromResult(1);
+        public Task<string> Rendered(string a) => Task.FromResult("s");
+
+        public Task<int> Nested(Dictionary<string, int> a) => Task.FromResult(1);
+        public Task<string> Nested(string a) => Task.FromResult("s");
+
+        public Task<int> WithArray(int[] a) => Task.FromResult(1);
+        public Task<string> WithArray(string a) => Task.FromResult("s");
+
+        public Task<int> WithByRef(ref int a) => Task.FromResult(1);
+        public Task<string> WithByRef(string a) => Task.FromResult("s");
+
+        public Task<int> WithMethodGeneric<T>(T a) => Task.FromResult(1);
+        public Task<string> WithMethodGeneric(string a) => Task.FromResult("s");
+
+        public Task<int> GenericArray(List<int>[] a) => Task.FromResult(1);
+        public Task<string> GenericArray(string a) => Task.FromResult("s");
+
+        // Same result shape on both overloads, so the agreement fallback can answer even when the
+        // signature matches neither.
+        public Task<int> Agreeing(List<int> a) => Task.FromResult(1);
+        public Task<int> Agreeing(string a) => Task.FromResult(2);
+
+        // One overload is not a task type at all, so the shapes disagree.
+        public Task<int> MixedTaskAndNot(List<int> a) => Task.FromResult(1);
+        public int MixedTaskAndNot(string a) => 2;
+    }
+
+    // Overloads on a GENERIC declaring type, so a parameter can be the type's own generic
+    // parameter -- rendered !0 rather than a method's !!0.
+    private class GenericOverloadSubject<TDoc>
+    {
+        public Task<int> Save(TDoc a) => Task.FromResult(1);
+        public Task<string> Save(string a) => Task.FromResult("s");
     }
 
     // A generic declaring type, to cover the case the profiler actually hands us: an
@@ -169,7 +209,129 @@ public class RuntimeAsyncResultNormalizerTests
     [Test]
     public void TryCreate_ReturnsNull_WhenOverloadCannotBeDisambiguated()
     {
+        // Nothing renders as System.Guid, and the two Overloaded candidates return Task<int> and
+        // Task<string>, so the result-shape fallback cannot answer either.
         Assert.That(Create(nameof(Subject.Overloaded), "System.Guid"), Is.Null);
+    }
+
+    // The profiler renders parameter types via MethodSignature::ToString in
+    // SignatureParser/Types.h, NOT the way Type.FullName does. The two agree for primitives,
+    // arrays and by-ref, and disagree for anything generic: Types.h emits List`1[System.Int32]
+    // while FullName emits List`1[[System.Int32, <assembly>, Version=...]]. These cases pin each
+    // rendering that the resolver has to reproduce to identify an overload at all.
+
+    [Test]
+    public void TryCreate_MatchesAClosedGenericParameterType()
+    {
+        var normalization = CreateFull(nameof(Subject.Rendered), "System.Collections.Generic.List`1[System.Int32]");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(normalization, Is.Not.Null, "the List<int> overload should have been identified");
+            Assert.That(normalization.Normalize(1), Is.TypeOf<Task<int>>(), "picked the wrong overload");
+        });
+    }
+
+    [Test]
+    public void TryCreate_MatchesTheSiblingOfAGenericParameterType()
+    {
+        // The other half of the pair: the plainly-rendered overload must still resolve to itself.
+        var normalization = CreateFull(nameof(Subject.Rendered), "System.String");
+
+        Assert.That(normalization.Normalize("s"), Is.TypeOf<Task<string>>());
+    }
+
+    [Test]
+    public void TryCreate_MatchesANestedGenericParameterType()
+    {
+        var normalization = CreateFull(nameof(Subject.Nested),
+            "System.Collections.Generic.Dictionary`2[System.String,System.Int32]");
+
+        Assert.That(normalization.Normalize(1), Is.TypeOf<Task<int>>());
+    }
+
+    [Test]
+    public void TryCreate_MatchesAnArrayParameterType()
+    {
+        var normalization = CreateFull(nameof(Subject.WithArray), "System.Int32[]");
+
+        Assert.That(normalization.Normalize(1), Is.TypeOf<Task<int>>());
+    }
+
+    [Test]
+    public void TryCreate_MatchesAByRefParameterType()
+    {
+        var normalization = CreateFull(nameof(Subject.WithByRef), "System.Int32&");
+
+        Assert.That(normalization.Normalize(1), Is.TypeOf<Task<int>>());
+    }
+
+    [Test]
+    public void TryCreate_MatchesAnArrayOfAClosedGenericParameterType()
+    {
+        var normalization = CreateFull(nameof(Subject.GenericArray),
+            "System.Collections.Generic.List`1[System.Int32][]");
+
+        Assert.That(normalization.Normalize(1), Is.TypeOf<Task<int>>());
+    }
+
+    [Test]
+    public void TryCreate_MatchesAMethodsOwnGenericParameter()
+    {
+        // MvarType renders as !!N.
+        var normalization = CreateFull(nameof(Subject.WithMethodGeneric), "!!0");
+
+        Assert.That(normalization.Normalize(1), Is.TypeOf<Task<int>>());
+    }
+
+    [Test]
+    public void TryCreate_MatchesTheDeclaringTypesGenericParameter()
+    {
+        // VarType renders as !N -- one bang, not two.
+        var normalization = RuntimeAsyncResultNormalizer.TryCreate(typeof(GenericOverloadSubject<>), "Save", "!0");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(normalization, Is.Not.Null);
+            Assert.That(normalization.Normalize(1), Is.TypeOf<Task<int>>());
+        });
+    }
+
+    [Test]
+    public void TryCreate_UsesResultShapeAgreement_WhenNoCandidateMatchesTheSignature()
+    {
+        // Both Agreeing overloads return Task<int>, so which one this is cannot change the
+        // normalizer. Refusing here would drop a genuinely async method to synchronous completion
+        // semantics for no reason.
+        var normalization = CreateFull(nameof(Subject.Agreeing), "System.Guid");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(normalization, Is.Not.Null);
+            Assert.That(normalization.Normalize(7), Is.TypeOf<Task<int>>());
+            Assert.That(normalization.IsExactlyTyped, Is.True);
+        });
+    }
+
+    [Test]
+    public void TryCreate_UsesResultShapeAgreement_ForIndistinguishableGenericOverloads()
+    {
+        // These two are the case that used to be refused outright.
+        var normalization = CreateFull("AmbiguousGeneric");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(normalization, Is.Not.Null);
+            Assert.That(normalization.Normalize(7), Is.TypeOf<Task<int>>());
+        });
+    }
+
+    [Test]
+    public void TryCreate_ReturnsNull_WhenOneCandidateIsNotATaskTypeAtAll()
+    {
+        // Agreement has to mean agreement: a non-task sibling is a disagreement, not something to
+        // average over.
+        Assert.That(Create(nameof(Subject.MixedTaskAndNot), "System.Guid"), Is.Null);
     }
 
     [Test]
@@ -188,14 +350,6 @@ public class RuntimeAsyncResultNormalizerTests
     public void TryCreate_ReturnsNull_ForAGenericReturnTypeThatIsNotATaskType()
     {
         Assert.That(Create(nameof(Subject.ReturnsGenericNonTask)), Is.Null);
-    }
-
-    [Test]
-    public void TryCreate_ReturnsNull_WhenTwoCandidatesShareTheSameSignatureString()
-    {
-        // Refuse rather than pick one arbitrarily: guessing wrong would attach the wrong result
-        // shape to the wrong method.
-        Assert.That(Create("AmbiguousGeneric"), Is.Null);
     }
 
     [Test]
