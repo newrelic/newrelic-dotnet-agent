@@ -47,6 +47,18 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
                 instrumentationPoint->TracerFactoryName = _X("NewRelic.Agent.Core.Tracer.Factories.DefaultTracerFactory");
                 instrumentationPoint->TracerFactoryArgs = 0;
             }
+            else
+            {
+                // TryGetInstrumentationPoint hands back the object stored in the configuration's
+                // map, not a copy, and one point serves EVERY function that matches it -- a
+                // parameterless <exactMethodMatcher> matches all overloads of the method name. So
+                // OR-ing this function's flags into it would leave them set for every sibling
+                // instrumented afterwards: a plain Task-returning overload would be reported as
+                // RuntimeAsyncMethod, and WrapperService would then swap its real pending Task for a
+                // synthesized completed one, ending the segment before the work finishes. Copy first
+                // so per-function flags stay per-function.
+                instrumentationPoint = std::make_shared<Configuration::InstrumentationPoint>(*instrumentationPoint);
+            }
 
             instrumentationPoint->TracerFactoryArgs |= function->GetTracerFlags();
 

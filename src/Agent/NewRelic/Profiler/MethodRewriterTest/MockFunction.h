@@ -54,6 +54,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             _classAttributes(0),
             _methodAttributes(0),
             _isRuntimeAsync(false),
+            _tracerFlags(0),
             _isValid(true)
         {
             if (version.empty())
@@ -187,9 +188,14 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             return _shouldInjectMethodInstrumentation;
         }
 
+        // Per-function flags the real Function derives from method metadata (AsyncMethod from
+        // AsyncStateMachineAttribute, RuntimeAsyncMethod from the Async impl flag). Settable so a
+        // test can prove they reach the instrumented function without leaking onto the shared
+        // configuration point.
+        uint32_t _tracerFlags;
         virtual uint32_t GetTracerFlags() override
         {
-            return 0;
+            return _tracerFlags;
         }
 
         bool _isValid;
