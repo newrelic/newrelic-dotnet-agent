@@ -48,6 +48,8 @@ public struct KafkaMetricValue
 /// </summary>
 public static class KafkaStatisticsHelper
 {
+    private const string StatisticsIntervalMsKey = "statistics.interval.ms";
+
     #region JSON Model Classes
 
     /// <summary>
@@ -716,12 +718,12 @@ public static class KafkaStatisticsHelper
         {
             foreach (var item in existingConfig)
             {
-                if (item is KeyValuePair<string, string> kvp && kvp.Key != "statistics.interval.ms")
+                if (item is KeyValuePair<string, string> kvp && kvp.Key != StatisticsIntervalMsKey)
                     result.Add(kvp);
             }
         }
 
-        result.Add(new KeyValuePair<string, string>("statistics.interval.ms", intervalMs.ToString()));
+        result.Add(new KeyValuePair<string, string>(StatisticsIntervalMsKey, intervalMs.ToString()));
         return result;
     }
 }
