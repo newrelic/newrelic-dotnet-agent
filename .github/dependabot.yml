@@ -11,6 +11,19 @@ updates:
         patterns:
           - "*"
 
+  # Keeps the hash-pinned PyYAML used by the workflow lint script current. Dependabot
+  # rewrites the --hash= digests along with the version.
+  - package-ecosystem: pip
+    directory: /.github/scripts
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: "chore(deps):"
+    groups:
+      pip-workflow-scripts:
+        patterns:
+          - "*"
+
 # Docker can't be updated until we modernize the profiler build process
 #  - package-ecosystem: docker
 #    directories: 

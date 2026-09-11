@@ -225,8 +225,10 @@ upstream release cannot change what CI runs. OpenSSF Scorecard's
   `./...` path, and a same-repo reusable workflow
   (`newrelic/newrelic-dotnet-agent/...`).
 - **Pin every `pip install` with `--require-hashes -r <file>`.** The hashes
-  live in `.github/scripts/requirements.txt`. A bare `pip install <pkg>`
-  fails the build. Scorecard accepts no other form for a PyPI install.
+  live in `.github/scripts/pyyaml_requirements.txt`, which Dependabot keeps
+  current (`pip` ecosystem, monthly; it rewrites the digests with the version).
+  A bare `pip install <pkg>` fails the build. Scorecard accepts no other form
+  for a PyPI install.
 - Both rules are enforced by `.github/scripts/check-workflows.py`, which
   `.github/workflows/workflow_lint.yml` runs on any PR that touches
   `.github/**`. Run it yourself before you push a workflow change:
