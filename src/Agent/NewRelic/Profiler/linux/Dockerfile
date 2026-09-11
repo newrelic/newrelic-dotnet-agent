@@ -3,6 +3,10 @@
 # v14.04
 FROM ubuntu@sha256:881afbae521c910f764f7187dbfbca3cc10c26f8bafa458c76dda009a901c29d
 
+# archive.ubuntu.com round-robins over hosts that intermittently refuse port 80
+RUN printf 'Acquire::Retries "5";\nAcquire::http::Timeout "20";\n' > /etc/apt/apt.conf.d/99-nr-retries \
+ && sed -i 's|http://archive\.ubuntu\.com/ubuntu|http://azure.archive.ubuntu.com/ubuntu|g' /etc/apt/sources.list
+
 RUN apt-get update && apt-get install -y \
   wget \
   curl \
