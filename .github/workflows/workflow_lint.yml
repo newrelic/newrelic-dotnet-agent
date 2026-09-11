@@ -24,7 +24,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Install PyYAML
-        run: pip install pyyaml
+        run: pip install --require-hashes -r .github/scripts/pyyaml_requirements.txt
         shell: bash
 
       - name: Run workflow checks

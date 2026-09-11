@@ -33,6 +33,11 @@ NO_CONCURRENCY = ["integration_tests.yml", "unbounded_tests.yml"]
 
 RANK = {"none": 0, "read": 1, "write": 2}
 
+ALLOWED_UNPINNED_USES = {
+    # same-org repo shared across New Relic agents; we always want the latest from main
+    "newrelic/newrelic-agent-init-container/.github/workflows/agent-metadata.yml@main",
+}
+
 FAILURES = []
 
 _EXTERNAL_CACHE = {}
@@ -259,6 +264,57 @@ def check_no_expressions_in_action_metadata():
                 )
 
 
+def lint_target_paths():
+    """Every workflow and composite action file, for the raw-text checks below."""
+    paths = sorted(WORKFLOWS.glob("*.yml")) + sorted(WORKFLOWS.glob("*.yaml"))
+    actions_dir = ROOT / ".github" / "actions"
+    if actions_dir.exists():
+        paths += sorted(actions_dir.glob("*/action.yml")) + sorted(actions_dir.glob("*/action.yaml"))
+    return paths
+
+
+def check_uses_are_sha_pinned():
+    """A tag or branch ref in `uses:` can be rewritten after review; a commit SHA cannot."""
+    uses_re = re.compile(r'^\s*-?\s*uses:\s*[\'"]?([^\'"#\s]+)')
+    sha_re = re.compile(r'^[0-9a-f]{40}$')
+    for path in lint_target_paths():
+        for lineno, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+            if line.strip().startswith("#"):
+                continue
+            match = uses_re.match(line)
+            if not match:
+                continue
+            value = match.group(1)
+            if value.startswith("./") or value.startswith("newrelic/newrelic-dotnet-agent/"):
+                continue
+            if value in ALLOWED_UNPINNED_USES:
+                continue
+            ref = value.rsplit("@", 1)[-1] if "@" in value else ""
+            if sha_re.match(ref):
+                continue
+            fail(
+                "pinned-dependencies",
+                "%s:%d uses '%s', which must be pinned to a 40-character commit SHA"
+                % (path.relative_to(ROOT).as_posix(), lineno, value),
+            )
+
+
+def check_pip_installs_are_hash_pinned():
+    """OpenSSF Scorecard only accepts a pip install as pinned when --require-hashes is used."""
+    pip_re = re.compile(r'\b(?:pip3?|python3?\s+-m\s+pip)\s+install\b')
+    for path in lint_target_paths():
+        for lineno, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+            if not pip_re.search(line):
+                continue
+            if "--require-hashes" in line:
+                continue
+            fail(
+                "pip-hash-pinning",
+                "%s:%d installs with pip without --require-hashes -r <requirements file>"
+                % (path.relative_to(ROOT).as_posix(), lineno),
+            )
+
+
 def main():
     docs = {}
     for name in TOUCHED:
@@ -274,6 +330,8 @@ def main():
     check_container_lists_match(docs)
     check_no_concurrency_in_called_workflows(docs)
     check_no_expressions_in_action_metadata()
+    check_uses_are_sha_pinned()
+    check_pip_installs_are_hash_pinned()
 
     if FAILURES:
         print("check-workflows: %d failure(s)" % len(FAILURES))
@@ -282,7 +340,8 @@ def main():
         return 1
     print(
         "check-workflows: all checks passed (needs-resolution, required-checks, "
-        "permissions, container-lists, called-workflow-concurrency, action-metadata)"
+        "permissions, container-lists, called-workflow-concurrency, action-metadata, "
+        "pinned-dependencies, pip-hash-pinning)"
     )
     return 0
 
