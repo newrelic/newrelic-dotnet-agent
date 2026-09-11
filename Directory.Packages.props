@@ -30,8 +30,8 @@
     <PackageVersion Include="OpenTelemetry" Version="1.18.0" />
     <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.18.0" />
     <PackageVersion Include="PublicApiGenerator" Version="11.5.4" />
-    <PackageVersion Include="Selenium.Support" Version="4.48.0" />
-    <PackageVersion Include="Selenium.WebDriver" Version="4.48.0" />
+    <PackageVersion Include="Selenium.Support" Version="4.49.0" />
+    <PackageVersion Include="Selenium.WebDriver" Version="4.49.0" />
     <PackageVersion Include="Serilog" Version="4.4.0" />
     <PackageVersion Include="Serilog.Sinks.Async" Version="2.1.0" />
     <PackageVersion Include="Serilog.Sinks.Console" Version="6.1.1" />
