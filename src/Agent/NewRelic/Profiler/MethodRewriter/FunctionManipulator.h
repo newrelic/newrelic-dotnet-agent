@@ -46,7 +46,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
         ByteVector _newLocalVariablesSignature;
         SignatureParser::MethodSignaturePtr _methodSignature;
         // The return type the method's IL body actually leaves on the stack, which differs from
-        // _methodSignature->_returnType only for a .NET 11 runtime-async method: void for
+        // _methodSignature->_returnType only for a runtime-async method: void for
         // Task/ValueTask, T for Task<T>/ValueTask<T>. For every other method this IS
         // _methodSignature->_returnType, so substituting it changes nothing.
         //

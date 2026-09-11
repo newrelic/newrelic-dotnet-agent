@@ -35,7 +35,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
         virtual bool IsValid() = 0;
         virtual bool IsCoreClr() = 0;
         // true when the method carries MethodImplAttributes.Async, i.e. it was compiled
-        // with .NET 11 runtime-async and so follows the async2 return convention rather
+        // with runtime-async and so follows the async2 return convention rather
         // than the one implied by its metadata signature
         virtual bool IsRuntimeAsync() = 0;
         virtual uint32_t GetTracerFlags() = 0;

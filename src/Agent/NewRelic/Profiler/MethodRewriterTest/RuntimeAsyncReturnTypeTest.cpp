@@ -14,7 +14,7 @@ using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
 namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace Test
 {
-    // A .NET 11 runtime-async method returns the *unwrapped* type its task wraps rather than
+    // A runtime-async method returns the *unwrapped* type its task wraps rather than
     // the task type its metadata signature declares (runtime-async.md, I.8.4.5). These tests
     // pin down the mapping the IL rewriter depends on:
     //

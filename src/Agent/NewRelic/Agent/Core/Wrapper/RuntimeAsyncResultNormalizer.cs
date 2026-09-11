@@ -40,7 +40,7 @@ public sealed class RuntimeAsyncNormalization
 }
 
 /// <summary>
-/// Converts the value a .NET 11 runtime-async method's IL body actually returns into the
+/// Converts the value a runtime-async method's IL body actually returns into the
 /// already-completed Task the agent's after-delegate machinery expects.
 ///
 /// Per the ECMA-335 augment (I.8.4.5) a runtime-async body pushes nothing before `ret` for

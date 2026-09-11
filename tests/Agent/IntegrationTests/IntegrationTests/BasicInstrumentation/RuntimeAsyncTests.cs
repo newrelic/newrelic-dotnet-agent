@@ -14,8 +14,8 @@ using Xunit;
 namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation;
 
 /// <summary>
-/// Covers instrumentation of .NET 11 runtime-async methods. The application is built for
-/// net10.0 with runtime-async enabled as a preview feature, so this needs no .NET 11 SDK.
+/// Covers instrumentation of runtime-async methods. The application is built for
+/// net10.0 with runtime-async enabled as a preview feature, so this needs no newer SDK.
 ///
 /// The assertion that matters is the scoped count of the nested InnerAsync segment. InnerAsync
 /// is called twice per OuterAsync invocation, both times after a suspension point, so its
@@ -71,6 +71,12 @@ public class RuntimeAsyncTests : NewRelicIntegrationTest<RuntimeAsyncTestsFixtur
 
                 // thread.id lives on span events, so they have to be on to assert about it.
                 configModifier.SetOrDeleteSpanEventsEnabled(true);
+
+                // Every transaction sampled, so every one of them produces a span. Without this the
+                // default adaptive sampler takes only about ten per minute and the application would
+                // have to be ordered so the transactions being asserted on come first -- a
+                // constraint that is invisible from the test and easy to break by adding a use case.
+                configModifier.SetRootSamplerAlwaysOn();
                 configModifier.ConfigureFasterMetricsHarvestCycle(10);
                 configModifier.ConfigureFasterSpanEventsHarvestCycle(10);
             }

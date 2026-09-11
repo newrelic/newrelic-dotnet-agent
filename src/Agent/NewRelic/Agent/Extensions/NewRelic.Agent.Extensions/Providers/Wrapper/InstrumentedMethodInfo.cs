@@ -14,7 +14,7 @@ public class InstrumentedMethodInfo
     public readonly bool IsAsync;
 
     /// <summary>
-    /// True for a .NET 11 runtime-async method. Distinct from <see cref="IsAsync"/>, which
+    /// True for a runtime-async method. Distinct from <see cref="IsAsync"/>, which
     /// WrapperService also sets for these methods once it can restore the Task their body does not
     /// return; this flag says the method is runtime-async specifically.
     ///

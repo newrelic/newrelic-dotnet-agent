@@ -158,7 +158,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             Assert::IsFalse(result);
         }
 
-        // .NET 11 runtime-async methods (MethodImplAttributes.Async, 0x2000 in ImplFlags -- note
+        // Runtime-async methods (MethodImplAttributes.Async, 0x2000 in ImplFlags -- note
         // that mdPinvokeImpl above is also 0x2000, but in methodAttributes, a different field) do
         // not follow the return convention their signature declares: the body pushes nothing for
         // Task/ValueTask and an unwrapped T for Task<T>/ValueTask<T>.

@@ -77,7 +77,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
                 LogError(L"Skipping interop method: ", function->ToString());
                 return false;
             }
-            // A .NET 11 runtime-async method returns its unwrapped type rather than the task type
+            // A runtime-async method returns its unwrapped type rather than the task type
             // its signature declares. The rewriter handles that for the four return types the spec
             // permits (Task, ValueTask, Task<T>, ValueTask<T>) by substituting an effective return
             // type; see RuntimeAsyncReturnType.h.

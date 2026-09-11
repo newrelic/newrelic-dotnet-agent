@@ -25,11 +25,11 @@ namespace NewRelic { namespace Profiler { namespace Configuration
         WebTransaction = 1 << 21,
         AttributeInstrumentation = 1 << 20,
 
-        // Bit 19 indicates a .NET 11 runtime-async method (MethodImplAttributes.Async).
+        // Bit 19 indicates a runtime-async method (MethodImplAttributes.Async).
         // Deliberately NOT AsyncMethod: that flag promises the instrumented method returns a
         // not-yet-complete Task in the result slot, which a runtime-async body never does (it
         // returns nothing for Task/ValueTask and an unwrapped T for Task<T>/ValueTask<T>).
-        // The managed side restores that promise before honouring it.
+        // The managed side restores that promise before honoring it.
         RuntimeAsyncMethod = 1 << 19,
 
         // Bits 18..16 hold a 3-bit instrumentation level for this instrumenter.

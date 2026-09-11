@@ -84,7 +84,7 @@ public class WrapperService : IWrapperService
             bool isCustom = KnownCustomTracerNames.Contains(tracerFactoryName);
             var isAsync = TracerArgument.IsAsync(tracerArguments);
 
-            // A .NET 11 runtime-async method is async in every way the wrappers care about, but its
+            // A runtime-async method is async in every way the wrappers care about, but its
             // IL body returns the unwrapped result rather than a Task, so the profiler deliberately
             // withholds TracerFlags.Async. Build a normalizer that restores the Task the wrappers
             // expect; only if that succeeds may we call the method async, because IsAsync is a

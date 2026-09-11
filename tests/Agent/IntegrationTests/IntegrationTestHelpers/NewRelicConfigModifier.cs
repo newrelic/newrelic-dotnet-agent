@@ -314,6 +314,23 @@ public class NewRelicConfigModifier
         return this;
     }
 
+    /// <summary>
+    /// Sets the root span sampler to alwaysOn, so every transaction is sampled.
+    ///
+    /// Span events are only produced for sampled transactions, and the default adaptive sampler
+    /// takes roughly ten per minute. A test that asserts on spans from more transactions than that,
+    /// or from one queued behind many others, needs this rather than an ordering that happens to be
+    /// favorable. Requires distributedTracing to be enabled, which it is in the shipped
+    /// newrelic.config.
+    /// </summary>
+    public NewRelicConfigModifier SetRootSamplerAlwaysOn()
+    {
+        CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath,
+            new[] { "configuration", "distributedTracing", "sampler", "root" }, "alwaysOn", string.Empty);
+
+        return this;
+    }
+
     public void SetCustomHostName(string customHostName)
     {
         CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "processHost" },

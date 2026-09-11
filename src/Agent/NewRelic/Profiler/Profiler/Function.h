@@ -19,8 +19,7 @@ namespace NewRelic { namespace Profiler
 {
     using NewRelic::Profiler::MethodRewriter::FunctionHeaderInfoPtr;
 
-    // MethodImplAttributes.Async -- set by the C# compiler on methods built with .NET 11
-    // runtime-async. Not yet present in the vendored coreclr headers (CorMethodImpl in
+    // MethodImplAttributes.Async -- set by the C# compiler on methods built with runtime-async. Not yet present in the vendored coreclr headers (CorMethodImpl in
     // externals/coreclr-headers/src/inc/corhdr.h stops at miInternalCall = 0x1000), so it
     // is defined here. Replace with miAsync once those headers are updated; the name is
     // deliberately different so a header bump cannot collide with this declaration.
@@ -349,7 +348,7 @@ namespace NewRelic { namespace Profiler
             ULONG cbVal = 0;
 
             // This is the ONLY place TracerFlags::AsyncMethod is set, and it must stay gated on
-            // AsyncStateMachineAttribute alone. A .NET 11 runtime-async method does not carry that
+            // AsyncStateMachineAttribute alone. A runtime-async method does not carry that
             // attribute, so it correctly does NOT get this flag -- it gets RuntimeAsyncMethod
             // (below) instead.
             //
@@ -361,7 +360,7 @@ namespace NewRelic { namespace Profiler
             // would make DefaultWrapperAsync attach a continuation to a null or a boxed T, leaking
             // the segment and stranding the transaction.
             //
-            // WrapperService restores that promise for RuntimeAsyncMethod methods by synthesising a
+            // WrapperService restores that promise for RuntimeAsyncMethod methods by synthesizing a
             // completed Task from the real result, and only then treats them as async. See
             // RuntimeAsyncReturnType.h and Core/Wrapper/RuntimeAsyncResultNormalizer.cs.
             HRESULT attributeResult = _metaDataImport->GetCustomAttributeByName(_metaDataToken, _X("System.Runtime.CompilerServices.AsyncStateMachineAttribute"), (const void**)&pVal, &cbVal);
@@ -372,9 +371,9 @@ namespace NewRelic { namespace Profiler
                 _tracerFlags |= NewRelic::Profiler::Configuration::TracerFlags::AsyncMethod;
             }
 
-            // Runtime-async is signalled by a method impl flag rather than an attribute. Test the
+            // Runtime-async is signaled by a method impl flag rather than an attribute. Test the
             // member directly instead of calling the virtual IsRuntimeAsync() -- _methodImplFlags is
-            // initialised in the member-init list so it is already valid here, and this avoids a
+            // initialized in the member-init list so it is already valid here, and this avoids a
             // virtual dispatch from inside a constructor.
             if ((_methodImplFlags & CorMethodImplAsync) != 0)
             {
@@ -443,7 +442,7 @@ namespace NewRelic { namespace Profiler
             return _isCoreClr;
         }
 
-        // A .NET 11 runtime-async method carries no AsyncStateMachineAttribute -- the compiler
+        // A runtime-async method carries no AsyncStateMachineAttribute -- the compiler
         // emits the body directly on the method and flags it here instead. Such a method returns
         // its unwrapped type (nothing for Task/ValueTask, T for Task<T>/ValueTask<T>) even though
         // its signature declares the task type, so the default instrumentation's signature-derived
