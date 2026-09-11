@@ -11,7 +11,7 @@ namespace NewRelic.Agent.Extensions.Helpers;
 
 public class KafkaClusterIdCache
 {
-    private const long TtlTicks = TimeSpan.TicksPerHour;
+    private static readonly TimeSpan ClusterIdTtl = TimeSpan.FromHours(1);
 
     private readonly Func<object, string> _resolver;
     private readonly ISimpleSchedulingService _schedulingService;
@@ -84,7 +84,7 @@ public class KafkaClusterIdCache
 
     private void ResolveKey(string key, WeakReference weakRef)
     {
-        if (_clusterIdByKey.TryGetValue(key, out var existing) && _utcTicksProvider() - existing.ResolvedAtTicks < TtlTicks)
+        if (_clusterIdByKey.TryGetValue(key, out var existing) && _utcTicksProvider() - existing.ResolvedAtTicks < ClusterIdTtl.Ticks)
             return;
 
         // A single Target read decides liveness. IsAlive followed by Target read the same

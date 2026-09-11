@@ -17,6 +17,7 @@ using NewRelic.Agent.Core.SharedInterfaces.Web;
 using NewRelic.Agent.Core.SharedInterfaces.Web.Core;
 #endif
 using NewRelic.Agent.Core.Utilities;
+using NewRelic.Agent.Extensions.Helpers;
 using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Agent.Extensions.SystemExtensions;
 using NewRelic.Agent.Extensions.SystemExtensions.Collections.Generic;
@@ -42,7 +43,6 @@ public class DefaultConfiguration : IConfiguration
     private const string ServerConfigSource = "Server Configuration";
     private const int MaxExptectedErrorConfigEntries = 50;
     private const int MaxIgnoreErrorConfigEntries = 50;
-    private const int MinKafkaMetricsIntervalSeconds = 5;
 
     private static long _currentConfigurationVersion;
     private readonly IEnvironment _environment = new EnvironmentMock();
@@ -3031,7 +3031,7 @@ public class DefaultConfiguration : IConfiguration
 
             var configured = EnvironmentOverrides(local, "NEW_RELIC_KAFKA_METRICS_INTERVAL");
 
-            return configured.HasValue ? Math.Max(MinKafkaMetricsIntervalSeconds, configured.Value) : null;
+            return configured.HasValue ? Math.Max(KafkaStatisticsHelper.MinStatisticsIntervalSeconds, configured.Value) : null;
         }
     }
 

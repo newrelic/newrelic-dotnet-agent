@@ -48,7 +48,14 @@ public struct KafkaMetricValue
 /// </summary>
 public static class KafkaStatisticsHelper
 {
-    private const string StatisticsIntervalMsKey = "statistics.interval.ms";
+    /// <summary>The librdkafka configuration key that controls how often statistics JSON is emitted.</summary>
+    public const string StatisticsIntervalMsKey = "statistics.interval.ms";
+
+    /// <summary>
+    /// The shortest statistics interval the agent will request from librdkafka. It floors both the
+    /// customer-configured interval and the interval the agent derives from the harvest cycle.
+    /// </summary>
+    public const int MinStatisticsIntervalSeconds = 5;
 
     #region JSON Model Classes
 

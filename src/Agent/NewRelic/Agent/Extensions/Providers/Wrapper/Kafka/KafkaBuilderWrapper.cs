@@ -23,8 +23,6 @@ public class KafkaBuilderWrapper : IWrapper
 
     private const string WrapperName = "KafkaBuilderWrapper";
     private const string BootstrapServersKey = "bootstrap.servers";
-    private const string StatisticsIntervalKey = "statistics.interval.ms";
-    private const int MinStatisticsIntervalMs = 5000;
     private static readonly TimeSpan DrainInitialDelay = TimeSpan.FromSeconds(5);
     private static readonly TimeSpan ClientTtl = TimeSpan.FromMinutes(5);
     private static readonly TimeSpan CleanupInterval = TimeSpan.FromMinutes(2);
@@ -430,7 +428,7 @@ public class KafkaBuilderWrapper : IWrapper
 
     /// <summary>
     /// Enables statistics on the Kafka builder if not already configured by the customer.
-    /// Derives an interval as half the harvest cycle (floored at MinStatisticsIntervalMs) so that
+    /// Derives an interval as half the harvest cycle (floored at MinStatisticsIntervalSeconds) so that
     /// scheduler phase offset between librdkafka's timer and our drain can never cause a missed cycle.
     /// If the customer has already set an interval, it is left unchanged, but a warning is logged
     /// when it exceeds the harvest cycle since metrics may not be reported reliably in that case.
@@ -450,7 +448,7 @@ public class KafkaBuilderWrapper : IWrapper
         var configuredSeconds = agent.Configuration.KafkaMetricsInterval;
         var intervalMs = configuredSeconds.HasValue
             ? configuredSeconds.Value * 1000
-            : Math.Max(MinStatisticsIntervalMs, harvestMs / 2);
+            : Math.Max(KafkaStatisticsHelper.MinStatisticsIntervalSeconds * 1000, harvestMs / 2);
 
         try
         {
@@ -506,7 +504,7 @@ public class KafkaBuilderWrapper : IWrapper
 
             foreach (KeyValuePair<string, string> kvp in config)
             {
-                if (kvp.Key == StatisticsIntervalKey && !string.IsNullOrEmpty(kvp.Value) && kvp.Value != "0"
+                if (kvp.Key == KafkaStatisticsHelper.StatisticsIntervalMsKey && !string.IsNullOrEmpty(kvp.Value) && kvp.Value != "0"
                     && int.TryParse(kvp.Value, out var ms))
                     return ms;
             }
