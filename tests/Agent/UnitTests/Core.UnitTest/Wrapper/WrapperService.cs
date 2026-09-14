@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Threading.Tasks;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Configuration;
@@ -344,30 +343,12 @@ public class Class_WrapperService
 
     // Runtime-async support tests
 
-    // Test subjects for the normalizer's reflection. The normalizer reads only the declared
-    // return type, so ordinary methods stand in faithfully for runtime-async ones.
+    // Test subjects for the runtime-async tests. Only the method NAME reaches the normalizer now --
+    // the result type is supplied by the caller as effectiveReturnType -- so these stand in for
+    // runtime-async methods without needing to be compiled as any particular shape.
     public Task<int> RuntimeAsyncTaskOfIntMethod() => Task.FromResult(0);
 
     public Task RuntimeAsyncTaskMethod() => Task.CompletedTask;
-
-    public int RuntimeAsyncUnclassifiableMethod() => 0;
-
-    // Stands in for a customer type whose member signatures reference an assembly that cannot be
-    // loaded, and counts the attempts so the test can prove the failure is not retried per call.
-    private class ReflectionHostileType : TypeDelegator
-    {
-        public ReflectionHostileType() : base(typeof(Class_WrapperService))
-        {
-        }
-
-        public int GetMethodsCallCount { get; private set; }
-
-        public override MethodInfo[] GetMethods(BindingFlags bindingAttr)
-        {
-            GetMethodsCallCount++;
-            throw new TypeLoadException("could not load a parameter type");
-        }
-    }
 
     [Test]
     public void BeforeWrappedMethod_TreatsClassifiableRuntimeAsyncMethodAsAsync()
@@ -381,14 +362,16 @@ public class Class_WrapperService
             });
 
         _wrapperService.BeforeWrappedMethod(typeof(Class_WrapperService), nameof(RuntimeAsyncTaskOfIntMethod),
-            string.Empty, new object(), new object[0], "MyTracer", null, RuntimeAsyncTracerArgs, 100, null);
+            string.Empty, new object(), new object[0], "MyTracer", null, RuntimeAsyncTracerArgs, 100, typeof(int));
 
         Assert.That(capturedInfo.IsAsync, Is.True);
     }
 
     [Test]
-    public void BeforeWrappedMethod_DoesNotTreatUnclassifiableRuntimeAsyncMethodAsAsync()
+    public void BeforeWrappedMethod_DoesNotTreatRuntimeAsyncMethodAsAsync_WhenTheTypeCannotBeBound()
     {
+        // void is not a valid generic argument, so no normalizer can be built. IsAsync must stay
+        // false: it is a promise about the result slot, and nothing is going to fill it with a Task.
         InstrumentedMethodInfo capturedInfo = null;
         Mock.Arrange(() => _wrapperMap.Get(Arg.IsAny<InstrumentedMethodInfo>()))
             .Returns((InstrumentedMethodInfo info) =>
@@ -397,8 +380,8 @@ public class Class_WrapperService
                 return new TrackedWrapper(Mock.Create<IWrapper>());
             });
 
-        _wrapperService.BeforeWrappedMethod(typeof(Class_WrapperService), nameof(RuntimeAsyncUnclassifiableMethod),
-            string.Empty, new object(), new object[0], "MyTracer", null, RuntimeAsyncTracerArgs, 101, null);
+        _wrapperService.BeforeWrappedMethod(typeof(Class_WrapperService), nameof(RuntimeAsyncTaskOfIntMethod),
+            string.Empty, new object(), new object[0], "MyTracer", null, RuntimeAsyncTracerArgs, 101, typeof(void));
 
         Assert.That(capturedInfo.IsAsync, Is.False);
     }
@@ -411,7 +394,7 @@ public class Class_WrapperService
 
         var afterWrappedMethod = _wrapperService.BeforeWrappedMethod(typeof(Class_WrapperService),
             nameof(RuntimeAsyncTaskOfIntMethod), string.Empty, new object(), new object[0],
-            "MyTracer", null, RuntimeAsyncTracerArgs, 102, null);
+            "MyTracer", null, RuntimeAsyncTracerArgs, 102, typeof(int));
 
         afterWrappedMethod(42, null);
 
@@ -449,7 +432,7 @@ public class Class_WrapperService
 
         var afterWrappedMethod = _wrapperService.BeforeWrappedMethod(typeof(Class_WrapperService),
             nameof(RuntimeAsyncTaskOfIntMethod), string.Empty, new object(), new object[0],
-            "MyTracer", null, RuntimeAsyncTracerArgs, 104, null);
+            "MyTracer", null, RuntimeAsyncTracerArgs, 104, typeof(int));
 
         afterWrappedMethod(null, thrown);
 
@@ -464,7 +447,7 @@ public class Class_WrapperService
 
         var afterWrappedMethod = _wrapperService.BeforeWrappedMethod(typeof(Class_WrapperService),
             nameof(RuntimeAsyncTaskOfIntMethod), string.Empty, new object(), new object[0],
-            "MyTracer", null, EmptyTracerArgs, 105, null);
+            "MyTracer", null, EmptyTracerArgs, 105, typeof(int));
 
         afterWrappedMethod(42, null);
 
@@ -483,7 +466,7 @@ public class Class_WrapperService
             });
 
         _wrapperService.BeforeWrappedMethod(typeof(Class_WrapperService), nameof(RuntimeAsyncTaskOfIntMethod),
-            string.Empty, new object(), new object[0], "MyTracer", null, RuntimeAsyncTracerArgs, 106, null);
+            string.Empty, new object(), new object[0], "MyTracer", null, RuntimeAsyncTracerArgs, 106, typeof(int));
 
         Assert.That(capturedInfo.IsRuntimeAsync, Is.True);
     }
@@ -500,7 +483,7 @@ public class Class_WrapperService
             });
 
         _wrapperService.BeforeWrappedMethod(typeof(Class_WrapperService), nameof(RuntimeAsyncTaskOfIntMethod),
-            string.Empty, new object(), new object[0], "MyTracer", null, AsyncTracerArgs, 107, null);
+            string.Empty, new object(), new object[0], "MyTracer", null, AsyncTracerArgs, 107, typeof(int));
 
         Assert.Multiple(() =>
         {
@@ -510,33 +493,34 @@ public class Class_WrapperService
     }
 
     [Test]
-    public void BeforeWrappedMethod_ClassifiesOnce_WhenRuntimeAsyncClassificationThrows()
+    public void BeforeWrappedMethod_NormalizesEachInstantiationOfAGenericRuntimeAsyncMethod_ToItsOwnType()
     {
-        // A classification failure must still cache the functionId. If the exception escaped
-        // instead, AgentShim.GetTracer would swallow it and the entry would never be written, so
-        // every later call to this method would repeat the full reflection plus the throw.
-        var declaringType = new ReflectionHostileType();
-        InstrumentedMethodInfo capturedInfo = null;
-        Mock.Arrange(() => _wrapperMap.Get(Arg.IsAny<InstrumentedMethodInfo>()))
-            .Returns((InstrumentedMethodInfo info) =>
-            {
-                capturedInfo = info;
-                return new TrackedWrapper(Mock.Create<IWrapper>());
-            });
+        // One functionId, two instantiations. The second call hits the functionId cache, so if the
+        // normalizer were stored in that cache entry the string instantiation would be handed the
+        // int delegate and its result would silently become default(int) wrapped in a Task<int>.
+        object capturedResult = null;
+        ArrangeWrapperCapturingAfterDelegateResult(r => capturedResult = r);
 
-        Assert.DoesNotThrow(() =>
-        {
-            _wrapperService.BeforeWrappedMethod(declaringType, nameof(RuntimeAsyncTaskOfIntMethod),
-                string.Empty, new object(), new object[0], "MyTracer", null, RuntimeAsyncTracerArgs, 108, null);
-            _wrapperService.BeforeWrappedMethod(declaringType, nameof(RuntimeAsyncTaskOfIntMethod),
-                string.Empty, new object(), new object[0], "MyTracer", null, RuntimeAsyncTracerArgs, 108, null);
-        });
+        var asInt = _wrapperService.BeforeWrappedMethod(typeof(Class_WrapperService),
+            nameof(RuntimeAsyncTaskOfIntMethod), string.Empty, new object(), new object[0],
+            "MyTracer", null, RuntimeAsyncTracerArgs, 200, typeof(int));
+
+        asInt(42, null);
+        var intResult = capturedResult;
+
+        var asString = _wrapperService.BeforeWrappedMethod(typeof(Class_WrapperService),
+            nameof(RuntimeAsyncTaskOfIntMethod), string.Empty, new object(), new object[0],
+            "MyTracer", null, RuntimeAsyncTracerArgs, 200, typeof(string));
+
+        asString("forty-two", null);
+        var stringResult = capturedResult;
 
         Assert.Multiple(() =>
         {
-            Assert.That(declaringType.GetMethodsCallCount, Is.EqualTo(1));
-            Assert.That(capturedInfo.IsAsync, Is.False);
-            Assert.That(capturedInfo.IsRuntimeAsync, Is.True);
+            Assert.That(intResult, Is.TypeOf<Task<int>>());
+            Assert.That(((Task<int>)intResult).Result, Is.EqualTo(42));
+            Assert.That(stringResult, Is.TypeOf<Task<string>>());
+            Assert.That(((Task<string>)stringResult).Result, Is.EqualTo("forty-two"));
         });
     }
 

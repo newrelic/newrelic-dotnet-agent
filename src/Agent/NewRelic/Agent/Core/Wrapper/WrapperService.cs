@@ -35,13 +35,11 @@ public class WrapperService : IWrapperService
     {
         public readonly InstrumentedMethodInfo instrumentedMethodInfo;
         public readonly TrackedWrapper wrapper;
-        public readonly Func<object, Task> resultNormalizer;
 
-        public InstrumentedMethodInfoWrapper(InstrumentedMethodInfo instrumentedMethodInfo, TrackedWrapper wrapper, Func<object, Task> resultNormalizer)
+        public InstrumentedMethodInfoWrapper(InstrumentedMethodInfo instrumentedMethodInfo, TrackedWrapper wrapper)
         {
             this.wrapper = wrapper;
             this.instrumentedMethodInfo = instrumentedMethodInfo;
-            this.resultNormalizer = resultNormalizer;
         }
     }
 
@@ -72,12 +70,22 @@ public class WrapperService : IWrapperService
     {
         InstrumentedMethodInfo instrumentedMethodInfo = default(InstrumentedMethodInfo);
         TrackedWrapper trackedWrapper;
-        Func<object, Task> resultNormalizer;
+
+        // Resolved per call rather than stored with the functionId. A functionId is per method
+        // DEFINITION, so a generic runtime-async method arrives here once per instantiation with a
+        // different effectiveReturnType each time while the functionId stays the same -- caching the
+        // delegate against the functionId would hand later instantiations the first one's delegate,
+        // whose result would silently become default(T). TryCreate is itself a type-keyed dictionary
+        // lookup, so resolving per call is cheap.
+        var isRuntimeAsync = TracerArgument.IsRuntimeAsync(tracerArguments);
+        var resultNormalizer = isRuntimeAsync
+            ? RuntimeAsyncResultNormalizer.TryCreate(effectiveReturnType)
+            : null;
+
         if (_functionIdToWrapper.TryGetValue(functionId, out InstrumentedMethodInfoWrapper methodAndWrapper))
         {
             instrumentedMethodInfo = methodAndWrapper.instrumentedMethodInfo;
             trackedWrapper = methodAndWrapper.wrapper;
-            resultNormalizer = methodAndWrapper.resultNormalizer;
         }
         else
         {
@@ -86,33 +94,16 @@ public class WrapperService : IWrapperService
 
             // A runtime-async method is async in every way the wrappers care about, but its
             // IL body returns the unwrapped result rather than a Task, so the profiler deliberately
-            // withholds TracerFlags.Async. Build a normalizer that restores the Task the wrappers
-            // expect; only if that succeeds may we call the method async, because IsAsync is a
-            // promise about the result slot as well as a description of the method.
-            var isRuntimeAsync = TracerArgument.IsRuntimeAsync(tracerArguments);
-            var normalization = isRuntimeAsync
-                ? RuntimeAsyncResultNormalizer.TryCreate(type, methodName, argumentSignature)
-                : null;
-            resultNormalizer = normalization?.Normalize;
-
-            if (normalization != null)
+            // withholds TracerFlags.Async. Only once a normalizer exists may we call the method
+            // async, because IsAsync is a promise about the result slot as well as a description of
+            // the method.
+            if (resultNormalizer != null)
             {
                 isAsync = true;
-
-                if (!normalization.IsExactlyTyped)
-                {
-                    // Open generic result type -- Task<object> was substituted. Every async delegate
-                    // gates on Task rather than a concrete Task<TResult>, so the segment still ends
-                    // normally; the residual effect is that a wrapper pairing a typed onComplete with
-                    // a generic method receives null for the task, because Delegates.OnSuccess
-                    // narrows with `as`. This line is the only signal that happened.
-                    Log.Debug("Runtime-async method {0}.{1}({2}) has an open generic result type; using Task<object> for result normalization.",
-                        type.FullName, methodName, argumentSignature);
-                }
             }
             else if (isRuntimeAsync)
             {
-                Log.Finest("Could not classify the return shape of runtime-async method {0}.{1}({2}); instrumenting it with synchronous completion semantics.",
+                Log.Finest("Could not build a result normalizer for runtime-async method {0}.{1}({2}); instrumenting it with synchronous completion semantics.",
                     type.FullName, methodName, argumentSignature);
             }
 
@@ -157,7 +148,7 @@ public class WrapperService : IWrapperService
                 }
             }
 
-            _functionIdToWrapper[functionId] = new InstrumentedMethodInfoWrapper(instrumentedMethodInfo, trackedWrapper, resultNormalizer);
+            _functionIdToWrapper[functionId] = new InstrumentedMethodInfoWrapper(instrumentedMethodInfo, trackedWrapper);
             GenerateSupportabilityMetrics(instrumentedMethodInfo, isCustom);
         }
 
@@ -281,9 +272,7 @@ public class WrapperService : IWrapperService
         if (trackedWrapper.NumberOfConsecutiveFailures >= _maxConsecutiveFailures)
         {
             _agentHealthReporter.ReportWrapperShutdown(trackedWrapper.Wrapper, instrumentedMethodCall.MethodCall.Method);
-            // No normalizer: this entry replaces a misbehaving wrapper with the no-op wrapper, whose
-            // after-delegate ignores the result entirely, so there is nothing to normalize for.
-            _functionIdToWrapper[functionId] = new InstrumentedMethodInfoWrapper(instrumetedMethodInfo, _wrapperMap.GetNoOpWrapper(), null);
+            _functionIdToWrapper[functionId] = new InstrumentedMethodInfoWrapper(instrumetedMethodInfo, _wrapperMap.GetNoOpWrapper());
         }
     }
 
