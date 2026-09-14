@@ -110,8 +110,8 @@ public class AzureFuncTool : RemoteService
         {
             try
             {
-                //We need to attempt to clean up the process that did not successfully start.
-                RemoteProcess.Kill();
+                // func spawns a host process which spawns the worker; killing only func leaves them holding the redirected output pipe.
+                RemoteProcess.Kill(entireProcessTree: true);
             }
             catch (Exception)
             {
@@ -157,7 +157,7 @@ public class AzureFuncTool : RemoteService
         try
         {
             if (RemoteProcess is { HasExited: false })
-                RemoteProcess.Kill();
+                RemoteProcess.Kill(entireProcessTree: true);
         }
         catch
         {

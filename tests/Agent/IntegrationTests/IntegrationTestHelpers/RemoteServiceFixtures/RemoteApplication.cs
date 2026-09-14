@@ -10,6 +10,7 @@ using System.IO.Pipes;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 
@@ -25,6 +26,9 @@ public enum ApplicationType
 public abstract class RemoteApplication : IDisposable
 {
     #region Constant/Static
+
+    private const int ExitWaitMilliseconds = 60_000;
+    private const int OutputDrainMilliseconds = 15_000;
 
     private static string GetAssemblyFolderFromAssembly(Assembly assembly)
     {
@@ -330,9 +334,19 @@ public abstract class RemoteApplication : IDisposable
 
     public void WaitForExit()
     {
-        if (!RemoteProcess.HasExited)
+        // Both waits are bounded. The parameterless WaitForExit also waits for
+        // redirected output to reach EOF, which never happens when a spawned
+        // child outlives this process and keeps the pipe open -- on Linux that
+        // hung the whole test lane with no output at all.
+        if (!RemoteProcess.HasExited && !RemoteProcess.WaitForExit(ExitWaitMilliseconds))
         {
-            RemoteProcess.WaitForExit();
+            TestLogger?.WriteLine($"[RemoteApplication] Process {RemoteProcess.Id} did not exit within {ExitWaitMilliseconds / 1000} seconds.");
+            return;
+        }
+
+        if (!Task.Run(() => RemoteProcess.WaitForExit()).Wait(OutputDrainMilliseconds))
+        {
+            TestLogger?.WriteLine($"[RemoteApplication] Redirected output did not drain within {OutputDrainMilliseconds / 1000} seconds; a child process is likely still holding the pipe.");
         }
     }
 
@@ -394,7 +408,7 @@ public abstract class RemoteApplication : IDisposable
         {
             try
             {
-                RemoteProcess.Kill();
+                RemoteProcess.Kill(entireProcessTree: true);
             }
             catch
             {
@@ -427,7 +441,7 @@ public abstract class RemoteApplication : IDisposable
                     TestLogger?.WriteLine($"[RemoteApplication] FAILED sending shutdown signal to named pipe \"{shutdownChannelName}\": {ex}.");
                     try
                     {
-                        RemoteProcess.Kill();
+                        RemoteProcess.Kill(entireProcessTree: true);
                     }
                     catch
                     {
@@ -454,7 +468,7 @@ public abstract class RemoteApplication : IDisposable
                 TestLogger?.WriteLine($"[RemoteApplication] FAILED sending shutdown signal to wait handle \"{shutdownChannelName}\": {ex}.");
                 try
                 {
-                    RemoteProcess.Kill();
+                    RemoteProcess.Kill(entireProcessTree: true);
                 }
                 catch
                 {

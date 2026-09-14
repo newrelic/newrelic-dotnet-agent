@@ -56,7 +56,10 @@ public abstract class RemoteApplicationFixture : IDisposable
     public readonly RemoteApplication RemoteApplication;
 
     public string UniqueFolderName { get { return RemoteApplication.UniqueFolderName; } }
-    private string AgentLogFileName { get { return CommonUtils.GetAgentLogFileNameFromNewRelicConfig(DestinationNewRelicConfigFilePath); } }
+    // A fixture whose application shares its agent home with another instrumented
+    // process must name its log file, or AgentLogFile picks whichever log was
+    // written last.
+    protected virtual string AgentLogFileName { get { return CommonUtils.GetAgentLogFileNameFromNewRelicConfig(DestinationNewRelicConfigFilePath); } }
 
 
     private AgentLogFile _agentLogFile;
