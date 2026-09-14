@@ -109,7 +109,7 @@ Two shared console hosts dispatch string commands to **exerciser** classes; test
 **Gotchas:**
 - Dispatcher matches command -> method by parameter **count, not type** -- do not overload `[LibraryMethod]` methods; they fail silently.
 - Non-static exercisers need a parameterless ctor (instantiated by reflection).
-- Exercisers must live in the helpers project; external assemblies aren't resolved by the reflection loader unless directly referenced.
+- The reflection loader scans every loaded assembly (`ReflectionHelpers/ReflectionUtil.cs:73-75`, `AppDomain.CurrentDomain.GetAssemblies()`), so an exerciser need not live in the helpers project. The real constraint: an assembly with no static reference is never loaded, so nothing finds its exercisers until a command loads it -- `AssemblyHelper.LoadAssemblyFromFile` is a `[LibraryMethod]` for exactly that (used at `BasicInstrumentation/NetStandardLibraryInstrumentation.cs:81`).
 - Use `Log.Info` / `Log.Error` inside exercisers -- output is timestamped and captured in test logs.
 
 **Fixture variants:** treat `IntegrationTestHelpers/RemoteServiceFixtures/ConsoleDynamicMethodFixture.cs` as authoritative and grep it -- the set drifts as .NET versions roll. Currently FW (`FW462/471/48/481`, `FWLatest`, `FWSpecificVersion`) and Core (`Core80/100`, `CoreOldest/CoreLatest`, `CoreSpecificVersion`), with `AIM`/`HSM` security-mode suffixes on the `Latest` fixtures. To run one scenario across runtimes, make the test class generic on the fixture type and derive concrete classes bound to each variant.
