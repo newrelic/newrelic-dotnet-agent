@@ -20,6 +20,8 @@ class Program
         var measurementsPerThread = GetArgValue(args, "--measurements", 1000);
         var threadCount = GetArgValue(args, "--threads", 10);
 
+        using var completion = AppLifecycleManager.ArmTestCompletion(port);
+
         AppLifecycleManager.CreatePidFile();
 
         var meters = new List<Meter>();
@@ -61,7 +63,7 @@ class Program
         await Task.Delay(5000);
 
         Console.WriteLine("Waiting for signal to terminate.");
-        AppLifecycleManager.WaitForTestCompletion(port);
+        completion.Wait();
 
         foreach (var meter in meters)
         {

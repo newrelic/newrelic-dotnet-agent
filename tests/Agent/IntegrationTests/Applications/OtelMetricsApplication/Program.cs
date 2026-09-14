@@ -12,6 +12,8 @@ class Program
     {
         var port = AppLifecycleManager.GetPortFromArgs(args);
 
+        using var completion = AppLifecycleManager.ArmTestCompletion(port);
+
         AppLifecycleManager.CreatePidFile();
 
         using var meter = new Meter("OtelMetricsTest.App", "1.0.0");
@@ -30,7 +32,7 @@ class Program
 
         Console.WriteLine("OtelMetricsTest complete. Waiting for signal to terminate.");
 
-        AppLifecycleManager.WaitForTestCompletion(port);
+        completion.Wait();
     }
 
     [Transaction]

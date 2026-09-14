@@ -65,56 +65,110 @@ public class AppLifecycleManager
         return portToUse;
     }
 
+    public static TestCompletionSignal ArmTestCompletion(string port)
+    {
+        return new TestCompletionSignal(port);
+    }
+
     public static void WaitForTestCompletion(string port)
     {
-        // On Linux, we have to used named pipes as the IPC mechanism because named EventWaitHandles aren't supported
-        if (_isLinux)
+        using (var signal = ArmTestCompletion(port))
         {
-            using (NamedPipeServerStream pipeServer =
-                   new NamedPipeServerStream(ShutdownChannelPrefix + port, PipeDirection.In))
+            signal.Wait();
+        }
+    }
+
+    // The runner opens a channel the application creates, so an application that works before it waits must arm the channel at startup.
+    public sealed class TestCompletionSignal : IDisposable
+    {
+        private readonly string _channelName;
+        private readonly EventWaitHandle _eventWaitHandle;
+        private readonly NamedPipeServerStream _pipeServer;
+
+        internal TestCompletionSignal(string port)
+        {
+            _channelName = ShutdownChannelPrefix + port;
+
+            try
             {
-                var task = pipeServer.WaitForConnectionAsync();
-                if (task.Wait(TimeSpan.FromMinutes(MinutesToWait)))
+                if (_isLinux)
                 {
-                    try
-                    {
-                        // Read user input and send that to the client process.
-                        using (StreamReader sr = new StreamReader(pipeServer))
-                        {
-                            string temp;
-                            while ((temp = sr.ReadLine()) != null)
-                            {
-                                Log($"Received shutdown message from test framework: {temp}");
-                            }
-                        }
-                    }
-                    // Catch the IOException that is raised if the pipe is broken
-                    // or disconnected.
-                    catch (IOException e)
-                    {
-                        Log($"WaitForTestCompletion: exception: {e.Message}");
-                    }
+                    _pipeServer = new NamedPipeServerStream(_channelName, PipeDirection.In);
                 }
                 else
                 {
-                    Log("Timed out waiting for test completion.");
+                    _eventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset, _channelName);
                 }
-            }
-        }
-        else
-        {
-            try
-            {
-                using (var eventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset, ShutdownChannelPrefix + port))
-                {
-                    Log($"Waiting for shutdown event handle: {ShutdownChannelPrefix + port}");
-                    if (!eventWaitHandle.WaitOne(TimeSpan.FromMinutes(MinutesToWait)))
-                        Log("Timed out waiting for shutdown event handle to be signaled.");
-                }
+
+                Log($"Armed shutdown channel: {_channelName}");
             }
             catch (Exception e)
             {
-                Log("WaitForTestCompletion: exception: " + e.Message);
+                Log($"Failed to arm shutdown channel {_channelName}: {e.Message}");
+            }
+        }
+
+        public void Wait()
+        {
+            if (_isLinux)
+            {
+                WaitForPipe();
+                return;
+            }
+
+            WaitForEvent();
+        }
+
+        public void Dispose()
+        {
+            _eventWaitHandle?.Dispose();
+            _pipeServer?.Dispose();
+        }
+
+        private void WaitForPipe()
+        {
+            if (_pipeServer == null)
+            {
+                Log("Shutdown channel was never armed; not waiting.");
+                return;
+            }
+
+            var task = _pipeServer.WaitForConnectionAsync();
+            if (!task.Wait(TimeSpan.FromMinutes(MinutesToWait)))
+            {
+                Log("Timed out waiting for test completion.");
+                return;
+            }
+
+            try
+            {
+                using (var reader = new StreamReader(_pipeServer))
+                {
+                    string line;
+                    while ((line = reader.ReadLine()) != null)
+                    {
+                        Log($"Received shutdown message from test framework: {line}");
+                    }
+                }
+            }
+            catch (IOException e)
+            {
+                Log($"WaitForTestCompletion: exception: {e.Message}");
+            }
+        }
+
+        private void WaitForEvent()
+        {
+            if (_eventWaitHandle == null)
+            {
+                Log("Shutdown channel was never armed; not waiting.");
+                return;
+            }
+
+            Log($"Waiting for shutdown event handle: {_channelName}");
+            if (!_eventWaitHandle.WaitOne(TimeSpan.FromMinutes(MinutesToWait)))
+            {
+                Log("Timed out waiting for shutdown event handle to be signaled.");
             }
         }
     }
