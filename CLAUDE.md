@@ -23,6 +23,11 @@ Sub-docs (read when working in that area):
   integration tests that require external infrastructure (databases,
   brokers, etc.). Start services first via
   `tests/Agent/IntegrationTests/UnboundedServices` docker compose.
+- **IntegrationTests.NetCore.sln** and **UnboundedIntegrationTests.NetCore.sln**
+  (`tests/Agent/IntegrationTests/`) -- additive, Core-targeted subsets of the two
+  solutions above. They build with plain `dotnet build` and back the Linux CI
+  lanes. See [tests/CLAUDE.md](tests/CLAUDE.md) for the lanes and the `Runtime`
+  trait.
 - **ContainerIntegrationTests.sln** (`tests/Agent/IntegrationTests/`) —
   tests that run instrumented apps inside Docker containers; primary
   coverage for the Linux agent and container-specific scenarios. Needs
