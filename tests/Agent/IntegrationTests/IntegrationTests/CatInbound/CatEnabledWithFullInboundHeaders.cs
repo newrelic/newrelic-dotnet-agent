@@ -12,6 +12,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.CatInbound;
 
+[Trait("Runtime", "Framework")]
 public class CatEnabledWithFullInboundHeaders : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
 {
 

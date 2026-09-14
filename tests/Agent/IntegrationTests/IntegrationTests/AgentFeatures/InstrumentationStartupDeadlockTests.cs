@@ -9,6 +9,7 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures;
 /// <summary>
 /// Tests that the agent doesn't deadlock at startup
 /// </summary>
+[Trait("Runtime", "Core")]
 public class InstrumentationStartupDeadlockTests : NewRelicIntegrationTest<RemoteServiceFixtures.ConsoleInstrumentationStartupFixtureCore>
 {
     private readonly RemoteServiceFixtures.ConsoleInstrumentationStartupFixtureCore _fixture;

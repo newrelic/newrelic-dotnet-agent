@@ -17,6 +17,7 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetFramework;
 /// Logging: finest
 /// Files: Integration.Testing.RenameOriginalXmlFileTest.xml, Integration.Testing.RenameTargetXmlFileTest.xml
 /// </summary>
+[Trait("Runtime", "Framework")]
 public class RejitRenameFile : NewRelicIntegrationTest<AspNetFrameworkReJitMvcApplicationFixture>
 {
     private readonly AspNetFrameworkReJitMvcApplicationFixture _fixture;

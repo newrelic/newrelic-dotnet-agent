@@ -12,6 +12,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.Api;
 
+[Trait("Runtime", "Framework")]
 public class CustomSpanNameApiTestsFWLatest : CustomSpanNameApiTests<ConsoleDynamicMethodFixtureFWLatest>
 {
     public CustomSpanNameApiTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -20,6 +21,7 @@ public class CustomSpanNameApiTestsFWLatest : CustomSpanNameApiTests<ConsoleDyna
     }
 }
 
+[Trait("Runtime", "Core")]
 public class CustomSpanNameApiTestsCoreLatest : CustomSpanNameApiTests<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public CustomSpanNameApiTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)

@@ -74,6 +74,7 @@ public abstract class MongoDBDriverAsyncCursorTestsBase<TFixture> : NewRelicInte
 
 }
 
+[Trait("Runtime", "Framework")]
 public class MongoDBDriverAsyncCursorTestsFWLatest : MongoDBDriverAsyncCursorTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public MongoDBDriverAsyncCursorTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -82,6 +83,7 @@ public class MongoDBDriverAsyncCursorTestsFWLatest : MongoDBDriverAsyncCursorTes
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class MongoDBDriverAsyncCursorTestsFW48 : MongoDBDriverAsyncCursorTestsBase<ConsoleDynamicMethodFixtureFW48>
 {
     public MongoDBDriverAsyncCursorTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
@@ -90,6 +92,7 @@ public class MongoDBDriverAsyncCursorTestsFW48 : MongoDBDriverAsyncCursorTestsBa
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class MongoDBDriverAsyncCursorTestsFW471 : MongoDBDriverAsyncCursorTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     public MongoDBDriverAsyncCursorTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -98,6 +101,7 @@ public class MongoDBDriverAsyncCursorTestsFW471 : MongoDBDriverAsyncCursorTestsB
     }
 }
 
+[Trait("Runtime", "Core")]
 public class MongoDBDriverAsyncCursorTestsCoreLatest : MongoDBDriverAsyncCursorTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public MongoDBDriverAsyncCursorTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -106,6 +110,7 @@ public class MongoDBDriverAsyncCursorTestsCoreLatest : MongoDBDriverAsyncCursorT
     }
 }
 
+[Trait("Runtime", "Core")]
 public class MongoDBDriverAsyncCursorTestsCoreOldest : MongoDBDriverAsyncCursorTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public MongoDBDriverAsyncCursorTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)

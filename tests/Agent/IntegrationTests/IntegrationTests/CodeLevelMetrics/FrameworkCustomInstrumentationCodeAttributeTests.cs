@@ -12,6 +12,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.CodeLevelMetrics;
 
+[Trait("Runtime", "Framework")]
 public class FrameworkCustomInstrumentationCodeAttributeTests : NewRelicIntegrationTest<RemoteServiceFixtures.AgentApiExecutor>
 {
     private readonly RemoteServiceFixtures.AgentApiExecutor _fixture;

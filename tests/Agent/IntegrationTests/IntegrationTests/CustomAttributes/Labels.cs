@@ -11,6 +11,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.CustomAttributes;
 
+[Trait("Runtime", "Framework")]
 public class Labels : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
 {
     private readonly RemoteServiceFixtures.BasicMvcApplicationTestFixture _fixture;

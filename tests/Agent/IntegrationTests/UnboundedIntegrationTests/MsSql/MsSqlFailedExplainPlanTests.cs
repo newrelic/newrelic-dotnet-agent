@@ -8,6 +8,7 @@ using Xunit;
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql;
 
+[Trait("Runtime", "Core")]
 public class MsSqlFailedExplainPlanTests : NewRelicIntegrationTest<ConsoleDynamicMethodFixtureCoreLatest>
 {
     private readonly ConsoleDynamicMethodFixtureCoreLatest _fixture;

@@ -12,6 +12,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.AspNetCore;
 
+[Trait("Runtime", "Core")]
 public class AspNetCoreMvcBasicRequestsTests : NewRelicIntegrationTest<RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture>
 {
     private readonly RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture _fixture;

@@ -93,6 +93,7 @@ public abstract class NsbThrowingHandlerTestsBase<TFixture> : NewRelicIntegratio
 /// <summary>
 /// This harness targets to NServiceBus 6.5.10
 /// </summary>
+[Trait("Runtime", "Framework")]
 public class NsbThrowingHandlerTestsFW471 : NsbThrowingHandlerTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     public NsbThrowingHandlerTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -104,6 +105,7 @@ public class NsbThrowingHandlerTestsFW471 : NsbThrowingHandlerTestsBase<ConsoleD
 /// <summary>
 /// This harness, and all the others, target to NServiceBus 7.5
 /// </summary>
+[Trait("Runtime", "Framework")]
 public class NsbThrowingHandlerTestsFW48 : NsbThrowingHandlerTestsBase<ConsoleDynamicMethodFixtureFW48>
 {
     public NsbThrowingHandlerTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
@@ -112,6 +114,7 @@ public class NsbThrowingHandlerTestsFW48 : NsbThrowingHandlerTestsBase<ConsoleDy
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class NsbThrowingHandlerTestsFWLatest : NsbThrowingHandlerTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public NsbThrowingHandlerTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -120,6 +123,7 @@ public class NsbThrowingHandlerTestsFWLatest : NsbThrowingHandlerTestsBase<Conso
     }
 }
 
+[Trait("Runtime", "Core")]
 public class NsbThrowingHandlerTestsCoreOldest : NsbThrowingHandlerTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public NsbThrowingHandlerTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -128,6 +132,7 @@ public class NsbThrowingHandlerTestsCoreOldest : NsbThrowingHandlerTestsBase<Con
     }
 }
 
+[Trait("Runtime", "Core")]
 public class NsbThrowingHandlerTestsCoreLatest : NsbThrowingHandlerTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public NsbThrowingHandlerTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)

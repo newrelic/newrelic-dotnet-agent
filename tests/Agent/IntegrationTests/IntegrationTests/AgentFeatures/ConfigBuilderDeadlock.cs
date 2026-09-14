@@ -9,6 +9,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.AgentFeatures;
 
+[Trait("Runtime", "Framework")]
 public class ConfigBuilderDeadlock : NewRelicIntegrationTest<ConsoleDynamicMethodFixtureFW471>
 {
     protected readonly ConsoleDynamicMethodFixtureFW471 _fixture;

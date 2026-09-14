@@ -127,6 +127,7 @@ public abstract class OracleMetadataCommentTestsBase<TFixture> : NewRelicIntegra
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class OracleMetadataCommentTestsFramework462 : OracleMetadataCommentTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public OracleMetadataCommentTestsFramework462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -134,6 +135,7 @@ public class OracleMetadataCommentTestsFramework462 : OracleMetadataCommentTests
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class OracleMetadataCommentTestsFrameworkLatest : OracleMetadataCommentTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public OracleMetadataCommentTestsFrameworkLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
@@ -141,6 +143,7 @@ public class OracleMetadataCommentTestsFrameworkLatest : OracleMetadataCommentTe
     }
 }
 
+[Trait("Runtime", "Core")]
 public class OracleMetadataCommentTestsCoreLatest : OracleMetadataCommentTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public OracleMetadataCommentTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)

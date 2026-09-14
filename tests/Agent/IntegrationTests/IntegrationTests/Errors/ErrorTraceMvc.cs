@@ -11,6 +11,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.Errors;
 
+[Trait("Runtime", "Framework")]
 public class ErrorTraceMvc : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
 {
     private readonly RemoteServiceFixtures.BasicMvcApplicationTestFixture _fixture;

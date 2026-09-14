@@ -82,6 +82,7 @@ public abstract class RejitDeleteFileBase<TFixture> : NewRelicIntegrationTest<TF
     }
 }
 
+[Trait("Runtime", "Core")]
 public class RejitDeleteFile : RejitDeleteFileBase<AspNetCoreReJitMvcApplicationFixture>
 {
     public RejitDeleteFile(AspNetCoreReJitMvcApplicationFixture fixture, ITestOutputHelper output)
@@ -90,6 +91,7 @@ public class RejitDeleteFile : RejitDeleteFileBase<AspNetCoreReJitMvcApplication
     }
 }
 
+[Trait("Runtime", "Core")]
 public class RejitDeleteFileWithTieredCompilation : RejitDeleteFileBase<AspNetCoreReJitMvcApplicationFixtureWithTieredCompilation>
 {
     public RejitDeleteFileWithTieredCompilation(AspNetCoreReJitMvcApplicationFixtureWithTieredCompilation fixture, ITestOutputHelper output)

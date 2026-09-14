@@ -72,16 +72,19 @@ public abstract class OtlpExportSuccessMetricsTestsBase<TFixture> : NewRelicInte
     }
 }
 
+[Trait("Runtime", "Core")]
 public class OtlpExportSuccessMetricsTestsCoreLatest : OtlpExportSuccessMetricsTestsBase<OtlpMetricsWithCollectorFixtureCoreLatest>
 {
     public OtlpExportSuccessMetricsTestsCoreLatest(OtlpMetricsWithCollectorFixtureCoreLatest fixture, ITestOutputHelper outputHelper) : base(fixture, outputHelper) { }
 }
 
+[Trait("Runtime", "Core")]
 public class OtlpExportSuccessMetricsTestsCoreNet8 : OtlpExportSuccessMetricsTestsBase<OtlpMetricsWithCollectorFixtureCoreNet8>
 {
     public OtlpExportSuccessMetricsTestsCoreNet8(OtlpMetricsWithCollectorFixtureCoreNet8 fixture, ITestOutputHelper outputHelper) : base(fixture, outputHelper) { }
 }
 
+[Trait("Runtime", "Framework")]
 public class OtlpExportSuccessMetricsTestsFWLatest : OtlpExportSuccessMetricsTestsBase<OtlpMetricsWithCollectorFixtureFWLatest>
 {
     public OtlpExportSuccessMetricsTestsFWLatest(OtlpMetricsWithCollectorFixtureFWLatest fixture, ITestOutputHelper outputHelper) : base(fixture, outputHelper) { }
@@ -159,16 +162,19 @@ public abstract class OtlpExportRetryMetricsTestsBase<TFixture> : NewRelicIntegr
     }
 }
 
+[Trait("Runtime", "Core")]
 public class OtlpExportRetryMetricsTestsCoreLatest : OtlpExportRetryMetricsTestsBase<OtlpMetricsWithCollectorFixtureCoreLatest>
 {
     public OtlpExportRetryMetricsTestsCoreLatest(OtlpMetricsWithCollectorFixtureCoreLatest fixture, ITestOutputHelper outputHelper) : base(fixture, outputHelper) { }
 }
 
+[Trait("Runtime", "Core")]
 public class OtlpExportRetryMetricsTestsCoreNet8 : OtlpExportRetryMetricsTestsBase<OtlpMetricsWithCollectorFixtureCoreNet8>
 {
     public OtlpExportRetryMetricsTestsCoreNet8(OtlpMetricsWithCollectorFixtureCoreNet8 fixture, ITestOutputHelper outputHelper) : base(fixture, outputHelper) { }
 }
 
+[Trait("Runtime", "Framework")]
 public class OtlpExportRetryMetricsTestsFWLatest : OtlpExportRetryMetricsTestsBase<OtlpMetricsWithCollectorFixtureFWLatest>
 {
     public OtlpExportRetryMetricsTestsFWLatest(OtlpMetricsWithCollectorFixtureFWLatest fixture, ITestOutputHelper outputHelper) : base(fixture, outputHelper) { }
@@ -246,16 +252,19 @@ public abstract class OtlpExportFailureMetricsTestsBase<TFixture> : NewRelicInte
     }
 }
 
+[Trait("Runtime", "Core")]
 public class OtlpExportFailureMetricsTestsCoreLatest : OtlpExportFailureMetricsTestsBase<OtlpMetricsWithCollectorFixtureCoreLatest>
 {
     public OtlpExportFailureMetricsTestsCoreLatest(OtlpMetricsWithCollectorFixtureCoreLatest fixture, ITestOutputHelper outputHelper) : base(fixture, outputHelper) { }
 }
 
+[Trait("Runtime", "Core")]
 public class OtlpExportFailureMetricsTestsCoreNet8 : OtlpExportFailureMetricsTestsBase<OtlpMetricsWithCollectorFixtureCoreNet8>
 {
     public OtlpExportFailureMetricsTestsCoreNet8(OtlpMetricsWithCollectorFixtureCoreNet8 fixture, ITestOutputHelper outputHelper) : base(fixture, outputHelper) { }
 }
 
+[Trait("Runtime", "Framework")]
 public class OtlpExportFailureMetricsTestsFWLatest : OtlpExportFailureMetricsTestsBase<OtlpMetricsWithCollectorFixtureFWLatest>
 {
     public OtlpExportFailureMetricsTestsFWLatest(OtlpMetricsWithCollectorFixtureFWLatest fixture, ITestOutputHelper outputHelper) : base(fixture, outputHelper) { }

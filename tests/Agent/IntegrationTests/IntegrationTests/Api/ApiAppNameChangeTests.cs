@@ -9,6 +9,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.Api;
 
+[Trait("Runtime", "Framework")]
 public class ApiAppNameChangeTests : NewRelicIntegrationTest<RemoteServiceFixtures.ApiAppNameChangeFixture>
 {
 

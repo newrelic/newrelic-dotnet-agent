@@ -11,6 +11,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.AspNet;
 
+[Trait("Runtime", "Framework")]
 public class AllowAllHeadersEnabledTests : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
 {
     private readonly RemoteServiceFixtures.BasicMvcApplicationTestFixture _fixture;

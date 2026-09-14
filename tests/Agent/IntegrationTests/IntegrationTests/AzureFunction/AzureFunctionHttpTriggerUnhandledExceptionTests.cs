@@ -17,6 +17,7 @@ namespace NewRelic.Agent.IntegrationTests.AzureFunction;
 /// (AzureFunctionIsolatedInvokeAsyncWrapper) ends the transaction in its finally block on a faulted
 /// invocation, so the log written before the exception should still reach the collector.
 /// </summary>
+[Trait("Runtime", "Core")]
 public class AzureFunctionHttpTriggerUnhandledExceptionTests : NewRelicIntegrationTest<AzureFunctionApplicationFixtureHttpTriggerThrowsCoreLatest>
 {
     private const string TriggerTransactionName = "WebTransaction/AzureFunction/HttpTriggerFunctionThatThrows";

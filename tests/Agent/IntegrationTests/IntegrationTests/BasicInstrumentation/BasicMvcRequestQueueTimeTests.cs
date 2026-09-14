@@ -17,6 +17,7 @@ namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation;
 /// and queueDuration intrinsic are present either way; the difference is the source of the measurement.
 /// These tests run against the BasicMvcApplication under IIS -- skip locally if IIS is not configured.
 /// </summary>
+[Trait("Runtime", "Framework")]
 public class BasicMvcRequestQueueTimeDefaultTests : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
 {
     private readonly RemoteServiceFixtures.BasicMvcApplicationTestFixture _fixture;
@@ -83,6 +84,7 @@ public class BasicMvcRequestQueueTimeDefaultTests : NewRelicIntegrationTest<Remo
 /// (via HttpWorkerRequest), so WebFrontend/QueueTime and queueDuration are still present.
 /// The X-Request-Start header is present but must be ignored for the measurement source.
 /// </summary>
+[Trait("Runtime", "Framework")]
 public class BasicMvcRequestQueueTimeSwitchOffTests : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
 {
     private readonly RemoteServiceFixtures.BasicMvcApplicationTestFixture _fixture;

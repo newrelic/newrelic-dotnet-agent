@@ -11,6 +11,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.AgentFeatures;
 
+[Trait("Runtime", "Framework")]
 public class ThreadProfileStressTests : NewRelicIntegrationTest<ThreadProfileStressTestWithCollectorFixture>
 {
     private string _threadProfileString;

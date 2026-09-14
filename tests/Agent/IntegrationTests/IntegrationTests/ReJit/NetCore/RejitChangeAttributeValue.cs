@@ -93,6 +93,7 @@ public abstract class RejitChangeAttributeValueBase<TFixture> : NewRelicIntegrat
     }
 }
 
+[Trait("Runtime", "Core")]
 public class RejitChangeAttributeValue : RejitChangeAttributeValueBase<AspNetCoreReJitMvcApplicationFixture>
 {
     public RejitChangeAttributeValue(AspNetCoreReJitMvcApplicationFixture fixture, ITestOutputHelper output)
@@ -101,6 +102,7 @@ public class RejitChangeAttributeValue : RejitChangeAttributeValueBase<AspNetCor
     }
 }
 
+[Trait("Runtime", "Core")]
 public class RejitChangeAttributeValueWithTieredCompilation : RejitChangeAttributeValueBase<AspNetCoreReJitMvcApplicationFixtureWithTieredCompilation>
 {
     public RejitChangeAttributeValueWithTieredCompilation(AspNetCoreReJitMvcApplicationFixtureWithTieredCompilation fixture, ITestOutputHelper output)

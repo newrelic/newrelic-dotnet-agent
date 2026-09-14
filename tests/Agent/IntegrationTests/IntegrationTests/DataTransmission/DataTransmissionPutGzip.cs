@@ -12,6 +12,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.DataTransmission;
 
+[Trait("Runtime", "Framework")]
 public class DataTransmissionPutGzip : NewRelicIntegrationTest<MvcWithCollectorFixture>
 {
     private readonly MvcWithCollectorFixture _fixture;

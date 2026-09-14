@@ -8,6 +8,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.AgentFeatures;
 
+[Trait("Runtime", "Framework")]
 public class AutoStartDisabled : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
 {
 

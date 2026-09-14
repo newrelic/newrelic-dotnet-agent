@@ -16,6 +16,7 @@ namespace NewRelic.Agent.IntegrationTests.WCF.Client.Self;
 /// (traceparent, tracestate, newrelic) in HttpRequestMessageProperty.Headers,
 /// the agent replaces them rather than duplicating or erroring.
 /// </summary>
+[Trait("Runtime", "Framework")]
 public class WCFClient_Self_BasicHTTP_DTHeaderReplacement : NewRelicIntegrationTest<ConsoleDynamicMethodFixtureFWLatest>
 {
     private readonly ConsoleDynamicMethodFixtureFWLatest _fixture;

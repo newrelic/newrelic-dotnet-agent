@@ -53,12 +53,14 @@ public abstract class GuidConfigurationTest<TFixture> : NewRelicIntegrationTest<
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class GuidConfigurationTest_FW : GuidConfigurationTest<ConsoleDynamicMethodFixtureFWLatest>
 {
     public GuidConfigurationTest_FW(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
         : base(fixture, output) { }
 }
 
+[Trait("Runtime", "Core")]
 public class GuidConfigurationTest_Core : GuidConfigurationTest<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public GuidConfigurationTest_Core(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)

@@ -243,6 +243,7 @@ public abstract class CosmosDBTestsBase<TFixture> : NewRelicIntegrationTest<TFix
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class CosmosDBTestsFW462 : CosmosDBTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public CosmosDBTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -251,6 +252,7 @@ public class CosmosDBTestsFW462 : CosmosDBTestsBase<ConsoleDynamicMethodFixtureF
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class CosmosDBTestsFWLatest : CosmosDBTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public CosmosDBTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -260,6 +262,7 @@ public class CosmosDBTestsFWLatest : CosmosDBTestsBase<ConsoleDynamicMethodFixtu
 }
 
 
+[Trait("Runtime", "Core")]
 public class CosmosDBTestsCoreOldest : CosmosDBTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public CosmosDBTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -268,6 +271,7 @@ public class CosmosDBTestsCoreOldest : CosmosDBTestsBase<ConsoleDynamicMethodFix
     }
 }
 
+[Trait("Runtime", "Core")]
 public class CosmosDBTestsCoreLatest : CosmosDBTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public CosmosDBTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)

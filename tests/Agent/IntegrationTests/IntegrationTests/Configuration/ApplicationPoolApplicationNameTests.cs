@@ -103,6 +103,7 @@ public abstract class ApplicationPoolApplicationNameTestsBase<TFixture> : NewRel
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class ApplicationPoolApplicationNameFWLatestTests : ApplicationPoolApplicationNameTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public ApplicationPoolApplicationNameFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -111,6 +112,7 @@ public class ApplicationPoolApplicationNameFWLatestTests : ApplicationPoolApplic
     }
 }
 
+[Trait("Runtime", "Core")]
 public class ApplicationPoolApplicationNameCoreLatestTests : ApplicationPoolApplicationNameTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public ApplicationPoolApplicationNameCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)

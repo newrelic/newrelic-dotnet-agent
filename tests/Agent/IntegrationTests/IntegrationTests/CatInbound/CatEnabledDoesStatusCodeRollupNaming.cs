@@ -11,6 +11,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.CatInbound;
 
+[Trait("Runtime", "Framework")]
 public class CatEnabledDoesStatusCodeRollupNaming : NewRelicIntegrationTest<BasicMvcApplicationTestFixture>
 {
     private BasicMvcApplicationTestFixture _fixture;

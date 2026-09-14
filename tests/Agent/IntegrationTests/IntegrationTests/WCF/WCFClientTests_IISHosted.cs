@@ -28,6 +28,7 @@ namespace NewRelic.Agent.IntegrationTests.WCF.Client.IIS.ASPDisabled
         }
     }
 
+    [Trait("Runtime", "Framework")]
     public class WCFClient_IIS_WebHTTP_ASPDiabled : WCFClient_IIS_ASPDisabled
     {
         public WCFClient_IIS_WebHTTP_ASPDiabled(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -36,6 +37,7 @@ namespace NewRelic.Agent.IntegrationTests.WCF.Client.IIS.ASPDisabled
         }
     }
 
+    [Trait("Runtime", "Framework")]
     public class WCFClient_IIS_WSHTTP_ASPDisabled : WCFClient_IIS_ASPDisabled
     {
         public WCFClient_IIS_WSHTTP_ASPDisabled(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -44,6 +46,7 @@ namespace NewRelic.Agent.IntegrationTests.WCF.Client.IIS.ASPDisabled
         }
     }
 
+    [Trait("Runtime", "Framework")]
     public class WCFClient_IIS_BasicHTTP_ASPDisabled : WCFClient_IIS_ASPDisabled
     {
         public WCFClient_IIS_BasicHTTP_ASPDisabled(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -52,6 +55,7 @@ namespace NewRelic.Agent.IntegrationTests.WCF.Client.IIS.ASPDisabled
         }
     }
 
+    [Trait("Runtime", "Framework")]
     public class WCFClient_IIS_WebHTTP_DT_ASPDisabled : WCFClient_IIS_ASPDisabled
     {
         public WCFClient_IIS_WebHTTP_DT_ASPDisabled(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -60,6 +64,7 @@ namespace NewRelic.Agent.IntegrationTests.WCF.Client.IIS.ASPDisabled
         }
     }
 
+    [Trait("Runtime", "Framework")]
     public class WCFClient_IIS_WSHTTP_DT_ASPDisasbled : WCFClient_IIS_ASPDisabled
     {
         public WCFClient_IIS_WSHTTP_DT_ASPDisasbled(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -68,6 +73,7 @@ namespace NewRelic.Agent.IntegrationTests.WCF.Client.IIS.ASPDisabled
         }
     }
 
+    [Trait("Runtime", "Framework")]
     public class WCFClient_IIS_BasicHTTP_DT_ASPDisabled : WCFClient_IIS_ASPDisabled
     {
         public WCFClient_IIS_BasicHTTP_DT_ASPDisabled(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -76,6 +82,7 @@ namespace NewRelic.Agent.IntegrationTests.WCF.Client.IIS.ASPDisabled
         }
     }
 
+    [Trait("Runtime", "Framework")]
     public class WCFClient_IIS_WebHTTP_CAT_AspDisabled : WCFClient_IIS_ASPDisabled
     {
         public WCFClient_IIS_WebHTTP_CAT_AspDisabled(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -84,6 +91,7 @@ namespace NewRelic.Agent.IntegrationTests.WCF.Client.IIS.ASPDisabled
         }
     }
 
+    [Trait("Runtime", "Framework")]
     public class WCFClient_IIS_WSHTTP_CAT_ASPDisabled : WCFClient_IIS_ASPDisabled
     {
         public WCFClient_IIS_WSHTTP_CAT_ASPDisabled(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -92,6 +100,7 @@ namespace NewRelic.Agent.IntegrationTests.WCF.Client.IIS.ASPDisabled
         }
     }
 
+    [Trait("Runtime", "Framework")]
     public class WCFClient_IIS_BasicHTTP_CAT_ASPDisabled : WCFClient_IIS_ASPDisabled
     {
         public WCFClient_IIS_BasicHTTP_CAT_ASPDisabled(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -112,6 +121,7 @@ namespace NewRelic.Agent.IntegrationTests.WCF.Client.IIS.ASPEnabled
         }
     }
 
+    [Trait("Runtime", "Framework")]
     public class WCFClient_IIS_WebHTTP_ASPDiabled : WCFClient_IIS_ASPEnabled
     {
         public WCFClient_IIS_WebHTTP_ASPDiabled(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -120,6 +130,7 @@ namespace NewRelic.Agent.IntegrationTests.WCF.Client.IIS.ASPEnabled
         }
     }
 
+    [Trait("Runtime", "Framework")]
     public class WCFClient_IIS_WSHTTP_ASPEnabled : WCFClient_IIS_ASPEnabled
     {
         public WCFClient_IIS_WSHTTP_ASPEnabled(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -128,6 +139,7 @@ namespace NewRelic.Agent.IntegrationTests.WCF.Client.IIS.ASPEnabled
         }
     }
 
+    [Trait("Runtime", "Framework")]
     public class WCFClient_IIS_BasicHTTP_ASPEnabled : WCFClient_IIS_ASPEnabled
     {
         public WCFClient_IIS_BasicHTTP_ASPEnabled(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -136,6 +148,7 @@ namespace NewRelic.Agent.IntegrationTests.WCF.Client.IIS.ASPEnabled
         }
     }
 
+    [Trait("Runtime", "Framework")]
     public class WCFClient_IIS_WebHTTP_DT_ASPEnabled : WCFClient_IIS_ASPEnabled
     {
         public WCFClient_IIS_WebHTTP_DT_ASPEnabled(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -144,6 +157,7 @@ namespace NewRelic.Agent.IntegrationTests.WCF.Client.IIS.ASPEnabled
         }
     }
 
+    [Trait("Runtime", "Framework")]
     public class WCFClient_IIS_WSHTTP_DT_ASPEnabled : WCFClient_IIS_ASPEnabled
     {
         public WCFClient_IIS_WSHTTP_DT_ASPEnabled(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -152,6 +166,7 @@ namespace NewRelic.Agent.IntegrationTests.WCF.Client.IIS.ASPEnabled
         }
     }
 
+    [Trait("Runtime", "Framework")]
     public class WCFClient_IIS_BasicHTTP_DT_ASPEnabled : WCFClient_IIS_ASPEnabled
     {
         public WCFClient_IIS_BasicHTTP_DT_ASPEnabled(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -160,6 +175,7 @@ namespace NewRelic.Agent.IntegrationTests.WCF.Client.IIS.ASPEnabled
         }
     }
 
+    [Trait("Runtime", "Framework")]
     public class WCFClient_IIS_WebHTTP_CAT_ASPEnabled : WCFClient_IIS_ASPEnabled
     {
         public WCFClient_IIS_WebHTTP_CAT_ASPEnabled(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -168,6 +184,7 @@ namespace NewRelic.Agent.IntegrationTests.WCF.Client.IIS.ASPEnabled
         }
     }
 
+    [Trait("Runtime", "Framework")]
     public class WCFClient_IIS_WSHTTP_CAT_ASPEnabled : WCFClient_IIS_ASPEnabled
     {
         public WCFClient_IIS_WSHTTP_CAT_ASPEnabled(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -176,6 +193,7 @@ namespace NewRelic.Agent.IntegrationTests.WCF.Client.IIS.ASPEnabled
         }
     }
 
+    [Trait("Runtime", "Framework")]
     public class WCFClient_IIS_BasicHTTP_CAT_ASPEnabled : WCFClient_IIS_ASPEnabled
     {
         public WCFClient_IIS_BasicHTTP_CAT_ASPEnabled(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)

@@ -77,6 +77,7 @@ public abstract class AwsLambdaKinesisFirehoseEventTest<T> : NewRelicIntegration
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AwsLambdaKinesisFirehoseEventTestCoreOldest : AwsLambdaKinesisFirehoseEventTest<LambdaKinesisFirehoseEventTriggerFixtureCoreOldest>
 {
     public AwsLambdaKinesisFirehoseEventTestCoreOldest(LambdaKinesisFirehoseEventTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -85,6 +86,7 @@ public class AwsLambdaKinesisFirehoseEventTestCoreOldest : AwsLambdaKinesisFireh
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AwsLambdaAsyncKinesisFirehoseEventTestCoreOldest : AwsLambdaKinesisFirehoseEventTest<AsyncLambdaKinesisFirehoseEventTriggerFixtureCoreOldest>
 {
     public AwsLambdaAsyncKinesisFirehoseEventTestCoreOldest(AsyncLambdaKinesisFirehoseEventTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -93,6 +95,7 @@ public class AwsLambdaAsyncKinesisFirehoseEventTestCoreOldest : AwsLambdaKinesis
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AwsLambdaKinesisFirehoseEventTestCoreLatest : AwsLambdaKinesisFirehoseEventTest<LambdaKinesisFirehoseEventTriggerFixtureCoreLatest>
 {
     public AwsLambdaKinesisFirehoseEventTestCoreLatest(LambdaKinesisFirehoseEventTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -101,6 +104,7 @@ public class AwsLambdaKinesisFirehoseEventTestCoreLatest : AwsLambdaKinesisFireh
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AwsLambdaAsyncKinesisFirehoseEventTestCoreLatest : AwsLambdaKinesisFirehoseEventTest<AsyncLambdaKinesisFirehoseEventTriggerFixtureCoreLatest>
 {
     public AwsLambdaAsyncKinesisFirehoseEventTestCoreLatest(AsyncLambdaKinesisFirehoseEventTriggerFixtureCoreLatest fixture, ITestOutputHelper output)

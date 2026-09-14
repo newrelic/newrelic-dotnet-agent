@@ -10,6 +10,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.CatInbound;
 
+[Trait("Runtime", "Framework")]
 public class CatEnabledWithServerRedirect : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
 {
     private RemoteServiceFixtures.BasicMvcApplicationTestFixture _fixture;

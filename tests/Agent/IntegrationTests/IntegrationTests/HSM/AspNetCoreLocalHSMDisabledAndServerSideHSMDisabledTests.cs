@@ -10,6 +10,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.HSM;
 
+[Trait("Runtime", "Core")]
 public class AspNetCoreLocalHSMDisabledAndServerSideHSMDisabledTests : NewRelicIntegrationTest<RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture>
 {
     private const string QueryStringParameterValue = @"my thing";

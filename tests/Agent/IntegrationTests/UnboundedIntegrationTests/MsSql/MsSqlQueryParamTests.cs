@@ -176,6 +176,7 @@ public abstract class MsSqlQueryParamTestsBase<TFixture> : NewRelicIntegrationTe
 }
 
 #region System.Data (.NET Framework only)
+[Trait("Runtime", "Framework")]
 public class MsSqlQueryParamTests_SystemData_FWLatest : MsSqlQueryParamTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public MsSqlQueryParamTests_SystemData_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -188,6 +189,7 @@ public class MsSqlQueryParamTests_SystemData_FWLatest : MsSqlQueryParamTestsBase
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class MsSqlQueryParamTests_SystemData_NoAtSigns_FWLatest : MsSqlQueryParamTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public MsSqlQueryParamTests_SystemData_NoAtSigns_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -203,6 +205,7 @@ public class MsSqlQueryParamTests_SystemData_NoAtSigns_FWLatest : MsSqlQueryPara
 
 #region Microsoft.Data.SqlClient (FW and Core/5+)
 
+[Trait("Runtime", "Framework")]
 public class MsSqlQueryParamTests_MicrosoftDataSqlClient_FWLatest : MsSqlQueryParamTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public MsSqlQueryParamTests_MicrosoftDataSqlClient_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -216,6 +219,7 @@ public class MsSqlQueryParamTests_MicrosoftDataSqlClient_FWLatest : MsSqlQueryPa
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class MsSqlQueryParamTests_MicrosoftDataSqlClient_NoAtSigns_FWLatest : MsSqlQueryParamTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public MsSqlQueryParamTests_MicrosoftDataSqlClient_NoAtSigns_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -229,6 +233,7 @@ public class MsSqlQueryParamTests_MicrosoftDataSqlClient_NoAtSigns_FWLatest : Ms
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class MsSqlQueryParamTests_MicrosoftDataSqlClient_FW462 : MsSqlQueryParamTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public MsSqlQueryParamTests_MicrosoftDataSqlClient_FW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -242,6 +247,7 @@ public class MsSqlQueryParamTests_MicrosoftDataSqlClient_FW462 : MsSqlQueryParam
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class MsSqlQueryParamTests_MicrosoftDataSqlClient_NoAtSigns_FW462 : MsSqlQueryParamTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public MsSqlQueryParamTests_MicrosoftDataSqlClient_NoAtSigns_FW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -255,6 +261,7 @@ public class MsSqlQueryParamTests_MicrosoftDataSqlClient_NoAtSigns_FW462 : MsSql
     }
 }
 
+[Trait("Runtime", "Core")]
 public class MsSqlQueryParamTests_MicrosoftDataSqlClient_CoreLatest : MsSqlQueryParamTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public MsSqlQueryParamTests_MicrosoftDataSqlClient_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -267,6 +274,7 @@ public class MsSqlQueryParamTests_MicrosoftDataSqlClient_CoreLatest : MsSqlQuery
     }
 }
 
+[Trait("Runtime", "Core")]
 public class MsSqlQueryParamTests_MicrosoftDataSqlClient_CoreOldest : MsSqlQueryParamTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public MsSqlQueryParamTests_MicrosoftDataSqlClient_CoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -279,6 +287,7 @@ public class MsSqlQueryParamTests_MicrosoftDataSqlClient_CoreOldest : MsSqlQuery
     }
 }
 
+[Trait("Runtime", "Core")]
 public class MsSqlQueryParamTests_MicrosoftDataSqlClient_NoAtSigns_CoreLatest : MsSqlQueryParamTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public MsSqlQueryParamTests_MicrosoftDataSqlClient_NoAtSigns_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -291,6 +300,7 @@ public class MsSqlQueryParamTests_MicrosoftDataSqlClient_NoAtSigns_CoreLatest : 
     }
 }
 
+[Trait("Runtime", "Core")]
 public class MsSqlQueryParamTests_MicrosoftDataSqlClient_NoAtSigns_CoreOldest : MsSqlQueryParamTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public MsSqlQueryParamTests_MicrosoftDataSqlClient_NoAtSigns_CoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)

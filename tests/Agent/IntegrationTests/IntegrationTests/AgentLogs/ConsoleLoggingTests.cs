@@ -52,6 +52,7 @@ public abstract class ConsoleLoggingTestsBase<TFixture> : NewRelicIntegrationTes
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class ConsoleLoggingFWLatestTests : ConsoleLoggingTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public ConsoleLoggingFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -60,6 +61,7 @@ public class ConsoleLoggingFWLatestTests : ConsoleLoggingTestsBase<ConsoleDynami
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class ConsoleLoggingFW462Tests : ConsoleLoggingTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public ConsoleLoggingFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -68,6 +70,7 @@ public class ConsoleLoggingFW462Tests : ConsoleLoggingTestsBase<ConsoleDynamicMe
     }
 }
 
+[Trait("Runtime", "Core")]
 public class ConsoleLoggingCoreLatestTests : ConsoleLoggingTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public ConsoleLoggingCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -76,6 +79,7 @@ public class ConsoleLoggingCoreLatestTests : ConsoleLoggingTestsBase<ConsoleDyna
     }
 }
 
+[Trait("Runtime", "Core")]
 public class ConsoleLoggingCoreOldestTests : ConsoleLoggingTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public ConsoleLoggingCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)

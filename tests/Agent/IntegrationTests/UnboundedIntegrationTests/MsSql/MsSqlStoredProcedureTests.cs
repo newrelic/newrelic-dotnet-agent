@@ -135,6 +135,7 @@ public abstract class MsSqlStoredProcedureTestsBase<TFixture> : NewRelicIntegrat
 }
 
 #region System.Data (.NET Framework only)
+[Trait("Runtime", "Framework")]
 public class MsSqlStoredProcedureTests_SystemData_FWLatest : MsSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public MsSqlStoredProcedureTests_SystemData_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -150,6 +151,7 @@ public class MsSqlStoredProcedureTests_SystemData_FWLatest : MsSqlStoredProcedur
 
 #region Microsoft.Data.SqlClient (FW and Core/5+)
 
+[Trait("Runtime", "Framework")]
 public class MsSqlStoredProcedureTests_MicrosoftDataSqlClient_FWLatest : MsSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public MsSqlStoredProcedureTests_MicrosoftDataSqlClient_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -161,6 +163,7 @@ public class MsSqlStoredProcedureTests_MicrosoftDataSqlClient_FWLatest : MsSqlSt
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class MsSqlStoredProcedureTests_MicrosoftDataSqlClient_FW462 : MsSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public MsSqlStoredProcedureTests_MicrosoftDataSqlClient_FW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -172,6 +175,7 @@ public class MsSqlStoredProcedureTests_MicrosoftDataSqlClient_FW462 : MsSqlStore
     }
 }
 
+[Trait("Runtime", "Core")]
 public class MsSqlStoredProcedureTests_MicrosoftDataSqlClient_CoreLatest : MsSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public MsSqlStoredProcedureTests_MicrosoftDataSqlClient_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -183,6 +187,7 @@ public class MsSqlStoredProcedureTests_MicrosoftDataSqlClient_CoreLatest : MsSql
     }
 }
 
+[Trait("Runtime", "Core")]
 public class MsSqlStoredProcedureTests_MicrosoftDataSqlClient_CoreOldest : MsSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public MsSqlStoredProcedureTests_MicrosoftDataSqlClient_CoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)

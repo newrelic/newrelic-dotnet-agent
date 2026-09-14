@@ -144,6 +144,7 @@ public abstract class BedrockConverseContentBlockTestsBase<TFixture> : NewRelicI
     }
 }
 
+[Trait("Runtime", "Core")]
 public class BedrockConverseContentBlockTests_CoreLatest : BedrockConverseContentBlockTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public BedrockConverseContentBlockTests_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -152,6 +153,7 @@ public class BedrockConverseContentBlockTests_CoreLatest : BedrockConverseConten
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class BedrockConverseContentBlockTests_FWLatest : BedrockConverseContentBlockTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public BedrockConverseContentBlockTests_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)

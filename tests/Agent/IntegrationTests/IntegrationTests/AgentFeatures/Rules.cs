@@ -16,6 +16,7 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures;
 ///		with prefix "WebTransaction/WebAPI" and whitelist terms "Values Sleep UrlRule".
 ///		Can be found at https://[staging|rpm].newrelic.com/accounts/{accountId}/applications/{applicationId}/segment_terms
 /// </summary>
+[Trait("Runtime", "Framework")]
 public class Rules : NewRelicIntegrationTest<RulesWebApi>
 {
     private readonly RulesWebApi _fixture;

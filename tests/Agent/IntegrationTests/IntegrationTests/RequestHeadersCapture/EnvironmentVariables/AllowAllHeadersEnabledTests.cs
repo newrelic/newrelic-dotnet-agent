@@ -72,6 +72,7 @@ public abstract  class EnvironmentVariableAllowAllHeadersEnabledTests_Base : New
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class EnvironmentVariableAllowAllHeadersEnabledTests_Defaults : EnvironmentVariableAllowAllHeadersEnabledTests_Base
 {
     public EnvironmentVariableAllowAllHeadersEnabledTests_Defaults(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output) : base(fixture, output)
@@ -118,6 +119,7 @@ public class EnvironmentVariableAllowAllHeadersEnabledTests_Defaults : Environme
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class EnvironmentVariableAllowAllHeadersEnabledTests_Includes_CommaDelimited : EnvironmentVariableAllowAllHeadersEnabledTests_Base
 {
     public EnvironmentVariableAllowAllHeadersEnabledTests_Includes_CommaDelimited(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output) : base(fixture, output)
@@ -165,6 +167,7 @@ public class EnvironmentVariableAllowAllHeadersEnabledTests_Includes_CommaDelimi
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class EnvironmentVariableAllowAllHeadersEnabledTests_Includes_CommaSpaceDelimited : EnvironmentVariableAllowAllHeadersEnabledTests_Base
 {
     public EnvironmentVariableAllowAllHeadersEnabledTests_Includes_CommaSpaceDelimited(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output) : base(fixture, output)
@@ -211,6 +214,7 @@ public class EnvironmentVariableAllowAllHeadersEnabledTests_Includes_CommaSpaceD
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class EnvironmentVariableAllowAllHeadersEnabledTests_Excludes_CommaDelimited : EnvironmentVariableAllowAllHeadersEnabledTests_Base
 {
     public EnvironmentVariableAllowAllHeadersEnabledTests_Excludes_CommaDelimited(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output) : base(fixture, output)
@@ -256,6 +260,7 @@ public class EnvironmentVariableAllowAllHeadersEnabledTests_Excludes_CommaDelimi
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class EnvironmentVariableAllowAllHeadersEnabledTests_Excludes_CommaSpaceDelimited : EnvironmentVariableAllowAllHeadersEnabledTests_Base
 {
     public EnvironmentVariableAllowAllHeadersEnabledTests_Excludes_CommaSpaceDelimited(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output) : base(fixture, output)

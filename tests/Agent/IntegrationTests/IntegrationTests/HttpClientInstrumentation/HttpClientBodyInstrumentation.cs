@@ -107,6 +107,7 @@ public abstract class HttpClientBodyInstrumentationTestsBase<TFixture> : NewReli
     }
 }
 
+[Trait("Runtime", "Core")]
 public class HttpClientBodyInstrumentationTests_NetCoreOldest : HttpClientBodyInstrumentationTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
     protected override string ExpectedClassName { get { return CLASS_NAME; } }
@@ -118,6 +119,7 @@ public class HttpClientBodyInstrumentationTests_NetCoreOldest : HttpClientBodyIn
     }
 }
 
+[Trait("Runtime", "Core")]
 public class HttpClientBodyInstrumentationTests_NetCoreLatest : HttpClientBodyInstrumentationTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     protected override string ExpectedClassName { get { return CLASS_NAME; } }
@@ -129,6 +131,7 @@ public class HttpClientBodyInstrumentationTests_NetCoreLatest : HttpClientBodyIn
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class HttpClientBodyInstrumentationTests_FW462 : HttpClientBodyInstrumentationTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     protected override string ExpectedClassName { get { return LEGACY_CLASS_NAME; } }
@@ -140,6 +143,7 @@ public class HttpClientBodyInstrumentationTests_FW462 : HttpClientBodyInstrument
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class HttpClientBodyInstrumentationTests_FW471 : HttpClientBodyInstrumentationTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     protected override string ExpectedClassName { get { return LEGACY_CLASS_NAME; } }
@@ -151,6 +155,7 @@ public class HttpClientBodyInstrumentationTests_FW471 : HttpClientBodyInstrument
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class HttpClientBodyInstrumentationTests_FW48 : HttpClientBodyInstrumentationTestsBase<ConsoleDynamicMethodFixtureFW48>
 {
     protected override string ExpectedClassName { get { return LEGACY_CLASS_NAME; } }
@@ -162,6 +167,7 @@ public class HttpClientBodyInstrumentationTests_FW48 : HttpClientBodyInstrumenta
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class HttpClientBodyInstrumentationTests_FWLatest : HttpClientBodyInstrumentationTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     protected override string ExpectedClassName { get { return LEGACY_CLASS_NAME; } }

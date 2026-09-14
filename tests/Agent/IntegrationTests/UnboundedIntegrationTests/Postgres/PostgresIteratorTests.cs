@@ -99,6 +99,7 @@ public abstract class PostgresSqlIteratorTestsBase<TFixture> : NewRelicIntegrati
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class PostgresSqlIteratorTestsFW462 : PostgresSqlIteratorTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public PostgresSqlIteratorTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -107,6 +108,7 @@ public class PostgresSqlIteratorTestsFW462 : PostgresSqlIteratorTestsBase<Consol
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class PostgresSqlIteratorTestsFWLatest : PostgresSqlIteratorTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public PostgresSqlIteratorTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
@@ -115,6 +117,7 @@ public class PostgresSqlIteratorTestsFWLatest : PostgresSqlIteratorTestsBase<Con
     }
 }
 
+[Trait("Runtime", "Core")]
 public class PostgresSqlIteratorTestsCoreOldest : PostgresSqlIteratorTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public PostgresSqlIteratorTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output) : base(fixture, output)
@@ -123,6 +126,7 @@ public class PostgresSqlIteratorTestsCoreOldest : PostgresSqlIteratorTestsBase<C
     }
 }
 
+[Trait("Runtime", "Core")]
 public class PostgresSqlIteratorTestsCoreLatest : PostgresSqlIteratorTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public PostgresSqlIteratorTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)

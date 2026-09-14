@@ -130,6 +130,7 @@ public abstract class StructuredLogArgContextDataTestsBase<TFixture> : NewRelicI
 
 #region MEL
 
+[Trait("Runtime", "Core")]
 public class MELStructuredLogArgContextDataWithContextNetCoreLatestTests : StructuredLogArgContextDataTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public MELStructuredLogArgContextDataWithContextNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -138,6 +139,7 @@ public class MELStructuredLogArgContextDataWithContextNetCoreLatestTests : Struc
     }
 }
 
+[Trait("Runtime", "Core")]
 public class MELStructuredLogArgContextDataNoContextNetCoreLatestTests : StructuredLogArgContextDataTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public MELStructuredLogArgContextDataNoContextNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -146,6 +148,7 @@ public class MELStructuredLogArgContextDataNoContextNetCoreLatestTests : Structu
     }
 }
 
+[Trait("Runtime", "Core")]
 public class MELStructuredLogArgContextDataWithContextNetCoreOldestTests : StructuredLogArgContextDataTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public MELStructuredLogArgContextDataWithContextNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -154,6 +157,7 @@ public class MELStructuredLogArgContextDataWithContextNetCoreOldestTests : Struc
     }
 }
 
+[Trait("Runtime", "Core")]
 public class MELStructuredLogArgContextDataNoContextNetCoreOldestTests : StructuredLogArgContextDataTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public MELStructuredLogArgContextDataNoContextNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -166,6 +170,7 @@ public class MELStructuredLogArgContextDataNoContextNetCoreOldestTests : Structu
 
 #region Serilog
 
+[Trait("Runtime", "Framework")]
 public class SerilogStructuredLogArgContextDataWithContextFWLatestTests : StructuredLogArgContextDataTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public SerilogStructuredLogArgContextDataWithContextFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -174,6 +179,7 @@ public class SerilogStructuredLogArgContextDataWithContextFWLatestTests : Struct
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class SerilogStructuredLogArgContextDataNoContextFWLatestTests : StructuredLogArgContextDataTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public SerilogStructuredLogArgContextDataNoContextFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -182,6 +188,7 @@ public class SerilogStructuredLogArgContextDataNoContextFWLatestTests : Structur
     }
 }
 
+[Trait("Runtime", "Core")]
 public class SerilogStructuredLogArgContextDataWithContextNetCoreLatestTests : StructuredLogArgContextDataTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public SerilogStructuredLogArgContextDataWithContextNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -190,6 +197,7 @@ public class SerilogStructuredLogArgContextDataWithContextNetCoreLatestTests : S
     }
 }
 
+[Trait("Runtime", "Core")]
 public class SerilogStructuredLogArgContextDataNoContextNetCoreLatestTests : StructuredLogArgContextDataTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public SerilogStructuredLogArgContextDataNoContextNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -198,6 +206,7 @@ public class SerilogStructuredLogArgContextDataNoContextNetCoreLatestTests : Str
     }
 }
 
+[Trait("Runtime", "Core")]
 public class SerilogStructuredLogArgContextDataWithContextNetCoreOldestTests : StructuredLogArgContextDataTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public SerilogStructuredLogArgContextDataWithContextNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -206,6 +215,7 @@ public class SerilogStructuredLogArgContextDataWithContextNetCoreOldestTests : S
     }
 }
 
+[Trait("Runtime", "Core")]
 public class SerilogStructuredLogArgContextDataNoContextNetCoreOldestTests : StructuredLogArgContextDataTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public SerilogStructuredLogArgContextDataNoContextNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -218,6 +228,7 @@ public class SerilogStructuredLogArgContextDataNoContextNetCoreOldestTests : Str
 
 #region NLog
 
+[Trait("Runtime", "Framework")]
 public class NLogStructuredLogArgContextDataWithContextFWLatestTests : StructuredLogArgContextDataTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public NLogStructuredLogArgContextDataWithContextFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -226,6 +237,7 @@ public class NLogStructuredLogArgContextDataWithContextFWLatestTests : Structure
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class NLogStructuredLogArgContextDataNoContextFWLatestTests : StructuredLogArgContextDataTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public NLogStructuredLogArgContextDataNoContextFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -234,6 +246,7 @@ public class NLogStructuredLogArgContextDataNoContextFWLatestTests : StructuredL
     }
 }
 
+[Trait("Runtime", "Core")]
 public class NLogStructuredLogArgContextDataWithContextNetCoreLatestTests : StructuredLogArgContextDataTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public NLogStructuredLogArgContextDataWithContextNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -242,6 +255,7 @@ public class NLogStructuredLogArgContextDataWithContextNetCoreLatestTests : Stru
     }
 }
 
+[Trait("Runtime", "Core")]
 public class NLogStructuredLogArgContextDataNoContextNetCoreLatestTests : StructuredLogArgContextDataTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public NLogStructuredLogArgContextDataNoContextNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -250,6 +264,7 @@ public class NLogStructuredLogArgContextDataNoContextNetCoreLatestTests : Struct
     }
 }
 
+[Trait("Runtime", "Core")]
 public class NLogStructuredLogArgContextDataWithContextNetCoreOldestTests : StructuredLogArgContextDataTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public NLogStructuredLogArgContextDataWithContextNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -258,6 +273,7 @@ public class NLogStructuredLogArgContextDataWithContextNetCoreOldestTests : Stru
     }
 }
 
+[Trait("Runtime", "Core")]
 public class NLogStructuredLogArgContextDataNoContextNetCoreOldestTests : StructuredLogArgContextDataTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public NLogStructuredLogArgContextDataNoContextNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -270,6 +286,7 @@ public class NLogStructuredLogArgContextDataNoContextNetCoreOldestTests : Struct
 
 #region MelWithSerilog
 
+[Trait("Runtime", "Framework")]
 public class SerilogELStructuredLogArgContextDataWithContextFWLatestTests : StructuredLogArgContextDataTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public SerilogELStructuredLogArgContextDataWithContextFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -278,6 +295,7 @@ public class SerilogELStructuredLogArgContextDataWithContextFWLatestTests : Stru
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class SerilogELStructuredLogArgContextDataNoContextFWLatestTests : StructuredLogArgContextDataTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public SerilogELStructuredLogArgContextDataNoContextFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -286,6 +304,7 @@ public class SerilogELStructuredLogArgContextDataNoContextFWLatestTests : Struct
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class SerilogELStructuredLogArgContextDataWithContextFW48Tests : StructuredLogArgContextDataTestsBase<ConsoleDynamicMethodFixtureFW48>
 {
     public SerilogELStructuredLogArgContextDataWithContextFW48Tests(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
@@ -294,6 +313,7 @@ public class SerilogELStructuredLogArgContextDataWithContextFW48Tests : Structur
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class SerilogELStructuredLogArgContextDataNoContextFW48Tests : StructuredLogArgContextDataTestsBase<ConsoleDynamicMethodFixtureFW48>
 {
     public SerilogELStructuredLogArgContextDataNoContextFW48Tests(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
@@ -302,6 +322,7 @@ public class SerilogELStructuredLogArgContextDataNoContextFW48Tests : Structured
     }
 }
 
+[Trait("Runtime", "Core")]
 public class SerilogELStructuredLogArgContextDataWithContextNetCoreLatestTests : StructuredLogArgContextDataTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public SerilogELStructuredLogArgContextDataWithContextNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -310,6 +331,7 @@ public class SerilogELStructuredLogArgContextDataWithContextNetCoreLatestTests :
     }
 }
 
+[Trait("Runtime", "Core")]
 public class SerilogELStructuredLogArgContextDataNoContextNetCoreLatestTests : StructuredLogArgContextDataTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public SerilogELStructuredLogArgContextDataNoContextNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -318,6 +340,7 @@ public class SerilogELStructuredLogArgContextDataNoContextNetCoreLatestTests : S
     }
 }
 
+[Trait("Runtime", "Core")]
 public class SerilogELStructuredLogArgContextDataWithContextNetCoreOldestTests : StructuredLogArgContextDataTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public SerilogELStructuredLogArgContextDataWithContextNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -326,6 +349,7 @@ public class SerilogELStructuredLogArgContextDataWithContextNetCoreOldestTests :
     }
 }
 
+[Trait("Runtime", "Core")]
 public class SerilogELStructuredLogArgContextDataNoContextNetCoreOldestTests : StructuredLogArgContextDataTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public SerilogELStructuredLogArgContextDataNoContextNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -338,6 +362,7 @@ public class SerilogELStructuredLogArgContextDataNoContextNetCoreOldestTests : S
 
 #region MelWithNLog
 
+[Trait("Runtime", "Framework")]
 public class NLogELStructuredLogArgContextDataWithContextFWLatestTests : StructuredLogArgContextDataTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public NLogELStructuredLogArgContextDataWithContextFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -346,6 +371,7 @@ public class NLogELStructuredLogArgContextDataWithContextFWLatestTests : Structu
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class NLogELStructuredLogArgContextDataNoContextFWLatestTests : StructuredLogArgContextDataTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public NLogELStructuredLogArgContextDataNoContextFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -354,6 +380,7 @@ public class NLogELStructuredLogArgContextDataNoContextFWLatestTests : Structure
     }
 }
 
+[Trait("Runtime", "Core")]
 public class NLogELStructuredLogArgContextDataWithContextNetCoreLatestTests : StructuredLogArgContextDataTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public NLogELStructuredLogArgContextDataWithContextNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -362,6 +389,7 @@ public class NLogELStructuredLogArgContextDataWithContextNetCoreLatestTests : St
     }
 }
 
+[Trait("Runtime", "Core")]
 public class NLogELStructuredLogArgContextDataNoContextNetCoreLatestTests : StructuredLogArgContextDataTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public NLogELStructuredLogArgContextDataNoContextNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)

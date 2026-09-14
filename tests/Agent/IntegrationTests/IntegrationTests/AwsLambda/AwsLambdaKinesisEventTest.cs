@@ -77,6 +77,7 @@ public abstract class AwsLambdaKinesisEventTest<T> : NewRelicIntegrationTest<T> 
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AwsLambdaKinesisEventTestCoreOldest : AwsLambdaKinesisEventTest<LambdaKinesisEventTriggerFixtureCoreOldest>
 {
     public AwsLambdaKinesisEventTestCoreOldest(LambdaKinesisEventTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -85,6 +86,7 @@ public class AwsLambdaKinesisEventTestCoreOldest : AwsLambdaKinesisEventTest<Lam
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AwsLambdaAsyncKinesisEventTestCoreOldest : AwsLambdaKinesisEventTest<AsyncLambdaKinesisEventTriggerFixtureCoreOldest>
 {
     public AwsLambdaAsyncKinesisEventTestCoreOldest(AsyncLambdaKinesisEventTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -93,6 +95,7 @@ public class AwsLambdaAsyncKinesisEventTestCoreOldest : AwsLambdaKinesisEventTes
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AwsLambdaKinesisEventTestCoreLatest : AwsLambdaKinesisEventTest<LambdaKinesisEventTriggerFixtureCoreLatest>
 {
     public AwsLambdaKinesisEventTestCoreLatest(LambdaKinesisEventTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -101,6 +104,7 @@ public class AwsLambdaKinesisEventTestCoreLatest : AwsLambdaKinesisEventTest<Lam
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AwsLambdaAsyncKinesisEventTestCoreLatest : AwsLambdaKinesisEventTest<AsyncLambdaKinesisEventTriggerFixtureCoreLatest>
 {
     public AwsLambdaAsyncKinesisEventTestCoreLatest(AsyncLambdaKinesisEventTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -109,6 +113,7 @@ public class AwsLambdaAsyncKinesisEventTestCoreLatest : AwsLambdaKinesisEventTes
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AwsLambdaKinesisTimeWindowEventTestCoreOldest : AwsLambdaKinesisEventTest<LambdaKinesisTimeWindowEventTriggerFixtureCoreOldest>
 {
     public AwsLambdaKinesisTimeWindowEventTestCoreOldest(LambdaKinesisTimeWindowEventTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -117,6 +122,7 @@ public class AwsLambdaKinesisTimeWindowEventTestCoreOldest : AwsLambdaKinesisEve
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AwsLambdaAsyncKinesisTimeWindowEventTestCoreOldest : AwsLambdaKinesisEventTest<AsyncLambdaKinesisTimeWindowEventTriggerFixtureCoreOldest>
 {
     public AwsLambdaAsyncKinesisTimeWindowEventTestCoreOldest(AsyncLambdaKinesisTimeWindowEventTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -125,6 +131,7 @@ public class AwsLambdaAsyncKinesisTimeWindowEventTestCoreOldest : AwsLambdaKines
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AwsLambdaKinesisTimeWindowEventTestCoreLatest : AwsLambdaKinesisEventTest<LambdaKinesisTimeWindowEventTriggerFixtureCoreLatest>
 {
     public AwsLambdaKinesisTimeWindowEventTestCoreLatest(LambdaKinesisTimeWindowEventTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -133,6 +140,7 @@ public class AwsLambdaKinesisTimeWindowEventTestCoreLatest : AwsLambdaKinesisEve
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AwsLambdaAsyncKinesisTimeWindowEventTestCoreLatest : AwsLambdaKinesisEventTest<AsyncLambdaKinesisTimeWindowEventTriggerFixtureCoreLatest>
 {
     public AwsLambdaAsyncKinesisTimeWindowEventTestCoreLatest(AsyncLambdaKinesisTimeWindowEventTriggerFixtureCoreLatest fixture, ITestOutputHelper output)

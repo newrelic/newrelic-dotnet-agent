@@ -14,6 +14,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.CodeLevelMetrics;
 
+[Trait("Runtime", "Core")]
 public class NetCoreCustomInstrumentationCodeAttributeTests : NewRelicIntegrationTest<NetCoreAsyncTestsFixture>
 {
     private readonly NetCoreAsyncTestsFixture _fixture;

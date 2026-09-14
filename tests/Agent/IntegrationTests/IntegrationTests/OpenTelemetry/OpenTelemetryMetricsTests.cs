@@ -122,18 +122,21 @@ public abstract class OpenTelemetryMetricsTestsBase<TFixture> : NewRelicIntegrat
 }
 
 // NET10 test targets DiagnosticSource v10.x
+[Trait("Runtime", "Core")]
 public class OpenTelemetryMetricsTestsCoreLatest : OpenTelemetryMetricsTestsBase<OtlpMetricsWithCollectorFixtureCoreLatest>
 {
     public OpenTelemetryMetricsTestsCoreLatest(OtlpMetricsWithCollectorFixtureCoreLatest fixture, ITestOutputHelper outputHelper) : base(fixture, outputHelper) { }
 }
 
 // Net8 test targets DiagnosticSource v8.x
+[Trait("Runtime", "Core")]
 public class OpenTelemetryMetricsTestsCoreNet8 : OpenTelemetryMetricsTestsBase<OtlpMetricsWithCollectorFixtureCoreNet8>
 {
     public OpenTelemetryMetricsTestsCoreNet8(OtlpMetricsWithCollectorFixtureCoreNet8 fixture, ITestOutputHelper outputHelper) : base(fixture, outputHelper) { }
 }
 
 // Net472 test targets DiagnosticSource v8.x
+[Trait("Runtime", "Framework")]
 public class OpenTelemetryMetricsTestsFw472 : OpenTelemetryMetricsTestsBase<OtlpMetricsWithCollectorFixtureFW472>
 {
     public OpenTelemetryMetricsTestsFw472(OtlpMetricsWithCollectorFixtureFW472 fixture, ITestOutputHelper outputHelper) : base(fixture, outputHelper) { }
@@ -142,6 +145,7 @@ public class OpenTelemetryMetricsTestsFw472 : OpenTelemetryMetricsTestsBase<Otlp
 }
 
 // Net481 test targets DiagnosticSource v9.x
+[Trait("Runtime", "Framework")]
 public class OpenTelemetryMetricsTestsFw481 : OpenTelemetryMetricsTestsBase<OtlpMetricsWithCollectorFixtureFW481>
 {
     public OpenTelemetryMetricsTestsFw481(OtlpMetricsWithCollectorFixtureFW481 fixture, ITestOutputHelper outputHelper) : base(fixture, outputHelper) { }

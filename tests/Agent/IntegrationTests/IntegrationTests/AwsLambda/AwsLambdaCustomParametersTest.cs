@@ -71,6 +71,7 @@ public abstract class AwsLambdaCustomParametersTest<T> : NewRelicIntegrationTest
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AwsLambdaCustomParametersTestCoreOldest : AwsLambdaCustomParametersTest<LambdaCustomParametersFixtureCoreOldest>
 {
     public AwsLambdaCustomParametersTestCoreOldest(LambdaCustomParametersFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -79,6 +80,7 @@ public class AwsLambdaCustomParametersTestCoreOldest : AwsLambdaCustomParameters
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AwsLambdaCustomParametersTestCoreLatest : AwsLambdaCustomParametersTest<LambdaCustomParametersFixtureCoreLatest>
 {
     public AwsLambdaCustomParametersTestCoreLatest(LambdaCustomParametersFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -87,6 +89,7 @@ public class AwsLambdaCustomParametersTestCoreLatest : AwsLambdaCustomParameters
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AwsLambdaCustomParametersAsyncTestCoreOldest : AwsLambdaCustomParametersTest<LambdaCustomParametersAsyncFixtureCoreOldest>
 {
     public AwsLambdaCustomParametersAsyncTestCoreOldest(LambdaCustomParametersAsyncFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -95,6 +98,7 @@ public class AwsLambdaCustomParametersAsyncTestCoreOldest : AwsLambdaCustomParam
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AwsLambdaCustomParametersAsyncTestCoreLatest : AwsLambdaCustomParametersTest<LambdaCustomParametersAsyncFixtureCoreLatest>
 {
     public AwsLambdaCustomParametersAsyncTestCoreLatest(LambdaCustomParametersAsyncFixtureCoreLatest fixture, ITestOutputHelper output)
