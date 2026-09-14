@@ -23,7 +23,6 @@ SKILL_REL = os.path.join('.claude', 'skills', 'analyze-dotnet-agent-logs')
 PLUGIN_NAME = 'dotnet-log-triage'
 SKILL_NAME = 'triage-dotnet-agent-logs'
 FIELD_REL = ('teams', 'dotnet-agent', 'playbooks', 'field')
-WORKFLOW_NAME = 'lint-dotnet-playbooks.yml'
 UNPROMOTED_DAYS = 90
 VERIFIED_ID_MAX = 99
 FIELD_ID_MIN = 100
@@ -160,8 +159,6 @@ def plugin_version(root, fallback):
 def plan_copies(root, target, verified, field):
     plugin, skill = plugin_paths(target)
     pairs = [
-        (os.path.join(SCAFFOLD, 'workflows', WORKFLOW_NAME),
-         os.path.join(target, '.github', 'workflows', WORKFLOW_NAME)),
         (os.path.join(SCAFFOLD, 'bootstrap.sh'),
          os.path.join(plugin, 'bootstrap.sh')),
         (os.path.join(SCAFFOLD, 'bootstrap.ps1'),

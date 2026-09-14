@@ -41,7 +41,8 @@ are beside it, under
 0. **Preflight.** Run `python3 --version`. On failure try `python --version`,
    then `py -3 --version`. If none answers, tell the engineer to install
    Python 3 from python.org and stop. Use the launcher that answered as `$PY`
-   for every command below, and run them as `$PY "$NRLOG" <command>`.
+   for every command below, and run them as `$PY "$NRLOG" <command>`. Below,
+   `nrlog.py <command>` is shorthand for that same `$PY "$NRLOG" <command>`.
 1. **Triage.** `nrlog.py triage <path>`. Pass the ticket's log file or its whole
    logs directory. If it reports more than one managed log, show the file table
    and ask which application; rerun with `--file <name>`. If it names other
@@ -55,8 +56,9 @@ are beside it, under
    For a field playbook the block carries an unverified header addressed to you,
    not to the customer. Decide whether to send it, then remove that header.
 5. **Escalate when unmatched or unresolved.** `nrlog.py summary <path>
-   --escalation --ticket <id>` builds the packet. Attach it to the internal
-   escalation instead of the raw dump.
+   --escalation --ticket <id>` builds the packet. Carry the same `--session N`
+   that `triage` reported, the same way you carry `--file`. Attach the packet
+   to the internal escalation instead of the raw dump.
 6. **Capture, when the ticket resolves unmatched.** `nrlog.py draft-playbook
    <path>` writes a filled skeleton. Fill the two headings and open a pull
    request adding it under `teams/dotnet-agent/playbooks/field/` in the

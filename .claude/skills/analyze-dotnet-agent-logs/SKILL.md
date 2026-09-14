@@ -10,8 +10,9 @@ run, and it is written by a process you cannot interview. Work it in this order.
 
 ## Hard rules
 
-- Work only from a **slim** file. `nrlog.py slim` writes one; every later
-  step reads that.
+- `nrlog.py` is the only tool that opens the log. Run its commands (`triage`,
+  `summary`, `slim`) against the raw path; a slim file is for when a verdict
+  needs another look.
 - Never `Read`, `tail`, or wide-grep a raw log. A customer log runs to hundreds
   of MB with single lines tens of KB wide, and those bytes stay in context for
   the rest of the session.
@@ -49,8 +50,9 @@ run, and it is written by a process you cannot interview. Work it in this order.
    reply block: the fix and the next ask, with no log line in it. A field-tier
    block carries a header addressed to you and not to the customer.
 5. **Escalate.** Run `nrlog.py summary <path> --file <name> --escalation
-   --ticket <id>` when the ticket goes to engineering. It writes a directory
-   holding the triage report, a level-narrowed redacted slim log
+   --ticket <id>` when the ticket goes to engineering. Carry the same
+   `--session N` that `triage` reported, the same way you carry `--file`.
+   It writes a directory holding the triage report, a level-narrowed redacted slim log
    (`ERROR`, `WARN`, `INFO`), a redacted copy of each correlated profiler log,
    and `environment.txt`. The packet holds host and application names, so it
    goes to the internal escalation and never into a customer-facing reply. Add

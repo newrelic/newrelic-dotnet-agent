@@ -1249,6 +1249,7 @@ class SummaryTests(unittest.TestCase):
             body = handle.read()
         self.assertIn('runtime: not stated (the agent logs it at DEBUG)', body)
         self.assertIn('os: not recorded in an agent log line', body)
+        self.assertIn('DEBUG and FINEST are dropped', body)
 
     def test_session_runtime_is_parsed_where_the_agent_logged_it(self):
         self.assertEqual(load_session('ConfigDebug').runtime, '.NET 8.0.10')

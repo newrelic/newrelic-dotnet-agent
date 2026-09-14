@@ -1,5 +1,4 @@
 .claude-plugin/marketplace.json
-.github/workflows/lint-dotnet-playbooks.yml
 plugins/dotnet-log-triage/.claude-plugin/plugin.json
 plugins/dotnet-log-triage/README.md
 plugins/dotnet-log-triage/bootstrap.ps1

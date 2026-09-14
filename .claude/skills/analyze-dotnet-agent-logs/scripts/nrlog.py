@@ -1657,7 +1657,7 @@ def build_escalation(path, file, session, ticket, out, make_zip, playbooks,
         handle.write('stated level: %s\n' % (chosen.log_level or 'not stated'))
         handle.write('observed levels: %s\n' % chosen.level_label())
         handle.write('flags: %s\n' % (','.join(chosen.flags()) or 'none'))
-        handle.write('slim entries: %d (levels %s)\n'
+        handle.write('slim entries: %d (levels %s; DEBUG and FINEST are dropped)\n'
                      % (kept, ','.join(ESCALATION_LEVELS)))
     written.append(environment)
 
