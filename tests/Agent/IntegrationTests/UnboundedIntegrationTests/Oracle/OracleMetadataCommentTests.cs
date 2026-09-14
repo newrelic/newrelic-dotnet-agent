@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
@@ -44,7 +45,7 @@ public abstract class OracleMetadataCommentTestsBase<TFixture> : NewRelicIntegra
                 configModifier.SetTransactionTracerRecordSql("raw");
                 configModifier.SetTransactionTracerSqlMetadataCommentsEnabled(true);
 
-                var instrumentationFilePath = $@"{fixture.DestinationNewRelicExtensionsDirectoryPath}\NewRelic.Providers.Wrapper.Sql.Instrumentation.xml";
+                var instrumentationFilePath = Path.Combine(fixture.DestinationNewRelicExtensionsDirectoryPath, "NewRelic.Providers.Wrapper.Sql.Instrumentation.xml");
                 CommonUtils.SetAttributeOnTracerFactoryInNewRelicInstrumentation(instrumentationFilePath, "", "enabled", "true");
             },
             exerciseApplication: () =>
@@ -126,6 +127,7 @@ public abstract class OracleMetadataCommentTestsBase<TFixture> : NewRelicIntegra
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class OracleMetadataCommentTestsFramework462 : OracleMetadataCommentTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public OracleMetadataCommentTestsFramework462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -133,6 +135,7 @@ public class OracleMetadataCommentTestsFramework462 : OracleMetadataCommentTests
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class OracleMetadataCommentTestsFrameworkLatest : OracleMetadataCommentTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public OracleMetadataCommentTestsFrameworkLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
@@ -140,6 +143,7 @@ public class OracleMetadataCommentTestsFrameworkLatest : OracleMetadataCommentTe
     }
 }
 
+[Trait("Runtime", "Core")]
 public class OracleMetadataCommentTestsCoreLatest : OracleMetadataCommentTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public OracleMetadataCommentTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)

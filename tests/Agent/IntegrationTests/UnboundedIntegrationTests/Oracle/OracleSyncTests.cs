@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
@@ -43,7 +44,7 @@ public abstract class OracleSyncTestsBase<TFixture> : NewRelicIntegrationTest<TF
                 CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "transactionTracer" }, "explainThreshold", "1");
                 CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "transactionTracer" }, "explainEnabled", "true");
 
-                var instrumentationFilePath = $@"{fixture.DestinationNewRelicExtensionsDirectoryPath}\NewRelic.Providers.Wrapper.Sql.Instrumentation.xml";
+                var instrumentationFilePath = Path.Combine(fixture.DestinationNewRelicExtensionsDirectoryPath, "NewRelic.Providers.Wrapper.Sql.Instrumentation.xml");
                 CommonUtils.SetAttributeOnTracerFactoryInNewRelicInstrumentation(instrumentationFilePath, "", "enabled", "true");
             },
             exerciseApplication: () =>
@@ -170,6 +171,7 @@ public abstract class OracleSyncTestsBase<TFixture> : NewRelicIntegrationTest<TF
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class OracleSyncTestsFramework462 : OracleSyncTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public OracleSyncTestsFramework462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -177,6 +179,7 @@ public class OracleSyncTestsFramework462 : OracleSyncTestsBase<ConsoleDynamicMet
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class OracleSyncTestsFramework471 : OracleSyncTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     public OracleSyncTestsFramework471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -184,6 +187,7 @@ public class OracleSyncTestsFramework471 : OracleSyncTestsBase<ConsoleDynamicMet
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class OracleSyncTestsFrameworkLatest : OracleSyncTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public OracleSyncTestsFrameworkLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
@@ -191,6 +195,7 @@ public class OracleSyncTestsFrameworkLatest : OracleSyncTestsBase<ConsoleDynamic
     }
 }
 
+[Trait("Runtime", "Core")]
 public class OracleSyncTestsCoreLatest : OracleSyncTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public OracleSyncTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)

@@ -112,7 +112,17 @@ public class DotnetTool : RemoteApplication
             return;
         }
 
-        TestLogger?.WriteLine($"[DotnetTool] Forcibly terminating dotnet tool {_toolName} process.");
+        var shutdownMessage = $"[DotnetTool] Forcibly terminating dotnet tool {_toolName} process.";
+        try
+        {
+            TestLogger?.WriteLine(shutdownMessage);
+        }
+        catch (InvalidOperationException)
+        {
+            // logging must not block the kill below; fall back so the message still reaches the CI job log
+            Console.WriteLine(shutdownMessage);
+        }
+
         try
         {
             RemoteProcess.Kill();

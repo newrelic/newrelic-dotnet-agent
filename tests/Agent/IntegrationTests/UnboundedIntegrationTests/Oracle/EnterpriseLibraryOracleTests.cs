@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.Shared;
@@ -14,6 +15,7 @@ using Xunit;
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.Oracle;
 
+[Trait("Runtime", "Framework")]
 public class EnterpriseLibraryOracleTests : NewRelicIntegrationTest<RemoteServiceFixtures.OracleBasicMvcFixture>
 {
     private readonly RemoteServiceFixtures.OracleBasicMvcFixture _fixture;
@@ -37,7 +39,7 @@ public class EnterpriseLibraryOracleTests : NewRelicIntegrationTest<RemoteServic
 
                 CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "transactionTracer" }, "explainThreshold", "1");
 
-                var instrumentationFilePath = $@"{fixture.DestinationNewRelicExtensionsDirectoryPath}\NewRelic.Providers.Wrapper.Sql.Instrumentation.xml";
+                var instrumentationFilePath = Path.Combine(fixture.DestinationNewRelicExtensionsDirectoryPath, "NewRelic.Providers.Wrapper.Sql.Instrumentation.xml");
                 CommonUtils.SetAttributeOnTracerFactoryInNewRelicInstrumentation(instrumentationFilePath, "", "enabled", "true");
             },
             exerciseApplication: () =>

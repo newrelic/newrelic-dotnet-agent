@@ -110,8 +110,10 @@ public class AzureFuncTool : RemoteService
         {
             try
             {
-                //We need to attempt to clean up the process that did not successfully start.
-                RemoteProcess.Kill();
+                // The npm-installed func on Linux is a node shim that spawns the real
+                // host, which spawns the worker. Killing only the shim leaves both
+                // holding the redirected output pipe, so WaitForExit never returns.
+                RemoteProcess.Kill(entireProcessTree: true);
             }
             catch (Exception)
             {
@@ -157,7 +159,7 @@ public class AzureFuncTool : RemoteService
         try
         {
             if (RemoteProcess is { HasExited: false })
-                RemoteProcess.Kill();
+                RemoteProcess.Kill(entireProcessTree: true);
         }
         catch
         {

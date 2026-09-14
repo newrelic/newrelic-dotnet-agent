@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
@@ -41,7 +42,7 @@ public abstract class MySqlMetadataCommentTestsBase<TFixture> : NewRelicIntegrat
                 configModifier.SetTransactionTracerRecordSql("raw");
                 configModifier.SetTransactionTracerSqlMetadataCommentsEnabled(true);
 
-                var instrumentationFilePath = string.Format(@"{0}\NewRelic.Providers.Wrapper.Sql.Instrumentation.xml", fixture.DestinationNewRelicExtensionsDirectoryPath);
+                var instrumentationFilePath = Path.Combine(fixture.DestinationNewRelicExtensionsDirectoryPath, "NewRelic.Providers.Wrapper.Sql.Instrumentation.xml");
                 CommonUtils.SetAttributeOnTracerFactoryInNewRelicInstrumentation(instrumentationFilePath, "", "enabled", "true");
             },
             exerciseApplication: () =>
@@ -119,6 +120,7 @@ public abstract class MySqlMetadataCommentTestsBase<TFixture> : NewRelicIntegrat
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class MySqlMetadataCommentTestsFW462 : MySqlMetadataCommentTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public MySqlMetadataCommentTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -126,6 +128,7 @@ public class MySqlMetadataCommentTestsFW462 : MySqlMetadataCommentTestsBase<Cons
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class MySqlMetadataCommentTestsFWLatest : MySqlMetadataCommentTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public MySqlMetadataCommentTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
@@ -133,6 +136,7 @@ public class MySqlMetadataCommentTestsFWLatest : MySqlMetadataCommentTestsBase<C
     }
 }
 
+[Trait("Runtime", "Core")]
 public class MySqlMetadataCommentTestsCoreOldest : MySqlMetadataCommentTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public MySqlMetadataCommentTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output) : base(fixture, output)
@@ -140,6 +144,7 @@ public class MySqlMetadataCommentTestsCoreOldest : MySqlMetadataCommentTestsBase
     }
 }
 
+[Trait("Runtime", "Core")]
 public class MySqlMetadataCommentTestsCoreLatest : MySqlMetadataCommentTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public MySqlMetadataCommentTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)

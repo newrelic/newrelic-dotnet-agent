@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
@@ -15,6 +16,7 @@ using Xunit;
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql;
 
+[Trait("Runtime", "Framework")]
 public class EnterpriseLibraryMsSqlTests : NewRelicIntegrationTest<ConsoleDynamicMethodFixtureFW462>
 {
     private readonly ConsoleDynamicMethodFixture _fixture;
@@ -51,7 +53,7 @@ public class EnterpriseLibraryMsSqlTests : NewRelicIntegrationTest<ConsoleDynami
                 CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "transactionTracer" }, "explainEnabled", "true");
                 CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "transactionTracer" }, "explainThreshold", "1");
 
-                var instrumentationFilePath = $@"{fixture.DestinationNewRelicExtensionsDirectoryPath}\NewRelic.Providers.Wrapper.Sql.Instrumentation.xml";
+                var instrumentationFilePath = Path.Combine(fixture.DestinationNewRelicExtensionsDirectoryPath, "NewRelic.Providers.Wrapper.Sql.Instrumentation.xml");
                 CommonUtils.SetAttributeOnTracerFactoryInNewRelicInstrumentation(instrumentationFilePath, "", "enabled", "true");
             },
             exerciseApplication: () =>

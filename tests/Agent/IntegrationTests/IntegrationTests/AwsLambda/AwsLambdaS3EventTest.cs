@@ -54,7 +54,9 @@ public abstract class AwsLambdaS3EventTest<T> : NewRelicIntegrationTest<T> where
         var expectedAgentAttributes = new[]
         {
             "aws.lambda.arn",
-            "aws.requestId"
+            "aws.requestId",
+            // presence only: the agent renders this with the machine's culture and timezone
+            "aws.lambda.eventSource.eventTime"
         };
 
         var expectedAgentAttributeValues = new Dictionary<string, object>
@@ -64,7 +66,6 @@ public abstract class AwsLambdaS3EventTest<T> : NewRelicIntegrationTest<T> where
             { "aws.lambda.eventSource.eventName", expectPutEvent ? "ObjectCreated:Put" : "ObjectRemoved:Delete"},
             { "aws.lambda.eventSource.length", 1 },
             { "aws.lambda.eventSource.region", "{region}" },
-            { "aws.lambda.eventSource.eventTime", "1/1/1970 12:00:00 AM" },
             { "aws.lambda.eventSource.xAmzId2", "EXAMPLE123/5678abcdefghijklambdaisawesome/mnopqrstuvwxyzABCDEFGH" },
             { "aws.lambda.eventSource.bucketName", "sourcebucket" },
             { "aws.lambda.eventSource.objectKey", "HappyFace.jpg" },
@@ -86,6 +87,7 @@ public abstract class AwsLambdaS3EventTest<T> : NewRelicIntegrationTest<T> where
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AwsLambdaS3EventTestCoreOldest : AwsLambdaS3EventTest<LambdaS3EventTriggerFixtureCoreOldest>
 {
     public AwsLambdaS3EventTestCoreOldest(LambdaS3EventTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -94,6 +96,7 @@ public class AwsLambdaS3EventTestCoreOldest : AwsLambdaS3EventTest<LambdaS3Event
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AwsLambdaAsyncS3EventTestCoreOldest : AwsLambdaS3EventTest<AsyncLambdaS3EventTriggerFixtureCoreOldest>
 {
     public AwsLambdaAsyncS3EventTestCoreOldest(AsyncLambdaS3EventTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -102,6 +105,7 @@ public class AwsLambdaAsyncS3EventTestCoreOldest : AwsLambdaS3EventTest<AsyncLam
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AwsLambdaS3EventTestCoreLatest : AwsLambdaS3EventTest<LambdaS3EventTriggerFixtureCoreLatest>
 {
     public AwsLambdaS3EventTestCoreLatest(LambdaS3EventTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -110,6 +114,7 @@ public class AwsLambdaS3EventTestCoreLatest : AwsLambdaS3EventTest<LambdaS3Event
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AwsLambdaAsyncS3EventTestCoreLatest : AwsLambdaS3EventTest<AsyncLambdaS3EventTriggerFixtureCoreLatest>
 {
     public AwsLambdaAsyncS3EventTestCoreLatest(AsyncLambdaS3EventTriggerFixtureCoreLatest fixture, ITestOutputHelper output)

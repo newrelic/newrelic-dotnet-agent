@@ -54,7 +54,9 @@ public abstract class AwsLambdaSnsEventTest<T> : NewRelicIntegrationTest<T> wher
         var expectedAgentAttributes = new[]
         {
             "aws.lambda.arn",
-            "aws.requestId"
+            "aws.requestId",
+            // presence only: the agent renders this with the machine's culture and timezone
+            "aws.lambda.eventSource.timestamp"
         };
 
         var expectedAgentAttributeValues = new Dictionary<string, object>
@@ -63,7 +65,6 @@ public abstract class AwsLambdaSnsEventTest<T> : NewRelicIntegrationTest<T> wher
             { "aws.lambda.eventSource.eventType", "sns" },
             { "aws.lambda.eventSource.length", 1 },
             { "aws.lambda.eventSource.messageId", "95df01b4-ee98-5cb9-9903-4c221d41eb5e" },
-            { "aws.lambda.eventSource.timestamp", "1/1/1970 12:00:00 AM" },
             { "aws.lambda.eventSource.topicArn", "arn:{partition}:sns:EXAMPLE2" },
             { "aws.lambda.eventSource.type", "Notification" }
         };
@@ -95,6 +96,7 @@ public abstract class AwsLambdaSnsEventTest<T> : NewRelicIntegrationTest<T> wher
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AwsLambdaSnsEventTestCoreOldest : AwsLambdaSnsEventTest<LambdaSnsEventTriggerFixtureCoreOldest>
 {
     public AwsLambdaSnsEventTestCoreOldest(LambdaSnsEventTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -103,6 +105,7 @@ public class AwsLambdaSnsEventTestCoreOldest : AwsLambdaSnsEventTest<LambdaSnsEv
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AwsLambdaSnsEventTestCoreLatest : AwsLambdaSnsEventTest<LambdaSnsEventTriggerFixtureCoreLatest>
 {
     public AwsLambdaSnsEventTestCoreLatest(LambdaSnsEventTriggerFixtureCoreLatest fixture, ITestOutputHelper output)

@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
@@ -42,7 +43,7 @@ public abstract class MySqlTestsBase<TFixture> : NewRelicIntegrationTest<TFixtur
                 CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "transactionTracer" }, "explainEnabled", "true");
                 CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "transactionTracer" }, "explainThreshold", "1");
 
-                var instrumentationFilePath = string.Format(@"{0}\NewRelic.Providers.Wrapper.Sql.Instrumentation.xml", fixture.DestinationNewRelicExtensionsDirectoryPath);
+                var instrumentationFilePath = Path.Combine(fixture.DestinationNewRelicExtensionsDirectoryPath, "NewRelic.Providers.Wrapper.Sql.Instrumentation.xml");
                 CommonUtils.SetAttributeOnTracerFactoryInNewRelicInstrumentation(instrumentationFilePath, "", "enabled", "true");
             },
             exerciseApplication: () =>
@@ -142,6 +143,7 @@ public abstract class MySqlTestsBase<TFixture> : NewRelicIntegrationTest<TFixtur
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class MySqlTestsFW462 : MySqlTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public MySqlTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -150,6 +152,7 @@ public class MySqlTestsFW462 : MySqlTestsBase<ConsoleDynamicMethodFixtureFW462>
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class MySqlTestsFW471 : MySqlTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     public MySqlTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -158,6 +161,7 @@ public class MySqlTestsFW471 : MySqlTestsBase<ConsoleDynamicMethodFixtureFW471>
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class MySqlTestsFW48 : MySqlTestsBase<ConsoleDynamicMethodFixtureFW48>
 {
     public MySqlTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -166,6 +170,7 @@ public class MySqlTestsFW48 : MySqlTestsBase<ConsoleDynamicMethodFixtureFW48>
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class MySqlTestsFWLatest : MySqlTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public MySqlTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
@@ -174,6 +179,7 @@ public class MySqlTestsFWLatest : MySqlTestsBase<ConsoleDynamicMethodFixtureFWLa
     }
 }
 
+[Trait("Runtime", "Core")]
 public class MySqlTestsCoreOldest : MySqlTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public MySqlTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output) : base(fixture, output)
@@ -182,6 +188,7 @@ public class MySqlTestsCoreOldest : MySqlTestsBase<ConsoleDynamicMethodFixtureCo
     }
 }
 
+[Trait("Runtime", "Core")]
 public class MySqlTestsCoreLatest : MySqlTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public MySqlTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)

@@ -43,7 +43,7 @@ public class RemoteConsoleApplication : RemoteService
             
         if (_processHasBeenShutdown)
         {
-            RemoteProcess.WaitForExit();
+            WaitForExit();
             return;
         }
 
@@ -54,16 +54,16 @@ public class RemoteConsoleApplication : RemoteService
             if (!IsRunning || RemoteProcess.WaitForExit(Convert.ToInt32(_timeout.TotalMilliseconds)))
             {
                 // Allows for any asynchronous writing to complete
-                RemoteProcess.WaitForExit();
+                WaitForExit();
                 return;
             }
 
             if (IsRunning)
             {
-                RemoteProcess.Kill();
+                RemoteProcess.Kill(entireProcessTree: true);
             }
 
-            RemoteProcess.WaitForExit();
+            WaitForExit();
         }
         catch (Exception ex)
         {
