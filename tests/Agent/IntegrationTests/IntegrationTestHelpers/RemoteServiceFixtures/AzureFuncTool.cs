@@ -110,9 +110,7 @@ public class AzureFuncTool : RemoteService
         {
             try
             {
-                // The npm-installed func on Linux is a node shim that spawns the real
-                // host, which spawns the worker. Killing only the shim leaves both
-                // holding the redirected output pipe, so WaitForExit never returns.
+                // func spawns a host process which spawns the worker; killing only func leaves them holding the redirected output pipe.
                 RemoteProcess.Kill(entireProcessTree: true);
             }
             catch (Exception)
