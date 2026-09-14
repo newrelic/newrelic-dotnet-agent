@@ -6,6 +6,8 @@ on:
       - 'teams/dotnet-agent/playbooks/field/**'
       - 'plugins/dotnet-log-triage/lint_playbooks.py'
   push:
+    branches:
+      - main
     paths:
       - 'teams/dotnet-agent/playbooks/field/**'
       - 'plugins/dotnet-log-triage/lint_playbooks.py'
