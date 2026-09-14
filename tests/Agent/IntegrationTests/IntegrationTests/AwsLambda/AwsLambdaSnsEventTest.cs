@@ -96,7 +96,6 @@ public abstract class AwsLambdaSnsEventTest<T> : NewRelicIntegrationTest<T> wher
     }
 }
 
-[Trait("Runtime", "Core")]
 public class AwsLambdaSnsEventTestCoreOldest : AwsLambdaSnsEventTest<LambdaSnsEventTriggerFixtureCoreOldest>
 {
     public AwsLambdaSnsEventTestCoreOldest(LambdaSnsEventTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -105,7 +104,6 @@ public class AwsLambdaSnsEventTestCoreOldest : AwsLambdaSnsEventTest<LambdaSnsEv
     }
 }
 
-[Trait("Runtime", "Core")]
 public class AwsLambdaSnsEventTestCoreLatest : AwsLambdaSnsEventTest<LambdaSnsEventTriggerFixtureCoreLatest>
 {
     public AwsLambdaSnsEventTestCoreLatest(LambdaSnsEventTriggerFixtureCoreLatest fixture, ITestOutputHelper output)

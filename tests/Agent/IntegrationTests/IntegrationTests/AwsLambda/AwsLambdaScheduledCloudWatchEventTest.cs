@@ -81,7 +81,6 @@ public abstract class AwsLambdaScheduledCloudWatchEventTest<T> : NewRelicIntegra
     }
 }
 
-[Trait("Runtime", "Core")]
 public class AwsLambdaScheduledCloudWatchEventTestCoreOldest : AwsLambdaScheduledCloudWatchEventTest<LambdaScheduledCloudWatchEventTriggerFixtureCoreOldest>
 {
     public AwsLambdaScheduledCloudWatchEventTestCoreOldest(LambdaScheduledCloudWatchEventTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -90,7 +89,6 @@ public class AwsLambdaScheduledCloudWatchEventTestCoreOldest : AwsLambdaSchedule
     }
 }
 
-[Trait("Runtime", "Core")]
 public class AwsLambdaAsyncScheduledCloudWatchEventTestCoreOldest : AwsLambdaScheduledCloudWatchEventTest<AsyncLambdaScheduledCloudWatchEventTriggerFixtureCoreOldest>
 {
     public AwsLambdaAsyncScheduledCloudWatchEventTestCoreOldest(AsyncLambdaScheduledCloudWatchEventTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -99,7 +97,6 @@ public class AwsLambdaAsyncScheduledCloudWatchEventTestCoreOldest : AwsLambdaSch
     }
 }
 
-[Trait("Runtime", "Core")]
 public class AwsLambdaScheduledCloudWatchEventTestCoreLatest : AwsLambdaScheduledCloudWatchEventTest<LambdaScheduledCloudWatchEventTriggerFixtureCoreLatest>
 {
     public AwsLambdaScheduledCloudWatchEventTestCoreLatest(LambdaScheduledCloudWatchEventTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -108,7 +105,6 @@ public class AwsLambdaScheduledCloudWatchEventTestCoreLatest : AwsLambdaSchedule
     }
 }
 
-[Trait("Runtime", "Core")]
 public class AwsLambdaAsyncScheduledCloudWatchEventTestCoreLatest : AwsLambdaScheduledCloudWatchEventTest<AsyncLambdaScheduledCloudWatchEventTriggerFixtureCoreLatest>
 {
     public AwsLambdaAsyncScheduledCloudWatchEventTestCoreLatest(AsyncLambdaScheduledCloudWatchEventTriggerFixtureCoreLatest fixture, ITestOutputHelper output)

@@ -20,9 +20,6 @@ class Program
         var measurementsPerThread = GetArgValue(args, "--measurements", 1000);
         var threadCount = GetArgValue(args, "--threads", 10);
 
-        var eventWaitHandleName = "app_server_wait_for_all_request_done_" + port;
-        using var eventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset, eventWaitHandleName);
-
         AppLifecycleManager.CreatePidFile();
 
         var meters = new List<Meter>();
@@ -64,7 +61,7 @@ class Program
         await Task.Delay(5000);
 
         Console.WriteLine("Waiting for signal to terminate.");
-        eventWaitHandle.WaitOne(TimeSpan.FromMinutes(5));
+        AppLifecycleManager.WaitForTestCompletion(port);
 
         foreach (var meter in meters)
         {

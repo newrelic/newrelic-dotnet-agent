@@ -147,7 +147,6 @@ public abstract class MySqlAsyncTestsBase<TFixture> : NewRelicIntegrationTest<TF
     }
 }
 
-[Trait("Runtime", "Framework")]
 public class MySqlAsyncTestsFW462 : MySqlAsyncTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public MySqlAsyncTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -156,7 +155,6 @@ public class MySqlAsyncTestsFW462 : MySqlAsyncTestsBase<ConsoleDynamicMethodFixt
     }
 }
 
-[Trait("Runtime", "Framework")]
 public class MySqlAsyncTestsFW471 : MySqlAsyncTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     public MySqlAsyncTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -165,7 +163,6 @@ public class MySqlAsyncTestsFW471 : MySqlAsyncTestsBase<ConsoleDynamicMethodFixt
     }
 }
 
-[Trait("Runtime", "Framework")]
 public class MySqlAsyncTestsFW48 : MySqlAsyncTestsBase<ConsoleDynamicMethodFixtureFW48>
 {
     public MySqlAsyncTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -174,7 +171,6 @@ public class MySqlAsyncTestsFW48 : MySqlAsyncTestsBase<ConsoleDynamicMethodFixtu
     }
 }
 
-[Trait("Runtime", "Framework")]
 public class MySqlAsyncTestsFWLatest : MySqlAsyncTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public MySqlAsyncTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
@@ -183,7 +179,6 @@ public class MySqlAsyncTestsFWLatest : MySqlAsyncTestsBase<ConsoleDynamicMethodF
     }
 }
 
-[Trait("Runtime", "Core")]
 public class MySqlAsyncTestsCoreOldest : MySqlAsyncTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public MySqlAsyncTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output) : base(fixture, output)
@@ -192,7 +187,6 @@ public class MySqlAsyncTestsCoreOldest : MySqlAsyncTestsBase<ConsoleDynamicMetho
     }
 }
 
-[Trait("Runtime", "Core")]
 public class MySqlAsyncTestsCoreLatest : MySqlAsyncTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public MySqlAsyncTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)
