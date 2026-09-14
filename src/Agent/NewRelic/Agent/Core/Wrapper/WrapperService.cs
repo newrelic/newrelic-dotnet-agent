@@ -18,7 +18,7 @@ namespace NewRelic.Agent.Core.Wrapper;
 
 public interface IWrapperService
 {
-    AfterWrappedMethodDelegate BeforeWrappedMethod(Type type, string methodName, string argumentSignature, object invocationTarget, object[] methodArguments, string tracerFactoryName, string metricName, uint tracerArguments, ulong functionId);
+    AfterWrappedMethodDelegate BeforeWrappedMethod(Type type, string methodName, string argumentSignature, object invocationTarget, object[] methodArguments, string tracerFactoryName, string metricName, uint tracerArguments, ulong functionId, Type effectiveReturnType);
     void ClearCaches();
 }
 
@@ -68,7 +68,7 @@ public class WrapperService : IWrapperService
 
     public AfterWrappedMethodDelegate BeforeWrappedMethod(Type type, string methodName, string argumentSignature,
         object invocationTarget, object[] methodArguments, string tracerFactoryName, string metricName,
-        uint tracerArguments, ulong functionId)
+        uint tracerArguments, ulong functionId, Type effectiveReturnType)
     {
         InstrumentedMethodInfo instrumentedMethodInfo = default(InstrumentedMethodInfo);
         TrackedWrapper trackedWrapper;

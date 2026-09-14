@@ -101,7 +101,7 @@ public class AgentShim
 
     /// <summary>
     /// This method is used to work around .NET Framework and .NET &lt; 6.0 not supporting generic delegates
-    /// with 11 parameters.
+    /// with 12 parameters.
     /// </summary>
     /// <param name="parameters">An array of boxed parameters for the GetFinishTracerDelegate method.</param>
     /// <returns>The delegate to invoke when a method completes or results in an exception.</returns>
@@ -118,7 +118,13 @@ public class AgentShim
             (string)parameters[7],
             parameters[8],
             (object[])parameters[9],
-            (ulong)parameters[10]);
+            (ulong)parameters[10],
+            // The last slot is absent when the pinned profiler predates it. Reading it defensively
+            // keeps a stale profiler degrading to synchronous completion semantics instead of
+            // throwing IndexOutOfRangeException on every instrumented call -- which the injected
+            // try/catch around GetTracer would swallow into a null tracer, silently disabling ALL
+            // instrumentation. Safe to delete once Home.csproj pins a profiler that sends 12 slots.
+            parameters.Length > 11 ? (Type)parameters[11] : null);
     }
 
     /// <summary>
@@ -136,7 +142,8 @@ public class AgentShim
         string argumentSignature,
         object invocationTarget,
         object[] args,
-        ulong functionId)
+        ulong functionId,
+        Type effectiveReturnType)
     {
         if (!_initialized)
         {
@@ -154,7 +161,8 @@ public class AgentShim
             argumentSignature,
             invocationTarget,
             args,
-            functionId);
+            functionId,
+            effectiveReturnType);
 
         if (tracer == null)
         {
@@ -185,8 +193,10 @@ public class AgentShim
     /// <param name="invocationTarget"></param>
     /// <param name="args"></param>
     /// <param name="functionId"></param>
+    /// <param name="effectiveReturnType">The type the instrumented body actually returns, for a
+    /// runtime-async method; null for every other method and for a void effective return.</param>
     /// <returns></returns>
-    /// <returns>Returns an Action&lt;object, Exception&gt; delegate which invokes ITracer.Finish.  
+    /// <returns>Returns an Action&lt;object, Exception&gt; delegate which invokes ITracer.Finish.
     /// We can directly invoke this delegate instead of using reflection.  Null should never be returned.</returns>
     /// <exception cref="System.ArgumentNullException"> thrown if any one of <paramref name="assemblyName"/>, <paramref name="type"/>,
     /// <paramref name="typeName"/>, <paramref name="methodName"/>, <paramref name="argumentSignature"/> or <paramref name="args"/> is null. 
@@ -202,7 +212,8 @@ public class AgentShim
         string argumentSignature,
         object invocationTarget,
         object[] args,
-        ulong functionId)
+        ulong functionId,
+        Type effectiveReturnType)
     {
         try
         {
@@ -235,7 +246,8 @@ public class AgentShim
                 argumentSignature,
                 invocationTarget,
                 args,
-                functionId);
+                functionId,
+                effectiveReturnType);
         }
 
         // http://msdn.microsoft.com/en-us/library/system.threading.threadabortexception.aspx

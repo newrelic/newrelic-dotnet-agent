@@ -372,14 +372,16 @@ public sealed class AgentManager : IAgentManager, IDisposable
     /// <param name="invocationTarget"></param>
     /// <param name="arguments"></param>
     /// <param name="functionId"></param>
+    /// <param name="effectiveReturnType">The type the instrumented body actually returns, for a
+    /// runtime-async method; null for every other method and for a void effective return.</param>
     /// <returns>Returns an ITracer, although it is given as the much simpler Object;
     /// an Object is the preferred type because it has a trival type signature.</returns>
-    public ITracer GetTracerImpl(string tracerFactoryName, uint tracerArguments, string metricName, string assemblyName, Type type, string typeName, string methodName, string argumentSignature, object invocationTarget, object[] arguments, ulong functionId)
+    public ITracer GetTracerImpl(string tracerFactoryName, uint tracerArguments, string metricName, string assemblyName, Type type, string typeName, string methodName, string argumentSignature, object invocationTarget, object[] arguments, ulong functionId, Type effectiveReturnType)
     {
         try
         {
             // First try to get a wrapper from the newer WrapperService
-            var afterWrappedMethodDelegate = _wrapperService.BeforeWrappedMethod(type, methodName, argumentSignature, invocationTarget, arguments, tracerFactoryName, metricName, tracerArguments, functionId);
+            var afterWrappedMethodDelegate = _wrapperService.BeforeWrappedMethod(type, methodName, argumentSignature, invocationTarget, arguments, tracerFactoryName, metricName, tracerArguments, functionId, effectiveReturnType);
             return (afterWrappedMethodDelegate != null) ? new WrapperTracer(afterWrappedMethodDelegate) : null;
         }
         catch (Exception e)

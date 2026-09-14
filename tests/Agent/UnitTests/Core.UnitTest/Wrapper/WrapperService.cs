@@ -1,4 +1,4 @@
-// Copyright 2020 New Relic, Inc. All rights reserved.
+﻿// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
@@ -71,7 +71,7 @@ public class Class_WrapperService
         const string tracerFactoryName = "MyTracer";
         var target = new object();
         var arguments = new object[0];
-        _wrapperService.BeforeWrappedMethod(type, methodName, string.Empty, target, arguments, tracerFactoryName, null, AttributeInstrumentation, 0);
+        _wrapperService.BeforeWrappedMethod(type, methodName, string.Empty, target, arguments, tracerFactoryName, null, AttributeInstrumentation, 0, null);
 
         var method = new Method(type, methodName, string.Empty);
         var expectedMethodCall = new MethodCall(method, target, arguments, false);
@@ -97,7 +97,7 @@ public class Class_WrapperService
         var target = new object();
         var arguments = new object[0];
 
-        var action = _wrapperService.BeforeWrappedMethod(type, methodName, string.Empty, target, arguments, tracerFactoryName, null, EmptyTracerArgs, 0);
+        var action = _wrapperService.BeforeWrappedMethod(type, methodName, string.Empty, target, arguments, tracerFactoryName, null, EmptyTracerArgs, 0, null);
         action(null, null);
 
         Assert.That(result, Is.EqualTo("foo"));
@@ -120,7 +120,7 @@ public class Class_WrapperService
 
         var wrapperService = new WrapperService(_configurationService, wrapperMap, _agent, _agentHealthReporter, _agentTimerService);
 
-        var action = wrapperService.BeforeWrappedMethod(type, methodName, string.Empty, target, arguments, tracerFactoryName, null, EmptyTracerArgs, 0);
+        var action = wrapperService.BeforeWrappedMethod(type, methodName, string.Empty, target, arguments, tracerFactoryName, null, EmptyTracerArgs, 0, null);
         action(null, null);
 
         Assert.That(result, Is.EqualTo("foo"));
@@ -142,7 +142,7 @@ public class Class_WrapperService
 
         var wrapperService = new WrapperService(_configurationService, wrapperMap, _agent, _agentHealthReporter, _agentTimerService);
 
-        var action = wrapperService.BeforeWrappedMethod(type, methodName, string.Empty, target, arguments, tracerFactoryName, null, EmptyTracerArgs, 0);
+        var action = wrapperService.BeforeWrappedMethod(type, methodName, string.Empty, target, arguments, tracerFactoryName, null, EmptyTracerArgs, 0, null);
         action(null, null);
 
         Assert.That(result, Is.EqualTo("foo"));
@@ -162,7 +162,7 @@ public class Class_WrapperService
         var target = new object();
         var arguments = new object[0];
 
-        Assert.Throws<Exception>(() => _wrapperService.BeforeWrappedMethod(type, methodName, string.Empty, target, arguments, tracerFactoryName, null, EmptyTracerArgs, 0));
+        Assert.Throws<Exception>(() => _wrapperService.BeforeWrappedMethod(type, methodName, string.Empty, target, arguments, tracerFactoryName, null, EmptyTracerArgs, 0, null));
 
         Mock.Assert(_wrapperMap);
     }
@@ -195,8 +195,8 @@ public class Class_WrapperService
 
         var wrapperService = new WrapperService(_configurationService, wrapperMap, _agent, _agentHealthReporter, _agentTimerService);
 
-        Assert.Throws<Exception>(() => wrapperService.BeforeWrappedMethod(type, methodName, argumentSignature, invocationTarget, arguments, tracerFactoryName, metricName, EmptyTracerArgs, 0));
-        Assert.DoesNotThrow(() => wrapperService.BeforeWrappedMethod(type, methodName, argumentSignature, invocationTarget, arguments, tracerFactoryName, metricName, EmptyTracerArgs, 0));
+        Assert.Throws<Exception>(() => wrapperService.BeforeWrappedMethod(type, methodName, argumentSignature, invocationTarget, arguments, tracerFactoryName, metricName, EmptyTracerArgs, 0, null));
+        Assert.DoesNotThrow(() => wrapperService.BeforeWrappedMethod(type, methodName, argumentSignature, invocationTarget, arguments, tracerFactoryName, metricName, EmptyTracerArgs, 0, null));
         Mock.Assert(_noOpWrapper);
     }
 #endif
@@ -214,7 +214,7 @@ public class Class_WrapperService
         var target = new object();
         var arguments = new object[0];
 
-        var afterWrappedMethod = _wrapperService.BeforeWrappedMethod(type, methodName, string.Empty, target, arguments, tracerFactoryName, null, EmptyTracerArgs, 0);
+        var afterWrappedMethod = _wrapperService.BeforeWrappedMethod(type, methodName, string.Empty, target, arguments, tracerFactoryName, null, EmptyTracerArgs, 0, null);
         Assert.Throws<Exception>(() => afterWrappedMethod(null, null));
 
         Mock.Assert(_wrapperMap);
@@ -247,10 +247,10 @@ public class Class_WrapperService
 
         var wrapperService = new WrapperService(_configurationService, wrapperMap, _agent, _agentHealthReporter, _agentTimerService);
 
-        var afterWrappedMethod1 = wrapperService.BeforeWrappedMethod(type, methodName, argumentSignature, invocationTarget, arguments, tracerFactoryName, metricName, EmptyTracerArgs, 0);
+        var afterWrappedMethod1 = wrapperService.BeforeWrappedMethod(type, methodName, argumentSignature, invocationTarget, arguments, tracerFactoryName, metricName, EmptyTracerArgs, 0, null);
         Assert.Throws<Exception>(() => afterWrappedMethod1(null, null));
 
-        var afterWrappedMethod2 = wrapperService.BeforeWrappedMethod(type, methodName, argumentSignature, invocationTarget, arguments, tracerFactoryName, metricName, EmptyTracerArgs, 0);
+        var afterWrappedMethod2 = wrapperService.BeforeWrappedMethod(type, methodName, argumentSignature, invocationTarget, arguments, tracerFactoryName, metricName, EmptyTracerArgs, 0, null);
         Assert.DoesNotThrow(() => afterWrappedMethod2(null, null));
     }
 #endif
@@ -277,7 +277,7 @@ public class Class_WrapperService
 
         using (var logging = new TestUtilities.Logging())
         {
-            var afterWrappedMethod = _wrapperService.BeforeWrappedMethod(type, methodName, string.Empty, target, arguments, tracerFactoryName, null, EmptyTracerArgs, 0);
+            var afterWrappedMethod = _wrapperService.BeforeWrappedMethod(type, methodName, string.Empty, target, arguments, tracerFactoryName, null, EmptyTracerArgs, 0, null);
 
             Assert.Multiple(() =>
             {
@@ -318,7 +318,7 @@ public class Class_WrapperService
 
         using (var logging = new TestUtilities.Logging())
         {
-            var afterWrappedMethod = _wrapperService.BeforeWrappedMethod(type, methodName, string.Empty, target, arguments, tracerFactoryName, null, AsyncTracerArgs, 0);
+            var afterWrappedMethod = _wrapperService.BeforeWrappedMethod(type, methodName, string.Empty, target, arguments, tracerFactoryName, null, AsyncTracerArgs, 0, null);
 
             Assert.That(logging.HasMessageThatContains("is not supported"), Is.True);
         }
@@ -336,7 +336,7 @@ public class Class_WrapperService
 
         using (var logging = new TestUtilities.Logging())
         {
-            var afterWrappedMethod = _wrapperService.BeforeWrappedMethod(type, methodName, string.Empty, target, arguments, tracerFactoryName, null, AsyncTracerArgs, 0);
+            var afterWrappedMethod = _wrapperService.BeforeWrappedMethod(type, methodName, string.Empty, target, arguments, tracerFactoryName, null, AsyncTracerArgs, 0, null);
 
             Assert.That(logging.HasMessageThatContains("is not supported"), Is.False);
         }
@@ -381,7 +381,7 @@ public class Class_WrapperService
             });
 
         _wrapperService.BeforeWrappedMethod(typeof(Class_WrapperService), nameof(RuntimeAsyncTaskOfIntMethod),
-            string.Empty, new object(), new object[0], "MyTracer", null, RuntimeAsyncTracerArgs, 100);
+            string.Empty, new object(), new object[0], "MyTracer", null, RuntimeAsyncTracerArgs, 100, null);
 
         Assert.That(capturedInfo.IsAsync, Is.True);
     }
@@ -398,7 +398,7 @@ public class Class_WrapperService
             });
 
         _wrapperService.BeforeWrappedMethod(typeof(Class_WrapperService), nameof(RuntimeAsyncUnclassifiableMethod),
-            string.Empty, new object(), new object[0], "MyTracer", null, RuntimeAsyncTracerArgs, 101);
+            string.Empty, new object(), new object[0], "MyTracer", null, RuntimeAsyncTracerArgs, 101, null);
 
         Assert.That(capturedInfo.IsAsync, Is.False);
     }
@@ -411,7 +411,7 @@ public class Class_WrapperService
 
         var afterWrappedMethod = _wrapperService.BeforeWrappedMethod(typeof(Class_WrapperService),
             nameof(RuntimeAsyncTaskOfIntMethod), string.Empty, new object(), new object[0],
-            "MyTracer", null, RuntimeAsyncTracerArgs, 102);
+            "MyTracer", null, RuntimeAsyncTracerArgs, 102, null);
 
         afterWrappedMethod(42, null);
 
@@ -431,7 +431,7 @@ public class Class_WrapperService
 
         var afterWrappedMethod = _wrapperService.BeforeWrappedMethod(typeof(Class_WrapperService),
             nameof(RuntimeAsyncTaskMethod), string.Empty, new object(), new object[0],
-            "MyTracer", null, RuntimeAsyncTracerArgs, 103);
+            "MyTracer", null, RuntimeAsyncTracerArgs, 103, null);
 
         afterWrappedMethod(null, null);
 
@@ -449,7 +449,7 @@ public class Class_WrapperService
 
         var afterWrappedMethod = _wrapperService.BeforeWrappedMethod(typeof(Class_WrapperService),
             nameof(RuntimeAsyncTaskOfIntMethod), string.Empty, new object(), new object[0],
-            "MyTracer", null, RuntimeAsyncTracerArgs, 104);
+            "MyTracer", null, RuntimeAsyncTracerArgs, 104, null);
 
         afterWrappedMethod(null, thrown);
 
@@ -464,7 +464,7 @@ public class Class_WrapperService
 
         var afterWrappedMethod = _wrapperService.BeforeWrappedMethod(typeof(Class_WrapperService),
             nameof(RuntimeAsyncTaskOfIntMethod), string.Empty, new object(), new object[0],
-            "MyTracer", null, EmptyTracerArgs, 105);
+            "MyTracer", null, EmptyTracerArgs, 105, null);
 
         afterWrappedMethod(42, null);
 
@@ -483,7 +483,7 @@ public class Class_WrapperService
             });
 
         _wrapperService.BeforeWrappedMethod(typeof(Class_WrapperService), nameof(RuntimeAsyncTaskOfIntMethod),
-            string.Empty, new object(), new object[0], "MyTracer", null, RuntimeAsyncTracerArgs, 106);
+            string.Empty, new object(), new object[0], "MyTracer", null, RuntimeAsyncTracerArgs, 106, null);
 
         Assert.That(capturedInfo.IsRuntimeAsync, Is.True);
     }
@@ -500,7 +500,7 @@ public class Class_WrapperService
             });
 
         _wrapperService.BeforeWrappedMethod(typeof(Class_WrapperService), nameof(RuntimeAsyncTaskOfIntMethod),
-            string.Empty, new object(), new object[0], "MyTracer", null, AsyncTracerArgs, 107);
+            string.Empty, new object(), new object[0], "MyTracer", null, AsyncTracerArgs, 107, null);
 
         Assert.Multiple(() =>
         {
@@ -527,9 +527,9 @@ public class Class_WrapperService
         Assert.DoesNotThrow(() =>
         {
             _wrapperService.BeforeWrappedMethod(declaringType, nameof(RuntimeAsyncTaskOfIntMethod),
-                string.Empty, new object(), new object[0], "MyTracer", null, RuntimeAsyncTracerArgs, 108);
+                string.Empty, new object(), new object[0], "MyTracer", null, RuntimeAsyncTracerArgs, 108, null);
             _wrapperService.BeforeWrappedMethod(declaringType, nameof(RuntimeAsyncTaskOfIntMethod),
-                string.Empty, new object(), new object[0], "MyTracer", null, RuntimeAsyncTracerArgs, 108);
+                string.Empty, new object(), new object[0], "MyTracer", null, RuntimeAsyncTracerArgs, 108, null);
         });
 
         Assert.Multiple(() =>
