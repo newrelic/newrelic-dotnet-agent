@@ -263,6 +263,18 @@ public class NewRelicConfigModifier
     }
 
     /// <summary>
+    /// Sets the root sampler in the newrelic.config, e.g. "alwaysOn", "alwaysOff", "adaptive".
+    /// </summary>
+    public NewRelicConfigModifier SetRootSampler(string samplerType)
+    {
+        // The sampler elements are empty complex types, so the element must have no text child.
+        CommonUtils.AddEmptyXmlNodeInNewRelicConfig(_configFilePath,
+            new[] { "configuration", "distributedTracing", "sampler", "root" }, samplerType);
+
+        return this;
+    }
+
+    /// <summary>
     /// Sets or deletes the excludeNewrelicHeader setting in the newrelic.config.
     /// </summary>
     /// <param name="exclude">If null, the setting will be deleted; otherwise, the setting will be set to the value of this parameter.</param>

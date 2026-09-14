@@ -23,8 +23,6 @@ public class KafkaBuilderWrapper : IWrapper
 
     private const string WrapperName = "KafkaBuilderWrapper";
     private const string BootstrapServersKey = "bootstrap.servers";
-    private const string StatisticsIntervalKey = "statistics.interval.ms";
-    private const int MinStatisticsIntervalMs = 5000;
     private static readonly TimeSpan DrainInitialDelay = TimeSpan.FromSeconds(5);
     private static readonly TimeSpan ClientTtl = TimeSpan.FromMinutes(5);
     private static readonly TimeSpan CleanupInterval = TimeSpan.FromMinutes(2);
@@ -41,6 +39,7 @@ public class KafkaBuilderWrapper : IWrapper
     private readonly ConcurrentDictionary<Type, Func<object, object, object>> _setStatisticsCallerCache = new();
     private readonly ConcurrentDictionary<Type, Func<object, object>> _statisticsHandlerGetterCache = new();
     private readonly ConcurrentDictionary<Type, Action<object, object>> _statisticsHandlerFieldWriterCache = new();
+    private readonly ConcurrentDictionary<Type, Action<object, object>> _builderConfigWriterCache = new();
     private readonly ConcurrentDictionary<WeakReferenceKey<object>, DateTime> _clientLastSeen = new();
     private int _drainStarted;
     private volatile bool _metricsCollectionDisabled;
@@ -89,7 +88,12 @@ public class KafkaBuilderWrapper : IWrapper
             // Store bootstrap servers for node metrics
             if (!string.IsNullOrEmpty(bootstrapServers))
             {
-                KafkaHelper.AddBootstrapServersToCache(clientAsObject, bootstrapServers);
+                KafkaHelper.AddClientToCache(clientAsObject, bootstrapServers);
+
+                if (agent.Configuration.KafkaClusterMetricsEnabled)
+                {
+                    KafkaClusterIdResolver.Register(clientAsObject, bootstrapServers, agent);
+                }
             }
         });
     }
@@ -424,7 +428,7 @@ public class KafkaBuilderWrapper : IWrapper
 
     /// <summary>
     /// Enables statistics on the Kafka builder if not already configured by the customer.
-    /// Derives an interval as half the harvest cycle (floored at MinStatisticsIntervalMs) so that
+    /// Derives an interval as half the harvest cycle (floored at MinStatisticsIntervalSeconds) so that
     /// scheduler phase offset between librdkafka's timer and our drain can never cause a missed cycle.
     /// If the customer has already set an interval, it is left unchanged, but a warning is logged
     /// when it exceeds the harvest cycle since metrics may not be reported reliably in that case.
@@ -441,12 +445,23 @@ public class KafkaBuilderWrapper : IWrapper
             return;
         }
 
-        var setConfigMethod = builder.GetType().GetMethod("SetConfig", [typeof(string), typeof(string)]);
-        if (setConfigMethod != null)
+        var configuredSeconds = agent.Configuration.KafkaMetricsInterval;
+        var intervalMs = configuredSeconds.HasValue
+            ? configuredSeconds.Value * 1000
+            : Math.Max(KafkaStatisticsHelper.MinStatisticsIntervalSeconds * 1000, harvestMs / 2);
+
+        try
         {
-            var intervalMs = Math.Max(MinStatisticsIntervalMs, harvestMs / 2);
-            setConfigMethod.Invoke(builder, [StatisticsIntervalKey, intervalMs.ToString()]);
+            var updatedConfig = KafkaStatisticsHelper.WithStatisticsInterval(GetBuilderConfig(builder), intervalMs);
+            var configWriter = _builderConfigWriterCache.GetOrAdd(builder.GetType(), t =>
+                VisibilityBypasser.Instance.GenerateFieldWriteAccessor<object>(t, "<Config>k__BackingField"));
+            configWriter(builder, updatedConfig);
+
             Log.Finest("KafkaBuilderWrapper: Set statistics interval to {0}ms (harvest cycle: {1}ms)", intervalMs, harvestMs);
+        }
+        catch (Exception ex)
+        {
+            Log.Debug(ex, "KafkaBuilderWrapper: could not set the statistics interval on the builder.");
         }
     }
 
@@ -489,7 +504,7 @@ public class KafkaBuilderWrapper : IWrapper
 
             foreach (KeyValuePair<string, string> kvp in config)
             {
-                if (kvp.Key == StatisticsIntervalKey && !string.IsNullOrEmpty(kvp.Value) && kvp.Value != "0"
+                if (kvp.Key == KafkaStatisticsHelper.StatisticsIntervalMsKey && !string.IsNullOrEmpty(kvp.Value) && kvp.Value != "0"
                     && int.TryParse(kvp.Value, out var ms))
                     return ms;
             }

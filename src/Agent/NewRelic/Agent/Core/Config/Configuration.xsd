@@ -2394,6 +2394,61 @@ e, so remove that element to use this mapping.
                         </xs:attribute>
                     </xs:complexType>
                 </xs:element>
+
+                <xs:element name="kafka" minOccurs="0" maxOccurs="1">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Configuration for Kafka instrumentation.
+                        </xs:documentation>
+                    </xs:annotation>
+
+                    <xs:complexType>
+                        <xs:all>
+                            <xs:element name="metrics" minOccurs="0" maxOccurs="1">
+                                <xs:annotation>
+                                    <xs:documentation>
+                                        Configuration for Kafka metrics.
+                                    </xs:documentation>
+                                </xs:annotation>
+
+                                <xs:complexType>
+                                    <xs:attribute name="debugEnabled" type="xs:boolean" use="optional">
+                                        <xs:annotation>
+                                            <xs:documentation>
+                                                Controls whether the agent collects internal Kafka metrics from the
+                                                statistics that Kafka itself reports. Defaults to "true".
+                                                Takes precedence over the NewRelic.KafkaInternalMetricsEnabled app setting.
+                                                Environment variable: NEW_RELIC_KAFKA_METRICS_DEBUG_ENABLED
+                                            </xs:documentation>
+                                        </xs:annotation>
+                                    </xs:attribute>
+
+                                    <xs:attribute name="interval" type="xs:int" use="optional">
+                                        <xs:annotation>
+                                            <xs:documentation>
+                                                The interval in seconds at which Kafka reports statistics to the agent.
+                                                Values below 5 are raised to 5. When not set, the agent derives the
+                                                interval from the metrics harvest cycle. An interval configured on the
+                                                Kafka client itself takes precedence over this setting.
+                                                Environment variable: NEW_RELIC_KAFKA_METRICS_INTERVAL
+                                            </xs:documentation>
+                                        </xs:annotation>
+                                    </xs:attribute>
+
+                                    <xs:attribute name="clusterMetricsEnabled" type="xs:boolean" use="optional">
+                                        <xs:annotation>
+                                            <xs:documentation>
+                                                Controls whether the agent records per-cluster Kafka produce and consume
+                                                metrics. Defaults to "false".
+                                                Environment variable: NEW_RELIC_KAFKA_METRICS_CLUSTER_METRICS_ENABLED
+                                            </xs:documentation>
+                                        </xs:annotation>
+                                    </xs:attribute>
+                                </xs:complexType>
+                            </xs:element>
+                        </xs:all>
+                    </xs:complexType>
+                </xs:element>
             </xs:all>
 
             <xs:attribute name="agentEnabled" type="xs:boolean" default="true">

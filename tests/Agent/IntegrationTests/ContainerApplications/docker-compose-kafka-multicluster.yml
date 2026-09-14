@@ -3,6 +3,7 @@
 # See docker-compose-base.yml for common required variables.
 # CONTAINER_NAME  The name for the container
 # NEW_RELIC_KAFKA_TOPIC
+# NEW_RELIC_KAFKA_TOPIC_2
 #
 # To build and run, execute `docker compose -f <path to docker-compose.yml> up`
 # Alternatively, set COMPOSE_FILE environment variable to the path and omit the -f parameter
@@ -18,9 +19,13 @@ services:
         depends_on:
             kafka-broker:
                 condition: service_healthy
+            kafka-broker-2:
+                condition: service_healthy
         environment:
             - NEW_RELIC_KAFKA_TOPIC=${NEW_RELIC_KAFKA_TOPIC}
+            - NEW_RELIC_KAFKA_TOPIC_2=${NEW_RELIC_KAFKA_TOPIC_2}
             - NEW_RELIC_KAFKA_BROKER_NAME=kafka-broker
+            - NEW_RELIC_KAFKA_BROKER_NAME_2=kafka-broker-2
             - NEW_RELIC_KAFKA_METRICS_CLUSTER_METRICS_ENABLED=${NEW_RELIC_KAFKA_METRICS_CLUSTER_METRICS_ENABLED:-false}
             - NEW_RELIC_KAFKA_METRICS_INTERVAL=${NEW_RELIC_KAFKA_METRICS_INTERVAL:-}
 
@@ -48,6 +53,31 @@ services:
           KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
           KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
           CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qg
+
+    kafka-broker-2:
+        image: confluentinc/cp-kafka:7.5.0
+        healthcheck:
+            test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+            interval: 5s
+            timeout: 5s
+            retries: 10
+            start_period: 15s
+        environment:
+          KAFKA_BROKER_ID: 1
+          KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+          KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-broker-2:29092,PLAINTEXT_HOST://kafka-broker-2:9092
+          KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+          KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+          KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+          KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+          KAFKA_PROCESS_ROLES: broker,controller
+          KAFKA_NODE_ID: 1
+          KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka-broker-2:29093
+          KAFKA_LISTENERS: PLAINTEXT://kafka-broker-2:29092,CONTROLLER://kafka-broker-2:29093,PLAINTEXT_HOST://:9092
+          KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+          KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+          KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
+          CLUSTER_ID: fzwakkuOTSGcbypei3HUAw
 
 networks:
     default:

@@ -154,6 +154,11 @@ public static class CommonUtils
         XmlUtils.AddXmlNode(filePath, "urn:newrelic-config", parentNodeNames, nodeName, value);
     }
 
+    public static void AddEmptyXmlNodeInNewRelicConfig(string filePath, IEnumerable<string> parentNodeNames, string nodeName)
+    {
+        XmlUtils.AddEmptyXmlNode(filePath, "urn:newrelic-config", parentNodeNames, nodeName);
+    }
+
     public static void DeleteXmlNodeFromNewRelicConfig(string filePath, IEnumerable<string> parentNodeNames, string nodeName)
     {
         XmlUtils.DeleteXmlNode(filePath, "urn:newrelic-config", parentNodeNames, nodeName);

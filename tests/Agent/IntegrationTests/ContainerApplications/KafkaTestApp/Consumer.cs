@@ -28,7 +28,7 @@ public class Consumer : BackgroundService, IConsumerSignalService
     // Custom-stats consumer: exercises the composite-handler path in KafkaBuilderWrapper by
     // installing a customer statistics handler before Build(). Runs a continuous background
     // poll loop so librdkafka statistics callbacks fire throughout the test. Not decorated
-    // with [Transaction] — its purpose is callback coverage, not span/transaction emission.
+    // with [Transaction] -- its purpose is callback coverage, not span/transaction emission.
     // Uses a distinct group.id so it reads independently of the work consumer.
     private IConsumer<string, string> _customStatsConsumer;
     private Task _customStatsPollTask;
@@ -61,7 +61,6 @@ public class Consumer : BackgroundService, IConsumerSignalService
     private void InitializeWorkConsumer()
     {
         var configDict = _configuration.AsEnumerable().ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-        configDict["statistics.interval.ms"] = "5000";
         configDict["group.id"] = "test-consumer-group-work";
 
         _workConsumer = new ConsumerBuilder<string, string>(configDict).Build();
@@ -89,7 +88,7 @@ public class Consumer : BackgroundService, IConsumerSignalService
     }
 
     // Continuous non-[Transaction] poll. KafkaConsumerWrapper.IsTransactionRequired == true,
-    // so these Consume() calls create no segments or consume metrics — the poll exists solely
+    // so these Consume() calls create no segments or consume metrics -- the poll exists solely
     // to keep the librdkafka client active and firing statistics callbacks.
     private void CustomStatsPollLoop(CancellationToken ct)
     {
@@ -110,7 +109,7 @@ public class Consumer : BackgroundService, IConsumerSignalService
         catch (OperationCanceledException) { /* normal shutdown */ }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "CustomStatsPollLoop: unexpected error — loop exiting");
+            _logger.LogError(ex, "CustomStatsPollLoop: unexpected error -- loop exiting");
         }
     }
 
@@ -133,7 +132,10 @@ public class Consumer : BackgroundService, IConsumerSignalService
             _logger.LogInformation("Consumer background service is starting.");
             while (await _requests.Reader.WaitToReadAsync(stoppingToken))
             {
-                while (_requests.Reader.TryRead(out var req))
+                // The token check keeps a queued backlog from outliving the shutdown signal.
+                // Each request polls for up to 5 seconds, so a drain that ignored cancellation
+                // could exceed docker compose's stop grace period and earn a SIGKILL.
+                while (!stoppingToken.IsCancellationRequested && _requests.Reader.TryRead(out var req))
                 {
                     _logger.LogInformation("Processing consume request ({Mode}).", req.Mode);
                     try
@@ -141,10 +143,10 @@ public class Consumer : BackgroundService, IConsumerSignalService
                         switch (req.Mode)
                         {
                             case ConsumptionMode.Timeout:
-                                await ConsumeOneWithTimeoutAsync();
+                                await ConsumeOneWithTimeoutAsync(stoppingToken);
                                 break;
                             case ConsumptionMode.CancellationToken:
-                                await ConsumeOneWithCancellationTokenAsync();
+                                await ConsumeOneWithCancellationTokenAsync(stoppingToken);
                                 break;
                         }
                         _logger.LogInformation("Completed consume request ({Mode}).", req.Mode);
@@ -185,7 +187,7 @@ public class Consumer : BackgroundService, IConsumerSignalService
     }
 
     [Transaction]
-    private async Task ConsumeOneWithTimeoutAsync()
+    private async Task ConsumeOneWithTimeoutAsync(CancellationToken stoppingToken)
     {
         var startTime = DateTime.UtcNow;
         var maxDuration = TimeSpan.FromSeconds(5);
@@ -195,7 +197,7 @@ public class Consumer : BackgroundService, IConsumerSignalService
         {
             _logger.LogInformation("ConsumeOneWithTimeoutAsync: Polling work consumer for up to {Duration}s", maxDuration.TotalSeconds);
 
-            while (DateTime.UtcNow - startTime < maxDuration)
+            while (DateTime.UtcNow - startTime < maxDuration && !stoppingToken.IsCancellationRequested)
             {
                 try
                 {
@@ -230,9 +232,12 @@ public class Consumer : BackgroundService, IConsumerSignalService
     }
 
     [Transaction]
-    private async Task ConsumeOneWithCancellationTokenAsync()
+    private async Task ConsumeOneWithCancellationTokenAsync(CancellationToken stoppingToken)
     {
-        var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        // Linked so shutdown cancels the poll before its 5 second budget expires. Disposed so the
+        // link does not stay registered on the long-lived stopping token.
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(stoppingToken);
+        cts.CancelAfter(TimeSpan.FromSeconds(5));
         var startTime = DateTime.UtcNow;
         var maxDuration = TimeSpan.FromSeconds(5);
         var messagesConsumed = 0;

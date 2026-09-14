@@ -4827,4 +4827,101 @@ public class DefaultConfigurationTests
         return defaultConfig.HybridHttpContextStorageEnabled;
     }
 
+    [Test]
+    public void KafkaClusterMetricsEnabled_DefaultsToFalse()
+    {
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        Assert.That(defaultConfig.KafkaClusterMetricsEnabled, Is.False);
+    }
+
+    [TestCase(null, null, ExpectedResult = false)]
+    [TestCase(true, null, ExpectedResult = true)]
+    [TestCase(false, null, ExpectedResult = false)]
+    [TestCase(null, "true", ExpectedResult = true)]
+    [TestCase(true, "false", ExpectedResult = false)]
+    [TestCase(false, "true", ExpectedResult = true)]
+    public bool KafkaClusterMetricsEnabled_EnvironmentOverridesLocal(bool? localValue, string environmentValue)
+    {
+        if (localValue.HasValue)
+        {
+            _localConfig.kafka.metrics.clusterMetricsEnabled = localValue.Value;
+        }
+
+        if (environmentValue != null)
+        {
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_KAFKA_METRICS_CLUSTER_METRICS_ENABLED")).Returns(environmentValue);
+        }
+
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        return defaultConfig.KafkaClusterMetricsEnabled;
+    }
+
+    [Test]
+    public void KafkaInternalMetricsEnabled_DefaultsToTrue()
+    {
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        Assert.That(defaultConfig.KafkaInternalMetricsEnabled, Is.True);
+    }
+
+    [TestCase(null, null, null, ExpectedResult = true)]
+    [TestCase("false", null, null, ExpectedResult = false)]
+    [TestCase(null, false, null, ExpectedResult = false)]
+    [TestCase("true", false, null, ExpectedResult = false)] // local config outranks the app setting
+    [TestCase("false", true, null, ExpectedResult = true)] // and in the other direction
+    [TestCase("false", false, "true", ExpectedResult = true)] // environment outranks both
+    [TestCase("true", true, "false", ExpectedResult = false)]
+    public bool KafkaInternalMetricsEnabled_PrefersLocalConfigOverAppSetting(string appSettingValue, bool? localValue, string environmentValue)
+    {
+        if (appSettingValue != null)
+        {
+            _localConfig.appSettings.Add(new configurationAdd { key = "NewRelic.KafkaInternalMetricsEnabled", value = appSettingValue });
+        }
+
+        if (localValue.HasValue)
+        {
+            _localConfig.kafka.metrics.debugEnabled = localValue.Value;
+        }
+
+        if (environmentValue != null)
+        {
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_KAFKA_METRICS_DEBUG_ENABLED")).Returns(environmentValue);
+        }
+
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        return defaultConfig.KafkaInternalMetricsEnabled;
+    }
+
+    [Test]
+    public void KafkaMetricsInterval_DefaultsToNull()
+    {
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        Assert.That(defaultConfig.KafkaMetricsInterval, Is.Null);
+    }
+
+    [TestCase(null, null, ExpectedResult = null)]
+    [TestCase(30, null, ExpectedResult = 30)]
+    [TestCase(5, null, ExpectedResult = 5)] // at the floor
+    [TestCase(4, null, ExpectedResult = 5)] // below the floor, clamped
+    [TestCase(0, null, ExpectedResult = 5)]
+    [TestCase(-1, null, ExpectedResult = 5)]
+    [TestCase(null, "45", ExpectedResult = 45)]
+    [TestCase(30, "60", ExpectedResult = 60)] // environment overrides local
+    [TestCase(30, "1", ExpectedResult = 5)] // the floor applies to the environment value too
+    [TestCase(30, "not-a-number", ExpectedResult = 30)] // unparsable environment value is ignored
+    public int? KafkaMetricsInterval_EnvironmentOverridesLocalAndClampsToFloor(int? localValue, string environmentValue)
+    {
+        if (localValue.HasValue)
+        {
+            _localConfig.kafka.metrics.interval = localValue.Value;
+        }
+
+        if (environmentValue != null)
+        {
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_KAFKA_METRICS_INTERVAL")).Returns(environmentValue);
+        }
+
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        return defaultConfig.KafkaMetricsInterval;
+    }
+
 }
