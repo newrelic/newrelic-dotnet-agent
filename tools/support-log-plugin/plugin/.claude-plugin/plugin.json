@@ -1,0 +1,11 @@
+{
+  "name": "dotnet-log-triage",
+  "displayName": "NET Agent Log Triage",
+  "description": "Diagnose a New Relic .NET agent log from a support ticket in one command. Routes to a playbook with the customer fix and the next ask attached.",
+  "version": "1.0.0",
+  "author": {
+    "name": "New Relic .NET Agent Team"
+  },
+  "keywords": ["dotnet", "logs", "support", "triage", "newrelic"],
+  "license": "Apache-2.0"
+}

@@ -1,0 +1,17 @@
+{
+  "name": "nr-agents",
+  "owner": {
+    "name": "New Relic Agent Teams",
+    "url": "https://source.datanerd.us/agents/claude-skills"
+  },
+  "description": "Claude Code plugins from the New Relic agent teams.",
+  "plugins": [
+    {
+      "name": "dotnet-log-triage",
+      "source": "./plugins/dotnet-log-triage",
+      "description": "Diagnose a New Relic .NET agent log from a support ticket in one command.",
+      "category": "support",
+      "tags": ["dotnet", "logs", "triage"]
+    }
+  ]
+}

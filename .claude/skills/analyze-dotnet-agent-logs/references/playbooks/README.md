@@ -60,3 +60,14 @@ Free markdown, with two required headings:
 Links to a sibling reference file go up one directory, for example
 [../log-formats.md](../log-formats.md) and
 [../collector-protocol.md](../collector-protocol.md).
+
+## Id ranges
+
+Ids 1 to 99 are verified playbooks, which live in this directory. Ids 100 and up
+are field playbooks, which live in `teams/dotnet-agent/playbooks/field/` in the
+marketplace repository. `export.py` refuses to publish a set that breaks either
+range, or that reuses an id across the two tiers.
+
+Promotion renumbers the file: an agent engineer confirms the signatures against
+source, sets `tier: verified` and `verified_versions`, renames the file into the
+1 to 99 range, and moves it here. The file never exists in both places.

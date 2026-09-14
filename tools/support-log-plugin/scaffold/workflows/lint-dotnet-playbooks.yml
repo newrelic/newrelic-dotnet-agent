@@ -1,0 +1,24 @@
+name: Lint .NET agent playbooks
+
+on:
+  pull_request:
+    paths:
+      - 'teams/dotnet-agent/playbooks/field/**'
+      - 'plugins/dotnet-log-triage/lint_playbooks.py'
+  push:
+    paths:
+      - 'teams/dotnet-agent/playbooks/field/**'
+      - 'plugins/dotnet-log-triage/lint_playbooks.py'
+  workflow_dispatch:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: >
+          python plugins/dotnet-log-triage/lint_playbooks.py
+          teams/dotnet-agent/playbooks/field
