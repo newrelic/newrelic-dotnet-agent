@@ -10,7 +10,7 @@ run, and it is written by a process you cannot interview. Work it in this order.
 
 ## Hard rules
 
-- Work only from a **slim** file. `nrlog.py extract` writes one; every later
+- Work only from a **slim** file. `nrlog.py slim` writes one; every later
   step reads that.
 - Never `Read`, `tail`, or wide-grep a raw log. A customer log runs to hundreds
   of MB with single lines tens of KB wide, and those bytes stay in context for
@@ -26,39 +26,41 @@ run, and it is written by a process you cannot interview. Work it in this order.
 
 ## Workflow
 
-1. **Inventory.** Run `nrlog.py sessions <path>` on the file or directory. It
+1. **Preflight.** Run `nrlog.py sessions <path>` on the file or directory. It
    accepts a rolled set and merges a run that spans siblings. A customer dump
    holds dozens of applications, so above 40 sessions it prints a per-file
-   summary instead: pick a file with `--file <name>`, then add `--all`.
-2. **Pick the session.** Show the rows. When more than one session is in scope,
-   ask the engineer which one before going further. A support question is
-   almost always about one run, and the wrong run wastes the whole analysis.
-   Session numbers are relative to the `--file` filter, so pass the same
-   `--file` to every later command.
-3. **Slim it.** Run `nrlog.py extract <path> --session N`. Read the slim file
-   from here on. When it reports more than a few MB, narrow with `--level`,
-   `--since`, `--until`, or `--grep` and extract again. A 7-hour FINEST session
-   slims to 125 MB, which is no more readable than the original.
-4. **Read the level from the counts, not the banner.** `extract` prints both
-   `stated log level` and `observed levels`. They disagree whenever the level
-   changed at runtime, which the agent records as `The log level was updated to
-   {new} from {previous}`. Trust the observed counts. The level bounds every
-   conclusion: INFO hides all collector payloads, and FINEST is the only level
-   that shows a skipped wrapper.
-5. **Correlate the profiler.** Point `nrlog.py profiler` at the directory
-   first. A dump routinely holds thousands of profiler logs, so above 8 files
-   it groups them by signature: most are processes the .NET Framework
-   allow-list rejected, which is expected noise, and the group carrying
-   `initialized` is the short list worth reading. Then match one
-   `NewRelic.Profiler.<pid>.log` to the session by pid **and** overlapping UTC
-   range. When the ranges do not overlap the pid was reused and the files are
-   unrelated, so say that rather than pairing them.
-6. **Route.** Take the engineer's symptom to
-   [references/playbooks.md](references/playbooks.md). Answer from the slim
-   file when no playbook fits.
-7. **Report.** Short verdict in chat with the evidence lines quoted verbatim.
-   Long form to a markdown file beside the slim file. A ticket-ready block only
-   when the engineer asks.
+   summary instead: pick a file with `--file <name>`, then add `--all`. When
+   more than one application is in scope, ask the engineer which one before
+   going further. Session numbers are relative to the `--file` filter, so pass
+   the same `--file` to every later command.
+2. **Triage.** Run `nrlog.py triage <path> --file <name>`. This is the entry
+   point and it answers most tickets on its own. One report gives the chosen
+   session, the observed level that bounds every verdict, the correlated
+   profiler logs, the playbooks that matched with their evidence lines, the
+   playbooks blocked by too low a level, and the agent version against the
+   changelog. It ends with a NEXT line naming the playbook files to read and the
+   `slim` command for this session.
+3. **Read the matched playbook.** Open the files the NEXT line names. Each one
+   carries the verified signature, the verdict, the customer fix, and the next
+   ask. A `[field]` label means field-observed, not source-verified: read it
+   before you act on it. When nothing matched, the report says so; answer from
+   the slim file, and consider `draft-playbook` to start a new one.
+4. **Answer the customer.** Run `nrlog.py summary <path> --playbook N` for the
+   reply block: the fix and the next ask, with no log line in it. A field-tier
+   block carries a header addressed to you and not to the customer.
+5. **Escalate.** Run `nrlog.py summary <path> --file <name> --escalation
+   --ticket <id>` when the ticket goes to engineering. It writes a directory
+   holding the triage report, a level-narrowed redacted slim log
+   (`ERROR`, `WARN`, `INFO`), a redacted copy of each correlated profiler log,
+   and `environment.txt`. The packet holds host and application names, so it
+   goes to the internal escalation and never into a customer-facing reply. Add
+   `--zip` for one file to attach.
+
+Read the level from the counts, not the banner. `triage` and `slim` both print
+`stated` and `observed` levels. They disagree whenever the level changed at
+runtime, which the agent records as `The log level was updated to {new} from
+{previous}`. Trust the observed counts: INFO hides all collector payloads, and
+FINEST is the only level that shows a skipped wrapper.
 
 Every verdict names its evidence and its limit. "Consistent with X; not proven,
 because that path logs nothing" is a finished answer. A guess dressed as a
@@ -71,12 +73,18 @@ finding is not.
 | Command | Use it to |
 |---|---|
 | `sessions` | List runs in a file or directory, with truncation and interleaving flags |
-| `extract` | Write the slim, redacted, payload-stripped file for one session |
+| `triage` | **Entry point.** One routed verdict: session, level, profiler, playbook match, version |
+| `slim` | Write the slim, redacted, payload-stripped file for one session |
+| `summary` | Write the customer reply block, or build the escalation packet |
+| `draft-playbook` | Start a field playbook from the shapes no playbook claimed |
 | `payloads` | Index collector calls: time, endpoint, direction, size, status, request guid |
 | `body` | Print one request or response body, so a payload enters context on purpose |
 | `decode` | Turn a base64 distributed-trace payload into JSON |
 | `profiler` | Summarize a profiler log: init, config, extensions, XML failures, method count |
 | `instrumented` | List the methods the profiler rewrote, for checking custom instrumentation |
+
+`extract` is a hidden alias of `slim`, kept so older notes and saved commands
+keep working; write `slim` in anything new.
 
 Launcher: `python` on Windows, `python3` elsewhere.
 
@@ -89,13 +97,24 @@ Regenerate the fixtures and re-run the checks before trusting an edit to
 `nrlog.py`:
 
 ```
-python tests/make_fixtures.py && python tests/make_merge_fixtures.py
+python tests/make_fixtures.py && python tests/make_merge_fixtures.py \
+  && python tests/make_playbook_fixtures.py && python -m unittest discover -s tests
 ```
+
+Run all three generators. A fixture-dependent test skips when its fixtures are
+absent, so a green run over missing fixtures proves nothing.
 
 They cover a restart, a rolled sibling, a truncated session, interleaved pids,
 one pid hosting three app domains, a runtime level change, DEBUG payload lines,
-exception continuation lines, and a planted license key for the redaction check.
+exception continuation lines, a planted license key for the redaction check, a
+field-tier playbook, and playbook sets large enough to exercise the report caps.
 Generated fixtures are gitignored.
+
+`tests/golden/triage-basic.txt` records the shape of the triage report, and one
+test compares the live report against it. A deliberate change to that shape means
+re-recording the golden with `python tests/record_golden.py` and reading the diff
+line by line before accepting it. A golden failure you did not intend is a defect
+in the change, not a reason to re-record.
 
 ## References
 
@@ -105,5 +124,8 @@ Generated fixtures are gitignored.
 - [references/collector-protocol.md](references/collector-protocol.md) -
   endpoints, the healthy call sequence, connect request and response fields,
   positional array keys. Read when interpreting a payload or a response.
-- [references/playbooks.md](references/playbooks.md) - eight symptoms, each
-  with its verified signature, its verdict, and the next ask for the customer.
+- [references/playbooks/](references/playbooks/) - one file per symptom, each
+  with its verified signature, its verdict, the customer fix, and the next ask.
+  `triage` names the files it matched, so there is no need to browse the
+  directory. [references/playbooks/README.md](references/playbooks/README.md)
+  documents the file format for adding one.

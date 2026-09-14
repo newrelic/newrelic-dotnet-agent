@@ -11,7 +11,11 @@ import json
 import os
 import re
 import sys
-from datetime import datetime, timedelta
+import tempfile
+import time
+import urllib.request
+import zipfile
+from datetime import datetime, timedelta, timezone
 
 MANAGED_RE = re.compile(
     r'^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3}) NewRelic\s+(\S+): '
@@ -27,6 +31,7 @@ STOP_RE = re.compile(
 )
 LEVEL_RE = re.compile(r'Log level set to (\S+)')
 LEVEL_CHANGE_RE = re.compile(r'The log level was updated to (\S+) from (\S+)')
+RUNTIME_RE = re.compile(r'\.NET Runtime Version: (.+)$')
 
 REQ_RE = re.compile(r'^Request\(([^)]+)\): (.*)$', re.S)
 INVOKING_RE = re.compile(r'^Invoking "([^"]+)"')
@@ -70,9 +75,378 @@ PROFILER_SIGNATURES = [
     ('live-instrumentation', 'Applying live instrumentation'),
 ]
 
+# groups that report health, not a fault: no playbook carries their literals,
+# because a playbook signature always means a fault is present
+PROFILER_HEALTHY_GROUPS = ('initialized', 'config-found', 'extensions-loaded',
+                           'live-instrumentation')
+# groups that are expected on a .NET Framework host and are not a finding
+PROFILER_NOISE_GROUPS = ('process-rejected', 'unloading')
+
 INSTRUMENTING_RE = re.compile(r'^Instrumenting (?:API |helper )?method: (.*)$')
 
 MERGE_GAP = timedelta(minutes=5)
+
+PLAYBOOK_REQUIRED = ('id', 'title', 'tier', 'scope', 'min_level', 'precedence',
+                     'signatures', 'keywords')
+PLAYBOOK_TIERS = ('verified', 'field')
+PLAYBOOK_SCOPES = ('managed', 'profiler', 'both')
+PLAYBOOK_TRUE = ('true', 'yes', 'on')
+PLAYBOOK_FALSE = ('false', 'no', 'off')
+SHIPPED_ID_MAX = 99
+REGEX_HINT = re.compile(r'[{}|]|\.\*|\.\+|\\[dws]|\[0-9\]')
+
+LEVEL_ORDER = {'OFF': 0, 'ERROR': 1, 'WARN': 2, 'INFO': 3, 'DEBUG': 4, 'FINEST': 5}
+LEVEL_ALIASES = {
+    'VERBOSE': 'FINEST', 'FINE': 'FINEST', 'FINER': 'FINEST', 'TRACE': 'FINEST',
+    'ALL': 'FINEST', 'NOTICE': 'INFO', 'ALERT': 'WARN', 'CRITICAL': 'ERROR',
+    'EMERGENCY': 'ERROR', 'FATAL': 'ERROR', 'SEVERE': 'ERROR', 'AUDIT': 'INFO',
+}
+
+
+def normalize_level(name):
+    token = (name or '').strip().rstrip(':').upper()
+    token = LEVEL_ALIASES.get(token, token)
+    return token if token in LEVEL_ORDER else 'INFO'
+
+
+def known_level(name):
+    """True when the token names a level, directly or through an alias."""
+    token = (name or '').strip().rstrip(':').upper()
+    return LEVEL_ALIASES.get(token, token) in LEVEL_ORDER
+
+
+def level_at_least(observed, required):
+    return LEVEL_ORDER[normalize_level(observed)] >= LEVEL_ORDER[normalize_level(required)]
+
+
+def level_at_most(observed, ceiling):
+    return LEVEL_ORDER[normalize_level(observed)] <= LEVEL_ORDER[normalize_level(ceiling)]
+
+
+def looks_like_regex(text):
+    """True when a signature carries template or regex syntax instead of literal text."""
+    if REGEX_HINT.search(text):
+        return True
+    return text.startswith('^') or text.endswith('$')
+
+
+def playbook_flag(value):
+    """True for a frontmatter boolean token; False for a false token or an absent one."""
+    if value is True or value is False:
+        return value
+    return isinstance(value, str) and value.strip().lower() in PLAYBOOK_TRUE
+
+
+def _known_flag(value):
+    if value is None or value is True or value is False:
+        return True
+    return isinstance(value, str) and value.strip().lower() in PLAYBOOK_TRUE + PLAYBOOK_FALSE
+
+
+def _scalar(raw):
+    text = raw.strip()
+    if len(text) >= 2 and text[0] == text[-1] and text[0] in '"\'':
+        return text[1:-1]
+    if re.fullmatch(r'-?\d+', text):
+        return int(text)
+    return text
+
+
+def parse_frontmatter(text):
+    """Parse the restricted frontmatter dialect used by playbook files; not YAML."""
+    lines = text.split('\n')
+    if not lines or lines[0].strip() != '---':
+        raise ValueError('file does not start with a --- frontmatter block')
+    end = None
+    for index in range(1, len(lines)):
+        if lines[index].strip() == '---':
+            end = index
+            break
+    if end is None:
+        raise ValueError('frontmatter block is not terminated by ---')
+
+    fields = {}
+    current = None
+    for raw in lines[1:end]:
+        if not raw.strip() or raw.lstrip().startswith('#'):
+            continue
+        item = re.match(r'\s+-\s+(.*)$', raw)
+        if item and current is not None:
+            fields[current].append(_scalar(item.group(1)))
+            continue
+        pair = re.match(r'([A-Za-z_][A-Za-z0-9_]*):\s*(.*)$', raw)
+        if not pair:
+            raise ValueError('cannot parse frontmatter line: %r' % raw)
+        key, value = pair.group(1), pair.group(2).strip()
+        if value == '':
+            fields[key] = []
+            current = key
+        elif value.startswith('[') and value.endswith(']'):
+            inner = value[1:-1].strip()
+            fields[key] = [_scalar(p) for p in inner.split(',') if p.strip()]
+            current = None
+        else:
+            fields[key] = _scalar(value)
+            current = None
+    return fields, '\n'.join(lines[end + 1:]).lstrip('\n')
+
+
+def validate_playbook(fields, path):
+    errors = []
+    for key in PLAYBOOK_REQUIRED:
+        if key not in fields:
+            errors.append('%s: missing required field %r' % (path, key))
+    if not isinstance(fields.get('id'), int):
+        errors.append('%s: id must be an integer' % path)
+    if not isinstance(fields.get('precedence'), int):
+        errors.append('%s: precedence must be an integer' % path)
+    if fields.get('tier') not in PLAYBOOK_TIERS:
+        errors.append('%s: tier must be one of %s' % (path, ', '.join(PLAYBOOK_TIERS)))
+    if fields.get('scope') not in PLAYBOOK_SCOPES:
+        errors.append('%s: scope must be one of %s' % (path, ', '.join(PLAYBOOK_SCOPES)))
+    if not known_level(fields.get('min_level')):
+        errors.append('%s: min_level %r is not a known level token'
+                      % (path, fields.get('min_level')))
+    level_max = fields.get('level_max')
+    if level_max is not None and not known_level(level_max):
+        errors.append('%s: level_max %r is not a known level token' % (path, level_max))
+    if not _known_flag(fields.get('stated_differs_from_observed')):
+        errors.append('%s: stated_differs_from_observed %r is not a boolean token'
+                      % (path, fields.get('stated_differs_from_observed')))
+    condition = playbook_flag(fields.get('stated_differs_from_observed'))
+    signatures = fields.get('signatures') or []
+    if not signatures and not level_max and not condition:
+        errors.append('%s: a playbook must carry a non-empty signatures list, '
+                      'a level_max, or stated_differs_from_observed' % path)
+    for signature in signatures:
+        if not isinstance(signature, str) or not signature.strip():
+            errors.append('%s: signature %r is not a non-empty string' % (path, signature))
+        elif looks_like_regex(signature):
+            errors.append('%s: signature %r must be a literal string, not a regex'
+                          % (path, signature))
+    if fields.get('tier') == 'field' and not fields.get('observed_in'):
+        errors.append('%s: a field-tier playbook must set observed_in' % path)
+    if fields.get('tier') == 'verified' and not fields.get('verified_versions'):
+        errors.append('%s: a verified playbook must set verified_versions' % path)
+    book_id = fields.get('id')
+    if isinstance(book_id, int):
+        if fields.get('tier') == 'verified' and book_id > SHIPPED_ID_MAX:
+            errors.append('%s: a verified playbook must have id %d or lower'
+                          % (path, SHIPPED_ID_MAX))
+        if fields.get('tier') == 'field' and book_id <= SHIPPED_ID_MAX:
+            errors.append('%s: a field-tier playbook must have id above %d'
+                          % (path, SHIPPED_ID_MAX))
+    return errors
+
+
+class Playbook:
+    def __init__(self, fields, body, path):
+        self.id = fields['id']
+        self.title = fields['title']
+        self.tier = fields['tier']
+        self.scope = fields['scope']
+        self.min_level = normalize_level(fields['min_level'])
+        self.level_max = (normalize_level(fields['level_max'])
+                          if fields.get('level_max') else None)
+        self.stated_differs_from_observed = playbook_flag(
+            fields.get('stated_differs_from_observed'))
+        self.precedence = fields['precedence']
+        self.signatures = list(fields['signatures'])
+        self.keywords = list(fields.get('keywords') or [])
+        self.verified_versions = fields.get('verified_versions')
+        self.observed_in = fields.get('observed_in')
+        self.body = body
+        self.path = path
+
+    def label(self):
+        return '[%d]%s %s' % (self.id, '' if self.tier == 'verified' else ' [field]',
+                              self.title)
+
+    def section(self, heading):
+        """Return the text under '## heading' up to the next '## ', or None."""
+        match = re.search(r'^##\s+%s\s*$(.*?)(?=^##\s|\Z)' % re.escape(heading),
+                          self.body, re.M | re.S)
+        return match.group(1).strip() if match else None
+
+
+def default_playbook_dir():
+    here = os.path.dirname(os.path.abspath(__file__))
+    return os.path.normpath(os.path.join(here, '..', 'references', 'playbooks'))
+
+
+def load_playbooks(directory=None):
+    directory = directory or default_playbook_dir()
+    if not os.path.isdir(directory):
+        sys.exit('playbook directory not found: %s' % directory)
+    books = []
+    errors = []
+    for name in sorted(os.listdir(directory)):
+        if not name.endswith('.md') or name.lower() == 'readme.md':
+            continue
+        path = os.path.join(directory, name)
+        with open(path, 'r', encoding='utf-8') as handle:
+            text = handle.read()
+        try:
+            fields, body = parse_frontmatter(text)
+        except ValueError as problem:
+            errors.append('%s: %s' % (name, problem))
+            continue
+        found = validate_playbook(fields, name)
+        if found:
+            errors.extend(found)
+            continue
+        books.append(Playbook(fields, body, path))
+    if errors:
+        sys.exit('invalid playbook file(s):\n  ' + '\n  '.join(errors))
+    seen = {}
+    for book in books:
+        if book.id in seen:
+            sys.exit('duplicate playbook id %d in %s and %s'
+                     % (book.id, seen[book.id], os.path.basename(book.path)))
+        seen[book.id] = os.path.basename(book.path)
+    return sorted(books, key=lambda b: (b.precedence, b.id))
+
+
+PROFILER_NAME_RE = re.compile(r'NewRelic\.Profiler\.(\d+)\.log$', re.I)
+EVIDENCE_WIDTH = 200
+
+_PROFILER_CACHE = {}
+
+
+class Match:
+    def __init__(self, playbook):
+        self.playbook = playbook
+        self.state = None
+        self.hits = 0
+        self.evidence = []
+        self.reason = None
+
+
+def reset_profiler_cache():
+    _PROFILER_CACHE.clear()
+
+
+def read_profiler_cached(path):
+    """Parse a profiler log at most once per run; correlation and matching both read it."""
+    key = os.path.abspath(path)
+    if key not in _PROFILER_CACHE:
+        _PROFILER_CACHE[key] = read_profiler(path)
+    return _PROFILER_CACHE[key]
+
+
+def session_observed_level(session):
+    """The most verbose level actually present, which bounds every verdict."""
+    best = 'OFF'
+    for token, count in (session.level_counts or {}).items():
+        if count and LEVEL_ORDER[normalize_level(token)] > LEVEL_ORDER[normalize_level(best)]:
+            best = normalize_level(token)
+    return best
+
+
+def profiler_logs_for_session(session, directory):
+    """Profiler logs whose pid matches and whose UTC range overlaps the session."""
+    if not os.path.isdir(directory):
+        return []
+    found = []
+    for name in sorted(os.listdir(directory)):
+        match = PROFILER_NAME_RE.search(name)
+        if not match or int(match.group(1)) != session.pid:
+            continue
+        path = os.path.join(directory, name)
+        entries = read_profiler_cached(path)
+        if not entries:
+            continue
+        try:
+            first = datetime.strptime(entries[0][1], '%Y-%m-%d %H:%M:%S')
+            last = datetime.strptime(entries[-1][1], '%Y-%m-%d %H:%M:%S')
+        except ValueError:
+            continue
+        if last >= session.start - MERGE_GAP and first <= session.end + MERGE_GAP:
+            found.append(path)
+    return found
+
+
+def _signature_index(playbooks, scopes):
+    pairs = []
+    for book in playbooks:
+        if book.scope in scopes or book.scope == 'both':
+            for signature in book.signatures:
+                pairs.append((signature, book.id))
+    gate = re.compile('|'.join(re.escape(s) for s, _i in pairs)) if pairs else None
+    return pairs, gate
+
+
+def _record_line(results, pairs, name, lineno, text, max_evidence, width):
+    """One hit per playbook per line, however many of that playbook's signatures match."""
+    counted = set()
+    for signature, book_id in pairs:
+        if book_id in counted or signature not in text:
+            continue
+        counted.add(book_id)
+        result = results[book_id]
+        result.hits += 1
+        if len(result.evidence) < max_evidence:
+            result.evidence.append((name, lineno, redact(text)[:width]))
+
+
+def match_playbooks(session, playbooks, profiler_paths=(), max_evidence=2,
+                    width=EVIDENCE_WIDTH):
+    results = {book.id: Match(book) for book in playbooks}
+
+    managed_pairs, managed_gate = _signature_index(playbooks, ('managed',))
+    if managed_gate:
+        owner_file = None
+        in_session = False
+        for path, lineno, ts, _level, pid, _tid, message, raw in iter_entries(session.files):
+            if path != owner_file:
+                owner_file = path
+                in_session = False
+            if ts is None:
+                text = raw
+            else:
+                text = message
+                in_session = (pid == session.pid
+                              and session.start <= ts <= session.end)
+            if not in_session:
+                continue
+            if not managed_gate.search(text):
+                continue
+            _record_line(results, managed_pairs, os.path.basename(path), lineno, text,
+                         max_evidence, width)
+
+    profiler_pairs, profiler_gate = _signature_index(playbooks, ('profiler',))
+    if profiler_gate:
+        for path in profiler_paths:
+            for lineno, (_level, _ts, message) in enumerate(read_profiler_cached(path), 1):
+                if not profiler_gate.search(message):
+                    continue
+                _record_line(results, profiler_pairs, os.path.basename(path), lineno,
+                             message, max_evidence, width)
+
+    observed = session_observed_level(session)
+    for book in playbooks:
+        result = results[book.id]
+        if result.hits:
+            result.state = 'matched'
+            result.reason = 'signature'
+        elif book.level_max and level_at_most(observed, book.level_max):
+            result.state = 'matched'
+            result.reason = 'level'
+        elif book.stated_differs_from_observed:
+            if not session.log_level:
+                result.state = 'blocked'
+                result.reason = 'no-stated-level'
+            elif (LEVEL_ORDER[observed]
+                  > LEVEL_ORDER[normalize_level(session.log_level)]):
+                result.state = 'matched'
+                result.reason = 'level-change'
+            else:
+                result.state = 'clear'
+        elif book.scope != 'profiler' and not level_at_least(observed, book.min_level):
+            result.state = 'blocked'
+        else:
+            result.state = 'clear'
+    return [results[book.id] for book in playbooks]
 
 
 def redact(text):
@@ -104,6 +478,7 @@ class Session:
         self.start = start
         self.end = start
         self.version = None
+        self.runtime = None
         self.appdomains = []
         self.log_level = None
         self.level_counts = {}
@@ -280,6 +655,9 @@ def build_sessions(paths):
         level = LEVEL_RE.search(message)
         if level and not current.log_level:
             current.log_level = level.group(1)
+        runtime = RUNTIME_RE.search(message)
+        if runtime and not current.runtime:
+            current.runtime = runtime.group(1).strip()
 
     for pid in list(open_sessions):
         close(pid)
@@ -403,6 +781,40 @@ def out_dir_for(paths, override):
     return target
 
 
+def write_slim(session, target, levels=None, since=None, until=None, needle=None,
+               max_width=200):
+    """Write one session as a slim redacted file; return the entry count."""
+    kept = 0
+    with open(target, 'w', encoding='utf-8') as sink:
+        sink.write('# nrlog.py slim extract: pid %d, %s .. %s, flags: %s\n'
+                   % (session.pid, fmt_ts(session.start), fmt_ts(session.end),
+                      ','.join(session.flags()) or 'none'))
+        sink.write('# source: %s\n' % ', '.join(os.path.basename(f) for f in session.files))
+        sink.write('# payload bodies stripped; secrets redacted\n')
+        ours = False
+        for _path, _lineno, ts, level, pid, tid, message, raw in iter_entries(session.files):
+            if ts is None:
+                if ours:
+                    sink.write(redact(raw[:max_width]) + '\n')
+                continue
+            ours = pid == session.pid and session.start <= ts <= session.end
+            if ours and levels and level.rstrip(':').upper() not in levels:
+                ours = False
+            if ours and since and ts < since:
+                ours = False
+            if ours and until and ts > until:
+                ours = False
+            if ours and needle and not needle.search(message):
+                ours = False
+            if not ours:
+                continue
+            sink.write('%s NewRelic %6s: [pid: %d, tid: %d] %s\n' % (
+                ts.strftime('%Y-%m-%d %H:%M:%S,') + '%03d' % (ts.microsecond // 1000),
+                level, pid, tid, redact(slim_message(message, max_width))))
+            kept += 1
+    return kept
+
+
 def cmd_extract(args):
     paths = collect_managed(args.path, args.file)
     session = pick_session(paths, args.session)
@@ -421,34 +833,8 @@ def cmd_extract(args):
     until = parse_arg_ts(args.until) if args.until else None
     needle = re.compile(args.grep) if args.grep else None
 
-    kept = 0
-    with open(target, 'w', encoding='utf-8') as sink:
-        sink.write('# nrlog.py slim extract: pid %d, %s .. %s, flags: %s\n'
-                   % (session.pid, fmt_ts(session.start), fmt_ts(session.end),
-                      ','.join(session.flags()) or 'none'))
-        sink.write('# source: %s\n' % ', '.join(os.path.basename(f) for f in session.files))
-        sink.write('# payload bodies stripped; secrets redacted\n')
-        ours = False
-        for path, _lineno, ts, level, pid, tid, message, raw in iter_entries(session.files):
-            if ts is None:
-                if ours:
-                    sink.write(redact(raw[:args.max_width]) + '\n')
-                continue
-            ours = pid == session.pid and session.start <= ts <= session.end
-            if ours and levels and level.rstrip(':').upper() not in levels:
-                ours = False
-            if ours and since and ts < since:
-                ours = False
-            if ours and until and ts > until:
-                ours = False
-            if ours and needle and not needle.search(message):
-                ours = False
-            if not ours:
-                continue
-            sink.write('%s NewRelic %6s: [pid: %d, tid: %d] %s\n' % (
-                ts.strftime('%Y-%m-%d %H:%M:%S,') + '%03d' % (ts.microsecond // 1000),
-                level, pid, tid, redact(slim_message(message, args.max_width))))
-            kept += 1
+    kept = write_slim(session, target, levels=levels, since=since, until=until,
+                      needle=needle, max_width=args.max_width)
     size = os.path.getsize(target)
     print('wrote %s' % target)
     print('%d entries, %.1f MB, pid %d, %s .. %s'
@@ -605,8 +991,29 @@ def resolve_profiler_path(path):
     sys.exit('no NewRelic.Profiler.<pid>.log found at %s' % path)
 
 
-def profiler_roster(paths, args):
-    """Aggregate view for a directory of profiler logs, of which most are noise."""
+def signature_relates(needle, signature):
+    """True when a roster literal and a playbook signature name the same log line."""
+    return needle in signature or signature in needle
+
+
+def roster_playbook_ids(names, playbooks):
+    """Playbook ids whose signatures cover a roster group's literals."""
+    lookup = dict(PROFILER_SIGNATURES)
+    found = []
+    for name in names:
+        needle = lookup.get(name)
+        if not needle:
+            continue
+        for book in playbooks:
+            if book.id in found:
+                continue
+            if any(signature_relates(needle, s) for s in book.signatures):
+                found.append(book.id)
+    return sorted(found)
+
+
+def profiler_groups(paths):
+    """Group profiler logs by the set of known signatures each one carries."""
     groups = {}
     empty = []
     total_instrumented = 0
@@ -624,6 +1031,12 @@ def profiler_roster(paths, args):
         total_instrumented += instrumented
         key = tuple(sorted(names)) or ('no-known-signature',)
         groups.setdefault(key, []).append((path, entries[0][1], entries[-1][1], instrumented))
+    return groups, empty, total_instrumented
+
+
+def profiler_roster(paths, args):
+    """Aggregate view for a directory of profiler logs, of which most are noise."""
+    groups, empty, total_instrumented = profiler_groups(paths)
 
     print('%d profiler log(s), %d with no parseable lines' % (len(paths), len(empty)))
     print()
@@ -714,6 +1127,667 @@ def cmd_instrumented(args):
             print('   ... %d more (raise --limit)' % (len(names) - args.limit))
 
 
+REPORT_LABEL_WIDTH = 9
+REPORT_TITLE_WIDTH = 52
+REPORT_GROUP_WIDTH = 46
+REPORT_FILE_CAP = 10
+REPORT_GROUP_NAME_CAP = 2
+REPORT_GROUP_PID_CAP = 3
+CLEAR_ENUMERATE_MAX = 12
+VERSION_RE = re.compile(r'v?(\d+)\.(\d+)\.(\d+)')
+
+
+def _pad(label, first=''):
+    return '%-*s %s' % (REPORT_LABEL_WIDTH, label, first)
+
+
+def parse_version(text):
+    match = VERSION_RE.match((text or '').strip())
+    return tuple(int(g) for g in match.groups()) if match else None
+
+
+CHANGELOG_URL = ('https://raw.githubusercontent.com/newrelic/newrelic-dotnet-agent/'
+                 'main/src/Agent/CHANGELOG.md')
+CHANGELOG_TTL_SECONDS = 24 * 60 * 60
+CHANGELOG_TIMEOUT_SECONDS = 5
+
+# two release-heading shapes: "## [10.54.0](compare link) (2026-08-25)" from
+# release-please, and "## [10.9.0] - 2023-03-28" from the hand-written era
+CHANGELOG_HEADING = re.compile(r'^##\s+\[?(\d+\.\d+(?:\.\d+)?)\]?'
+                               r'(?:.*?\((\d{4}-\d{2}-\d{2})\)|\s*-\s*(\d{4}-\d{2}-\d{2}))\s*$')
+CHANGELOG_SECTION = re.compile(r'^###\s+(.*)$')
+CHANGELOG_ITEM = re.compile(r'^\*\s+(.*)$')
+CHANGELOG_LINK = re.compile(r'\[([^\]]*)\]\([^)]*\)')
+CHANGELOG_ISSUE = re.compile(r'#(\d+)')
+CHANGELOG_TRAILER = re.compile(r'(\s*\((?:#\d+|[0-9a-f]{6,12})\))+$')
+CHANGELOG_KEPT_SECTIONS = ('fixes', 'bug fixes', 'new features')
+
+
+def clean(text):
+    """One fix title: links flattened, trailing issue and commit refs replaced by one."""
+    numbers = CHANGELOG_ISSUE.findall(text)
+    text = CHANGELOG_LINK.sub(r'\1', text)
+    text = CHANGELOG_TRAILER.sub('', text)
+    text = re.sub(r'\s*\(\s*\)\s*', ' ', text)
+    text = re.sub(r'\s+', ' ', text).strip(' .')
+    if not numbers:
+        return text
+    tag = '#%s' % numbers[0]
+    if re.search(r'(?<!\d)%s(?!\d)' % re.escape(tag), text):
+        return text
+    return '%s (%s)' % (text, tag)
+
+
+def parse_changelog(text):
+    """The release list: version, date, and kept fix titles, newest release first."""
+    releases = []
+    current = None
+    section = None
+    for line in text.splitlines():
+        heading = CHANGELOG_HEADING.match(line)
+        if heading:
+            current = {'version': heading.group(1),
+                       'date': heading.group(2) or heading.group(3),
+                       'fixes': []}
+            releases.append(current)
+            section = None
+            continue
+        if current is None:
+            continue
+        found = CHANGELOG_SECTION.match(line)
+        if found:
+            section = found.group(1).strip().lower()
+            continue
+        item = CHANGELOG_ITEM.match(line)
+        if item and section in CHANGELOG_KEPT_SECTIONS:
+            current['fixes'].append(clean(item.group(1)))
+    return releases
+
+
+def local_changelog_path():
+    """The checkout copy's path, when this script is running from inside the repo."""
+    here = os.path.dirname(os.path.abspath(__file__))
+    path = os.path.normpath(os.path.join(here, '..', '..', '..', '..',
+                                         'src', 'Agent', 'CHANGELOG.md'))
+    return path if os.path.isfile(path) else None
+
+
+def changelog_cache_path():
+    """Never inside the skill directory: a plugin install may be read-only and is
+    replaced on update."""
+    if sys.platform == 'win32':
+        base = os.environ.get('LOCALAPPDATA') or os.path.expanduser('~')
+    else:
+        base = os.environ.get('XDG_CACHE_HOME') or os.path.join(os.path.expanduser('~'),
+                                                                 '.cache')
+    return os.path.join(base, 'nrlog', 'changelog.md')
+
+
+def fetch_changelog(url=CHANGELOG_URL, timeout=CHANGELOG_TIMEOUT_SECONDS):
+    """The only function in this script that may touch the network. Text, or None."""
+    try:
+        with urllib.request.urlopen(url, timeout=timeout) as response:
+            return response.read().decode('utf-8', errors='replace')
+    except Exception:
+        return None
+
+
+def resolve_changelog(override=None, fetcher=None, now=None):
+    """(text_or_None, source_label), most authoritative source first.
+
+    override -> repo checkout -> fresh cache -> network fetch -> stale cache -> nothing.
+    """
+    fetcher = fetcher or fetch_changelog
+    now = time.time() if now is None else now
+    local = local_changelog_path()
+
+    if override:
+        # a named source that cannot be read is a hard error, not a fall-through to an implicit one
+        try:
+            with open(override, 'r', encoding='utf-8', errors='replace') as handle:
+                text = handle.read()
+        except OSError:
+            sys.exit('cannot read --changelog override: %s' % override)
+        same_as_checkout = local and os.path.abspath(override) == os.path.abspath(local)
+        return text, ('repo checkout' if same_as_checkout else override)
+
+    if local:
+        try:
+            with open(local, 'r', encoding='utf-8', errors='replace') as handle:
+                return handle.read(), 'repo checkout'
+        except OSError:
+            pass
+
+    cache = changelog_cache_path()
+    cached_text = None
+    cached_mtime = None
+    try:
+        cached_mtime = os.path.getmtime(cache)
+        with open(cache, 'r', encoding='utf-8', errors='replace') as handle:
+            cached_text = handle.read()
+        age_seconds = now - cached_mtime
+        if age_seconds < CHANGELOG_TTL_SECONDS:
+            return cached_text, ('cache from %s'
+                                 % datetime.fromtimestamp(cached_mtime, timezone.utc)
+                                   .strftime('%Y-%m-%d'))
+    except OSError:
+        pass
+
+    fetched = fetcher()
+    if fetched is not None:
+        # write to a temp file and os.replace onto cache, so a concurrent reader never sees a partial write
+        tmp_path = None
+        try:
+            cache_dir = os.path.dirname(cache)
+            os.makedirs(cache_dir, exist_ok=True)
+            fd, tmp_path = tempfile.mkstemp(dir=cache_dir, prefix='.changelog-', suffix='.tmp')
+            with os.fdopen(fd, 'w', encoding='utf-8', newline='\n') as handle:
+                handle.write(fetched)
+            os.replace(tmp_path, cache)
+            tmp_path = None
+        except OSError:
+            if tmp_path is not None:
+                try:
+                    os.remove(tmp_path)
+                except OSError:
+                    pass
+        return fetched, ('github, fetched %s'
+                         % datetime.fromtimestamp(now, timezone.utc).strftime('%Y-%m-%d'))
+
+    if cached_text is not None:
+        age_days = int((now - cached_mtime) // 86400)
+        return cached_text, ('cache from %s, %d day(s) old'
+                             % (datetime.fromtimestamp(cached_mtime, timezone.utc)
+                                .strftime('%Y-%m-%d'), age_days))
+
+    return None, None
+
+
+def load_versions(override=None, fetcher=None, now=None):
+    """The one entry point the report calls: latest version, release list, source
+    label, resolved at analysis time rather than published. None when unresolvable."""
+    text, source_label = resolve_changelog(override=override, fetcher=fetcher, now=now)
+    if text is None:
+        return None
+    releases = parse_changelog(text)
+    if not releases:
+        return None
+    return {'latest': releases[0]['version'], 'releases': releases,
+            'source_label': source_label}
+
+
+def _keyword_pattern(keyword):
+    """A keyword matches a whole word, plural allowed, so `connect` misses `reconnect`."""
+    return re.compile(r'(?<!\w)%s(?:s|es)?(?!\w)' % re.escape(keyword))
+
+
+def version_block(version, keywords, data, limit=4):
+    """Report the session's currency, and the fixes since it that match the symptom."""
+    if not data:
+        return [_pad('VERSION', 'changelog not reachable; latest version unknown, '
+                                'currency not checked')]
+    latest = data.get('latest', '?')
+    source = data.get('source_label', '?')
+    found = parse_version(version)
+    if not found:
+        return [_pad('VERSION', 'agent version not stated in this session; latest is '
+                                '%s (changelog from %s)' % (latest, source))]
+
+    releases = data.get('releases') or []
+    newer = [r for r in releases
+             if (parse_version(r.get('version')) or (0, 0, 0)) > found]
+    lines = []
+    if not newer:
+        lines.append(_pad('VERSION', '%s is current as of the changelog from %s (latest %s)'
+                                     % (version, source, latest)))
+        return lines
+    lines.append(_pad('VERSION', '%s is %d release(s) behind %s (%s), changelog from %s'
+                                 % (version, len(newer), latest,
+                                    newer[0].get('date', '?'), source)))
+    if not keywords:
+        lines.append(_pad('', 'no playbook matched, so no fix filter was applied'))
+        return lines
+
+    needles = [_keyword_pattern(k.lower()) for k in keywords]
+    hits = []
+    for release in newer:
+        for fix in release.get('fixes') or []:
+            lowered = fix.lower()
+            if any(needle.search(lowered) for needle in needles):
+                hits.append((release.get('version', '?'), fix))
+    lines.append(_pad('', 'fixes since, matching this symptom: %d' % len(hits)))
+    for release_version, fix in hits[:limit]:
+        lines.append(_pad('', '  %-9s %s' % (release_version, fix)))
+    if len(hits) > limit:
+        lines.append(_pad('', '  ... %d more' % (len(hits) - limit)))
+    if hits:
+        lines.append(_pad('', 'a keyword match is not a diagnosis; it is a candidate'))
+    return lines
+
+
+def _render_header(playbooks):
+    """The header stamps the PLAYBOOKS from their own provenance; the VERSION block
+    (if printed) stamps the changelog separately, since the two are unrelated data sets."""
+    verified = [parse_version(b.verified_versions) for b in playbooks if b.verified_versions]
+    verified = [v for v in verified if v]
+    stamp = ('%d.%d.%d' % max(verified)) if verified else 'unknown'
+    return ['nrlog triage   playbooks: %d (%d field)   playbooks verified against %s'
+            % (len(playbooks), sum(1 for b in playbooks if b.tier == 'field'), stamp),
+            '']
+
+
+def _render_input(directory, managed, profiler_all):
+    return [_pad('INPUT', '%s   %d managed log(s), %d profiler log(s)'
+                 % (directory, len(managed), len(profiler_all)))]
+
+
+def _render_choose(managed):
+    lines = [_pad('CHOOSE', '%d managed logs in scope. Pass --file <name> to '
+                            'pick one application:' % len(managed))]
+    for name in [os.path.basename(p) for p in managed][:REPORT_FILE_CAP]:
+        lines.append(_pad('', '  %s' % name))
+    if len(managed) > REPORT_FILE_CAP:
+        lines.append(_pad('', '  ... %d more' % (len(managed) - REPORT_FILE_CAP)))
+    lines.append(_pad('NEXT', 'rerun: nrlog.py triage <path> --file <name>'))
+    return lines
+
+
+def _render_session(session, index, total, observed):
+    lines = [_pad('SESSION', 'session %d of %d   pid %d   %s .. %s   %d lines'
+                  % (index + 1, total, session.pid, fmt_ts(session.start),
+                     fmt_ts(session.end), session.lines)),
+             _pad('', 'agent %s   app domain %s   flags: %s'
+                  % (session.version or '?', session.appdomain_label(),
+                     ','.join(session.flags()) or 'none')),
+             _pad('', 'level stated=%s  observed %s  most verbose=%s'
+                  % (session.log_level or 'not stated', session.level_label(), observed))]
+    for when, was, now in session.level_changes:
+        lines.append(_pad('', 'level change %s %s -> %s' % (fmt_ts(when), was, now)))
+    if total > 1:
+        others = ', '.join(str(i + 1) for i in range(total) if i != index)
+        lines.append(_pad('', 'other sessions: %s   rerun with --session N' % others))
+    return lines
+
+
+def _group_label(names):
+    faults = [n for n in names if n not in PROFILER_HEALTHY_GROUPS]
+    shown = faults or list(names)
+    text = ', '.join(shown[:REPORT_GROUP_NAME_CAP])
+    if len(shown) > REPORT_GROUP_NAME_CAP:
+        text += ' +%d' % (len(shown) - REPORT_GROUP_NAME_CAP)
+    return text
+
+
+def _group_pids(members):
+    pids = []
+    for path, _first, _last, _instrumented in members:
+        match = PROFILER_NAME_RE.search(os.path.basename(path))
+        if match:
+            pids.append(match.group(1))
+    if not pids:
+        return ''
+    if len(pids) > REPORT_GROUP_PID_CAP:
+        return 'pids %s, +%d' % (', '.join(pids[:REPORT_GROUP_PID_CAP]),
+                                 len(pids) - REPORT_GROUP_PID_CAP)
+    return 'pid%s %s' % ('' if len(pids) == 1 else 's', ', '.join(pids))
+
+
+def _render_profiler(profiler_all, correlated, session, playbooks):
+    groups, empty, _instrumented = profiler_groups(profiler_all)
+    lines = [_pad('PROFILER', '%d file(s), %d group(s), %d correlated to pid %d '
+                              'by time overlap'
+                  % (len(profiler_all), len(groups), len(correlated), session.pid))]
+    for key in sorted(groups, key=lambda k: (-len(groups[k]), k)):
+        notes = []
+        if all(name in PROFILER_NOISE_GROUPS for name in key):
+            notes.append('expected noise')
+        elif all(name in PROFILER_HEALTHY_GROUPS for name in key):
+            notes.append('healthy startup')
+        ids = roster_playbook_ids(key, playbooks)
+        if ids:
+            notes.append('playbook %s' % ', '.join(str(i) for i in ids))
+        notes.append(_group_pids(groups[key]))
+        lines.append(_pad('', '%6d  %-*s %s'
+                          % (len(groups[key]), REPORT_GROUP_WIDTH, _group_label(key),
+                             '; '.join(n for n in notes if n))))
+    if empty:
+        lines.append(_pad('', '%d file(s) hold no parseable profiler lines' % len(empty)))
+    if profiler_all and not correlated:
+        lines.append(_pad('', 'no profiler log matches this pid and time range; '
+                              'not pairing them'))
+    return lines
+
+
+def _match_detail(result, session, observed):
+    """The lines under one MATCHED label, which differ per match reason."""
+    if result.reason == 'level':
+        return ['observed level %s is at or below the %s ceiling'
+                % (observed, result.playbook.level_max.lower())]
+    if result.reason == 'level-change':
+        detail = ['observed %s is more verbose than the stated %s'
+                  % (observed, normalize_level(session.log_level))]
+        for when, was, now in session.level_changes:
+            detail.append('level change %s %s -> %s' % (fmt_ts(when), was, now))
+        return detail
+    return ['%s:%d  %s' % (name, lineno, text) for name, lineno, text in result.evidence]
+
+
+def _render_matched(selected, total, loaded, session, observed):
+    if not selected:
+        return [_pad('MATCHED', 'none')]
+    lines = [_pad('MATCHED', '%d of %d playbook(s)' % (total, loaded))]
+    for result in selected:
+        right = ('%d hit(s)' % result.hits if result.reason == 'signature'
+                 else 'level condition')
+        lines.append(_pad('', '%-*s %s' % (REPORT_TITLE_WIDTH, result.playbook.label(),
+                                           right)))
+        for detail in _match_detail(result, session, observed):
+            lines.append(_pad('', '   %s' % detail))
+    if total > len(selected):
+        lines.append(_pad('', '... %d more matched, not shown' % (total - len(selected))))
+    return lines
+
+
+def _render_blocked(blocked, observed):
+    lines = []
+    for result in blocked:
+        if result.reason == 'no-stated-level':
+            why = 'no startup banner, so the stated level is unknown'
+        else:
+            why = 'needs %s; this session is %s' % (result.playbook.min_level, observed)
+        lines.append(_pad('BLOCKED', '%-*s %s'
+                          % (REPORT_TITLE_WIDTH, result.playbook.label(), why)))
+    return lines
+
+
+def _render_clear(clear, loaded):
+    if loaded > CLEAR_ENUMERATE_MAX:
+        return [_pad('CLEAR', '%d playbook(s) did not match' % len(clear))]
+    ids = ', '.join(str(r.playbook.id) for r in sorted(clear, key=lambda r: r.playbook.id))
+    return [_pad('CLEAR', 'playbooks %s did not match' % ids if ids else 'none')]
+
+
+def _render_next(selected, blocked, path, index):
+    if selected:
+        names = ', '.join(os.path.basename(r.playbook.path) for r in selected)
+        lines = [_pad('NEXT', 'read references/playbooks/%s' % names)]
+    elif blocked:
+        lines = [_pad('NEXT', 'nothing matched at this level. Ask the customer to '
+                              'reproduce at debug or finest, then rerun.')]
+    else:
+        lines = [_pad('NEXT', 'nothing matched. State the limit, give the next ask, '
+                              'and build the escalation packet.')]
+    lines.append(_pad('', 'slim file: nrlog.py slim %s --session %d' % (path, index + 1)))
+    return lines
+
+
+def triage_report(path, file=None, session=None, playbooks=None, max_matched=5,
+                  evidence=2, width=EVIDENCE_WIDTH, no_version=False, changelog=None):
+    """One routed verdict for one session: input, level, profiler, playbooks, version."""
+    reset_profiler_cache()
+    books = load_playbooks(playbooks)
+    versions = load_versions(override=changelog)
+    directory = path if os.path.isdir(path) else os.path.dirname(os.path.abspath(path))
+    managed = collect_managed(path, file)
+    profiler_all = [os.path.join(directory, n) for n in sorted(os.listdir(directory))
+                    if is_profiler_log(n)] if os.path.isdir(directory) else []
+
+    lines = _render_header(books)
+    lines.extend(_render_input(directory, managed, profiler_all))
+    if len(managed) > 1 and not file:
+        return lines + _render_choose(managed)
+
+    sessions = build_sessions(managed)
+    if not sessions:
+        return lines + [_pad('SESSION', 'no parseable agent log lines found'),
+                        _pad('NEXT', 'check the profiler logs: nrlog.py profiler %s' % path)]
+
+    order = sorted(range(len(sessions)), key=lambda i: sessions[i].start, reverse=True)
+    index = (session - 1) if session is not None else order[0]
+    if index < 0 or index >= len(sessions):
+        sys.exit('session %d out of range (1..%d)' % (session, len(sessions)))
+    chosen = sessions[index]
+    observed = session_observed_level(chosen)
+    correlated = profiler_logs_for_session(chosen, directory)
+
+    results = match_playbooks(chosen, books, correlated, max_evidence=evidence, width=width)
+    matched = [r for r in results if r.state == 'matched']
+    blocked = [r for r in results if r.state == 'blocked']
+    clear = [r for r in results if r.state == 'clear']
+    selected = sorted(matched, key=lambda r: (0 if r.playbook.tier == 'verified' else 1,
+                                              -r.hits))[:max_matched]
+    selected.sort(key=lambda r: (r.playbook.precedence, r.playbook.id))
+
+    lines.extend(_render_session(chosen, index, len(sessions), observed))
+    lines.extend(_render_profiler(profiler_all, correlated, chosen, books))
+    lines.extend(_render_matched(selected, len(matched), len(books), chosen, observed))
+    lines.extend(_render_blocked(blocked, observed))
+    lines.extend(_render_clear(clear, len(books)))
+    if not no_version:
+        keywords = []
+        for result in selected:
+            keywords.extend(result.playbook.keywords)
+        lines.extend(version_block(chosen.version, keywords, versions))
+    lines.extend(_render_next(selected, blocked, path, index))
+    return lines
+
+
+def cmd_triage(args):
+    for line in triage_report(path=args.path, file=args.file, session=args.session,
+                              playbooks=args.playbooks, max_matched=args.max_matched,
+                              evidence=args.evidence, width=args.width,
+                              no_version=args.no_version, changelog=args.changelog):
+        print(line)
+
+
+ESCALATION_WARNING = (
+    'This packet contains host names, application names, SQL text, and request '
+    'parameters, because the playbooks need them. Send it to the internal '
+    'escalation, never in a customer-facing reply.')
+
+# the packet keeps the levels that carry a verdict and drops the volume below them
+ESCALATION_LEVELS = ('ERROR', 'WARN', 'INFO')
+
+
+def customer_block(playbook):
+    fix = playbook.section('Customer fix')
+    ask = playbook.section('Next ask')
+    lines = []
+    if playbook.tier == 'field':
+        lines.append('[for you, not the customer] This fix is field-observed, '
+                     'not source-verified. Decide before you send it.')
+        lines.append('')
+    lines.append('Playbook %d: %s' % (playbook.id, playbook.title))
+    lines.append('')
+    lines.append(fix or 'This playbook records no customer fix.')
+    lines.append('')
+    lines.append('Next ask: %s' % (ask or 'none recorded.'))
+    return lines
+
+
+def escalation_profiler_name(source):
+    """profiler-<pid>.log, or the original basename when the pid is not in the name."""
+    base = os.path.basename(source)
+    found = PROFILER_NAME_RE.search(base)
+    if not found:
+        return base
+    return 'profiler-%s.log' % found.group(1)
+
+
+def build_escalation(path, file, session, ticket, out, make_zip, playbooks,
+                     changelog=None):
+    managed = collect_managed(path, file)
+    chosen = pick_session(managed, session)
+    directory = path if os.path.isdir(path) else os.path.dirname(os.path.abspath(path))
+    label = ticket or 'pid%d-%s' % (chosen.pid, chosen.start.strftime('%Y%m%d'))
+    target = os.path.join(out_dir_for(managed, out), 'escalation-%s' % label)
+    os.makedirs(target, exist_ok=True)
+    written = []
+
+    report = os.path.join(target, 'triage-report.txt')
+    with open(report, 'w', encoding='utf-8') as handle:
+        handle.write('\n'.join(triage_report(path=path, file=file, session=session,
+                                             playbooks=playbooks,
+                                             changelog=changelog)) + '\n')
+    written.append(report)
+
+    slim = os.path.join(target, 'session-%d-slim.log' % (session or 1))
+    kept = write_slim(chosen, slim, levels=set(ESCALATION_LEVELS))
+    written.append(slim)
+
+    for source in profiler_logs_for_session(chosen, directory):
+        copy = os.path.join(target, escalation_profiler_name(source))
+        with open(source, 'r', encoding='utf-8', errors='replace') as reader, \
+                open(copy, 'w', encoding='utf-8') as writer:
+            for raw in reader:
+                writer.write(redact(raw))
+        written.append(copy)
+
+    environment = os.path.join(target, 'environment.txt')
+    with open(environment, 'w', encoding='utf-8') as handle:
+        handle.write('agent version: %s\n' % (chosen.version or 'not stated'))
+        handle.write('runtime: %s\n'
+                     % (chosen.runtime or 'not stated (the agent logs it at DEBUG)'))
+        handle.write('os: not recorded in an agent log line; it reaches the collector '
+                     'in the connect payload\n')
+        handle.write('pid: %d\n' % chosen.pid)
+        handle.write('app domain(s): %s\n' % chosen.appdomain_label())
+        handle.write('session: %s .. %s\n' % (fmt_ts(chosen.start), fmt_ts(chosen.end)))
+        handle.write('lines: %d\n' % chosen.lines)
+        handle.write('stated level: %s\n' % (chosen.log_level or 'not stated'))
+        handle.write('observed levels: %s\n' % chosen.level_label())
+        handle.write('flags: %s\n' % (','.join(chosen.flags()) or 'none'))
+        handle.write('slim entries: %d (levels %s)\n'
+                     % (kept, ','.join(ESCALATION_LEVELS)))
+    written.append(environment)
+
+    if make_zip:
+        archive = target + '.zip'
+        with zipfile.ZipFile(archive, 'w', zipfile.ZIP_DEFLATED) as bundle:
+            for item in written:
+                bundle.write(item, os.path.join(os.path.basename(target),
+                                                os.path.basename(item)))
+        written.append(archive)
+
+    return written, [ESCALATION_WARNING]
+
+
+def cmd_summary(args):
+    if args.escalation:
+        written, warnings = build_escalation(
+            path=args.path, file=args.file, session=args.session, ticket=args.ticket,
+            out=args.out, make_zip=args.zip, playbooks=args.playbooks,
+            changelog=args.changelog)
+        for item in written:
+            print('wrote %s' % item)
+        print()
+        for warning in warnings:
+            print(warning)
+        return
+    if args.playbook is None:
+        sys.exit('pass --playbook N, or --escalation')
+    books = {b.id: b for b in load_playbooks(args.playbooks)}
+    if args.playbook not in books:
+        sys.exit('no playbook with id %d; run triage to see the matched ids'
+                 % args.playbook)
+    for line in customer_block(books[args.playbook]):
+        print(line)
+
+
+SHAPE_SUBS = [
+    (re.compile(r'"[^"]*"'), '"..."'),
+    (re.compile(r"'[^']*'"), "'...'"),
+    (re.compile(r'\b0x[0-9a-fA-F]+\b'), '0xN'),
+    (re.compile(r'\b\d+\b'), 'N'),
+    (re.compile(r'\s+'), ' '),
+]
+SHAPE_MAX = 160
+SHAPE_MIN = 20
+
+
+def normalize_shape(message):
+    text = message
+    for pattern, replacement in SHAPE_SUBS:
+        text = pattern.sub(replacement, text)
+    return text.strip()[:SHAPE_MAX]
+
+
+def candidate_signatures(session, playbooks, limit=5):
+    """Frequent shapes at INFO or worse that no playbook already claims."""
+    known = [s for book in playbooks for s in book.signatures]
+    counts = {}
+    for _path, _lineno, ts, level, pid, _tid, message, _raw in iter_entries(session.files):
+        if ts is None or pid != session.pid:
+            continue
+        if not (session.start <= ts <= session.end):
+            continue
+        if LEVEL_ORDER[normalize_level(level)] > LEVEL_ORDER['INFO']:
+            continue
+        if any(signature in message for signature in known):
+            continue
+        shape = normalize_shape(message)
+        if len(shape) < SHAPE_MIN:
+            continue
+        counts[shape] = counts.get(shape, 0) + 1
+    ranked = sorted(counts.items(), key=lambda pair: (-pair[1], pair[0]))
+    return ranked[:limit]
+
+
+def draft_playbook_text(session, candidates, next_id):
+    signatures = [shape for shape, _count in candidates] or ['REPLACE ME']
+    body = []
+    body.append('---')
+    body.append('id: %d' % next_id)
+    body.append('title: REPLACE ME with a one-line symptom name')
+    body.append('tier: field')
+    body.append('scope: managed')
+    body.append('min_level: %s' % session_observed_level(session).lower())
+    body.append('precedence: 80')
+    body.append('signatures:')
+    for signature in signatures:
+        body.append('  - "%s"' % signature.replace('"', "'"))
+    body.append('keywords: [REPLACE, ME]')
+    body.append('observed_in: "%s"' % (session.version or 'unknown'))
+    body.append('---')
+    body.append('')
+    body.append('**Symptom.** REPLACE ME with what the customer reported.')
+    body.append('')
+    body.append('**Verdict.** REPLACE ME with what the log proves.')
+    body.append('')
+    body.append('**Limit.** REPLACE ME with what the log does not prove.')
+    body.append('')
+    body.append('## Customer fix')
+    body.append('')
+    body.append('REPLACE ME with the instruction that resolved the ticket.')
+    body.append('')
+    body.append('## Next ask')
+    body.append('')
+    body.append('REPLACE ME, or "None." when the log settles it.')
+    body.append('')
+    body.append('<!-- candidate signature counts from the source session:')
+    for shape, count in candidates:
+        body.append('     x%-6d %s' % (count, shape))
+    body.append('     Delete any signature that is not specific to this symptom. -->')
+    body.append('')
+    return '\n'.join(body)
+
+
+def cmd_draft_playbook(args):
+    managed = collect_managed(args.path, args.file)
+    session = pick_session(managed, args.session)
+    books = load_playbooks(args.playbooks)
+    candidates = candidate_signatures(session, books)
+    next_id = args.id or (max([b.id for b in books] + [SHIPPED_ID_MAX]) + 1)
+    target_dir = out_dir_for(managed, args.out)
+    target = os.path.join(target_dir, '%d-draft-playbook.md' % next_id)
+    with open(target, 'w', encoding='utf-8') as handle:
+        handle.write(draft_playbook_text(session, candidates, next_id))
+    print('wrote %s' % target)
+    print('%d candidate signature(s) from pid %d' % (len(candidates), session.pid))
+    print('Replace every REPLACE ME, delete signatures that are not specific to the')
+    print('symptom, then open a pull request against the field playbook directory.')
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     subparsers = parser.add_subparsers(dest='command', required=True)
@@ -727,7 +1801,27 @@ def main():
                           help='summarize per file above this many sessions (default 40)')
     sessions.set_defaults(func=cmd_sessions)
 
-    extract = subparsers.add_parser('extract', help='write a slim redacted file for one session')
+    triage = subparsers.add_parser('triage',
+                                   help='one-call diagnosis: session, level, profiler, '
+                                        'playbook match, version')
+    triage.add_argument('path')
+    triage.add_argument('--file', help='only files whose name contains this text')
+    triage.add_argument('--session', type=int, help='session number, default newest')
+    triage.add_argument('--playbooks', help='playbook directory, default the shipped set')
+    triage.add_argument('--max-matched', type=int, default=5,
+                        help='matched playbooks to print (default 5)')
+    triage.add_argument('--evidence', type=int, default=2,
+                        help='evidence lines per playbook (default 2)')
+    triage.add_argument('--width', type=int, default=EVIDENCE_WIDTH,
+                        help='evidence line width (default %d)' % EVIDENCE_WIDTH)
+    triage.add_argument('--no-version', action='store_true',
+                        help='skip the version block')
+    triage.add_argument('--changelog',
+                        help='path to a CHANGELOG.md to use instead of the resolved one')
+    triage.set_defaults(func=cmd_triage)
+
+    extract = subparsers.add_parser('slim', aliases=['extract'],
+                                    help='write a slim redacted file for one session')
     extract.add_argument('path')
     extract.add_argument('--file', help='only files whose name contains this text')
     extract.add_argument('--session', type=int, help='session number from "sessions"')
@@ -739,6 +1833,33 @@ def main():
     extract.add_argument('--max-width', type=int, default=400,
                          help='elide messages longer than this (default 400)')
     extract.set_defaults(func=cmd_extract)
+
+    summary = subparsers.add_parser('summary',
+                                    help='customer reply block, or an escalation packet')
+    summary.add_argument('path')
+    summary.add_argument('--file', help='only files whose name contains this text')
+    summary.add_argument('--session', type=int)
+    summary.add_argument('--playbook', type=int, help='playbook id for the customer block')
+    summary.add_argument('--format', choices=('customer',), default='customer')
+    summary.add_argument('--escalation', action='store_true',
+                         help='build the escalation packet instead')
+    summary.add_argument('--ticket', help='names the escalation folder')
+    summary.add_argument('--zip', action='store_true', help='also write a zip')
+    summary.add_argument('--playbooks', help='playbook directory')
+    summary.add_argument('--out', help='output directory, default nrlog-work beside the log')
+    summary.add_argument('--changelog',
+                         help='path to a CHANGELOG.md to use instead of the resolved one')
+    summary.set_defaults(func=cmd_summary)
+
+    draft = subparsers.add_parser('draft-playbook',
+                                  help='start a field playbook from an unmatched session')
+    draft.add_argument('path')
+    draft.add_argument('--file', help='only files whose name contains this text')
+    draft.add_argument('--session', type=int)
+    draft.add_argument('--playbooks', help='playbook directory')
+    draft.add_argument('--out', help='output directory')
+    draft.add_argument('--id', type=int, help='playbook id, default one above the highest')
+    draft.set_defaults(func=cmd_draft_playbook)
 
     payloads = subparsers.add_parser('payloads', help='index collector calls')
     payloads.add_argument('path')
