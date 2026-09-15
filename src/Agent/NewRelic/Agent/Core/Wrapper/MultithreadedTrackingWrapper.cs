@@ -15,7 +15,11 @@ public class MultithreadedTrackingWrapper : IWrapper
     {
         var canWrap = "MultithreadedTrackingWrapper".Equals(instrumentedMethodInfo.RequestedWrapperName, StringComparison.OrdinalIgnoreCase);
 
-        if (canWrap && instrumentedMethodInfo.IsAsync)
+        // Runtime-async is rejected on its own merits, not just via the IsAsync promotion
+        // WrapperService applies to it: this wrapper calls AttachToAsync() with no paired
+        // DetachFromPrimary(), which would strand a runtime-async transaction in the creating
+        // thread's primary storage. See MultithreadedTrackingWrapperTests.
+        if (canWrap && (instrumentedMethodInfo.IsAsync || instrumentedMethodInfo.IsRuntimeAsync))
         {
             return new CanWrapResponse(false, "This instrumentation is not intended to be used with async-await. Use the OtherTransactionWrapperAsync instead.");
         }

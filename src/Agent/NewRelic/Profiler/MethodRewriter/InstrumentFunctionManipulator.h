@@ -43,6 +43,10 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             unsigned maxStackSize = std::max<unsigned>(std::max<unsigned>(originalStackSize, 10), unsigned(_methodSignature->_parameters->size() + 1));
             GetHeader()->SetMaxStack(maxStackSize);
 
+            // every return-value decision below reads _effectiveReturnType, so fail here rather
+            // than emit IL against a shape we could not classify
+            ThrowIfEffectiveReturnTypeIsUnknown();
+
             AppendDefaultLocals();
             InitializeLocalsToNull();
 
@@ -55,7 +59,9 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             _instructions->AppendLabel(_X("user_code"));
             _instructions->AppendUserCode(_oldCodeBytes);
 
-            if (_methodSignature->_returnType->_kind != SignatureParser::ReturnType::VOID_RETURN_TYPE)
+            // a runtime-async Task/ValueTask body pushes nothing, so there is nothing to store --
+            // reading the declared return type here is what underflowed the stack before
+            if (_effectiveReturnType->_kind != SignatureParser::ReturnType::VOID_RETURN_TYPE)
                 _instructions->AppendStoreLocal(_resultLocalIndex);
 
             // } catch (Exception exception) {
@@ -79,7 +85,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             CallFinishTracerWithReturnValue();
 
             // return result;
-            Return(_instructions, _methodSignature->_returnType, _resultLocalIndex);
+            Return(_instructions, _effectiveReturnType, _resultLocalIndex);
         }
 
         // Invokes AgentShim.FinishTracer invoking the given argument lambdas to load the parameters
@@ -108,13 +114,14 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
         void CallFinishTracerWithReturnValue()
         {
             std::function<void()> returnValueDelegate;
-            if (_methodSignature->_returnType->_kind == SignatureParser::ReturnType::VOID_RETURN_TYPE)
+            if (_effectiveReturnType->_kind == SignatureParser::ReturnType::VOID_RETURN_TYPE)
             {
                 returnValueDelegate = [&]() { _instructions->Append(CEE_LDNULL); };
             }
             else
             {
-                returnValueDelegate = [&]() { _instructions->AppendLoadLocalAndBox(_resultLocalIndex, _methodSignature->_returnType); };
+                // box the unwrapped T for a runtime-async Task<T>, not the Task<T> the signature declares
+                returnValueDelegate = [&]() { _instructions->AppendLoadLocalAndBox(_resultLocalIndex, _effectiveReturnType); };
             }
             CallFinishTracer(
                 [&]() { _instructions->AppendLoadLocal(_tracerLocalIndex); },
@@ -180,12 +187,31 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             }
         }
 
+        // Pushes the type the instrumented body actually returns, for the last slot of the tracer
+        // argument array. Only a runtime-async method needs it -- and only a runtime-async method can
+        // safely supply it: GetTypeTokenForReturnType throws for a by-ref return and
+        // GetTypeTokenForType throws for pointers, so tokenizing every method's declared return type
+        // here would newly fail instrumentation for methods the agent handles correctly today.
+        // AppendTypeOfArgument already pushes null for a void effective return type, which is the
+        // runtime-async Task/ValueTask case.
+        void LoadEffectiveReturnTypeOrNull()
+        {
+            if (_function->IsRuntimeAsync())
+            {
+                _instructions->AppendTypeOfArgument(_effectiveReturnType);
+            }
+            else
+            {
+                _instructions->Append(CEE_LDNULL);
+            }
+        }
+
         void CallGetTracer(NewRelic::Profiler::Configuration::InstrumentationPointPtr instrumentationPoint)
         {
             LoadGetTracerTarget();
 
-            // tracer = <target>(new object[] { tracerFactoryName, tracerFactoryArgs, metricName, assemblyName, type, typeName, functionName, argumentSignatureString, this, new object[], functionId });
-            _instructions->Append(_X("ldc.i4.s   11"));
+            // tracer = <target>(new object[] { tracerFactoryName, tracerFactoryArgs, metricName, assemblyName, type, typeName, functionName, argumentSignatureString, this, new object[], functionId, effectiveReturnType });
+            _instructions->Append(_X("ldc.i4.s   12"));
             _instructions->Append(_X("newarr     [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Object"));
             _instructions->Append(_X("dup"));
             _instructions->Append(_X("ldc.i4.0"));
@@ -239,6 +265,10 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             _instructions->Append(CEE_LDC_I8, (uint64_t)_function->GetFunctionId());
             _instructions->Append(_X("box [") + _instructions->GetCoreLibAssemblyName() + _X("]System.UInt64"));
             _instructions->Append(_X("stelem.ref"));
+            _instructions->Append(_X("dup"));
+            _instructions->Append(_X("ldc.i4.s 11"));
+            LoadEffectiveReturnTypeOrNull();
+            _instructions->Append(_X("stelem.ref"));
             // make the call to GetTracer
             InvokeGetTracer();
 
@@ -252,8 +282,10 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             _tracerLocalIndex = AppendToLocalsSignature(_X("class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Object"), tokenizer, _newLocalVariablesSignature);
             _userExceptionLocalIndex = AppendToLocalsSignature(_X("class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Exception"), tokenizer, _newLocalVariablesSignature);
             
-            if (_methodSignature->_returnType->_kind != SignatureParser::ReturnType::Kind::VOID_RETURN_TYPE)
-                _resultLocalIndex = AppendReturnTypeLocal(_newLocalVariablesSignature, _methodSignature);
+            // size the result local to what the body actually returns: absent for a runtime-async
+            // Task/ValueTask, and the unwrapped T -- not Task<T> -- for the generic forms
+            if (_effectiveReturnType->_kind != SignatureParser::ReturnType::Kind::VOID_RETURN_TYPE)
+                _resultLocalIndex = AppendReturnTypeLocal(_newLocalVariablesSignature, _effectiveReturnType);
         }
     };
 }}}

@@ -53,6 +53,8 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             _shouldTrace(false),
             _classAttributes(0),
             _methodAttributes(0),
+            _isRuntimeAsync(false),
+            _tracerFlags(0),
             _isValid(true)
         {
             if (version.empty())
@@ -186,9 +188,14 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             return _shouldInjectMethodInstrumentation;
         }
 
+        // Per-function flags the real Function derives from method metadata (AsyncMethod from
+        // AsyncStateMachineAttribute, RuntimeAsyncMethod from the Async impl flag). Settable so a
+        // test can prove they reach the instrumented function without leaking onto the shared
+        // configuration point.
+        uint32_t _tracerFlags;
         virtual uint32_t GetTracerFlags() override
         {
-            return 0;
+            return _tracerFlags;
         }
 
         bool _isValid;
@@ -201,6 +208,12 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
         virtual bool IsCoreClr() override
         {
             return _isCoreClr;
+        }
+
+        bool _isRuntimeAsync;
+        virtual bool IsRuntimeAsync() override
+        {
+            return _isRuntimeAsync;
         }
 
         uint32_t _typeToken;
@@ -246,8 +259,14 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
 
         // get a token for a given signature
         uint32_t _signatureToken;
-        virtual uint32_t GetTokenFromSignature(const ByteVector& /*signature*/) override
+        // The manipulator hands the rewritten locals signature here on its way to the method header,
+        // which makes this the one place a test can see the result local's type. Used to prove a
+        // runtime-async method's result local is sized to the type its body returns rather than the
+        // task type its signature declares.
+        std::function<void(const ByteVector&)> _tokenFromSignatureHandler;
+        virtual uint32_t GetTokenFromSignature(const ByteVector& signature) override
         {
+            if (_tokenFromSignatureHandler) _tokenFromSignatureHandler(signature);
             return _signatureToken;
         }
 

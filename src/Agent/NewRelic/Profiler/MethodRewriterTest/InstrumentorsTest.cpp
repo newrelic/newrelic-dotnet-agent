@@ -1,6 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+#include <algorithm>
 #include <functional>
 #include <memory>
 #include <stdint.h>
@@ -12,6 +13,7 @@
 #include "../MethodRewriter/Instrumentors.h"
 #include "../MethodRewriter/InstrumentationSettings.h"
 #include "../Configuration/InstrumentationConfiguration.h"
+#include "../Configuration/TracerFlags.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
@@ -156,6 +158,215 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             Assert::IsFalse(result);
         }
 
+        // Runtime-async methods (MethodImplAttributes.Async, 0x2000 in ImplFlags -- note
+        // that mdPinvokeImpl above is also 0x2000, but in methodAttributes, a different field) do
+        // not follow the return convention their signature declares: the body pushes nothing for
+        // Task/ValueTask and an unwrapped T for Task<T>/ValueTask<T>.
+        //
+        // The rewriter handles those four shapes (RuntimeAsyncReturnType.h). Anything else is
+        // declined, because the Async flag can be set but inert and rewriting a method that really
+        // uses the synchronous convention would inject the InvalidProgramException we are
+        // preventing. These tests cover both sides of that split.
+
+        // Makes MockFunction look like a method returning a task type: a 0-parameter signature whose
+        // return type is ELEMENT_TYPE_CLASS with a token the resolver answers with typeName.
+        static void MakeTaskReturning(std::shared_ptr<MockFunction> func, const wchar_t* typeName)
+        {
+            auto resolver = std::make_shared<MockTokenResolver>();
+            resolver->_typeString = typeName;
+            func->_tokenResolver = resolver;
+
+            func->_signature = std::make_shared<ByteVector>();
+            func->_signature->push_back(0x00);  // default calling convention
+            func->_signature->push_back(0x00);  // 0 parameters
+            func->_signature->push_back(0x12);  // return type: ELEMENT_TYPE_CLASS
+            func->_signature->push_back(0x49);  // class token (compressed 0x01000012)
+        }
+
+        TEST_METHOD(default_runtime_async_unrecognized_return_type_returns_false)
+        {
+            // MockFunction's stock signature returns void, which no runtime-async method can --
+            // exactly the inert-flag shape that must be declined rather than rewritten
+            auto func = std::make_shared<MockFunction>();
+            func->_isRuntimeAsync = true;
+            auto settings = MakeMatchingSettings(func);
+            DefaultInstrumentor instr;
+            bool result = instr.Instrument(func, settings, false, AgentCallStyle::Strategy::AppDomainFallbackCache);
+            Assert::IsFalse(result);
+        }
+
+        TEST_METHOD(default_runtime_async_unrecognized_return_type_does_not_call_write_method)
+        {
+            // the return value only says we declined; this proves no IL was actually rewritten
+            auto func = std::make_shared<MockFunction>();
+            func->_isRuntimeAsync = true;
+            auto settings = MakeMatchingSettings(func);
+            bool writeMethodCalled = false;
+            func->_writeMethodHandler = [&writeMethodCalled](const ByteVector&) {
+                writeMethodCalled = true;
+            };
+            DefaultInstrumentor instr;
+            instr.Instrument(func, settings, false, AgentCallStyle::Strategy::AppDomainFallbackCache);
+            Assert::IsFalse(writeMethodCalled, L"an unrecognized runtime-async shape must not be rewritten");
+        }
+
+        TEST_METHOD(default_runtime_async_unrecognized_return_type_skipped_even_when_should_trace)
+        {
+            // no matching instrumentation point, so this takes the ShouldTrace branch that
+            // synthesizes one -- the [Transaction]/[Trace] attribute path, most exposed today
+            auto func = std::make_shared<MockFunction>();
+            func->_isRuntimeAsync = true;
+            func->_shouldTrace = true;
+            auto settings = MakeSettings(false);
+            DefaultInstrumentor instr;
+            bool result = instr.Instrument(func, settings, false, AgentCallStyle::Strategy::AppDomainFallbackCache);
+            Assert::IsFalse(result);
+        }
+
+        TEST_METHOD(default_runtime_async_task_is_instrumented)
+        {
+            // the shape the attached repro hits: async Task, whose body pushes nothing
+            auto func = std::make_shared<MockFunction>();
+            func->_isRuntimeAsync = true;
+            MakeTaskReturning(func, L"System.Threading.Tasks.Task");
+            auto settings = MakeMatchingSettings(func);
+            DefaultInstrumentor instr;
+            bool result = instr.Instrument(func, settings, false, AgentCallStyle::Strategy::AppDomainFallbackCache);
+            Assert::IsTrue(result, L"a runtime-async Task method is a shape the rewriter understands");
+        }
+
+        TEST_METHOD(default_runtime_async_task_calls_write_method)
+        {
+            auto func = std::make_shared<MockFunction>();
+            func->_isRuntimeAsync = true;
+            MakeTaskReturning(func, L"System.Threading.Tasks.Task");
+            auto settings = MakeMatchingSettings(func);
+            bool writeMethodCalled = false;
+            func->_writeMethodHandler = [&writeMethodCalled](const ByteVector&) {
+                writeMethodCalled = true;
+            };
+            DefaultInstrumentor instr;
+            instr.Instrument(func, settings, false, AgentCallStyle::Strategy::AppDomainFallbackCache);
+            Assert::IsTrue(writeMethodCalled, L"a runtime-async Task method must actually be rewritten");
+        }
+
+        TEST_METHOD(default_runtime_async_value_task_is_instrumented)
+        {
+            auto func = std::make_shared<MockFunction>();
+            func->_isRuntimeAsync = true;
+            MakeTaskReturning(func, L"System.Threading.Tasks.ValueTask");
+            auto settings = MakeMatchingSettings(func);
+            DefaultInstrumentor instr;
+            bool result = instr.Instrument(func, settings, false, AgentCallStyle::Strategy::AppDomainFallbackCache);
+            Assert::IsTrue(result, L"a runtime-async ValueTask method is a shape the rewriter understands");
+        }
+
+        TEST_METHOD(default_task_returning_method_without_the_flag_is_instrumented)
+        {
+            // the same signature without the Async impl flag is an ordinary Task-returning method
+            // and must keep going down the unchanged synchronous path
+            auto func = std::make_shared<MockFunction>();
+            func->_isRuntimeAsync = false;
+            MakeTaskReturning(func, L"System.Threading.Tasks.Task");
+            auto settings = MakeMatchingSettings(func);
+            DefaultInstrumentor instr;
+            bool result = instr.Instrument(func, settings, false, AgentCallStyle::Strategy::AppDomainFallbackCache);
+            Assert::IsTrue(result);
+        }
+
+        TEST_METHOD(default_not_runtime_async_still_instruments)
+        {
+            // guards against the runtime-async check being inverted
+            auto func = std::make_shared<MockFunction>();
+            func->_isRuntimeAsync = false;
+            auto settings = MakeMatchingSettings(func);
+            DefaultInstrumentor instr;
+            bool result = instr.Instrument(func, settings, false, AgentCallStyle::Strategy::AppDomainFallbackCache);
+            Assert::IsTrue(result);
+        }
+
+        // A parameterless matcher (<exactMethodMatcher methodName="MyMethod" /> with no parameters
+        // attribute) yields ONE InstrumentationPoint that every overload of the name resolves to,
+        // and TryGetInstrumentationPoint hands back that stored object rather than a copy. So a
+        // per-function flag OR-ed into it stays set for every sibling instrumented afterwards. For
+        // RuntimeAsyncMethod that is not just a mislabel: WrapperService would swap the sibling's
+        // real pending Task for a synthesized completed one and end the segment early.
+
+        TEST_METHOD(default_runtime_async_flag_does_not_leak_onto_the_shared_instrumentation_point)
+        {
+            auto func = std::make_shared<MockFunction>();
+            func->_isRuntimeAsync = true;
+            func->_tracerFlags = Configuration::TracerFlags::RuntimeAsyncMethod;
+            MakeTaskReturning(func, L"System.Threading.Tasks.Task");
+
+            auto sharedPoint = func->GetInstrumentationPoint();
+            auto settings = MakeSettingsForPoint(sharedPoint);
+
+            DefaultInstrumentor instr;
+            Assert::IsTrue(instr.Instrument(func, settings, false, AgentCallStyle::Strategy::AppDomainFallbackCache));
+
+            Assert::AreEqual(uint32_t(0), sharedPoint->TracerFactoryArgs,
+                L"the configuration's instrumentation point must not accumulate per-function flags");
+        }
+
+        TEST_METHOD(default_declined_runtime_async_does_not_leak_onto_the_shared_instrumentation_point)
+        {
+            // the flags were applied before the return-shape guard ran, so the leak used to outlive
+            // even the methods the profiler refused to rewrite. Stock signature returns void, which
+            // no runtime-async method can, so this is declined.
+            auto func = std::make_shared<MockFunction>();
+            func->_isRuntimeAsync = true;
+            func->_tracerFlags = Configuration::TracerFlags::RuntimeAsyncMethod;
+
+            auto sharedPoint = func->GetInstrumentationPoint();
+            auto settings = MakeSettingsForPoint(sharedPoint);
+
+            DefaultInstrumentor instr;
+            Assert::IsFalse(instr.Instrument(func, settings, false, AgentCallStyle::Strategy::AppDomainFallbackCache));
+
+            Assert::AreEqual(uint32_t(0), sharedPoint->TracerFactoryArgs,
+                L"a declined method must not leave its flags on the shared point either");
+        }
+
+        TEST_METHOD(default_runtime_async_flag_reaches_its_own_method_but_not_a_sibling_overload)
+        {
+            // End to end, and the reason the copy cannot simply drop the flags: both overloads match
+            // the one parameterless point, and each method's own TracerFactoryArgs is observable
+            // because InstrumentFunctionManipulator emits it as `ldc.i4 <args>`.
+            auto sharedPoint = std::make_shared<Configuration::InstrumentationPoint>();
+            sharedPoint->AssemblyName = _X("MyAssembly");
+            sharedPoint->ClassName = _X("MyNamespace.MyClass");
+            sharedPoint->MethodName = _X("MyMethod");
+            auto settings = MakeSettingsForPoint(sharedPoint);
+
+            const auto runtimeAsyncFlagIl = LdcI4Bytes(Configuration::TracerFlags::RuntimeAsyncMethod);
+
+            ByteVector runtimeAsyncIl;
+            auto runtimeAsyncFunc = std::make_shared<MockFunction>();
+            runtimeAsyncFunc->_isRuntimeAsync = true;
+            runtimeAsyncFunc->_tracerFlags = Configuration::TracerFlags::RuntimeAsyncMethod;
+            MakeTaskReturning(runtimeAsyncFunc, L"System.Threading.Tasks.Task");
+            runtimeAsyncFunc->_writeMethodHandler = [&runtimeAsyncIl](const ByteVector& il) { runtimeAsyncIl = il; };
+
+            ByteVector siblingIl;
+            auto siblingFunc = std::make_shared<MockFunction>();
+            siblingFunc->_isRuntimeAsync = false;
+            siblingFunc->_tracerFlags = 0;
+            MakeTaskReturning(siblingFunc, L"System.Threading.Tasks.Task");
+            siblingFunc->_writeMethodHandler = [&siblingIl](const ByteVector& il) { siblingIl = il; };
+
+            DefaultInstrumentor instr;
+            instr.Instrument(runtimeAsyncFunc, settings, false, AgentCallStyle::Strategy::AppDomainFallbackCache);
+            instr.Instrument(siblingFunc, settings, false, AgentCallStyle::Strategy::AppDomainFallbackCache);
+
+            Assert::IsFalse(runtimeAsyncIl.empty(), L"the runtime-async method should have been rewritten");
+            Assert::IsFalse(siblingIl.empty(), L"the sibling overload should have been rewritten");
+            Assert::IsTrue(Contains(runtimeAsyncIl, runtimeAsyncFlagIl),
+                L"a method's own tracer flags must still reach its instrumented IL");
+            Assert::IsFalse(Contains(siblingIl, runtimeAsyncFlagIl),
+                L"the ordinary sibling overload must not inherit the runtime-async flag");
+        }
+
         TEST_METHOD(default_no_write_method_when_no_match_no_trace)
         {
             auto func = std::make_shared<MockFunction>();
@@ -188,6 +399,35 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             points->insert(func->GetInstrumentationPoint());
             auto instrumentation = std::make_shared<Configuration::InstrumentationConfiguration>(points, nullptr);
             return std::make_shared<InstrumentationSettings>(instrumentation, _X(""));
+        }
+
+        // Settings built around a caller-held instrumentation point, so a test can watch the exact
+        // object the configuration hands out to every matching function. The set constructor stores
+        // the pointer as-is (no class-name splitting, which only happens on the XML path).
+        static InstrumentationSettingsPtr MakeSettingsForPoint(Configuration::InstrumentationPointPtr point)
+        {
+            auto points = std::make_shared<Configuration::InstrumentationPointSet>();
+            points->insert(point);
+            auto instrumentation = std::make_shared<Configuration::InstrumentationConfiguration>(points, nullptr);
+            return std::make_shared<InstrumentationSettings>(instrumentation, _X(""));
+        }
+
+        // `ldc.i4 <value>` as InstrumentationSet emits it: the 0x20 opcode then a 4-byte
+        // little-endian operand.
+        static ByteVector LdcI4Bytes(uint32_t value)
+        {
+            return ByteVector {
+                0x20,
+                uint8_t(value & 0xff),
+                uint8_t((value >> 8) & 0xff),
+                uint8_t((value >> 16) & 0xff),
+                uint8_t((value >> 24) & 0xff)
+            };
+        }
+
+        static bool Contains(const ByteVector& haystack, const ByteVector& needle)
+        {
+            return std::search(haystack.begin(), haystack.end(), needle.begin(), needle.end()) != haystack.end();
         }
 
         // Creates a settings object with an instrumentation point for a .ctor method

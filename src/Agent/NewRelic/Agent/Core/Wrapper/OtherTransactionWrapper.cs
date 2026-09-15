@@ -64,6 +64,25 @@ public class OtherTransactionWrapper : IWrapper
         if (instrumentedMethodCall.IsAsync)
         {
             agent.CurrentTransaction.AttachToAsync();
+
+            // A runtime-async method's after-delegate fires only at true completion, not at
+            // a stub return, so this transaction would otherwise sit in the creating thread's primary
+            // (thread-local) storage for the method's entire life. ThreadLocalStorage.Clear() clears
+            // only the calling thread, so a transaction completing on a different thread would strand
+            // a finished transaction in the creating thread's slot permanently -- and because
+            // GetCurrentInternalTransaction checks primary storage before the async context, later
+            // continuations landing on that thread would find the finished one and skip their
+            // segments. Dropping it from primary storage here is what state-machine async gets for
+            // free from its early Detach(); the AttachToAsync above keeps the live transaction
+            // reachable through the async context, which flows into the continuations.
+            //
+            // Gated on newTransactionCreatedByWrapper because otherwise this wrapper is not what put
+            // the transaction into primary storage, and a synchronous caller further up may still be
+            // relying on finding it there.
+            if (instrumentedMethodCall.InstrumentedMethodInfo.IsRuntimeAsync && newTransactionCreatedByWrapper)
+            {
+                agent.CurrentTransaction.DetachFromPrimary();
+            }
         }
 
         var segment = !string.IsNullOrEmpty(instrumentedMethodCall.RequestedMetricName)

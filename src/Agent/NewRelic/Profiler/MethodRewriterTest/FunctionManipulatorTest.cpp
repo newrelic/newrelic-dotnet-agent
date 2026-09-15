@@ -70,6 +70,217 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             manipulator.InstrumentDefault(instrumentationPoint);
         }
 
+        // ---------------------------------------------------------------------------------------
+        // Runtime-async return handling. See RuntimeAsyncReturnType.h.
+        //
+        // A runtime-async method's IL body does not honor the return convention its signature
+        // declares: Task/ValueTask push nothing before `ret`, Task<T>/ValueTask<T> push an
+        // unwrapped T. Instrumenting against the declared type produced two distinct defects --
+        // a stack underflow for Task (an injected `stloc` with nothing to store) and a type
+        // mismatch for Task<T> (a T stored into a Task<T>-typed local, then returned as Task<T>).
+        //
+        // The strongest available statement of the fix is an equivalence: instrumenting a
+        // runtime-async method must emit exactly what instrumenting a method that genuinely
+        // returns the effective type emits. The return type reaches the generated IL only through
+        // the four return-value sites, so if the substitution is right the byte streams match, and
+        // if it is wrong they cannot. That holds without hard-coding IL layout, so these tests
+        // survive unrelated changes to the injected preamble.
+        // ---------------------------------------------------------------------------------------
+    private:
+        struct InstrumentationResult
+        {
+            ByteVector _methodBytes;
+            ByteVector _localsSignature;
+        };
+
+        // 0 parameters keeps the injected argument-marshalling identical across every function
+        // built here, so any difference in output has to come from the return type.
+        static std::shared_ptr<MockFunction> MakeFunction(const ByteVector& returnTypeBytes, bool isRuntimeAsync, const wchar_t* resolvedTypeName)
+        {
+            auto function = std::make_shared<MockFunction>();
+            function->_isRuntimeAsync = isRuntimeAsync;
+
+            auto resolver = std::make_shared<MockTokenResolver>();
+            resolver->_typeString = resolvedTypeName;
+            function->_tokenResolver = resolver;
+
+            function->_signature = std::make_shared<ByteVector>();
+            function->_signature->push_back(0x00);  // default calling convention
+            function->_signature->push_back(0x00);  // 0 parameters
+            function->_signature->insert(function->_signature->end(), returnTypeBytes.begin(), returnTypeBytes.end());
+
+            return function;
+        }
+
+        // not static: CreateInstrumentationPointThatMatchesFunction is a member of this fixture
+        InstrumentationResult InstrumentAndCapture(std::shared_ptr<MockFunction> function)
+        {
+            InstrumentationResult result;
+            function->_writeMethodHandler = [&result](const ByteVector& bytes) { result._methodBytes = bytes; };
+            function->_tokenFromSignatureHandler = [&result](const ByteVector& bytes) { result._localsSignature = bytes; };
+
+            InstrumentFunctionManipulator manipulator(function, std::make_shared<InstrumentationSettings>(nullptr, L""), false, AgentCallStyle::Strategy::AppDomainFallbackCache);
+            manipulator.InstrumentDefault(CreateInstrumentationPointThatMatchesFunction(function));
+
+            Assert::IsFalse(result._methodBytes.empty(), L"instrumentation did not write a method");
+            Assert::IsFalse(result._localsSignature.empty(), L"instrumentation did not write a locals signature");
+            return result;
+        }
+
+        // Counts what the tracer-argument array pushes as System.Type values. Type::GetTypeFromHandle
+        // is emitted once per System.Type, so the count is the discriminator: the declaring type is
+        // always pushed, and the effective return type adds a second one only for a runtime-async
+        // method whose body actually returns something.
+        //
+        // not static: CreateInstrumentationPointThatMatchesFunction is a member of this fixture
+        size_t CountGetTypeFromHandle(std::shared_ptr<MockFunction> function)
+        {
+            auto tokenizer = std::make_shared<RecordingTokenizer>();
+            function->_tokenizer = tokenizer;
+
+            InstrumentFunctionManipulator manipulator(function, std::make_shared<InstrumentationSettings>(nullptr, L""), false, AgentCallStyle::Strategy::AppDomainFallbackCache);
+            manipulator.InstrumentDefault(CreateInstrumentationPointThatMatchesFunction(function));
+
+            return (size_t)std::count(tokenizer->_memberRefMethodNames.begin(), tokenizer->_memberRefMethodNames.end(), std::wstring(_X("GetTypeFromHandle")));
+        }
+
+        static void AssertBytesEqual(const ByteVector& expected, const ByteVector& actual, const wchar_t* message)
+        {
+            Assert::AreEqual(expected.size(), actual.size(), message);
+            for (size_t i = 0; i < expected.size(); ++i)
+            {
+                Assert::AreEqual(uint32_t(expected[i]), uint32_t(actual[i]), message);
+            }
+        }
+
+        // ECMA-335 LocalVarSig: 0x07, compressed local count, then one type per local.
+        static uint8_t LocalCount(const ByteVector& localsSignature)
+        {
+            Assert::AreEqual(uint32_t(0x07), uint32_t(localsSignature.at(0)), L"expected a LOCAL_SIG locals signature");
+            return localsSignature.at(1);
+        }
+
+        // metadata type names, so the generic form carries its `1 arity suffix
+        static const wchar_t* TaskTypeName() { return L"System.Threading.Tasks.Task"; }
+        static const wchar_t* GenericTaskTypeName() { return L"System.Threading.Tasks.Task`1"; }
+
+        // ELEMENT_TYPE_VOID / _I4 / _CLASS+token / _GENERICINST _CLASS+token 1 _I4
+        static ByteVector VoidReturn() { return ByteVector{ 0x01 }; }
+        static ByteVector Int32Return() { return ByteVector{ 0x08 }; }
+        static ByteVector TaskReturn() { return ByteVector{ 0x12, 0x49 }; }
+        static ByteVector GenericTaskOfInt32Return() { return ByteVector{ 0x15, 0x12, 0x49, 0x01, 0x08 }; }
+
+    public:
+        TEST_METHOD(runtime_async_task_is_instrumented_exactly_like_a_void_method)
+        {
+            // the shape the attached repro hits: nothing is pushed before ret, so the correct
+            // instrumentation is byte-for-byte the void instrumentation -- no result local, no
+            // store, a bare ret
+            auto asyncResult = InstrumentAndCapture(MakeFunction(TaskReturn(), true, TaskTypeName()));
+            auto voidResult = InstrumentAndCapture(MakeFunction(VoidReturn(), false, TaskTypeName()));
+
+            AssertBytesEqual(voidResult._localsSignature, asyncResult._localsSignature,
+                L"a runtime-async Task method must declare the same locals as a void method");
+            AssertBytesEqual(voidResult._methodBytes, asyncResult._methodBytes,
+                L"a runtime-async Task method must be instrumented exactly like a void method");
+        }
+
+        TEST_METHOD(runtime_async_task_declares_no_result_local)
+        {
+            // states the same fact directly, so the intent survives even if the baseline above moves
+            auto asyncResult = InstrumentAndCapture(MakeFunction(TaskReturn(), true, TaskTypeName()));
+            Assert::AreEqual(uint32_t(2), uint32_t(LocalCount(asyncResult._localsSignature)),
+                L"only the tracer and userException locals belong to a runtime-async Task method");
+        }
+
+        TEST_METHOD(runtime_async_generic_task_declares_the_same_locals_as_an_int_method)
+        {
+            // async Task<int> pushes an int, so it needs the locals an int-returning method needs:
+            // an int-typed result local, not a Task<int> one.
+            //
+            // This asserted full methodBytes equality until the tracer-argument array began carrying
+            // the effective return type. That array is a fifth site the return type reaches, and it is
+            // deliberately different between these two functions -- the runtime-async one tokenizes
+            // System.Int32 for the return-type slot, the ordinary one pushes null -- so byte equality
+            // is no longer the right statement. The store/box/return sites stay covered by
+            // runtime_async_generic_task_result_local_is_the_unwrapped_type and
+            // the_async_impl_flag_changes_the_emitted_instrumentation; the new slot is covered by
+            // runtime_async_generic_task_passes_its_effective_return_type_to_get_tracer.
+            auto asyncResult = InstrumentAndCapture(MakeFunction(GenericTaskOfInt32Return(), true, GenericTaskTypeName()));
+            auto intResult = InstrumentAndCapture(MakeFunction(Int32Return(), false, GenericTaskTypeName()));
+
+            AssertBytesEqual(intResult._localsSignature, asyncResult._localsSignature,
+                L"a runtime-async Task<int> method must declare an int result local, not a Task<int> one");
+        }
+
+        TEST_METHOD(runtime_async_generic_task_result_local_is_the_unwrapped_type)
+        {
+            auto asyncResult = InstrumentAndCapture(MakeFunction(GenericTaskOfInt32Return(), true, GenericTaskTypeName()));
+            auto& localsSignature = asyncResult._localsSignature;
+
+            Assert::AreEqual(uint32_t(3), uint32_t(LocalCount(localsSignature)),
+                L"tracer, userException and an int result local");
+            Assert::AreEqual(uint32_t(0x08), uint32_t(localsSignature.back()),
+                L"the result local must be ELEMENT_TYPE_I4, the unwrapped type argument");
+
+            // the declared Task<int> would have entered the signature as GENERICINST (0x15)
+            for (size_t i = 0; i < localsSignature.size(); ++i)
+            {
+                Assert::AreNotEqual(uint32_t(0x15), uint32_t(localsSignature[i]),
+                    L"no generic instantiation belongs in the locals of a runtime-async Task<int> method");
+            }
+        }
+
+        TEST_METHOD(the_async_impl_flag_changes_the_emitted_instrumentation)
+        {
+            // negative control: the same Task-returning signature without the flag is an ordinary
+            // synchronous method and must still be instrumented against its declared return type
+            auto asyncResult = InstrumentAndCapture(MakeFunction(TaskReturn(), true, TaskTypeName()));
+            auto syncResult = InstrumentAndCapture(MakeFunction(TaskReturn(), false, TaskTypeName()));
+
+            Assert::AreEqual(uint32_t(2), uint32_t(LocalCount(asyncResult._localsSignature)),
+                L"the runtime-async method needs no result local");
+            Assert::AreEqual(uint32_t(3), uint32_t(LocalCount(syncResult._localsSignature)),
+                L"the synchronous method still stores its returned Task in a result local");
+            Assert::AreNotEqual(syncResult._methodBytes.size(), asyncResult._methodBytes.size(),
+                L"the Async impl flag must change what is emitted");
+        }
+
+        // ---------------------------------------------------------------------------------------
+        // The tracer-argument array carries the type the body actually returns, so the managed
+        // normalizer does not have to rediscover it by reflecting over the declaring type and
+        // resolving overloads. It is populated only for runtime-async methods: tokenizing an
+        // ordinary method's declared return type would newly throw for the by-ref and pointer
+        // returns that instrument correctly today.
+        // ---------------------------------------------------------------------------------------
+        TEST_METHOD(runtime_async_generic_task_passes_its_effective_return_type_to_get_tracer)
+        {
+            auto count = CountGetTypeFromHandle(MakeFunction(GenericTaskOfInt32Return(), true, GenericTaskTypeName()));
+
+            Assert::AreEqual((size_t)2, count,
+                L"expected one GetTypeFromHandle for the declaring type and one for the effective return type");
+        }
+
+        TEST_METHOD(ordinary_method_passes_no_return_type_to_get_tracer)
+        {
+            // regression guard on the gate: the same signature without the Async impl flag is an
+            // ordinary Task-returning method and must push null, tokenizing nothing
+            auto count = CountGetTypeFromHandle(MakeFunction(GenericTaskOfInt32Return(), false, GenericTaskTypeName()));
+
+            Assert::AreEqual((size_t)1, count,
+                L"an ordinary method must push null for its return type, tokenizing nothing");
+        }
+
+        TEST_METHOD(runtime_async_task_passes_no_return_type_to_get_tracer)
+        {
+            // a runtime-async Task has a void effective return type, so nothing is tokenized even
+            // though the gate is open
+            auto count = CountGetTypeFromHandle(MakeFunction(TaskReturn(), true, TaskTypeName()));
+
+            Assert::AreEqual((size_t)1, count,
+                L"a void effective return type must push null");
+        }
+
         //TEST_METHOD(test_method_with_no_code)
         //{
         //    Assert::Fail(L"Test not implemented.");

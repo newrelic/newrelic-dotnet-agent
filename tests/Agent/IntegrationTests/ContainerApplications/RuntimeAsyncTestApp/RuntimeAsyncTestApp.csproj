@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <DockerfileContext>.</DockerfileContext>
+    <!-- Compiles the async methods in this app using the runtime-async calling convention
+         rather than compiler-generated state machines. It is a preview feature on net10.0,
+         so no newer SDK is needed to build this.
+         The methods still need DOTNET_RuntimeAsync=1 at run time; the Dockerfile sets it. -->
+    <Features>runtime-async=on</Features>
+    <!-- Both are emitted as errors, and Directory.Build.props sets TreatWarningsAsErrors.
+         SYSLIB5007: the lowering targets System.Runtime.CompilerServices.AsyncHelpers, which
+         is [Experimental] on net10.0. CA2252: using a preview feature.
+         EnablePreviewFeatures does NOT suppress either one - these NoWarns are load-bearing. -->
+    <NoWarn>$(NoWarn);SYSLIB5007;CA2252</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.23.0" />
+    <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="18.7.23">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="NewRelic.Agent.Api" Version="10.54.0" />
+  </ItemGroup>
+</Project>

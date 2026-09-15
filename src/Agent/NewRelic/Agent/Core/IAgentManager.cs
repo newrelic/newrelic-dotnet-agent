@@ -27,6 +27,8 @@ public interface IAgentManager
     /// <param name="invocationTarget"></param>
     /// <param name="arguments"></param>
     /// <param name="functionId"></param>
+    /// <param name="effectiveReturnType">The type the instrumented body actually returns, for a
+    /// runtime-async method; null for every other method and for a void effective return.</param>
     /// <returns>Returns an ITracer as an Object, since that built-in type is much easier to use in call-point type signatures</returns>
-    ITracer GetTracerImpl(string tracerFactoryName, uint tracerArguments, string metricName, string assemblyName, Type type, string typeName, string methodName, string argumentSignature, object invocationTarget, object[] arguments, ulong functionId);
+    ITracer GetTracerImpl(string tracerFactoryName, uint tracerArguments, string metricName, string assemblyName, Type type, string typeName, string methodName, string argumentSignature, object invocationTarget, object[] arguments, ulong functionId, Type effectiveReturnType);
 }

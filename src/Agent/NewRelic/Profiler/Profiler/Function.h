@@ -19,6 +19,13 @@ namespace NewRelic { namespace Profiler
 {
     using NewRelic::Profiler::MethodRewriter::FunctionHeaderInfoPtr;
 
+    // MethodImplAttributes.Async -- set by the C# compiler on methods built with runtime-async. Not yet present in the vendored coreclr headers (CorMethodImpl in
+    // externals/coreclr-headers/src/inc/corhdr.h stops at miInternalCall = 0x1000), so it
+    // is defined here. Replace with miAsync once those headers are updated; the name is
+    // deliberately different so a header bump cannot collide with this declaration.
+    // Spec: dotnet/runtime docs/design/specs/runtime-async.md, II.23.1.11.
+    constexpr DWORD CorMethodImplAsync = 0x2000;
+
 #ifdef DEBUG
 //#define DEBUG_PREPROCESSOR 1 // when enabled the profiler will instrument tons of methods to help identify issues with method manipulation
 //#define WRITE_BYTES_TO_DISK 1
@@ -51,6 +58,7 @@ namespace NewRelic { namespace Profiler
         mdTypeDef _typeDefinitionToken;
         DWORD _classAttributes;
         DWORD _methodAttributes;
+        DWORD _methodImplFlags;
         FunctionHeaderInfoPtr _functionHeaderInfo;
         bool _shouldTrace;
         bool _valid;
@@ -155,7 +163,9 @@ namespace NewRelic { namespace Profiler
             StaticThrowOnError(metaDataImport->GetMethodProps(metaDataToken, nullptr, nullptr, 0, &functionNameLength, &methodAttributes, nullptr, nullptr, nullptr, nullptr));
             
             std::unique_ptr<WCHAR[]> functionName(new WCHAR[functionNameLength]);
-            StaticThrowOnError(metaDataImport->GetMethodProps(metaDataToken, &typeDefinitionToken, functionName.get(), functionNameLength, nullptr, nullptr, &signature, &signatureSize, nullptr, nullptr));
+            // the final out-param is pdwImplFlags; we read it to detect runtime-async methods
+            DWORD methodImplFlags = 0;
+            StaticThrowOnError(metaDataImport->GetMethodProps(metaDataToken, &typeDefinitionToken, functionName.get(), functionNameLength, nullptr, nullptr, &signature, &signatureSize, nullptr, &methodImplFlags));
 
             if (!skipShouldInstrumentChecks && !methodRewriter.get()->ShouldInstrumentFunction(ToStdWString(functionName.get()))) {
                 LogTrace(ToStdWString(functionName.get()), L" is not an instrumented function");
@@ -198,7 +208,7 @@ namespace NewRelic { namespace Profiler
 
             return std::make_shared<Function>(profilerInfo, functionId, metaDataImport, metaDataAssemblyImport, methodRewriter,
                 appDomainId, signatureSize, signature, moduleId, classId, metaDataToken, typeDefinitionToken, ToStdWString(assemblyName.get()), 
-                typeName, ToStdWString(functionName.get()), classAttributes, methodAttributes, tracerFlags, 
+                typeName, ToStdWString(functionName.get()), classAttributes, methodAttributes, methodImplFlags, tracerFlags,
                 hasTransactionOrTraceAttribute, injectMethodInstrumentation, setILFunctionBodyOrRejit, rejitFunction);
         }
 
@@ -259,6 +269,7 @@ namespace NewRelic { namespace Profiler
             xstring_t functionName,
             DWORD classAttributes,
             DWORD methodAttributes,
+            DWORD methodImplFlags,
             uint32_t tracerFlags,
             bool shouldTrace,
             bool injectMethodInstrumentation,
@@ -279,6 +290,7 @@ namespace NewRelic { namespace Profiler
             _typeDefinitionToken(typeDefinitionToken),
             _classAttributes(classAttributes),
             _methodAttributes(methodAttributes),
+            _methodImplFlags(methodImplFlags),
             _shouldTrace(shouldTrace),
             _valid(true),
             _isCoreClr(false),
@@ -335,12 +347,38 @@ namespace NewRelic { namespace Profiler
             const BYTE *pVal = NULL;
             ULONG cbVal = 0;
 
+            // This is the ONLY place TracerFlags::AsyncMethod is set, and it must stay gated on
+            // AsyncStateMachineAttribute alone. A runtime-async method does not carry that
+            // attribute, so it correctly does NOT get this flag -- it gets RuntimeAsyncMethod
+            // (below) instead.
+            //
+            // The distinction matters because AsyncMethod is a promise about the result slot, not a
+            // description of the method: it tells the managed agent that the value passed to
+            // FinishTracer is a Task which has NOT yet completed, so the segment must be ended from
+            // a continuation on it. A runtime-async body never produces such a Task -- nothing for
+            // Task/ValueTask, an unwrapped T for Task<T>/ValueTask<T>. Setting AsyncMethod here
+            // would make DefaultWrapperAsync attach a continuation to a null or a boxed T, leaking
+            // the segment and stranding the transaction.
+            //
+            // WrapperService restores that promise for RuntimeAsyncMethod methods by synthesizing a
+            // completed Task from the real result, and only then treats them as async. See
+            // RuntimeAsyncReturnType.h and Core/Wrapper/RuntimeAsyncResultNormalizer.cs.
             HRESULT attributeResult = _metaDataImport->GetCustomAttributeByName(_metaDataToken, _X("System.Runtime.CompilerServices.AsyncStateMachineAttribute"), (const void**)&pVal, &cbVal);
             // It is not safe for us to use the SUCCEEDED macro on the result returned from GetCustomAttributeByName
             if (attributeResult == S_OK)
             {
                 LogDebug(L"Async method detected: ", this->ToString());
                 _tracerFlags |= NewRelic::Profiler::Configuration::TracerFlags::AsyncMethod;
+            }
+
+            // Runtime-async is signaled by a method impl flag rather than an attribute. Test the
+            // member directly instead of calling the virtual IsRuntimeAsync() -- _methodImplFlags is
+            // initialized in the member-init list so it is already valid here, and this avoids a
+            // virtual dispatch from inside a constructor.
+            if ((_methodImplFlags & CorMethodImplAsync) != 0)
+            {
+                LogDebug(L"Runtime-async method detected: ", this->ToString());
+                _tracerFlags |= NewRelic::Profiler::Configuration::TracerFlags::RuntimeAsyncMethod;
             }
 
             mdAssembly mda = 0;
@@ -402,6 +440,16 @@ namespace NewRelic { namespace Profiler
         virtual bool IsCoreClr() override
         {
             return _isCoreClr;
+        }
+
+        // A runtime-async method carries no AsyncStateMachineAttribute -- the compiler
+        // emits the body directly on the method and flags it here instead. Such a method returns
+        // its unwrapped type (nothing for Task/ValueTask, T for Task<T>/ValueTask<T>) even though
+        // its signature declares the task type, so the default instrumentation's signature-derived
+        // return handling would produce unverifiable IL.
+        virtual bool IsRuntimeAsync() override
+        {
+            return (_methodImplFlags & CorMethodImplAsync) != 0;
         }
 
         virtual bool ShouldTrace() override

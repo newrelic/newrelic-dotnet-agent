@@ -1,0 +1,16 @@
+# The following must be set either in environment variables or via a .env file in the same folder as this file:
+#
+# See docker-compose-base.yml for common required variables.
+# CONTAINER_NAME  The name for the container
+#
+# To build and run, execute `docker compose -f <path to docker-compose.yml> up`
+# Alternatively, set COMPOSE_FILE environment variable to the path and omit the -f parameter
+
+services:
+    runtimeasynctestapp:
+        extends:
+            file: docker-compose-base.yml
+            service: base-app
+        container_name: ${CONTAINER_NAME}
+        image: ${CONTAINER_NAME}
+        platform: ${PLATFORM}

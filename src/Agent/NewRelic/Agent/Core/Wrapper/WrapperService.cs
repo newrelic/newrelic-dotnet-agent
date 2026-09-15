@@ -18,7 +18,7 @@ namespace NewRelic.Agent.Core.Wrapper;
 
 public interface IWrapperService
 {
-    AfterWrappedMethodDelegate BeforeWrappedMethod(Type type, string methodName, string argumentSignature, object invocationTarget, object[] methodArguments, string tracerFactoryName, string metricName, uint tracerArguments, ulong functionId);
+    AfterWrappedMethodDelegate BeforeWrappedMethod(Type type, string methodName, string argumentSignature, object invocationTarget, object[] methodArguments, string tracerFactoryName, string metricName, uint tracerArguments, ulong functionId, Type effectiveReturnType);
     void ClearCaches();
 }
 
@@ -66,10 +66,22 @@ public class WrapperService : IWrapperService
 
     public AfterWrappedMethodDelegate BeforeWrappedMethod(Type type, string methodName, string argumentSignature,
         object invocationTarget, object[] methodArguments, string tracerFactoryName, string metricName,
-        uint tracerArguments, ulong functionId)
+        uint tracerArguments, ulong functionId, Type effectiveReturnType)
     {
         InstrumentedMethodInfo instrumentedMethodInfo = default(InstrumentedMethodInfo);
         TrackedWrapper trackedWrapper;
+
+        // Resolved per call rather than stored with the functionId. A functionId is per method
+        // DEFINITION, so a generic runtime-async method arrives here once per instantiation with a
+        // different effectiveReturnType each time while the functionId stays the same -- caching the
+        // delegate against the functionId would hand later instantiations the first one's delegate,
+        // whose result would silently become default(T). TryCreate is itself a type-keyed dictionary
+        // lookup, so resolving per call is cheap.
+        var isRuntimeAsync = TracerArgument.IsRuntimeAsync(tracerArguments);
+        var resultNormalizer = isRuntimeAsync
+            ? RuntimeAsyncResultNormalizer.TryCreate(effectiveReturnType)
+            : null;
+
         if (_functionIdToWrapper.TryGetValue(functionId, out InstrumentedMethodInfoWrapper methodAndWrapper))
         {
             instrumentedMethodInfo = methodAndWrapper.instrumentedMethodInfo;
@@ -80,6 +92,21 @@ public class WrapperService : IWrapperService
             bool isCustom = KnownCustomTracerNames.Contains(tracerFactoryName);
             var isAsync = TracerArgument.IsAsync(tracerArguments);
 
+            // A runtime-async method is async in every way the wrappers care about, but its
+            // IL body returns the unwrapped result rather than a Task, so the profiler deliberately
+            // withholds TracerFlags.Async. Only once a normalizer exists may we call the method
+            // async, because IsAsync is a promise about the result slot as well as a description of
+            // the method.
+            if (resultNormalizer != null)
+            {
+                isAsync = true;
+            }
+            else if (isRuntimeAsync)
+            {
+                Log.Finest("Could not build a result normalizer for runtime-async method {0}.{1}({2}); instrumenting it with synchronous completion semantics.",
+                    type.FullName, methodName, argumentSignature);
+            }
+
             if (TracerArgument.IsFlagSet(tracerArguments, TracerFlags.AttributeInstrumentation))
             {
                 tracerFactoryName = ResolveTracerFactoryNameForAttributeInstrumentation(tracerArguments, isAsync, tracerFactoryName);
@@ -88,7 +115,7 @@ public class WrapperService : IWrapperService
 
             var method = new Method(type, methodName, argumentSignature, functionId.GetHashCode());
             var transactionNamePriority = TracerArgument.GetTransactionNamingPriority(tracerArguments);
-            instrumentedMethodInfo = new InstrumentedMethodInfo((long)functionId, method, tracerFactoryName, isAsync, metricName, transactionNamePriority, TracerArgument.IsFlagSet(tracerArguments, TracerFlags.WebTransaction));
+            instrumentedMethodInfo = new InstrumentedMethodInfo((long)functionId, method, tracerFactoryName, isAsync, metricName, transactionNamePriority, TracerArgument.IsFlagSet(tracerArguments, TracerFlags.WebTransaction), isRuntimeAsync);
 
             trackedWrapper = _wrapperMap.Get(instrumentedMethodInfo);
 
@@ -188,10 +215,17 @@ public class WrapperService : IWrapperService
                 {
                     using (_agentTimerService.StartNew("AfterWrappedMethod", type.FullName, methodName))
                     {
+                        // A thrown exception routes to onFailure, which ends the segment
+                        // synchronously and is already correct for runtime-async. Only the success
+                        // result needs restoring to the Task shape the wrappers expect.
+                        var normalizedResult = resultNormalizer != null && exception == null
+                            ? resultNormalizer(result)
+                            : result;
+
                         // if the wrapper throws an exception when executing the post-method code, make sure the wrapper isn't called again in the future
                         try
                         {
-                            afterWrappedMethod(result, exception);
+                            afterWrappedMethod(normalizedResult, exception);
                             trackedWrapper.NoticeSuccess();
                         }
                         catch (Exception)

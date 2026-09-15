@@ -12,6 +12,7 @@
 #include "ApiFunctionManipulator.h"
 #include "HelperFunctionManipulator.h"
 #include "InstrumentFunctionManipulator.h"
+#include "RuntimeAsyncReturnType.h"
 #include "../Configuration/InstrumentationPoint.h"
 #include "../Configuration/InstrumentationConfiguration.h"
 #include "../Common/CorStandIn.h"
@@ -46,6 +47,18 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
                 instrumentationPoint->TracerFactoryName = _X("NewRelic.Agent.Core.Tracer.Factories.DefaultTracerFactory");
                 instrumentationPoint->TracerFactoryArgs = 0;
             }
+            else
+            {
+                // TryGetInstrumentationPoint hands back the object stored in the configuration's
+                // map, not a copy, and one point serves EVERY function that matches it -- a
+                // parameterless <exactMethodMatcher> matches all overloads of the method name. So
+                // OR-ing this function's flags into it would leave them set for every sibling
+                // instrumented afterwards: a plain Task-returning overload would be reported as
+                // RuntimeAsyncMethod, and WrapperService would then swap its real pending Task for a
+                // synthesized completed one, ending the segment before the work finishes. Copy first
+                // so per-function flags stay per-function.
+                instrumentationPoint = std::make_shared<Configuration::InstrumentationPoint>(*instrumentationPoint);
+            }
 
             instrumentationPoint->TracerFactoryArgs |= function->GetTracerFlags();
 
@@ -62,6 +75,24 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             }
             if (IsMdPinvokeImpl(function->GetMethodAttributes()) || IsMdUnmanagedExport(function->GetMethodAttributes())) {
                 LogError(L"Skipping interop method: ", function->ToString());
+                return false;
+            }
+            // A runtime-async method returns its unwrapped type rather than the task type
+            // its signature declares. The rewriter handles that for the four return types the spec
+            // permits (Task, ValueTask, Task<T>, ValueTask<T>) by substituting an effective return
+            // type; see RuntimeAsyncReturnType.h.
+            //
+            // Any other shape is declined. MethodImplAttributes.Async can be set but inert -- the
+            // spec says it "only has effect" on Task/ValueTask returns -- and applying the async
+            // return convention to a method that actually uses the synchronous one would inject the
+            // very InvalidProgramException this code prevents. Losing telemetry on an unknown shape
+            // is the safe trade; the warning tells us if it ever actually happens.
+            //
+            // Must stay above the ShouldInjectMethodInstrumentation() call so we don't request a
+            // rejit we won't honor.
+            if (function->IsRuntimeAsync() &&
+                    RuntimeAsync::GetEffectiveReturnTypeFromSignature(function->GetSignature(), function->GetTokenResolver()) == nullptr) {
+                LogWarn(L"Skipping runtime-async method with an unrecognized return type: ", function->ToString());
                 return false;
             }
 

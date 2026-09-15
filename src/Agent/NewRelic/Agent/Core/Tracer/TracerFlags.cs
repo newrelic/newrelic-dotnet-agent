@@ -19,6 +19,10 @@ public enum TracerFlags : uint
     OtherTransaction = 1 << 22,
     WebTransaction = 1 << 21,
     AttributeInstrumentation = 1 << 20,
+
+    // A runtime-async method. Distinct from Async on purpose: see IsRuntimeAsync below.
+    RuntimeAsync = 1 << 19,
+
     UseInvocationTargetClassName = 1 << 15,
     CustomMetricName = 1 << 14,
     SuppressRecursiveCalls = 1 << 13,
@@ -62,6 +66,22 @@ public static class TracerArgument
     public static bool IsAsync(uint tracerArguments)
     {
         return IsFlagSet(tracerArguments, TracerFlags.Async);
+    }
+
+    /// <summary>
+    /// Checks to see if the "RuntimeAsync" bit was set in the tracerArguments from the profiler.
+    /// True when the instrumented method carries MethodImplAttributes.Async, i.e. it is a
+    /// runtime-async method. Such a method is NOT flagged <see cref="TracerFlags.Async"/>, because
+    /// that flag promises the value handed to the after-delegate is a not-yet-complete Task, and a
+    /// runtime-async body returns nothing (Task/ValueTask) or an unwrapped T (Task&lt;T&gt;/
+    /// ValueTask&lt;T&gt;) instead. WrapperService synthesizes the promised Task before treating
+    /// these methods as async.
+    /// </summary>
+    /// <param name="tracerArguments"></param>
+    /// <returns>true if the runtime-async bit has been set on tracerArguments</returns>
+    public static bool IsRuntimeAsync(uint tracerArguments)
+    {
+        return IsFlagSet(tracerArguments, TracerFlags.RuntimeAsync);
     }
 
     public static bool IsFlagSet(uint tracerArguments, TracerFlags flag)
