@@ -27,6 +27,16 @@ run, and it is written by a process you cannot interview. Work it in this order.
 - Ask the engineer for the reported symptom before you conclude, if they have
   not stated one. A match cannot be tested against a symptom that is not on
   the table.
+- A mechanism is not a cause. When the customer reports the behaviour changed
+  after an upgrade, a mechanism found in the log - no transaction, a disabled
+  wrapper, a missing segment - is the how, not the why. Something in the
+  version delta produced it; report the mechanism and that delta together,
+  never the mechanism alone.
+- Use the version window. When the report names a version where it worked,
+  pass `--worked-on <that version>` to `triage` and read every entry between
+  the two versions, not only what a keyword happens to match. When the report
+  does not name one, ask for it; it is usually the cheapest question on the
+  ticket.
 
 ## Workflow
 

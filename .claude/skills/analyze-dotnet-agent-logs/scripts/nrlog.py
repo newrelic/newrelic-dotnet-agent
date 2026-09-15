@@ -1322,8 +1322,99 @@ def _keyword_pattern(keyword):
     return re.compile(r'(?<!\w)%s(?:s|es)?(?!\w)' % re.escape(keyword))
 
 
-def version_block(version, keywords, data, limit=4):
-    """Report the session's currency, and the fixes since it that match the symptom."""
+WORKED_ON_CAP = 20
+LOG_TERM_MIN_LENGTH = 4
+LOG_TERM_CAP = 8
+# framework-ubiquitous names that would match almost any fix and tell the engineer nothing
+LOG_TERM_STOPLIST = frozenset(s.lower() for s in (
+    'System', 'Microsoft', 'Threading', 'Tasks', 'Collections', 'Generic',
+    'String', 'Object', 'Int32', 'Int64', 'Boolean', 'Void', 'Async', 'Task',
+    'Method', 'Transaction', 'Wrapper'))
+_LOG_TERM_TOKEN_RE = re.compile(r'[A-Za-z][A-Za-z0-9]*')
+
+
+def extract_log_terms(evidence, cap=LOG_TERM_CAP):
+    """Candidate terms pulled from the log's own text, not a playbook's vocabulary.
+
+    evidence is the (name, lineno, text) tuples a matched playbook quoted; the text is
+    already redacted and width-capped, so no secret can reach a term. A dotted name like
+    `Confluent.Kafka.Consumer` becomes three terms; short and stoplisted ones are dropped.
+    """
+    seen = set()
+    terms = []
+    for _name, _lineno, text in evidence:
+        for token in _LOG_TERM_TOKEN_RE.findall(text or ''):
+            if len(token) < LOG_TERM_MIN_LENGTH:
+                continue
+            lowered = token.lower()
+            if lowered in LOG_TERM_STOPLIST or lowered in seen:
+                continue
+            seen.add(lowered)
+            terms.append(token)
+            if len(terms) >= cap:
+                return terms
+    return terms
+
+
+def _log_terms_block(log_terms, newer, limit):
+    """A filter kept separate from the keyword section: provenance matters here, so an
+    engineer can see which hits came from a playbook's vocabulary and which from the log's
+    own text."""
+    if not log_terms:
+        return []
+    needles = [_keyword_pattern(t.lower()) for t in log_terms]
+    hits = []
+    for release in newer:
+        for fix in release.get('fixes') or []:
+            lowered = fix.lower()
+            if any(needle.search(lowered) for needle in needles):
+                hits.append((release.get('version', '?'), fix))
+    lines = [_pad('LOG-TERMS', 'terms pulled from the log, not a playbook: %s'
+                              % ', '.join(log_terms))]
+    lines.append(_pad('', 'fixes since, matching those terms: %d' % len(hits)))
+    for release_version, fix in hits[:limit]:
+        lines.append(_pad('', '  %-9s %s' % (release_version, fix)))
+    if len(hits) > limit:
+        lines.append(_pad('', '  ... %d more not shown, and any one of them could '
+                              'outrank what is shown above' % (len(hits) - limit)))
+    if hits:
+        lines.append(_pad('', 'a log-term match is not a diagnosis; it is a candidate, '
+                              'the same as a keyword match'))
+    return lines
+
+
+def _worked_on_block(worked_on, found, version, releases):
+    """Every changelog entry between a customer-named working version and this session's
+    version - complete and unfiltered, because that is the commonest regression shape:
+    something changed in that window, and a keyword guess should not be needed to find it.
+    """
+    if worked_on is None:
+        return []
+    parsed = parse_version(worked_on)
+    if not parsed:
+        return [_pad('WORKED-ON', '--worked-on "%s" is not a parseable version; '
+                                  'skipping the window' % worked_on)]
+    if parsed >= found:
+        return [_pad('WORKED-ON', '--worked-on %s is not older than the session version '
+                                  '%s; no window to show' % (worked_on, version))]
+    window = [(release.get('version', '?'), fix)
+             for release in releases
+             if parsed < (parse_version(release.get('version')) or (0, 0, 0)) <= found
+             for fix in (release.get('fixes') or [])]
+    lines = [_pad('WORKED-ON', 'window %s .. %s: %d entrie(s), complete and unfiltered'
+                              % (worked_on, version, len(window)))]
+    for release_version, fix in window[:WORKED_ON_CAP]:
+        lines.append(_pad('', '  %-9s %s' % (release_version, fix)))
+    if len(window) > WORKED_ON_CAP:
+        lines.append(_pad('', '  ... %d more not shown, out of a window meant to be '
+                              'complete' % (len(window) - WORKED_ON_CAP)))
+    return lines
+
+
+def version_block(version, keywords, data, limit=4, worked_on=None, log_terms=None):
+    """Report the session's currency, the fixes since it that match the symptom, the
+    complete window since a version the customer named as working, and any changelog
+    hits the log's own vocabulary turns up that the playbook keywords missed."""
     if not data:
         return [_pad('VERSION', 'changelog not reachable; latest version unknown, '
                                 'currency not checked')]
@@ -1337,14 +1428,14 @@ def version_block(version, keywords, data, limit=4):
     releases = data.get('releases') or []
     newer = [r for r in releases
              if (parse_version(r.get('version')) or (0, 0, 0)) > found]
-    lines = []
     if not newer:
-        lines.append(_pad('VERSION', '%s is current as of the changelog from %s (latest %s)'
-                                     % (version, source, latest)))
+        lines = [_pad('VERSION', '%s is current as of the changelog from %s (latest %s)'
+                                 % (version, source, latest))]
+        lines.extend(_worked_on_block(worked_on, found, version, releases))
         return lines
-    lines.append(_pad('VERSION', '%s is %d release(s) behind %s (%s), changelog from %s'
-                                 % (version, len(newer), latest,
-                                    newer[0].get('date', '?'), source)))
+    lines = [_pad('VERSION', '%s is %d release(s) behind %s (%s), changelog from %s'
+                             % (version, len(newer), latest,
+                                newer[0].get('date', '?'), source))]
     all_fixes = [(release.get('version', '?'), fix)
                  for release in newer for fix in (release.get('fixes') or [])]
     lines.append(_pad('', '%d fix(es) total across those releases, before any filter'
@@ -1361,6 +1452,8 @@ def version_block(version, keywords, data, limit=4):
                                   % (len(all_fixes) - limit)))
         lines.append(_pad('', 'these are candidates, not findings; nothing has been '
                               'ruled in or ruled out'))
+        lines.extend(_log_terms_block(log_terms, newer, limit))
+        lines.extend(_worked_on_block(worked_on, found, version, releases))
         return lines
 
     needles = [_keyword_pattern(k.lower()) for k in keywords]
@@ -1380,6 +1473,8 @@ def version_block(version, keywords, data, limit=4):
         lines.append(_pad('', 'a keyword match is not a diagnosis; it is a candidate'))
     lines.append(_pad('', 'this filter uses only the matched playbooks\' keywords; '
                           'a wrong match narrows it wrongly'))
+    lines.extend(_log_terms_block(log_terms, newer, limit))
+    lines.extend(_worked_on_block(worked_on, found, version, releases))
     return lines
 
 
@@ -1585,7 +1680,8 @@ def _render_next(selected, blocked, path, index):
 
 
 def triage_report(path, file=None, session=None, playbooks=None, max_matched=5,
-                  evidence=2, width=EVIDENCE_WIDTH, no_version=False, changelog=None):
+                  evidence=2, width=EVIDENCE_WIDTH, no_version=False, changelog=None,
+                  worked_on=None):
     """One routed verdict for one session: input, level, profiler, playbooks, version."""
     reset_profiler_cache()
     books = load_playbooks(playbooks)
@@ -1629,9 +1725,13 @@ def triage_report(path, file=None, session=None, playbooks=None, max_matched=5,
     lines.extend(_render_errors(chosen, matched, width))
     if not no_version:
         keywords = []
+        selected_evidence = []
         for result in selected:
             keywords.extend(result.playbook.keywords)
-        lines.extend(version_block(chosen.version, keywords, versions))
+            selected_evidence.extend(result.evidence)
+        lines.extend(version_block(chosen.version, keywords, versions,
+                                   worked_on=worked_on,
+                                   log_terms=extract_log_terms(selected_evidence)))
     lines.extend(_render_next(selected, blocked, path, index))
     return lines
 
@@ -1640,7 +1740,8 @@ def cmd_triage(args):
     for line in triage_report(path=args.path, file=args.file, session=args.session,
                               playbooks=args.playbooks, max_matched=args.max_matched,
                               evidence=args.evidence, width=args.width,
-                              no_version=args.no_version, changelog=args.changelog):
+                              no_version=args.no_version, changelog=args.changelog,
+                              worked_on=args.worked_on):
         print(line)
 
 
@@ -1882,6 +1983,9 @@ def main():
                         help='skip the version block')
     triage.add_argument('--changelog',
                         help='path to a CHANGELOG.md to use instead of the resolved one')
+    triage.add_argument('--worked-on', metavar='VERSION',
+                        help='the agent version the customer says this worked on; '
+                             'lists every change since it')
     triage.set_defaults(func=cmd_triage)
 
     extract = subparsers.add_parser('slim', aliases=['extract'],

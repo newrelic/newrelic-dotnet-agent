@@ -39,6 +39,12 @@ are beside it, under
   cannot tell whether it explains the reported symptom. If none does, report
   unmatched and escalate. Ask for the symptom first if the engineer has not
   stated one.
+- **A mechanism is not a cause.** No transaction, a disabled wrapper, a
+  missing segment: each is the how, not the why, once the customer says an
+  upgrade changed the behaviour. Report the version delta that produced it.
+- **Use the version window.** When a version is named as working, pass
+  `--worked-on <version>` and read every entry in the window. If none is
+  named, ask; it is usually the cheapest question on the ticket.
 
 ## Workflow
 

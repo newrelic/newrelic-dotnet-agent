@@ -1020,6 +1020,76 @@ class VersionTests(unittest.TestCase):
         self.assertIn('... 2 more', text)
         self.assertIn('could outrank what is shown above', text)
 
+    def test_worked_on_lists_every_entry_in_the_window_unfiltered(self):
+        # window (10.40.1, 10.53.5]: the 10.53.1 and 10.53.5 releases, 7 fixes total,
+        # including the reconnect fix that the 'wcf' keyword would never have matched
+        text = '\n'.join(nrlog.version_block('10.53.5', ['wcf'], self.DATA,
+                                             worked_on='10.40.1'))
+        self.assertIn('WORKED-ON', text)
+        self.assertIn('window 10.40.1 .. 10.53.5', text)
+        self.assertIn('7 entrie(s), complete and unfiltered', text)
+        self.assertIn('Send loaded modules on agent reconnect', text)
+        self.assertIn('Guard null OperationContext in WCF MethodInvokerWrapper', text)
+
+    def test_worked_on_at_or_newer_than_session_renders_no_window_message(self):
+        at_version = '\n'.join(nrlog.version_block('10.40.1', [], self.DATA,
+                                                    worked_on='10.40.1'))
+        self.assertIn('not older than the session version', at_version)
+        newer_version = '\n'.join(nrlog.version_block('10.40.1', [], self.DATA,
+                                                       worked_on='10.53.5'))
+        self.assertIn('not older than the session version', newer_version)
+
+    def test_unparseable_worked_on_names_the_value_and_does_not_raise(self):
+        text = '\n'.join(nrlog.version_block('10.40.1', [], self.DATA, worked_on='banana'))
+        self.assertIn('WORKED-ON', text)
+        self.assertIn('banana', text)
+        self.assertIn('not a parseable version', text)
+
+    def test_extract_log_terms_drops_the_stoplist_and_short_tokens_keeps_a_library_name(self):
+        evidence = [('newrelic_agent.log', 193,
+                     'No transaction, skipping method '
+                     'Confluent.Kafka.Consumer`2.Consume(System.TimeSpan)')]
+        terms = nrlog.extract_log_terms(evidence)
+        lowered = [t.lower() for t in terms]
+        self.assertIn('kafka', lowered)
+        self.assertIn('confluent', lowered)
+        self.assertNotIn('system', lowered)
+        self.assertNotIn('method', lowered)
+        self.assertTrue(all(len(t) >= nrlog.LOG_TERM_MIN_LENGTH for t in terms))
+
+    def test_log_terms_surface_an_entry_the_playbook_keywords_miss(self):
+        # Round 3 regression: the Kafka Consume changelog entry shares no word with
+        # playbook 8's keywords, so only a log-derived term ('Kafka') can surface it.
+        data = {
+            'source_label': 'repo checkout', 'latest': '10.45.0',
+            'releases': [
+                {'version': '10.45.0', 'date': '2026-03-01',
+                 'fixes': ['Resolve issues with Kafka "Consume" instrumentation to ensure '
+                           'that automatic instrumentation works in conjunction with '
+                           'custom instrumentation (#3257)']},
+            ],
+        }
+        playbook_8_keywords = ['wrapper', 'transaction', 'segment']
+        without_terms = '\n'.join(nrlog.version_block('10.44.1', playbook_8_keywords, data))
+        self.assertNotIn('#3257', without_terms)
+
+        evidence = [('newrelic_agent.log', 193,
+                     'No transaction, skipping method '
+                     'Confluent.Kafka.Consumer`2.Consume(System.TimeSpan)')]
+        terms = nrlog.extract_log_terms(evidence)
+        self.assertIn('Kafka', terms)
+        with_terms = '\n'.join(nrlog.version_block('10.44.1', playbook_8_keywords, data,
+                                                    log_terms=terms))
+        self.assertIn('#3257', with_terms)
+        self.assertIn('LOG-TERMS', with_terms)
+
+    def test_log_terms_section_is_labelled_separately_from_the_keyword_section(self):
+        text = '\n'.join(nrlog.version_block('10.40.1', ['wcf'], self.DATA,
+                                             log_terms=['reconnect']))
+        self.assertIn("this filter uses only the matched playbooks' keywords", text)
+        self.assertIn('LOG-TERMS', text)
+        self.assertIn('terms pulled from the log, not a playbook', text)
+
     def test_triage_prints_the_version_block_by_default(self):
         if not os.path.isdir(FIXTURES):
             self.skipTest('run python tests/make_fixtures.py first')
@@ -1302,6 +1372,35 @@ class CliChangelogOverrideErrorTests(unittest.TestCase):
             stderr = result.stderr.decode('utf-8', errors='replace')
             self.assertNotEqual(result.returncode, 0)
             self.assertIn(missing, stderr)
+        finally:
+            shutil.rmtree(scratch, ignore_errors=True)
+
+
+class CliWorkedOnFlagTests(unittest.TestCase):
+    """version_block's own tests call it in-process and cannot prove --worked-on reaches
+    it from argparse. This test runs the real CLI subprocess, the same shape as
+    CliChangelogFlagTests, so the add_argument -> cmd_triage -> triage_report seam is
+    covered end to end, not only the function."""
+
+    def test_worked_on_flag_reaches_the_version_block(self):
+        if not os.path.isdir(FIXTURES):
+            self.skipTest('run python tests/make_fixtures.py first')
+        scratch = tempfile.mkdtemp()
+        try:
+            changelog = os.path.join(scratch, 'CHANGELOG.md')
+            with open(changelog, 'w', encoding='utf-8') as handle:
+                handle.write('## [10.40.1] - 2026-01-05\n\n### Fixes\n\n'
+                             '* A later fix (#1)\n')
+            script = os.path.join(HERE, '..', 'scripts', 'nrlog.py')
+            result = subprocess.run(
+                [sys.executable, script, 'triage', FIXTURES, '--file', 'Quiet',
+                 '--changelog', changelog, '--worked-on', '10.40.0'],
+                capture_output=True)
+            stdout = result.stdout.decode('utf-8', errors='replace')
+            stderr = result.stderr.decode('utf-8', errors='replace')
+            self.assertEqual(result.returncode, 0, stderr)
+            self.assertIn('WORKED-ON', stdout)
+            self.assertIn('A later fix', stdout)
         finally:
             shutil.rmtree(scratch, ignore_errors=True)
 
