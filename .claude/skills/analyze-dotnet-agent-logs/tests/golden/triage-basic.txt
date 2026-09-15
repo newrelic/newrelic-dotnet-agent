@@ -1,4 +1,4 @@
-nrlog triage   playbooks: 9 (0 field)   playbooks verified against 10.54.0
+nrlog triage   playbooks: <N> (0 field)   playbooks verified against 10.54.0
 
 INPUT     <FIXTURES>   1 managed log(s), 3 profiler log(s)
 SESSION   session 1 of 1   pid 5150   2026-08-19 09:00:00.000 .. 2026-08-19 09:10:00.000   5 lines
@@ -9,12 +9,14 @@ PROFILER  3 file(s), 3 group(s), 0 correlated to pid 5150 by time overlap
                1  config-found, initialized                      healthy startup; pid 5150
                1  process-rejected, unloading                    expected noise; playbook 2; pid 7777
           no profiler log matches this pid and time range; not pairing them
-MATCHED   2 of 9 playbook(s)
+MATCHED   2 of <N> playbook(s)
           [7] Log level too low to diagnose                    level condition
              observed level INFO is at or below the info ceiling
           [3] Connect failure                                  1 hit(s)
              newrelic_agent_Quiet.log:4  Received a 401 Unauthorized response invoking method "connect" with payload "https://collector-1.nr.com/agent_listener/invoke_raw_method?method=connect&license_key=[REDACTED]&marshal_format=json"
+          a signature hit is a candidate, not a conclusion; it still has to explain the reported symptom
 BLOCKED   [8] Wrapper skipped for lack of an active transaction needs FINEST; this session is INFO
-CLEAR     playbooks 1, 2, 4, 5, 6, 9 did not match
+CLEAR     playbooks <IDS> did not match
+ERRORS    no ERROR or WARN lines in this session; that is not proof of health, only that none were logged
 NEXT      read references/playbooks/07-log-level-too-low.md, 03-connect-failure.md
           slim file: nrlog.py slim <FIXTURES> --session 1

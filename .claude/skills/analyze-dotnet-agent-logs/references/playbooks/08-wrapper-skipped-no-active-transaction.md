@@ -34,6 +34,14 @@ the profiler log, and no transaction or segment activity for that method in the
 managed log. Word the verdict as consistent with the wrapper being skipped, and
 say that the path logs nothing.
 
+**Specificity limit.** This signature is common and usually benign: it fires in
+nearly any application that does background or non-transactional work, so its
+presence alone is not a finding. This playbook is load-bearing only when the
+data the customer says is missing is transaction-scoped. When the missing data
+is of one specific type, look first for a wrapper that was disabled outright
+([playbook 10](10-wrapper-disabled-consecutive-exceptions.md)) before
+concluding this one.
+
 ## Customer fix
 
 Instrument an entry point that starts a transaction, rather than the method that

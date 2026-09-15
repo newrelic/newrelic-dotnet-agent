@@ -1134,6 +1134,7 @@ REPORT_FILE_CAP = 10
 REPORT_GROUP_NAME_CAP = 2
 REPORT_GROUP_PID_CAP = 3
 CLEAR_ENUMERATE_MAX = 12
+REPORT_ERROR_CAP = 5
 VERSION_RE = re.compile(r'v?(\d+)\.(\d+)\.(\d+)')
 
 
@@ -1344,8 +1345,22 @@ def version_block(version, keywords, data, limit=4):
     lines.append(_pad('VERSION', '%s is %d release(s) behind %s (%s), changelog from %s'
                                  % (version, len(newer), latest,
                                     newer[0].get('date', '?'), source)))
+    all_fixes = [(release.get('version', '?'), fix)
+                 for release in newer for fix in (release.get('fixes') or [])]
+    lines.append(_pad('', '%d fix(es) total across those releases, before any filter'
+                      % len(all_fixes)))
     if not keywords:
-        lines.append(_pad('', 'no playbook matched, so no fix filter was applied'))
+        lines.append(_pad('', 'no playbook matched, so no fix filter was applied; '
+                              'showing the %d most recent fix(es) instead'
+                              % min(limit, len(all_fixes))))
+        for release_version, fix in all_fixes[:limit]:
+            lines.append(_pad('', '  %-9s %s' % (release_version, fix)))
+        if len(all_fixes) > limit:
+            lines.append(_pad('', '  ... %d more not shown, and any one of them could '
+                                  'outrank what is shown above'
+                                  % (len(all_fixes) - limit)))
+        lines.append(_pad('', 'these are candidates, not findings; nothing has been '
+                              'ruled in or ruled out'))
         return lines
 
     needles = [_keyword_pattern(k.lower()) for k in keywords]
@@ -1359,9 +1374,12 @@ def version_block(version, keywords, data, limit=4):
     for release_version, fix in hits[:limit]:
         lines.append(_pad('', '  %-9s %s' % (release_version, fix)))
     if len(hits) > limit:
-        lines.append(_pad('', '  ... %d more' % (len(hits) - limit)))
+        lines.append(_pad('', '  ... %d more not shown, and any one of them could '
+                              'outrank what is shown above' % (len(hits) - limit)))
     if hits:
         lines.append(_pad('', 'a keyword match is not a diagnosis; it is a candidate'))
+    lines.append(_pad('', 'this filter uses only the matched playbooks\' keywords; '
+                          'a wrong match narrows it wrongly'))
     return lines
 
 
@@ -1485,6 +1503,8 @@ def _render_matched(selected, total, loaded, session, observed):
             lines.append(_pad('', '   %s' % detail))
     if total > len(selected):
         lines.append(_pad('', '... %d more matched, not shown' % (total - len(selected))))
+    lines.append(_pad('', 'a signature hit is a candidate, not a conclusion; it still '
+                          'has to explain the reported symptom'))
     return lines
 
 
@@ -1505,6 +1525,49 @@ def _render_clear(clear, loaded):
         return [_pad('CLEAR', '%d playbook(s) did not match' % len(clear))]
     ids = ', '.join(str(r.playbook.id) for r in sorted(clear, key=lambda r: r.playbook.id))
     return [_pad('CLEAR', 'playbooks %s did not match' % ids if ids else 'none')]
+
+
+def _render_errors(session, matched, width):
+    """ERROR and WARN lines a matched playbook did not already quote as evidence.
+
+    This block is playbook-independent by design: it works on the tickets no
+    playbook covers, which is where the tool is weakest.
+    """
+    quoted = {(name, lineno) for result in matched for name, lineno, _text in result.evidence}
+    order = []
+    groups = {}
+    for path, lineno, ts, level, pid, _tid, message, _raw in iter_entries(session.files):
+        if ts is None or pid != session.pid or not (session.start <= ts <= session.end):
+            continue
+        token = normalize_level(level)
+        if token not in ('ERROR', 'WARN'):
+            continue
+        name = os.path.basename(path)
+        if (name, lineno) in quoted:
+            continue
+        shape = normalize_shape(message)
+        if shape not in groups:
+            groups[shape] = {'level': token, 'name': name, 'lineno': lineno,
+                             'text': message, 'count': 0}
+            order.append(shape)
+        groups[shape]['count'] += 1
+
+    if not groups:
+        return [_pad('ERRORS', 'no ERROR or WARN lines in this session; that is not '
+                               'proof of health, only that none were logged')]
+
+    lines = [_pad('ERRORS', '%d group(s) of ERROR/WARN not explained by a matched '
+                            'playbook' % len(groups))]
+    for shape in order[:REPORT_ERROR_CAP]:
+        group = groups[shape]
+        lines.append(_pad('', '%-5s %s:%d  %s'
+                          % (group['level'], group['name'], group['lineno'],
+                             redact(group['text'])[:width])))
+        if group['count'] > 1:
+            lines.append(_pad('', '   seen %d time(s)' % group['count']))
+    if len(groups) > REPORT_ERROR_CAP:
+        lines.append(_pad('', '... %d more group(s) not shown' % (len(groups) - REPORT_ERROR_CAP)))
+    return lines
 
 
 def _render_next(selected, blocked, path, index):
@@ -1563,6 +1626,7 @@ def triage_report(path, file=None, session=None, playbooks=None, max_matched=5,
     lines.extend(_render_matched(selected, len(matched), len(books), chosen, observed))
     lines.extend(_render_blocked(blocked, observed))
     lines.extend(_render_clear(clear, len(books)))
+    lines.extend(_render_errors(chosen, matched, width))
     if not no_version:
         keywords = []
         for result in selected:

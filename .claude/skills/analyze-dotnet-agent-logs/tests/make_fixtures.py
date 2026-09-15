@@ -208,6 +208,27 @@ reused_pid = [
 with open(os.path.join(OUT, 'NewRelic.Profiler.5150.log'), 'w') as f:
     f.writelines(reused_pid)
 
+# playbook 10 (wrapper hard-disabled) plus playbook 8's FINEST signature, so the
+# outranking test has a session where both match. No "Log level set to" line, so
+# playbook 9 stays blocked rather than clear or matched.
+wrapper_disabled = [
+    line('2026-08-22 11:00:00,000', 'INFO', 6600, 1,
+         "The New Relic .NET Agent v10.54.0 started (pid 6600) on app domain '/Orders'"),
+    line('2026-08-22 11:00:05,000', 'ERROR', 6600, 5,
+         'Wrapper SqlCommandWrapper is being disabled for '
+         'System.Data.SqlClient.SqlCommand.ExecuteReader due to too many consecutive '
+         'exceptions. All other methods using this wrapper will continue to be '
+         'instrumented. This will reduce the functionality of the agent until the '
+         'agent is restarted.'),
+    line('2026-08-22 11:00:06,000', 'FINEST', 6600, 7,
+         'No transaction, skipping method MyCo.Orders.Poll(System.String)'),
+    line('2026-08-22 11:10:00,000', 'INFO', 6600, 1,
+         "The New Relic .NET Agent v10.54.0 has shutdown (pid 6600) on app domain "
+         "'/Orders'"),
+]
+with open(os.path.join(OUT, 'newrelic_agent_WrapperDisabled.log'), 'w') as f:
+    f.writelines(wrapper_disabled)
+
 # two applications side by side: triage must refuse to choose between them and
 # ask for --file, because picking one customer application is a human decision
 MULTI = os.path.join(BASE, 'multi')

@@ -490,6 +490,15 @@ class MatcherTests(unittest.TestCase):
         self.assertEqual(nrlog.session_observed_level(load_session('Quiet')), 'INFO')
         self.assertEqual(nrlog.session_observed_level(load_session('MyApp', 2)), 'FINEST')
 
+    def test_a_disabled_wrapper_matches_playbook_ten(self):
+        session = load_session('WrapperDisabled')
+        results = {r.playbook.id: r for r in nrlog.match_playbooks(session, self.books)}
+        self.assertEqual(results[10].state, 'matched')
+        self.assertEqual(results[10].reason, 'signature')
+        self.assertEqual(results[10].hits, 1)
+        _name, _lineno, text = results[10].evidence[0]
+        self.assertIn('due to too many consecutive exceptions', text)
+
 
 class KeywordPatternTests(unittest.TestCase):
     """Pins _keyword_pattern's edge behaviour. Do not change the pattern for these: all 27
@@ -567,9 +576,21 @@ CHANGELOG = os.path.normpath(os.path.join(HERE, '..', '..', '..', '..',
 
 
 def normalize(text):
-    """Replace the machine path and the data export date, so a golden file is portable."""
+    """Replace the machine path, the data export date, and the playbook inventory, so a
+    golden file is portable across things that legitimately vary rather than the report's
+    shape. The MATCHED numerator (how many matched) stays pinned; only the denominator (how
+    many were loaded) is inventory.
+    """
     text = text.replace(FIXTURES, '<FIXTURES>')
-    return re.sub(r'exported \d{4}-\d{2}-\d{2}', 'exported <DATA-DATE>', text)
+    text = re.sub(r'exported \d{4}-\d{2}-\d{2}', 'exported <DATA-DATE>', text)
+    text = re.sub(r'playbooks: \d+ \(', 'playbooks: <N> (', text)
+    text = re.sub(r'(MATCHED\s+\d+ of) \d+( playbook\(s\))', r'\1 <N>\2', text)
+    return re.sub(r'(CLEAR\s+playbooks) [\d, ]+( did not match)', r'\1 <IDS>\2', text)
+
+
+def _log_line(ts, level, pid, tid, msg):
+    """Build one raw managed-log line in the format nrlog.py's MANAGED_RE parses."""
+    return '%s NewRelic %6s: [pid: %d, tid: %d] %s\n' % (ts, level, pid, tid, msg)
 
 
 def matched_labels(lines):
@@ -607,7 +628,8 @@ class TriageTests(unittest.TestCase):
 
     def test_report_has_every_required_block(self):
         text = '\n'.join(self.report())
-        for label in ('INPUT', 'SESSION', 'PROFILER', 'MATCHED', 'BLOCKED', 'CLEAR', 'NEXT'):
+        for label in ('INPUT', 'SESSION', 'PROFILER', 'MATCHED', 'BLOCKED', 'CLEAR',
+                      'ERRORS', 'NEXT'):
             self.assertIn(label, text)
 
     def test_header_stamps_the_playbooks_provenance_even_without_the_version_block(self):
@@ -621,7 +643,7 @@ class TriageTests(unittest.TestCase):
 
     def test_clear_enumerates_the_ids_for_the_shipped_set(self):
         text = '\n'.join(self.report())
-        self.assertRegex(text, r'CLEAR\s+playbooks 1, 2, 4, 5, 6, 9 did not match')
+        self.assertRegex(text, r'CLEAR\s+playbooks 1, 2, 4, 5, 6, 9, 10 did not match')
 
     def test_clear_collapses_to_a_count_at_scale(self):
         text = '\n'.join(self.report(playbooks=self.playbooks('scale')))
@@ -644,6 +666,12 @@ class TriageTests(unittest.TestCase):
         self.assertRegex(labels[0], r'\[7\]', 'playbook 7 has the lowest precedence')
         self.assertRegex(labels[1], r'\[3\]')
 
+    def test_playbook_ten_outranks_playbook_eight_when_both_match(self):
+        labels = matched_labels(self.report(file='WrapperDisabled'))
+        self.assertRegex(labels[0], r'\[10\]',
+                         'precedence 45 must display before playbook 8 at precedence 60')
+        self.assertRegex(labels[1], r'\[8\]')
+
     def test_a_level_condition_match_renders_the_observed_level_not_an_evidence_line(self):
         text = '\n'.join(self.report())
         self.assertIn('observed level INFO is at or below the info ceiling', text)
@@ -654,6 +682,28 @@ class TriageTests(unittest.TestCase):
         self.assertIn('newrelic_agent_Quiet.log:4', text)
         self.assertIn('[REDACTED]', text)
         self.assertNotIn('abcdefghij0123456789klmnopqrstuvwxyzNRAL', text)
+
+    def test_matched_block_carries_a_candidate_not_conclusion_caution(self):
+        text = '\n'.join(self.report())
+        self.assertIn('a signature hit is a candidate, not a conclusion', text)
+
+    def test_matched_block_has_no_caution_when_nothing_matched(self):
+        """With zero playbooks loaded, nothing can match, so MATCHED renders 'none'
+        and the caution line (which belongs to the non-empty branch) is absent."""
+        empty_playbooks = tempfile.mkdtemp()
+        try:
+            lines = self.report(playbooks=empty_playbooks)
+            text = '\n'.join(lines)
+            self.assertRegex(text, r'MATCHED\s+none')
+            self.assertNotIn('a signature hit is a candidate', text)
+        finally:
+            shutil.rmtree(empty_playbooks, ignore_errors=True)
+
+    def test_errors_block_reports_the_honest_empty_case_when_nothing_is_unaccounted(self):
+        """Quiet's one ERROR line is already quoted as evidence for playbook 3, so
+        nothing is left for the ERRORS block to show."""
+        text = '\n'.join(self.report())
+        self.assertIn('ERRORS    no ERROR or WARN lines in this session', text)
 
     def test_a_level_change_match_states_the_direction(self):
         lines = nrlog.triage_report(path=FIXTURES, file='Shared', session=None,
@@ -756,6 +806,83 @@ class TriageTests(unittest.TestCase):
             shutil.rmtree(scratch, ignore_errors=True)
 
 
+class ErrorsBlockTests(unittest.TestCase):
+    """The ERRORS block: what the report shows when no matched playbook already
+    quoted an ERROR or WARN line as its evidence."""
+
+    KEY = 'abcdefghij0123456789klmnopqrstuvwxyz' + 'NRAL'
+
+    @classmethod
+    def setUpClass(cls):
+        cls.scratch = tempfile.mkdtemp()
+        path = os.path.join(cls.scratch, 'newrelic_agent_Errs.log')
+        with open(path, 'w', encoding='utf-8') as handle:
+            handle.writelines([
+                _log_line('2026-08-21 10:00:00,000', 'INFO', 6001, 1,
+                          "The New Relic .NET Agent v10.44.0 started (pid 6001) on app "
+                          "domain '/Errs'"),
+                _log_line('2026-08-21 10:00:00,010', 'INFO', 6001, 1,
+                          'Log level set to INFO'),
+                _log_line('2026-08-21 10:00:01,000', 'ERROR', 6001, 1,
+                          'Received a 401 Unauthorized response invoking method '
+                          '"connect" with payload "..."'),
+                _log_line('2026-08-21 10:00:02,000', 'ERROR', 6001, 2,
+                          'Unhandled exception in custom instrumentation for method '
+                          '"Foo.Bar.Baz"'),
+                _log_line('2026-08-21 10:00:03,000', 'ERROR', 6001, 2,
+                          'Unhandled exception in custom instrumentation for method '
+                          '"Foo.Qux.Quux"'),
+                _log_line('2026-08-21 10:00:04,000', 'ERROR', 6001, 2,
+                          'Unhandled exception in custom instrumentation for method '
+                          '"Foo.Corge.Grault"'),
+                _log_line('2026-08-21 10:00:05,000', 'WARN', 6001, 1,
+                          'Configured license key appears malformed: ' + cls.KEY),
+                _log_line('2026-08-21 10:00:10,000', 'INFO', 6001, 1,
+                          "The New Relic .NET Agent v10.44.0 has shutdown (pid 6001) on "
+                          "app domain '/Errs'"),
+            ])
+        nrlog.reset_profiler_cache()
+        cls.report_lines = nrlog.triage_report(path=cls.scratch, file=None, session=None,
+                                               playbooks=None, max_matched=5, evidence=2,
+                                               width=200, no_version=True)
+        cls.text = '\n'.join(cls.report_lines)
+
+    @classmethod
+    def tearDownClass(cls):
+        shutil.rmtree(cls.scratch, ignore_errors=True)
+        nrlog.reset_profiler_cache()
+
+    def _errors_block(self):
+        block = []
+        inside = False
+        for text in self.report_lines:
+            if text.startswith('ERRORS'):
+                inside = True
+            elif inside and text[:9].strip():
+                break
+            if inside:
+                block.append(text)
+        return '\n'.join(block)
+
+    def test_unattributed_error_lines_appear_in_the_block(self):
+        self.assertIn('Unhandled exception in custom instrumentation',
+                      self._errors_block())
+
+    def test_a_line_already_quoted_as_matched_evidence_does_not_repeat(self):
+        self.assertIn('Received a 401 Unauthorized', self.text)
+        self.assertNotIn('Received a 401 Unauthorized', self._errors_block())
+
+    def test_three_lines_differing_only_by_method_name_collapse_to_one_group(self):
+        block = self._errors_block()
+        self.assertEqual(block.count('Unhandled exception in custom instrumentation'), 1)
+        self.assertIn('seen 3 time(s)', block)
+
+    def test_a_secret_shaped_string_in_an_error_line_is_redacted(self):
+        block = self._errors_block()
+        self.assertIn('[REDACTED]', block)
+        self.assertNotIn(self.KEY, block)
+
+
 class ProfilerSignatureGuardTests(unittest.TestCase):
     """The roster's literals and the playbook signatures must not drift apart."""
 
@@ -836,9 +963,40 @@ class VersionTests(unittest.TestCase):
             '10.40.1', ['connect', 'license key', 'proxy', 'tls'], self.DATA))
         self.assertIn('license keys', text)
 
-    def test_currency_only_when_no_keywords(self):
+    def test_no_keywords_shows_candidates_not_nothing(self):
         text = '\n'.join(nrlog.version_block('10.40.1', [], self.DATA))
-        self.assertNotIn('#3772', text)
+        self.assertIn('#3772', text)
+        self.assertIn('no playbook matched, so no fix filter was applied', text)
+        self.assertIn('candidates, not findings', text)
+
+    def test_unfiltered_total_exceeds_matched_count(self):
+        text = '\n'.join(nrlog.version_block(
+            '10.40.1', ['wrapper', 'transaction', 'segment'], self.DATA))
+        self.assertIn('8 fix(es) total across those releases, before any filter', text)
+        self.assertIn('fixes since, matching this symptom: 1', text)
+
+    def test_filter_scope_is_stated(self):
+        text = '\n'.join(nrlog.version_block('10.40.1', ['wcf'], self.DATA))
+        self.assertIn("this filter uses only the matched playbooks' keywords", text)
+
+    def test_the_3263_regression_surfaces_through_the_unfiltered_path(self):
+        # Live ticket: the changelog held the entry for #3263, but it shares
+        # none of playbook 8's keywords, so the old filter hid it. Fix 1b
+        # makes the unfiltered path (keywords=[]) show it instead.
+        data = {
+            'source_label': 'repo checkout',
+            'latest': '10.45.0',
+            'releases': [
+                {'version': '10.45.0', 'date': '2026-03-01',
+                 'fixes': ['MSSQL connection string parsing can throw exceptions and '
+                           'disable Datastore instrumentation (#3263)']},
+            ],
+        }
+        playbook_8_keywords = ['wrapper', 'transaction', 'segment']
+        filtered = '\n'.join(nrlog.version_block('10.40.1', playbook_8_keywords, data))
+        self.assertNotIn('#3263', filtered)
+        unfiltered = '\n'.join(nrlog.version_block('10.40.1', [], data))
+        self.assertIn('#3263', unfiltered)
 
     def test_current_version_says_so(self):
         text = '\n'.join(nrlog.version_block('10.54.0', ['wcf'], self.DATA))
@@ -860,6 +1018,7 @@ class VersionTests(unittest.TestCase):
     def test_the_fix_list_is_capped(self):
         text = '\n'.join(nrlog.version_block('10.40.1', ['wcf', 'rum'], self.DATA, limit=1))
         self.assertIn('... 2 more', text)
+        self.assertIn('could outrank what is shown above', text)
 
     def test_triage_prints_the_version_block_by_default(self):
         if not os.path.isdir(FIXTURES):
@@ -1073,7 +1232,8 @@ class ChangelogResolutionTests(unittest.TestCase):
         text = '\n'.join(lines)
         self.assertIn('changelog not reachable; latest version unknown, '
                       'currency not checked', text)
-        for label in ('INPUT', 'SESSION', 'PROFILER', 'MATCHED', 'BLOCKED', 'CLEAR', 'NEXT'):
+        for label in ('INPUT', 'SESSION', 'PROFILER', 'MATCHED', 'BLOCKED', 'CLEAR',
+                      'ERRORS', 'NEXT'):
             self.assertIn(label, text)
 
 

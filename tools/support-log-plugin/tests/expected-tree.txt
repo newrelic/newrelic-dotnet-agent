@@ -15,5 +15,6 @@ plugins/dotnet-log-triage/skills/triage-dotnet-agent-logs/references/playbooks/0
 plugins/dotnet-log-triage/skills/triage-dotnet-agent-logs/references/playbooks/07-log-level-too-low.md
 plugins/dotnet-log-triage/skills/triage-dotnet-agent-logs/references/playbooks/08-wrapper-skipped-no-active-transaction.md
 plugins/dotnet-log-triage/skills/triage-dotnet-agent-logs/references/playbooks/09-runaway-log-volume.md
+plugins/dotnet-log-triage/skills/triage-dotnet-agent-logs/references/playbooks/10-wrapper-disabled-consecutive-exceptions.md
 plugins/dotnet-log-triage/skills/triage-dotnet-agent-logs/references/playbooks/README.md
 plugins/dotnet-log-triage/skills/triage-dotnet-agent-logs/scripts/nrlog.py

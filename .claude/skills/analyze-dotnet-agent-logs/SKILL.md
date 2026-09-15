@@ -24,6 +24,9 @@ run, and it is written by a process you cannot interview. Work it in this order.
 - Delegate to a subagent when the source file exceeds 50 MB, or when the answer
   needs a sweep across many sessions or many files. Give the subagent the exact
   question and the exact commands, and require a verdict back, not log content.
+- Ask the engineer for the reported symptom before you conclude, if they have
+  not stated one. A match cannot be tested against a symptom that is not on
+  the table.
 
 ## Workflow
 
@@ -41,11 +44,18 @@ run, and it is written by a process you cannot interview. Work it in this order.
    playbooks blocked by too low a level, and the agent version against the
    changelog. It ends with a NEXT line naming the playbook files to read and the
    `slim` command for this session.
-3. **Read the matched playbook.** Open the files the NEXT line names. Each one
-   carries the verified signature, the verdict, the customer fix, and the next
-   ask. A `[field]` label means field-observed, not source-verified: read it
-   before you act on it. When nothing matched, the report says so; answer from
-   the slim file, and consider `draft-playbook` to start a new one.
+3. **Read the matched playbook, then test it against the symptom.** Open the
+   files the NEXT line names. Each one carries the verified signature, the
+   verdict, the customer fix, and the next ask. A `[field]` label means
+   field-observed, not source-verified: read it before you act on it. For each
+   matched playbook, decide whether its mechanism produces the symptom the
+   engineer reported: yes, no, or cannot tell from this log. **Hard rule: if no
+   matched playbook explains the reported symptom, report the ticket as
+   unmatched**, and go to escalation and `draft-playbook`. Never lead with the
+   best available match when it does not explain the complaint; state it as
+   "present in the log, does not explain your symptom", not as the verdict.
+   When nothing matched, the report says so; answer from the slim file, and
+   consider `draft-playbook` to start a new one.
 4. **Answer the customer.** Run `nrlog.py summary <path> --playbook N` for the
    reply block: the fix and the next ask, with no log line in it. A field-tier
    block carries a header addressed to you and not to the customer.

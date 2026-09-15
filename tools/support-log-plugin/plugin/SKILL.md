@@ -25,7 +25,7 @@ are beside it, under
 
 - **`nrlog.py` is the only tool that opens the log.** Never `Read`, `cat`,
   `tail`, or grep a customer log. A dump runs to hundreds of MB with single
-  lines tens of KB wide, and those bytes stay in context for the whole session.
+  lines tens of KB wide, and those bytes stay in context for the session.
 - **Report `BLOCKED` as blocked.** A playbook the log's level cannot evaluate is
   not a playbook that did not match. Saying "clear" there sends the engineer
   down the wrong path.
@@ -35,20 +35,23 @@ are beside it, under
   names, SQL text, and request parameters. It never goes to a customer.
 - **Name the limit in every verdict.** "Consistent with X, not proven, because
   that path logs nothing at this level" is a finished answer.
+- **A match is a candidate, not a verdict.** Decide per match: yes, no, or
+  cannot tell whether it explains the reported symptom. If none does, report
+  unmatched and escalate. Ask for the symptom first if the engineer has not
+  stated one.
 
 ## Workflow
 
 0. **Preflight.** Run `python3 --version`. On failure try `python --version`,
    then `py -3 --version`. If none answers, tell the engineer to install
-   Python 3 from python.org and stop. Use the launcher that answered as `$PY`
-   for every command below, and run them as `$PY "$NRLOG" <command>`. Below,
-   `nrlog.py <command>` is shorthand for that same `$PY "$NRLOG" <command>`.
+   Python 3 from python.org and stop. Use the launcher that answered as `$PY`.
+   Below, `nrlog.py <command>` means `$PY "$NRLOG" <command>`.
 1. **Triage.** `nrlog.py triage <path>`. Pass the ticket's log file or its whole
    logs directory. If it reports more than one managed log, show the file table
    and ask which application; rerun with `--file <name>`. If it names other
    sessions, ask before rerunning with `--session N`.
-2. **Read the matched playbooks only.** The `NEXT` line of the report names
-   them. Read those files and nothing else under `references/playbooks/`.
+2. **Read the matched playbooks, then test each against the symptom.** The
+   `NEXT` line names them; read only those files under `references/playbooks/`.
 3. **Answer.** Verdict in chat, evidence lines quoted verbatim from the report,
    the limit stated. A `[field]` tier means the signature was confirmed by
    observation, not by reading agent source; say so.
