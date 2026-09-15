@@ -52,9 +52,9 @@ public class RuntimeTraitAgreementTests
 
         Assert.True(
             mismatches.Count == 0,
-            $"{mismatches.Count} class(es) carry a stale or hand-edited Runtime trait. Either re-run " +
-            ".github/scripts/apply-runtime-traits.py, or record the deliberate exception in " +
-            "RuntimeTraitPolicy.ClassOverrides.\n" + string.Join("\n", mismatches));
+            $"{mismatches.Count} class(es) carry a stale or hand-edited Runtime trait. Either re-run the " +
+            "trait tool with dotnet run .github/scripts/apply-runtime-traits.cs <report.tsv> <source-root>, " +
+            "or record the deliberate exception in RuntimeTraitPolicy.ClassOverrides.\n" + string.Join("\n", mismatches));
     }
 
     [Fact]

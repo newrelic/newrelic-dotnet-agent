@@ -33,8 +33,8 @@ public class RuntimeTraitCompletenessTests
             offenders.Length == 0,
             $"{offenders.Length} test class(es) declare no [Trait(\"{RuntimeLaneResolver.TraitName}\", ...)]. " +
             "Lane selection is by inclusion, so each of these runs on no CI lane and reports green. " +
-            "Run .github/scripts/apply-runtime-traits.py, or add the class to RuntimeTraitPolicy.ExemptClasses " +
-            "with a reason.\n" + string.Join("\n", offenders));
+            "Apply it with dotnet run .github/scripts/apply-runtime-traits.cs <report.tsv> <source-root>, or " +
+            "add the class to RuntimeTraitPolicy.ExemptClasses with a reason.\n" + string.Join("\n", offenders));
     }
 
     [Fact]
