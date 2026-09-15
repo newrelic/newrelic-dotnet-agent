@@ -4,15 +4,21 @@ Layout, conventions, and the non-obvious facts for **writing** tests.
 - **Running** integration tests -> `run-integration-tests` skill (build-first, layer pick, CLI, env gotchas, troubleshooting). Don't duplicate it here.
 - **Building** first -> `build-dotnet-agent` skill. CLI build workarounds (`Core.UnitTest` `SolutionDir`, Extensions DLL-direct) and the no-unit-tests-for-wrappers rule -> [root claude.md](../CLAUDE.md). Building the **integration test solutions** themselves needs VS MSBuild + three specific flags -> [Building the solution](#building-the-solution) below.
 
-Five layers, all integration layers read the built `src/Agent/newrelichome_*` dirs (build `FullAgent.sln` first):
+Five layers (seven solutions), all integration layers read the built `src/Agent/newrelichome_*` dirs (build `FullAgent.sln` first):
 
 | Layer | Solution | Needs |
 |-------|----------|-------|
 | Unit | (in `tests/Agent/UnitTests/`) | nothing |
 | Integration (host-run) | `IntegrationTests.sln` | Windows + home dirs |
+| Integration (host-run, Core only) | `IntegrationTests.NetCore.sln` | home dirs; plain `dotnet build` |
 | Unbounded | `UnboundedIntegrationTests.sln` | real DB/broker infra |
+| Unbounded (Core only) | `UnboundedIntegrationTests.NetCore.sln` | as above; plain `dotnet build` |
 | Container | `ContainerIntegrationTests.sln` | Docker Desktop (Linux-agent coverage) |
 | Performance | `PerformanceTests.sln` | Python-driven, not `dotnet test` |
+
+The two `*.NetCore.sln` files are **additive**: they hold the Core-targeted projects only, build with plain `dotnet build`, and exist so the Linux CI lanes need no VS MSBuild. The original solutions are unchanged.
+
+**Lanes and the `Runtime` trait.** CI splits the host-run suites into three lanes -- Linux-Core, Windows-Framework, and a two-shard Windows-Core smoke set -- selected by a `[Trait("Runtime", "Core"|"Framework")]` on every test class. `TestInfrastructure/RuntimeTraitPolicy.cs` (one copy per suite) holds the fixture-to-lane mapping plus the exemption and override tables; the lane lists are in `.github/workflows/test_selection.yml`. Two guard tests fail the build when a class carries no `Runtime` trait, or when its committed trait no longer matches its fixture.
 
 ## Layout
 
