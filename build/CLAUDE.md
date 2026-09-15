@@ -101,13 +101,6 @@ PR. Releases are driven by **release-please**: conventional commits bump
 the version, regenerate `CHANGELOG.md`, open a release PR; merging tags
 and publishes artifacts.
 
-### After a release
-
-- **Support log triage plugin.** After the changelog lands, re-export the
-  support plugin:
-  `python tools/support-log-plugin/export.py --target <claude-skills checkout>`,
-  and push the target by hand.
-
 ## Troubleshooting
 
 **Profiler build fails:**
