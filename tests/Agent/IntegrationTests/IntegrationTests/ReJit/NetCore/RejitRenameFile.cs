@@ -93,6 +93,7 @@ public abstract class RejitRenameFileBase<TFixture> : NewRelicIntegrationTest<TF
     }
 }
 
+[Trait("Runtime", "Core")]
 public class RejitRenameFile : RejitRenameFileBase<AspNetCoreReJitMvcApplicationFixture>
 {
     public RejitRenameFile(AspNetCoreReJitMvcApplicationFixture fixture, ITestOutputHelper output)
@@ -101,6 +102,7 @@ public class RejitRenameFile : RejitRenameFileBase<AspNetCoreReJitMvcApplication
     }
 }
 
+[Trait("Runtime", "Core")]
 public class RejitRenameFileWithTieredCompilation : RejitRenameFileBase<AspNetCoreReJitMvcApplicationFixtureWithTieredCompilation>
 {
     public RejitRenameFileWithTieredCompilation(AspNetCoreReJitMvcApplicationFixtureWithTieredCompilation fixture, ITestOutputHelper output)

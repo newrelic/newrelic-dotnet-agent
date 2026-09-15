@@ -93,6 +93,7 @@ public abstract class OwinMiddlewareExceptionTestsBase<TFixture> : NewRelicInteg
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class OwinMiddlewareExceptionTests : OwinMiddlewareExceptionTestsBase<RemoteServiceFixtures.OwinWebApiFixture>
 {
     public OwinMiddlewareExceptionTests(RemoteServiceFixtures.OwinWebApiFixture fixture, ITestOutputHelper output)
@@ -101,6 +102,7 @@ public class OwinMiddlewareExceptionTests : OwinMiddlewareExceptionTestsBase<Rem
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class Owin3MiddlewareExceptionTests : OwinMiddlewareExceptionTestsBase<RemoteServiceFixtures.Owin3WebApiFixture>
 {
     public Owin3MiddlewareExceptionTests(RemoteServiceFixtures.Owin3WebApiFixture fixture, ITestOutputHelper output)
@@ -109,6 +111,7 @@ public class Owin3MiddlewareExceptionTests : OwinMiddlewareExceptionTestsBase<Re
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class Owin4MiddlewareExceptionTests : OwinMiddlewareExceptionTestsBase<RemoteServiceFixtures.Owin4WebApiFixture>
 {
     public Owin4MiddlewareExceptionTests(RemoteServiceFixtures.Owin4WebApiFixture fixture, ITestOutputHelper output)

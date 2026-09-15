@@ -54,6 +54,7 @@ public abstract class ZeroMaxSamplesStoredTestsBase<TFixture> : NewRelicIntegrat
 
 #region log4net
 
+[Trait("Runtime", "Framework")]
 public class Log4netZeroMaxSamplesStoredTestsFWLatestTests : ZeroMaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public Log4netZeroMaxSamplesStoredTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -62,6 +63,7 @@ public class Log4netZeroMaxSamplesStoredTestsFWLatestTests : ZeroMaxSamplesStore
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class Log4netZeroMaxSamplesStoredTestsFW471Tests : ZeroMaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     public Log4netZeroMaxSamplesStoredTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -70,6 +72,7 @@ public class Log4netZeroMaxSamplesStoredTestsFW471Tests : ZeroMaxSamplesStoredTe
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class Log4netZeroMaxSamplesStoredTestsFW462Tests : ZeroMaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public Log4netZeroMaxSamplesStoredTestsFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -78,6 +81,7 @@ public class Log4netZeroMaxSamplesStoredTestsFW462Tests : ZeroMaxSamplesStoredTe
     }
 }
 
+[Trait("Runtime", "Core")]
 public class Log4netZeroMaxSamplesStoredTestsNetCoreLatestTests : ZeroMaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public Log4netZeroMaxSamplesStoredTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -86,6 +90,7 @@ public class Log4netZeroMaxSamplesStoredTestsNetCoreLatestTests : ZeroMaxSamples
     }
 }
 
+[Trait("Runtime", "Core")]
 public class Log4netZeroMaxSamplesStoredTestsNetCoreOldestTests : ZeroMaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public Log4netZeroMaxSamplesStoredTestsNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -98,6 +103,7 @@ public class Log4netZeroMaxSamplesStoredTestsNetCoreOldestTests : ZeroMaxSamples
 
 #region MicrosoftLogging
 
+[Trait("Runtime", "Core")]
 public class MicrosoftLoggingZeroMaxSamplesStoredTestsNetCoreLatestTests : ZeroMaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public MicrosoftLoggingZeroMaxSamplesStoredTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -106,6 +112,7 @@ public class MicrosoftLoggingZeroMaxSamplesStoredTestsNetCoreLatestTests : ZeroM
     }
 }
 
+[Trait("Runtime", "Core")]
 public class MicrosoftLoggingZeroMaxSamplesStoredTestsNetCoreOldestTests : ZeroMaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public MicrosoftLoggingZeroMaxSamplesStoredTestsNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -114,6 +121,7 @@ public class MicrosoftLoggingZeroMaxSamplesStoredTestsNetCoreOldestTests : ZeroM
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class MicrosoftLoggingZeroMaxSamplesStoredTestsFWLatestTests : ZeroMaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public MicrosoftLoggingZeroMaxSamplesStoredTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -126,6 +134,7 @@ public class MicrosoftLoggingZeroMaxSamplesStoredTestsFWLatestTests : ZeroMaxSam
 
 #region Serilog
 
+[Trait("Runtime", "Framework")]
 public class SerilogZeroMaxSamplesStoredTestsFWLatestTests : ZeroMaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public SerilogZeroMaxSamplesStoredTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -134,6 +143,7 @@ public class SerilogZeroMaxSamplesStoredTestsFWLatestTests : ZeroMaxSamplesStore
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class SerilogZeroMaxSamplesStoredTestsFW471Tests : ZeroMaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     public SerilogZeroMaxSamplesStoredTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -142,6 +152,7 @@ public class SerilogZeroMaxSamplesStoredTestsFW471Tests : ZeroMaxSamplesStoredTe
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class SerilogZeroMaxSamplesStoredTestsFW462Tests : ZeroMaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public SerilogZeroMaxSamplesStoredTestsFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -150,6 +161,7 @@ public class SerilogZeroMaxSamplesStoredTestsFW462Tests : ZeroMaxSamplesStoredTe
     }
 }
 
+[Trait("Runtime", "Core")]
 public class SerilogZeroMaxSamplesStoredTestsNetCoreLatestTests : ZeroMaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public SerilogZeroMaxSamplesStoredTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -158,6 +170,7 @@ public class SerilogZeroMaxSamplesStoredTestsNetCoreLatestTests : ZeroMaxSamples
     }
 }
 
+[Trait("Runtime", "Core")]
 public class SerilogZeroMaxSamplesStoredTestsNetCoreOldestTests : ZeroMaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public SerilogZeroMaxSamplesStoredTestsNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -170,6 +183,7 @@ public class SerilogZeroMaxSamplesStoredTestsNetCoreOldestTests : ZeroMaxSamples
 
 #region NLog
 
+[Trait("Runtime", "Framework")]
 public class NLogZeroMaxSamplesStoredTestsFWLatestTests : ZeroMaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public NLogZeroMaxSamplesStoredTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -178,6 +192,7 @@ public class NLogZeroMaxSamplesStoredTestsFWLatestTests : ZeroMaxSamplesStoredTe
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class NLogZeroMaxSamplesStoredTestsFW471Tests : ZeroMaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     public NLogZeroMaxSamplesStoredTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -186,6 +201,7 @@ public class NLogZeroMaxSamplesStoredTestsFW471Tests : ZeroMaxSamplesStoredTests
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class NLogZeroMaxSamplesStoredTestsFW462Tests : ZeroMaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public NLogZeroMaxSamplesStoredTestsFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -194,6 +210,7 @@ public class NLogZeroMaxSamplesStoredTestsFW462Tests : ZeroMaxSamplesStoredTests
     }
 }
 
+[Trait("Runtime", "Core")]
 public class NLogZeroMaxSamplesStoredTestsNetCoreLatestTests : ZeroMaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public NLogZeroMaxSamplesStoredTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -202,6 +219,7 @@ public class NLogZeroMaxSamplesStoredTestsNetCoreLatestTests : ZeroMaxSamplesSto
     }
 }
 
+[Trait("Runtime", "Core")]
 public class NLogZeroMaxSamplesStoredTestsNetCoreOldestTests : ZeroMaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public NLogZeroMaxSamplesStoredTestsNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)

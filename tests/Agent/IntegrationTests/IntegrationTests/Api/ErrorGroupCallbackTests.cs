@@ -75,6 +75,7 @@ public abstract class ErrorGroupCallbackTestsBase<TFixture> : NewRelicIntegratio
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class ErrorGroupCallbackReturnsStringTestsFW : ErrorGroupCallbackTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public ErrorGroupCallbackReturnsStringTestsFW(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -83,6 +84,7 @@ public class ErrorGroupCallbackReturnsStringTestsFW : ErrorGroupCallbackTestsBas
     }
 }
 
+[Trait("Runtime", "Core")]
 public class ErrorGroupCallbackReturnsStringTestsCore : ErrorGroupCallbackTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public ErrorGroupCallbackReturnsStringTestsCore(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)

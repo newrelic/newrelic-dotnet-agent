@@ -81,6 +81,7 @@ public abstract class NsbSendTestsBase<TFixture> : NewRelicIntegrationTest<TFixt
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class NsbSendTestsFW471 : NsbSendTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     public NsbSendTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -89,6 +90,7 @@ public class NsbSendTestsFW471 : NsbSendTestsBase<ConsoleDynamicMethodFixtureFW4
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class NsbSendTestsFW48 : NsbSendTestsBase<ConsoleDynamicMethodFixtureFW48>
 {
     public NsbSendTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
@@ -97,6 +99,7 @@ public class NsbSendTestsFW48 : NsbSendTestsBase<ConsoleDynamicMethodFixtureFW48
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class NsbSendTestsFWLatest : NsbSendTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public NsbSendTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -105,6 +108,7 @@ public class NsbSendTestsFWLatest : NsbSendTestsBase<ConsoleDynamicMethodFixture
     }
 }
 
+[Trait("Runtime", "Core")]
 public class NsbSendTestsCoreOldest : NsbSendTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public NsbSendTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -113,6 +117,7 @@ public class NsbSendTestsCoreOldest : NsbSendTestsBase<ConsoleDynamicMethodFixtu
     }
 }
 
+[Trait("Runtime", "Core")]
 public class NsbSendTestsCoreLatest : NsbSendTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public NsbSendTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)

@@ -116,22 +116,26 @@ public abstract class OpenTelemetryStressTestsBase<TFixture> : NewRelicIntegrati
 }
 
 [Collection("OtelBridgeMetricsTest")]
+[Trait("Runtime", "Core")]
 public class OpenTelemetryBridgeMetricsCollectionTestsCoreLatest : OpenTelemetryStressTestsBase<OtlpStressWithCollectorFixtureCoreLatest>
 {
     public OpenTelemetryBridgeMetricsCollectionTestsCoreLatest(OtlpStressWithCollectorFixtureCoreLatest fixture, ITestOutputHelper outputHelper) : base(fixture, outputHelper) { }
 }
 
 [Collection("OtelBridgeMetricsTest")]
+[Trait("Runtime", "Core")]
 public class OpenTelemetryBridgeMetricsCollectionTestsCoreNet8 : OpenTelemetryStressTestsBase<OtlpStressWithCollectorFixtureCoreNet8>
 {
     public OpenTelemetryBridgeMetricsCollectionTestsCoreNet8(OtlpStressWithCollectorFixtureCoreNet8 fixture, ITestOutputHelper outputHelper) : base(fixture, outputHelper) { }
 }
 [Collection("OtelBridgeMetricsTest")]
+[Trait("Runtime", "Framework")]
 public class OpenTelemetryBridgeMetricsCollectionTestsNet472 : OpenTelemetryStressTestsBase<OtlpStressWithCollectorFixtureFW472>
 {
     public OpenTelemetryBridgeMetricsCollectionTestsNet472(OtlpStressWithCollectorFixtureFW472 fixture, ITestOutputHelper outputHelper) : base(fixture, outputHelper) { }
 }
 [Collection("OtelBridgeMetricsTest")]
+[Trait("Runtime", "Framework")]
 public class OpenTelemetryBridgeMetricsCollectionTestsNet481 : OpenTelemetryStressTestsBase<OtlpStressWithCollectorFixtureFW481>
 {
     public OpenTelemetryBridgeMetricsCollectionTestsNet481(OtlpStressWithCollectorFixtureFW481 fixture, ITestOutputHelper outputHelper) : base(fixture, outputHelper) { }

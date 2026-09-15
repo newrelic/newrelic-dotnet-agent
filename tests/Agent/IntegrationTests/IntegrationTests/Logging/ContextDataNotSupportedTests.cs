@@ -83,6 +83,7 @@ public abstract class ContextDataNotSupportedTestsBase<TFixture> : NewRelicInteg
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class ContextDataNotSupportedFWLatestTests : ContextDataNotSupportedTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public ContextDataNotSupportedFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -91,6 +92,7 @@ public class ContextDataNotSupportedFWLatestTests : ContextDataNotSupportedTests
     }
 }
 
+[Trait("Runtime", "Core")]
 public class ContextDataNotSupportedNetCoreLatestTests : ContextDataNotSupportedTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public ContextDataNotSupportedNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -99,6 +101,7 @@ public class ContextDataNotSupportedNetCoreLatestTests : ContextDataNotSupported
     }
 }
 
+[Trait("Runtime", "Core")]
 public class ContextDataNotSupportedNetCoreOldestTests : ContextDataNotSupportedTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public ContextDataNotSupportedNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)

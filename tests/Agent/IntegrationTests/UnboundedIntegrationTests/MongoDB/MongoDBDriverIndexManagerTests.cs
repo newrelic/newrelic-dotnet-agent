@@ -84,6 +84,7 @@ public abstract class MongoDBDriverIndexManagerTestsBase<TFixture> : NewRelicInt
 
 }
 
+[Trait("Runtime", "Framework")]
 public class MongoDBDriverIndexManagerTestsFWLatest : MongoDBDriverIndexManagerTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public MongoDBDriverIndexManagerTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -92,6 +93,7 @@ public class MongoDBDriverIndexManagerTestsFWLatest : MongoDBDriverIndexManagerT
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class MongoDBDriverIndexManagerTestsFW48 : MongoDBDriverIndexManagerTestsBase<ConsoleDynamicMethodFixtureFW48>
 {
     public MongoDBDriverIndexManagerTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
@@ -100,6 +102,7 @@ public class MongoDBDriverIndexManagerTestsFW48 : MongoDBDriverIndexManagerTests
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class MongoDBDriverIndexManagerTestsFW471 : MongoDBDriverIndexManagerTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     public MongoDBDriverIndexManagerTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -108,6 +111,7 @@ public class MongoDBDriverIndexManagerTestsFW471 : MongoDBDriverIndexManagerTest
     }
 }
 
+[Trait("Runtime", "Core")]
 public class MongoDBDriverIndexManagerTestsCoreLatest : MongoDBDriverIndexManagerTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public MongoDBDriverIndexManagerTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -116,6 +120,7 @@ public class MongoDBDriverIndexManagerTestsCoreLatest : MongoDBDriverIndexManage
     }
 }
 
+[Trait("Runtime", "Core")]
 public class MongoDBDriverIndexManagerTestsCoreOldest : MongoDBDriverIndexManagerTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public MongoDBDriverIndexManagerTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)

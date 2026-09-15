@@ -7,6 +7,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.AgentFeatures;
 
+[Trait("Runtime", "Framework")]
 public class RemotingSerialization : NewRelicIntegrationTest<RemoteServiceFixtures.OwinRemotingFixture>
 {
     private readonly RemoteServiceFixtures.OwinRemotingFixture _fixture;

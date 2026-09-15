@@ -79,6 +79,7 @@ public abstract class NsbPublishTestsBase<TFixture> : NewRelicIntegrationTest<TF
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class NsbPublishTestsFW471 : NsbPublishTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     public NsbPublishTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -87,6 +88,7 @@ public class NsbPublishTestsFW471 : NsbPublishTestsBase<ConsoleDynamicMethodFixt
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class NsbPublishTestsFW48 : NsbPublishTestsBase<ConsoleDynamicMethodFixtureFW48>
 {
     public NsbPublishTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
@@ -95,6 +97,7 @@ public class NsbPublishTestsFW48 : NsbPublishTestsBase<ConsoleDynamicMethodFixtu
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class NsbPublishTestsFWLatest : NsbPublishTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public NsbPublishTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -103,6 +106,7 @@ public class NsbPublishTestsFWLatest : NsbPublishTestsBase<ConsoleDynamicMethodF
     }
 }
 
+[Trait("Runtime", "Core")]
 public class NsbPublishTestsCoreOldest : NsbPublishTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public NsbPublishTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -111,6 +115,7 @@ public class NsbPublishTestsCoreOldest : NsbPublishTestsBase<ConsoleDynamicMetho
     }
 }
 
+[Trait("Runtime", "Core")]
 public class NsbPublishTestsCoreLatest : NsbPublishTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public NsbPublishTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)

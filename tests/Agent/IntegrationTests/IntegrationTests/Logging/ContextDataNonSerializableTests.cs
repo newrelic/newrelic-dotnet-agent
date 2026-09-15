@@ -97,6 +97,7 @@ public abstract class ContextDataNonSerializableTestsBase<TFixture> : NewRelicIn
     }
 }
 
+[Trait("Runtime", "Core")]
 public class MELContextDataNonSerializableNetCoreLatestTests : ContextDataNonSerializableTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public MELContextDataNonSerializableNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -105,6 +106,7 @@ public class MELContextDataNonSerializableNetCoreLatestTests : ContextDataNonSer
     }
 }
 
+[Trait("Runtime", "Core")]
 public class MELContextDataNonSerializableNetCoreOldestTests : ContextDataNonSerializableTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public MELContextDataNonSerializableNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -113,6 +115,7 @@ public class MELContextDataNonSerializableNetCoreOldestTests : ContextDataNonSer
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class MELContextDataNonSerializableFWLatestTests : ContextDataNonSerializableTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public MELContextDataNonSerializableFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)

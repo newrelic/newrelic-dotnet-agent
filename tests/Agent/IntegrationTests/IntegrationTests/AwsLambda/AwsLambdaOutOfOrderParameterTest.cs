@@ -74,6 +74,7 @@ public abstract class AwsLambdaOutOfOrderParameterTest<T> : NewRelicIntegrationT
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AwsLambdaOutOfOrderParameterTestCoreOldest : AwsLambdaOutOfOrderParameterTest<LambdaOutOfOrderParameterFixtureCoreOldest>
 {
     public AwsLambdaOutOfOrderParameterTestCoreOldest(LambdaOutOfOrderParameterFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -82,6 +83,7 @@ public class AwsLambdaOutOfOrderParameterTestCoreOldest : AwsLambdaOutOfOrderPar
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AwsLambdaOutOfOrderParameterTestCoreLatest : AwsLambdaOutOfOrderParameterTest<LambdaOutOfOrderParameterFixtureCoreLatest>
 {
     public AwsLambdaOutOfOrderParameterTestCoreLatest(LambdaOutOfOrderParameterFixtureCoreLatest fixture, ITestOutputHelper output)

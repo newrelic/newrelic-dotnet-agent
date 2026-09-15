@@ -211,6 +211,7 @@ public abstract class OpenSearchTestsTestsBase<TFixture> : NewRelicIntegrationTe
 }
 
 #region OpenSearchClient
+[Trait("Runtime", "Framework")]
 public class OpenSearchClientTestsFWLatest : OpenSearchTestsTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public OpenSearchClientTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -219,6 +220,7 @@ public class OpenSearchClientTestsFWLatest : OpenSearchTestsTestsBase<ConsoleDyn
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class OpenSearchClientTestsFW462 : OpenSearchTestsTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public OpenSearchClientTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -227,6 +229,7 @@ public class OpenSearchClientTestsFW462 : OpenSearchTestsTestsBase<ConsoleDynami
     }
 }
 
+[Trait("Runtime", "Core")]
 public class OpenSearchClientTestsCoreLatest : OpenSearchTestsTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public OpenSearchClientTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -235,6 +238,7 @@ public class OpenSearchClientTestsCoreLatest : OpenSearchTestsTestsBase<ConsoleD
     }
 }
 
+[Trait("Runtime", "Core")]
 public class OpenSearchClientTestsCoreOldest : OpenSearchTestsTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public OpenSearchClientTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)

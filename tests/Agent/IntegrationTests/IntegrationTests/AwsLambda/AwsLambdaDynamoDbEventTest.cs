@@ -75,6 +75,7 @@ public abstract class AwsLambdaDynamoDbEventTest<T> : NewRelicIntegrationTest<T>
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AwsLambdaDynamoDbEventTestCoreOldest : AwsLambdaDynamoDbEventTest<LambdaDynamoDbEventTriggerFixtureCoreOldest>
 {
     public AwsLambdaDynamoDbEventTestCoreOldest(LambdaDynamoDbEventTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -83,6 +84,7 @@ public class AwsLambdaDynamoDbEventTestCoreOldest : AwsLambdaDynamoDbEventTest<L
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AwsLambdaDynamoDbEventTestCoreLatest : AwsLambdaDynamoDbEventTest<LambdaDynamoDbEventTriggerFixtureCoreLatest>
 {
     public AwsLambdaDynamoDbEventTestCoreLatest(LambdaDynamoDbEventTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -91,6 +93,7 @@ public class AwsLambdaDynamoDbEventTestCoreLatest : AwsLambdaDynamoDbEventTest<L
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AwsLambdaAsyncDynamoDbEventTestCoreOldest : AwsLambdaDynamoDbEventTest<AsyncLambdaDynamoDbEventTriggerFixtureCoreOldest>
 {
     public AwsLambdaAsyncDynamoDbEventTestCoreOldest(AsyncLambdaDynamoDbEventTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -99,6 +102,7 @@ public class AwsLambdaAsyncDynamoDbEventTestCoreOldest : AwsLambdaDynamoDbEventT
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AwsLambdaAsyncDynamoDbEventTestCoreLatest : AwsLambdaDynamoDbEventTest<AsyncLambdaDynamoDbEventTriggerFixtureCoreLatest>
 {
     public AwsLambdaAsyncDynamoDbEventTestCoreLatest(AsyncLambdaDynamoDbEventTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -107,6 +111,7 @@ public class AwsLambdaAsyncDynamoDbEventTestCoreLatest : AwsLambdaDynamoDbEventT
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AwsLambdaDynamoDbTimeWindowEventTestCoreOldest : AwsLambdaDynamoDbEventTest<LambdaDynamoDbTimeWindowEventTriggerFixtureCoreOldest>
 {
     public AwsLambdaDynamoDbTimeWindowEventTestCoreOldest(LambdaDynamoDbTimeWindowEventTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -115,6 +120,7 @@ public class AwsLambdaDynamoDbTimeWindowEventTestCoreOldest : AwsLambdaDynamoDbE
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AwsLambdaDynamoDbTimeWindowEventTestCoreLatest : AwsLambdaDynamoDbEventTest<LambdaDynamoDbTimeWindowEventTriggerFixtureCoreLatest>
 {
     public AwsLambdaDynamoDbTimeWindowEventTestCoreLatest(LambdaDynamoDbTimeWindowEventTriggerFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -123,6 +129,7 @@ public class AwsLambdaDynamoDbTimeWindowEventTestCoreLatest : AwsLambdaDynamoDbE
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AwsLambdaAsyncDynamoDbTimeWindowEventTestCoreOldest : AwsLambdaDynamoDbEventTest<AsyncLambdaDynamoDbTimeWindowEventTriggerFixtureCoreOldest>
 {
     public AwsLambdaAsyncDynamoDbTimeWindowEventTestCoreOldest(AsyncLambdaDynamoDbTimeWindowEventTriggerFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -131,6 +138,7 @@ public class AwsLambdaAsyncDynamoDbTimeWindowEventTestCoreOldest : AwsLambdaDyna
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AwsLambdaAsyncDynamoDbTimeWindowEventTestCoreLatest : AwsLambdaDynamoDbEventTest<AsyncLambdaDynamoDbTimeWindowEventTriggerFixtureCoreLatest>
 {
     public AwsLambdaAsyncDynamoDbTimeWindowEventTestCoreLatest(AsyncLambdaDynamoDbTimeWindowEventTriggerFixtureCoreLatest fixture, ITestOutputHelper output)

@@ -126,6 +126,7 @@ public abstract class OwinWebApiTestsBase<TFixture> : NewRelicIntegrationTest<TF
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class OwinWebApiTests : OwinWebApiTestsBase<RemoteServiceFixtures.OwinWebApiFixture>
 {
     public OwinWebApiTests(RemoteServiceFixtures.OwinWebApiFixture fixture, ITestOutputHelper output)
@@ -134,6 +135,7 @@ public class OwinWebApiTests : OwinWebApiTestsBase<RemoteServiceFixtures.OwinWeb
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class Owin3WebApiTests : OwinWebApiTestsBase<RemoteServiceFixtures.Owin3WebApiFixture>
 {
     public Owin3WebApiTests(RemoteServiceFixtures.Owin3WebApiFixture fixture, ITestOutputHelper output)
@@ -142,6 +144,7 @@ public class Owin3WebApiTests : OwinWebApiTestsBase<RemoteServiceFixtures.Owin3W
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class Owin4WebApiTests : OwinWebApiTestsBase<RemoteServiceFixtures.Owin4WebApiFixture>
 {
     public Owin4WebApiTests(RemoteServiceFixtures.Owin4WebApiFixture fixture, ITestOutputHelper output)

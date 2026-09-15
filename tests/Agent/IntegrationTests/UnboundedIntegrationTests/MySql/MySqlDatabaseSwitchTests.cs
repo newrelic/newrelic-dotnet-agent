@@ -37,6 +37,7 @@ public abstract class MySqlDatabaseSwitchTestsBase<TFixture> : DatabaseSwitchTes
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class MySqlDatabaseSwitchTests_FWLatest : MySqlDatabaseSwitchTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public MySqlDatabaseSwitchTests_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -45,6 +46,7 @@ public class MySqlDatabaseSwitchTests_FWLatest : MySqlDatabaseSwitchTestsBase<Co
     }
 }
 
+[Trait("Runtime", "Core")]
 public class MySqlDatabaseSwitchTests_CoreLatest : MySqlDatabaseSwitchTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public MySqlDatabaseSwitchTests_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)

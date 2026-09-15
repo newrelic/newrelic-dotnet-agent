@@ -12,6 +12,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.AspNetCore;
 
+[Trait("Runtime", "Core")]
 public class AspNetCoreGenericWebHostTests : NewRelicIntegrationTest<RemoteServiceFixtures.AspNetCoreFeaturesFixture>
 {
     private readonly RemoteServiceFixtures.AspNetCoreFeaturesFixture _fixture;

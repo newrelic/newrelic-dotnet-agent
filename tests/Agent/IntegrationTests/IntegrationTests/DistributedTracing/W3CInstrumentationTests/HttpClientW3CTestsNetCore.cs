@@ -160,6 +160,7 @@ public abstract class HttpClientW3CTestsNetCore : NewRelicIntegrationTest<AspNet
     }
 }
 
+[Trait("Runtime", "Core")]
 public class HttpClientW3CTestsNetCoreWithNRHeader : HttpClientW3CTestsNetCore
 {
     public HttpClientW3CTestsNetCoreWithNRHeader(AspNetCoreDistTraceRequestChainFixture fixture, ITestOutputHelper output)
@@ -169,6 +170,7 @@ public class HttpClientW3CTestsNetCoreWithNRHeader : HttpClientW3CTestsNetCore
 
 }
 
+[Trait("Runtime", "Core")]
 public class HttpClientW3CTestsNetCoreWithoutNRHeader : HttpClientW3CTestsNetCore
 {
     public HttpClientW3CTestsNetCoreWithoutNRHeader(AspNetCoreDistTraceRequestChainFixture fixture, ITestOutputHelper output)

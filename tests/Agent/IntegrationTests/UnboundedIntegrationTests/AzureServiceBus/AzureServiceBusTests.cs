@@ -253,6 +253,7 @@ public abstract class AzureServiceBusTestsBase<TFixture> : NewRelicIntegrationTe
 
 #region Queue Tests
 
+[Trait("Runtime", "Framework")]
 public class AzureServiceBusQueueTestsFWLatest : AzureServiceBusTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public AzureServiceBusQueueTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) :
@@ -261,6 +262,7 @@ public class AzureServiceBusQueueTestsFWLatest : AzureServiceBusTestsBase<Consol
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class AzureServiceBusQueueTestsFW462 : AzureServiceBusTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public AzureServiceBusQueueTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(
@@ -269,6 +271,7 @@ public class AzureServiceBusQueueTestsFW462 : AzureServiceBusTestsBase<ConsoleDy
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AzureServiceBusQueueTestsCoreOldest : AzureServiceBusTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public AzureServiceBusQueueTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output) :
@@ -277,6 +280,7 @@ public class AzureServiceBusQueueTestsCoreOldest : AzureServiceBusTestsBase<Cons
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AzureServiceBusQueueTestsCoreLatest : AzureServiceBusTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public AzureServiceBusQueueTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) :
@@ -289,6 +293,7 @@ public class AzureServiceBusQueueTestsCoreLatest : AzureServiceBusTestsBase<Cons
 
 #region Topic Tests
 
+[Trait("Runtime", "Framework")]
 public class AzureServiceBusTopicTestsFWLatest : AzureServiceBusTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public AzureServiceBusTopicTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) :
@@ -297,6 +302,7 @@ public class AzureServiceBusTopicTestsFWLatest : AzureServiceBusTestsBase<Consol
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class AzureServiceBusTopicTestsFW462 : AzureServiceBusTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public AzureServiceBusTopicTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(
@@ -305,6 +311,7 @@ public class AzureServiceBusTopicTestsFW462 : AzureServiceBusTestsBase<ConsoleDy
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AzureServiceBusTopicTestsCoreOldest : AzureServiceBusTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public AzureServiceBusTopicTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output) :
@@ -313,6 +320,7 @@ public class AzureServiceBusTopicTestsCoreOldest : AzureServiceBusTestsBase<Cons
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AzureServiceBusTopicTestsCoreLatest : AzureServiceBusTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public AzureServiceBusTopicTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) :

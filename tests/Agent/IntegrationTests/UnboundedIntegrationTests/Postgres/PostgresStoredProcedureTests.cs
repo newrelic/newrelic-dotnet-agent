@@ -107,6 +107,7 @@ public abstract class PostgresSqlStoredProcedureTestsBase<TFixture> : NewRelicIn
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class PostgresSqlStoredProcedureTestsFW462 : PostgresSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public PostgresSqlStoredProcedureTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -115,6 +116,7 @@ public class PostgresSqlStoredProcedureTestsFW462 : PostgresSqlStoredProcedureTe
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class PostgresSqlStoredProcedureTestsFWLatest : PostgresSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public PostgresSqlStoredProcedureTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
@@ -123,6 +125,7 @@ public class PostgresSqlStoredProcedureTestsFWLatest : PostgresSqlStoredProcedur
     }
 }
 
+[Trait("Runtime", "Core")]
 public class PostgresSqlStoredProcedureTestsCoreOldest : PostgresSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public PostgresSqlStoredProcedureTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output) : base(fixture, output)
@@ -131,6 +134,7 @@ public class PostgresSqlStoredProcedureTestsCoreOldest : PostgresSqlStoredProced
     }
 }
 
+[Trait("Runtime", "Core")]
 public class PostgresSqlStoredProcedureTestsCoreLatest : PostgresSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public PostgresSqlStoredProcedureTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)

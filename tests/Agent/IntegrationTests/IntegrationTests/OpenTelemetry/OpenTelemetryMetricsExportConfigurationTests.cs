@@ -60,6 +60,7 @@ public abstract class OpenTelemetryMetricsExportConfigurationTestsBase<TFixture>
     }
 }
 
+[Trait("Runtime", "Core")]
 public class OpenTelemetryMetricsExportConfigurationInvalidIntervalLessThanTimeoutTests : OpenTelemetryMetricsExportConfigurationTestsBase<OtlpMetricsWithCollectorFixtureCoreLatest>
 {
     public OpenTelemetryMetricsExportConfigurationInvalidIntervalLessThanTimeoutTests(OtlpMetricsWithCollectorFixtureCoreLatest fixture, ITestOutputHelper outputHelper) 
@@ -90,6 +91,7 @@ public class OpenTelemetryMetricsExportConfigurationInvalidIntervalLessThanTimeo
     }
 }
 
+[Trait("Runtime", "Core")]
 public class OpenTelemetryMetricsExportConfigurationInvalidIntervalEqualsTimeoutTests : OpenTelemetryMetricsExportConfigurationTestsBase<OtlpMetricsWithCollectorFixtureCoreNet8>
 {
     public OpenTelemetryMetricsExportConfigurationInvalidIntervalEqualsTimeoutTests(OtlpMetricsWithCollectorFixtureCoreNet8 fixture, ITestOutputHelper outputHelper)
@@ -119,6 +121,7 @@ public class OpenTelemetryMetricsExportConfigurationInvalidIntervalEqualsTimeout
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class OpenTelemetryMetricsExportConfigurationValidTests : OpenTelemetryMetricsExportConfigurationTestsBase<OtlpMetricsWithCollectorFixtureFW472>
 {
     public OpenTelemetryMetricsExportConfigurationValidTests(OtlpMetricsWithCollectorFixtureFW472 fixture, ITestOutputHelper outputHelper) 

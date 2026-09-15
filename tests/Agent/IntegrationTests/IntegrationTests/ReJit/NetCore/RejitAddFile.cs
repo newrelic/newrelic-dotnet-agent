@@ -95,6 +95,7 @@ public abstract class RejitAddFileBase<TFixture> : NewRelicIntegrationTest<TFixt
     }
 }
 
+[Trait("Runtime", "Core")]
 public class RejitAddFileWithFileWatcherEnabled : RejitAddFileBase<AspNetCoreReJitMvcApplicationFixture>
 {
     public RejitAddFileWithFileWatcherEnabled(AspNetCoreReJitMvcApplicationFixture fixture, ITestOutputHelper output)
@@ -103,6 +104,7 @@ public class RejitAddFileWithFileWatcherEnabled : RejitAddFileBase<AspNetCoreReJ
     }
 }
 
+[Trait("Runtime", "Core")]
 public class RejitAddFileWithFileWatcherDisabled : RejitAddFileBase<AspNetCoreReJitMvcApplicationFixture>
 {
     public RejitAddFileWithFileWatcherDisabled(AspNetCoreReJitMvcApplicationFixture fixture, ITestOutputHelper output)
@@ -111,6 +113,7 @@ public class RejitAddFileWithFileWatcherDisabled : RejitAddFileBase<AspNetCoreRe
     }
 }
 
+[Trait("Runtime", "Core")]
 public class RejitAddFileWithTieredCompilation : RejitAddFileBase<AspNetCoreReJitMvcApplicationFixtureWithTieredCompilation>
 {
     public RejitAddFileWithTieredCompilation(AspNetCoreReJitMvcApplicationFixtureWithTieredCompilation fixture, ITestOutputHelper output)

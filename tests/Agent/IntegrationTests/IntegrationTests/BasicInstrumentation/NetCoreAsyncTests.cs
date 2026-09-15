@@ -12,6 +12,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation;
 
+[Trait("Runtime", "Core")]
 public class NetCoreAsyncTests : NewRelicIntegrationTest<NetCoreAsyncTestsFixture>
 {
     private readonly NetCoreAsyncTestsFixture _fixture;

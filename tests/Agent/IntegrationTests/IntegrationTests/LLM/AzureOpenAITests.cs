@@ -147,6 +147,7 @@ public abstract class AzureOpenAITestsBase<TFixture> : NewRelicIntegrationTest<T
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AzureOpenAITests_CoreLatest : AzureOpenAITestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public AzureOpenAITests_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -155,6 +156,7 @@ public class AzureOpenAITests_CoreLatest : AzureOpenAITestsBase<ConsoleDynamicMe
     }
 }
 
+[Trait("Runtime", "Core")]
 public class AzureOpenAITests_CoreOldest : AzureOpenAITestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public AzureOpenAITests_CoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -163,6 +165,7 @@ public class AzureOpenAITests_CoreOldest : AzureOpenAITestsBase<ConsoleDynamicMe
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class AzureOpenAITests_FWLatest : AzureOpenAITestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public AzureOpenAITests_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)

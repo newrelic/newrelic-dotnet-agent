@@ -14,6 +14,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.CatOutbound;
 
+[Trait("Runtime", "Framework")]
 public class CatDisabledChainedRequestsWebRequest : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
 {
     private RemoteServiceFixtures.BasicMvcApplicationTestFixture _fixture;

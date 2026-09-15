@@ -123,6 +123,7 @@ public abstract class HttpClientInstrumentationTestsBase<TFixture> : NewRelicInt
     }
 }
 
+[Trait("Runtime", "Core")]
 public class HttpClientInstrumentationTests_NetCoreOldest : HttpClientInstrumentationTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
     protected override string ExpectedClassName { get { return CLASS_NAME; } }
@@ -134,6 +135,7 @@ public class HttpClientInstrumentationTests_NetCoreOldest : HttpClientInstrument
     }
 }
 
+[Trait("Runtime", "Core")]
 public class HttpClientInstrumentationTests_NetCoreLatest : HttpClientInstrumentationTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     protected override string ExpectedClassName { get { return CLASS_NAME; } }
@@ -145,6 +147,7 @@ public class HttpClientInstrumentationTests_NetCoreLatest : HttpClientInstrument
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class HttpClientInstrumentationTests_FW462 : HttpClientInstrumentationTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     protected override string ExpectedClassName { get { return LEGACY_CLASS_NAME; } }
@@ -156,6 +159,7 @@ public class HttpClientInstrumentationTests_FW462 : HttpClientInstrumentationTes
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class HttpClientInstrumentationTests_FW471 : HttpClientInstrumentationTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     protected override string ExpectedClassName { get { return LEGACY_CLASS_NAME; } }
@@ -167,6 +171,7 @@ public class HttpClientInstrumentationTests_FW471 : HttpClientInstrumentationTes
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class HttpClientInstrumentationTests_FW48 : HttpClientInstrumentationTestsBase<ConsoleDynamicMethodFixtureFW48>
 {
     protected override string ExpectedClassName { get { return LEGACY_CLASS_NAME; } }
@@ -178,6 +183,7 @@ public class HttpClientInstrumentationTests_FW48 : HttpClientInstrumentationTest
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class HttpClientInstrumentationTests_FWLatest : HttpClientInstrumentationTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     protected override string ExpectedClassName { get { return LEGACY_CLASS_NAME; } }

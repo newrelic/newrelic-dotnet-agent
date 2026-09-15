@@ -13,6 +13,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation;
 
+[Trait("Runtime", "Framework")]
 public class WebApiAsyncTests : NewRelicIntegrationTest<WebApiAsyncFixture>
 {
     private readonly WebApiAsyncFixture _fixture;

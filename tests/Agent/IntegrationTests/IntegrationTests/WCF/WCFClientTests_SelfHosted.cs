@@ -15,6 +15,7 @@ public abstract class WCFClient_Self : WCFClientTestBase
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class WCFClient_Self_NetTCP : WCFClient_Self
 {
     public WCFClient_Self_NetTCP(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -23,6 +24,7 @@ public class WCFClient_Self_NetTCP : WCFClient_Self
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class WCFClient_Self_WebHTTP : WCFClient_Self
 {
     public WCFClient_Self_WebHTTP(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -31,6 +33,7 @@ public class WCFClient_Self_WebHTTP : WCFClient_Self
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class WCFClient_Self_WSHTTP : WCFClient_Self
 {
     public WCFClient_Self_WSHTTP(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -39,6 +42,7 @@ public class WCFClient_Self_WSHTTP : WCFClient_Self
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class WCFClient_Self_BasicHTTP : WCFClient_Self
 {
     public WCFClient_Self_BasicHTTP(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -47,6 +51,7 @@ public class WCFClient_Self_BasicHTTP : WCFClient_Self
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class WCFClient_Self_WebHTTP_DT : WCFClient_Self
 {
     public WCFClient_Self_WebHTTP_DT(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -55,6 +60,7 @@ public class WCFClient_Self_WebHTTP_DT : WCFClient_Self
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class WCFClient_Self_WSHTTP_DT : WCFClient_Self
 {
     public WCFClient_Self_WSHTTP_DT(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -63,6 +69,7 @@ public class WCFClient_Self_WSHTTP_DT : WCFClient_Self
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class WCFClient_Self_BasicHTTP_DT : WCFClient_Self
 {
     public WCFClient_Self_BasicHTTP_DT(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -71,6 +78,7 @@ public class WCFClient_Self_BasicHTTP_DT : WCFClient_Self
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class WCFClient_Self_NetTCP_DT : WCFClient_Self
 {
     public WCFClient_Self_NetTCP_DT(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -80,6 +88,7 @@ public class WCFClient_Self_NetTCP_DT : WCFClient_Self
 }
 
 
+[Trait("Runtime", "Framework")]
 public class WCFClient_Self_WebHTTP_CAT : WCFClient_Self
 {
     public WCFClient_Self_WebHTTP_CAT(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -88,6 +97,7 @@ public class WCFClient_Self_WebHTTP_CAT : WCFClient_Self
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class WCFClient_Self_WSHTTP_CAT : WCFClient_Self
 {
     public WCFClient_Self_WSHTTP_CAT(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -96,6 +106,7 @@ public class WCFClient_Self_WSHTTP_CAT : WCFClient_Self
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class WCFClient_Self_BasicHTTP_CAT : WCFClient_Self
 {
     public WCFClient_Self_BasicHTTP_CAT(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -104,6 +115,7 @@ public class WCFClient_Self_BasicHTTP_CAT : WCFClient_Self
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class WCFClient_Self_NetTCP_CAT : WCFClient_Self
 {
     public WCFClient_Self_NetTCP_CAT(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -112,6 +124,7 @@ public class WCFClient_Self_NetTCP_CAT : WCFClient_Self
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class WCFClient_Self_Custom : WCFClient_Self
 {
     public WCFClient_Self_Custom(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -120,6 +133,7 @@ public class WCFClient_Self_Custom : WCFClient_Self
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class WCFClient_Self_CustomClass : WCFClient_Self
 {
     public WCFClient_Self_CustomClass(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)

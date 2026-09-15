@@ -174,6 +174,7 @@ public abstract class AzureServiceBusProcessorTestsBase<TFixture> : NewRelicInte
 
 #region Queue Tests
 
+[Trait("Runtime", "Framework")]
 public class
     AzureServiceBusProcessorQueueTestsFWLatest : AzureServiceBusProcessorTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
@@ -183,6 +184,7 @@ public class
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class
     AzureServiceBusProcessorQueueTestsFW462 : AzureServiceBusProcessorTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
@@ -192,6 +194,7 @@ public class
     }
 }
 
+[Trait("Runtime", "Core")]
 public class
     AzureServiceBusProcessorQueueTestsCoreOldest : AzureServiceBusProcessorTestsBase<
     ConsoleDynamicMethodFixtureCoreOldest>
@@ -202,6 +205,7 @@ public class
     }
 }
 
+[Trait("Runtime", "Core")]
 public class
     AzureServiceBusProcessorQueueTestsCoreLatest : AzureServiceBusProcessorTestsBase<
     ConsoleDynamicMethodFixtureCoreLatest>
@@ -216,6 +220,7 @@ public class
 
 #region Topic Tests
 
+[Trait("Runtime", "Framework")]
 public class
     AzureServiceBusProcessorTopicTestsFWLatest : AzureServiceBusProcessorTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
@@ -225,6 +230,7 @@ public class
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class
     AzureServiceBusProcessorTopicTestsFW462 : AzureServiceBusProcessorTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
@@ -234,6 +240,7 @@ public class
     }
 }
 
+[Trait("Runtime", "Core")]
 public class
     AzureServiceBusProcessorTopicTestsCoreOldest : AzureServiceBusProcessorTestsBase<
     ConsoleDynamicMethodFixtureCoreOldest>
@@ -244,6 +251,7 @@ public class
     }
 }
 
+[Trait("Runtime", "Core")]
 public class
     AzureServiceBusProcessorTopicTestsCoreLatest : AzureServiceBusProcessorTestsBase<
     ConsoleDynamicMethodFixtureCoreLatest>

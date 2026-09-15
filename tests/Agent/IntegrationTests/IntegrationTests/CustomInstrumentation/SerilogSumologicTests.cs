@@ -10,6 +10,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation;
 
+[Trait("Runtime", "Core")]
 public class SerilogSumologicSyncTests : NewRelicIntegrationTest<RemoteServiceFixtures.SerilogSumologicFixture>
 {
     private readonly RemoteServiceFixtures.SerilogSumologicFixture _fixture;
@@ -60,6 +61,7 @@ public class SerilogSumologicSyncTests : NewRelicIntegrationTest<RemoteServiceFi
     };
 }
 
+[Trait("Runtime", "Core")]
 public class SerilogSumologicAsyncTests : SerilogSumologicSyncTests
 {
     public SerilogSumologicAsyncTests(RemoteServiceFixtures.SerilogSumologicFixture fixture, ITestOutputHelper output)

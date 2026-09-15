@@ -133,6 +133,7 @@ public abstract class BrowserAgentAutoInjectionLargeHeadBase : NewRelicIntegrati
     }
 }
 
+[Trait("Runtime", "Core")]
 public class BrowserAgentAutoInjectionLargeHeadUnCompressed : BrowserAgentAutoInjectionLargeHeadBase
 {
     public BrowserAgentAutoInjectionLargeHeadUnCompressed(BasicAspNetCoreRazorApplicationFixture fixture, ITestOutputHelper output)
@@ -141,6 +142,7 @@ public class BrowserAgentAutoInjectionLargeHeadUnCompressed : BrowserAgentAutoIn
     }
 }
 
+[Trait("Runtime", "Core")]
 public class BrowserAgentAutoInjectionLargeHeadCompressed : BrowserAgentAutoInjectionLargeHeadBase
 {
     public BrowserAgentAutoInjectionLargeHeadCompressed(BasicAspNetCoreRazorApplicationFixture fixture, ITestOutputHelper output)

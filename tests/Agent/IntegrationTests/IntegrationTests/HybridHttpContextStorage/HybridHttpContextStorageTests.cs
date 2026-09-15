@@ -9,6 +9,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.HybridHttpContextStorage;
 
+[Trait("Runtime", "Framework")]
 public class HybridHttpContextStorageTests : NewRelicIntegrationTest<RemoteServiceFixtures.BasicWebFormsApplication>
 {
 

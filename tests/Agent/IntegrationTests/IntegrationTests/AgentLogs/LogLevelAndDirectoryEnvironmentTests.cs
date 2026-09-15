@@ -76,18 +76,21 @@ public abstract class LogLevelAndDirectoryEnvironmentTests<T> : NewRelicIntegrat
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class LogLevelAndDirectoryEnvironmentTestsFrameworkLatest : LogLevelAndDirectoryEnvironmentTests<ConsoleDynamicMethodFixtureFWLatest>
 {
     public LogLevelAndDirectoryEnvironmentTestsFrameworkLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
         : base(fixture, output) { }
 }
 
+[Trait("Runtime", "Core")]
 public class LogLevelAndDirectoryEnvironmentTestsCoreOldest : LogLevelAndDirectoryEnvironmentTests<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public LogLevelAndDirectoryEnvironmentTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
         : base(fixture, output) { }
 }
 
+[Trait("Runtime", "Core")]
 public class LogLevelAndDirectoryEnvironmentTestsCoreLatest : LogLevelAndDirectoryEnvironmentTests<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public LogLevelAndDirectoryEnvironmentTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)

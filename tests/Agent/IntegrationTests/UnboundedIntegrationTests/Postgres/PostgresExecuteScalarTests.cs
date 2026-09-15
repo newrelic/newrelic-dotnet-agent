@@ -122,6 +122,7 @@ public abstract class PostgresSqlExecuteScalarTestsBase<TFixture> : NewRelicInte
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class PostgresSqlExecuteScalarTestsFW462 : PostgresSqlExecuteScalarTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public PostgresSqlExecuteScalarTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -130,6 +131,7 @@ public class PostgresSqlExecuteScalarTestsFW462 : PostgresSqlExecuteScalarTestsB
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class PostgresSqlExecuteScalarTestsFWLatest : PostgresSqlExecuteScalarTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public PostgresSqlExecuteScalarTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
@@ -138,6 +140,7 @@ public class PostgresSqlExecuteScalarTestsFWLatest : PostgresSqlExecuteScalarTes
     }
 }
 
+[Trait("Runtime", "Core")]
 public class PostgresSqlExecuteScalarTestsCoreOldest : PostgresSqlExecuteScalarTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public PostgresSqlExecuteScalarTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output) : base(fixture, output)
@@ -146,6 +149,7 @@ public class PostgresSqlExecuteScalarTestsCoreOldest : PostgresSqlExecuteScalarT
     }
 }
 
+[Trait("Runtime", "Core")]
 public class PostgresSqlExecuteScalarTestsCoreLatest : PostgresSqlExecuteScalarTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public PostgresSqlExecuteScalarTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)

@@ -85,6 +85,7 @@ public abstract class NsbCmdHandlerTestsBase<TFixture> : NewRelicIntegrationTest
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class NsbCmdHandlerTestsFW471 : NsbCmdHandlerTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     public NsbCmdHandlerTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -93,6 +94,7 @@ public class NsbCmdHandlerTestsFW471 : NsbCmdHandlerTestsBase<ConsoleDynamicMeth
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class NsbCmdHandlerTestsFW48 : NsbCmdHandlerTestsBase<ConsoleDynamicMethodFixtureFW48>
 {
     public NsbCmdHandlerTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
@@ -101,6 +103,7 @@ public class NsbCmdHandlerTestsFW48 : NsbCmdHandlerTestsBase<ConsoleDynamicMetho
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class NsbCmdHandlerTestsFWLatest : NsbCmdHandlerTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public NsbCmdHandlerTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -109,6 +112,7 @@ public class NsbCmdHandlerTestsFWLatest : NsbCmdHandlerTestsBase<ConsoleDynamicM
     }
 }
 
+[Trait("Runtime", "Core")]
 public class NsbCmdHandlerTestsCoreOldest : NsbCmdHandlerTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
     public NsbCmdHandlerTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
@@ -117,6 +121,7 @@ public class NsbCmdHandlerTestsCoreOldest : NsbCmdHandlerTestsBase<ConsoleDynami
     }
 }
 
+[Trait("Runtime", "Core")]
 public class NsbCmdHandlerTestsCoreLatest : NsbCmdHandlerTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public NsbCmdHandlerTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)

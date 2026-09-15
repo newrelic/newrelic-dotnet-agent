@@ -103,6 +103,7 @@ public abstract class LabelsTestsBase<TFixture> : NewRelicIntegrationTest<TFixtu
 
 #region Serilog
 
+[Trait("Runtime", "Framework")]
 public class SerilogLabelsEnabledFWLatestTests : LabelsTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public SerilogLabelsEnabledFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -111,6 +112,7 @@ public class SerilogLabelsEnabledFWLatestTests : LabelsTestsBase<ConsoleDynamicM
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class SerilogLabelsEnabledWithExcludesFWLatestTests : LabelsTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public SerilogLabelsEnabledWithExcludesFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -119,6 +121,7 @@ public class SerilogLabelsEnabledWithExcludesFWLatestTests : LabelsTestsBase<Con
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class SerilogLabelsDisabledFWLatestTests : LabelsTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public SerilogLabelsDisabledFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -127,6 +130,7 @@ public class SerilogLabelsDisabledFWLatestTests : LabelsTestsBase<ConsoleDynamic
     }
 }
 
+[Trait("Runtime", "Core")]
 public class SerilogLabelsEnabledNetCoreLatestTests : LabelsTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public SerilogLabelsEnabledNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -135,6 +139,7 @@ public class SerilogLabelsEnabledNetCoreLatestTests : LabelsTestsBase<ConsoleDyn
     }
 }
 
+[Trait("Runtime", "Core")]
 public class SerilogLabelsEnabledWithExcludesNetCoreLatestTests : LabelsTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public SerilogLabelsEnabledWithExcludesNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -143,6 +148,7 @@ public class SerilogLabelsEnabledWithExcludesNetCoreLatestTests : LabelsTestsBas
     }
 }
 
+[Trait("Runtime", "Core")]
 public class SerilogLabelsDisabledNetCoreLatestTests : LabelsTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
     public SerilogLabelsDisabledNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)

@@ -11,6 +11,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.AspNetCore;
 
+[Trait("Runtime", "Framework")]
 public class AspNetCoreMvcCoreFrameworkTests : NewRelicIntegrationTest<AspNetCoreMvcCoreFrameworkFixture>
 {
     private readonly AspNetCoreMvcCoreFrameworkFixture _fixture;

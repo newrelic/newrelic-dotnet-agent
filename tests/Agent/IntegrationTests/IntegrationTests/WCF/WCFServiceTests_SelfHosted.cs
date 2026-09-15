@@ -16,6 +16,7 @@ public abstract class WCFService_Self : WCFServiceTestBase
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class WCFService_Self_NetTCP : WCFService_Self
 {
     public WCFService_Self_NetTCP(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -24,6 +25,7 @@ public class WCFService_Self_NetTCP : WCFService_Self
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class WCFService_Self_WebHTTP : WCFService_Self
 {
     public WCFService_Self_WebHTTP(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -32,6 +34,7 @@ public class WCFService_Self_WebHTTP : WCFService_Self
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class WCFService_Self_WSHTTP : WCFService_Self
 {
     public WCFService_Self_WSHTTP(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -40,6 +43,7 @@ public class WCFService_Self_WSHTTP : WCFService_Self
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class WCFService_Self_BasicHTTP : WCFService_Self
 {
     public WCFService_Self_BasicHTTP(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -48,6 +52,7 @@ public class WCFService_Self_BasicHTTP : WCFService_Self
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class WCFService_Self_WebHTTP_DT : WCFService_Self
 {
     public WCFService_Self_WebHTTP_DT(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -56,6 +61,7 @@ public class WCFService_Self_WebHTTP_DT : WCFService_Self
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class WCFService_Self_WSHTTP_DT : WCFService_Self
 {
     public WCFService_Self_WSHTTP_DT(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -64,6 +70,7 @@ public class WCFService_Self_WSHTTP_DT : WCFService_Self
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class WCFService_Self_BasicHTTP_DT : WCFService_Self
 {
     public WCFService_Self_BasicHTTP_DT(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -72,6 +79,7 @@ public class WCFService_Self_BasicHTTP_DT : WCFService_Self
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class WCFService_Self_NetTCP_DT : WCFService_Self
 {
     public WCFService_Self_NetTCP_DT(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -80,6 +88,7 @@ public class WCFService_Self_NetTCP_DT : WCFService_Self
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class WCFService_Self_WebHTTP_CAT : WCFService_Self
 {
     public WCFService_Self_WebHTTP_CAT(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -88,6 +97,7 @@ public class WCFService_Self_WebHTTP_CAT : WCFService_Self
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class WCFService_Self_WSHTTP_CAT : WCFService_Self
 {
     public WCFService_Self_WSHTTP_CAT(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -96,6 +106,7 @@ public class WCFService_Self_WSHTTP_CAT : WCFService_Self
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class WCFService_Self_BasicHTTP_CAT : WCFService_Self
 {
     public WCFService_Self_BasicHTTP_CAT(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -104,6 +115,7 @@ public class WCFService_Self_BasicHTTP_CAT : WCFService_Self
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class WCFService_Self_NetTCP_CAT : WCFService_Self
 {
     public WCFService_Self_NetTCP_CAT(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -112,6 +124,7 @@ public class WCFService_Self_NetTCP_CAT : WCFService_Self
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class WCFService_Self_Custom : WCFService_Self
 {
     public WCFService_Self_Custom(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -120,6 +133,7 @@ public class WCFService_Self_Custom : WCFService_Self
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class WCFService_Self_CustomClass : WCFService_Self
 {
     public WCFService_Self_CustomClass(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)

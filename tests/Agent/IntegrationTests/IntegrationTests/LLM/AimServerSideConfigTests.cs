@@ -12,6 +12,7 @@ namespace NewRelic.Agent.IntegrationTests.LLM;
 // Local config: AIM off, streaming on, record_content on.
 // Server agent_config: AIM on, streaming off, record_content off.
 // Expect resolved: enabled=true (SSC enables master), streaming=false, record_content=false (SSC overrides local).
+[Trait("Runtime", "Framework")]
 public class AimServerSideConfigOverridesLocal : NewRelicIntegrationTest<MvcWithCollectorFixture>
 {
     private readonly MvcWithCollectorFixture _fixture;
@@ -60,6 +61,7 @@ public class AimServerSideConfigOverridesLocal : NewRelicIntegrationTest<MvcWith
 
 // Local HSM on, AIM off locally. Server agent_config tries to enable AIM.
 // Expect resolved: enabled=false (local HSM defense-in-depth wins over SSC).
+[Trait("Runtime", "Framework")]
 public class AimServerSideConfigIgnoredUnderHsm : NewRelicIntegrationTest<MvcWithCollectorFixture>
 {
     private readonly MvcWithCollectorFixture _fixture;

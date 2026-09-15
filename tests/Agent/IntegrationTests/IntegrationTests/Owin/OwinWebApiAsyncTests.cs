@@ -247,6 +247,7 @@ public abstract class OwinWebApiAsyncTestsBase<TFixture> : NewRelicIntegrationTe
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class OwinWebApiAsyncTests : OwinWebApiAsyncTestsBase<OwinWebApiFixture>
 {
     public OwinWebApiAsyncTests(OwinWebApiFixture fixture, ITestOutputHelper output)
@@ -255,6 +256,7 @@ public class OwinWebApiAsyncTests : OwinWebApiAsyncTestsBase<OwinWebApiFixture>
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class Owin3WebApiAsyncTests : OwinWebApiAsyncTestsBase<Owin3WebApiFixture>
 {
     public Owin3WebApiAsyncTests(Owin3WebApiFixture fixture, ITestOutputHelper output)
@@ -263,6 +265,7 @@ public class Owin3WebApiAsyncTests : OwinWebApiAsyncTestsBase<Owin3WebApiFixture
     }
 }
 
+[Trait("Runtime", "Framework")]
 public class Owin4WebApiAsyncTests : OwinWebApiAsyncTestsBase<Owin4WebApiFixture>
 {
     public Owin4WebApiAsyncTests(Owin4WebApiFixture fixture, ITestOutputHelper output)

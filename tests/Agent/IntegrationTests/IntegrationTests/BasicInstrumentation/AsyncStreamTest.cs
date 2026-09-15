@@ -10,6 +10,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation;
 
+[Trait("Runtime", "Core")]
 public class AsyncStreamTests : NewRelicIntegrationTest<RemoteServiceFixtures.AspNetCoreFeaturesFixture>
 {
     private readonly RemoteServiceFixtures.AspNetCoreFeaturesFixture _fixture;

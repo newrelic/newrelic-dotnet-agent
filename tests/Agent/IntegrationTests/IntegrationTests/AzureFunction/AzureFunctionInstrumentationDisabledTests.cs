@@ -6,6 +6,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.AzureFunction;
 
+[Trait("Runtime", "Core")]
 public class AzureFunctionInstrumentationDisabledTestsCoreLatest : AzureFunctionHttpTriggerTestsBase<AzureFunctionApplicationFixtureInstrumentationDisabledCoreLatest>
 {
     public AzureFunctionInstrumentationDisabledTestsCoreLatest(AzureFunctionApplicationFixtureInstrumentationDisabledCoreLatest fixture, ITestOutputHelper output)

@@ -10,6 +10,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.Blazor;
 
+[Trait("Runtime", "Core")]
 public class BlazorServerInteractivityTests : NewRelicIntegrationTest<RemoteServiceFixtures.BlazorSignalRApplicationFixture>
 {
     private readonly RemoteServiceFixtures.BlazorSignalRApplicationFixture _fixture;
