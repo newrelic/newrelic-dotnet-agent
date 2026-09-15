@@ -27,16 +27,22 @@ run, and it is written by a process you cannot interview. Work it in this order.
 - Ask the engineer for the reported symptom before you conclude, if they have
   not stated one. A match cannot be tested against a symptom that is not on
   the table.
-- A mechanism is not a cause. When the customer reports the behaviour changed
-  after an upgrade, a mechanism found in the log - no transaction, a disabled
-  wrapper, a missing segment - is the how, not the why. Something in the
-  version delta produced it; report the mechanism and that delta together,
-  never the mechanism alone.
-- Use the version window. When the report names a version where it worked,
-  pass `--worked-on <that version>` to `triage` and read every entry between
-  the two versions, not only what a keyword happens to match. When the report
-  does not name one, ask for it; it is usually the cheapest question on the
-  ticket.
+- A mechanism is not a cause. Whenever the agent names a mechanism as its
+  answer - no transaction, a disabled wrapper, a missing segment - that is
+  the how, not the why. The why is either a change the customer already
+  took or a fix they have not taken yet, and both live in the changelog.
+- Check the window before you conclude, in either direction. Every triage
+  that names a mechanism must read the `VERSION` and `LOG-TERMS` sections and
+  carry a candidate fix release, or an explicit "no entry in the window
+  matched", into the answer. This is not optional and does not wait for the
+  customer to report a regression; the fix can just as easily be ahead of
+  them as behind them. A changelog entry naming the same subsystem is a
+  candidate upgrade target, never state it as a proven fix.
+- Keep asking for the last known good version; it is still the cheapest
+  question on the ticket when a regression *is* reported. When the report
+  names one, pass `--worked-on <that version>` to `triage` and read every
+  entry in the window, not only what a keyword happens to match. That is one
+  direction of the rule above, not the whole rule.
 
 ## Workflow
 
@@ -65,7 +71,10 @@ run, and it is written by a process you cannot interview. Work it in this order.
    best available match when it does not explain the complaint; state it as
    "present in the log, does not explain your symptom", not as the verdict.
    When nothing matched, the report says so; answer from the slim file, and
-   consider `draft-playbook` to start a new one.
+   consider `draft-playbook` to start a new one. Once a mechanism is your
+   answer, read the report's `VERSION` and `LOG-TERMS` sections and carry a
+   candidate fix release, or "no entry in the window matched", into what you
+   tell the engineer - whether or not a regression was reported.
 4. **Answer the customer.** Run `nrlog.py summary <path> --playbook N` for the
    reply block: the fix and the next ask, with no log line in it. A field-tier
    block carries a header addressed to you and not to the customer.

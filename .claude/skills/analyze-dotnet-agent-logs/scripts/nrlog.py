@@ -1322,14 +1322,23 @@ def _keyword_pattern(keyword):
     return re.compile(r'(?<!\w)%s(?:s|es)?(?!\w)' % re.escape(keyword))
 
 
+def _sort_nearest_first(hits):
+    """Ascending by parsed version, so the oldest release newer than the session - the
+    cheapest upgrade - sorts first. Stable, so fixes within one release keep changelog order."""
+    return sorted(hits, key=lambda hit: parse_version(hit[0]) or (0, 0, 0))
+
+
 WORKED_ON_CAP = 20
 LOG_TERM_MIN_LENGTH = 4
 LOG_TERM_CAP = 8
-# framework-ubiquitous names that would match almost any fix and tell the engineer nothing
+# framework-ubiquitous names that would match almost any fix and tell the engineer nothing,
+# plus every level token (so a new alias in LEVEL_ORDER/LEVEL_ALIASES can't fall out of sync)
+# and the logger's own line-prefix vocabulary, none of which names the customer's subsystem
 LOG_TERM_STOPLIST = frozenset(s.lower() for s in (
     'System', 'Microsoft', 'Threading', 'Tasks', 'Collections', 'Generic',
     'String', 'Object', 'Int32', 'Int64', 'Boolean', 'Void', 'Async', 'Task',
-    'Method', 'Transaction', 'Wrapper'))
+    'Method', 'Transaction', 'Wrapper', 'NewRelic', 'skipping', 'TimeSpan',
+    *LEVEL_ORDER.keys(), *LEVEL_ALIASES.keys()))
 _LOG_TERM_TOKEN_RE = re.compile(r'[A-Za-z][A-Za-z0-9]*')
 
 
@@ -1369,9 +1378,11 @@ def _log_terms_block(log_terms, newer, limit):
             lowered = fix.lower()
             if any(needle.search(lowered) for needle in needles):
                 hits.append((release.get('version', '?'), fix))
+    hits = _sort_nearest_first(hits)
     lines = [_pad('LOG-TERMS', 'terms pulled from the log, not a playbook: %s'
                               % ', '.join(log_terms))]
-    lines.append(_pad('', 'fixes since, matching those terms: %d' % len(hits)))
+    lines.append(_pad('', 'fixes since, matching those terms: %d, nearest-upgrade-first'
+                          % len(hits)))
     for release_version, fix in hits[:limit]:
         lines.append(_pad('', '  %-9s %s' % (release_version, fix)))
     if len(hits) > limit:
@@ -1401,6 +1412,7 @@ def _worked_on_block(worked_on, found, version, releases):
              for release in releases
              if parsed < (parse_version(release.get('version')) or (0, 0, 0)) <= found
              for fix in (release.get('fixes') or [])]
+    window = _sort_nearest_first(window)
     lines = [_pad('WORKED-ON', 'window %s .. %s: %d entrie(s), complete and unfiltered'
                               % (worked_on, version, len(window)))]
     for release_version, fix in window[:WORKED_ON_CAP]:
@@ -1463,7 +1475,9 @@ def version_block(version, keywords, data, limit=4, worked_on=None, log_terms=No
             lowered = fix.lower()
             if any(needle.search(lowered) for needle in needles):
                 hits.append((release.get('version', '?'), fix))
-    lines.append(_pad('', 'fixes since, matching this symptom: %d' % len(hits)))
+    hits = _sort_nearest_first(hits)
+    lines.append(_pad('', 'fixes since, matching this symptom: %d, nearest-upgrade-first'
+                      % len(hits)))
     for release_version, fix in hits[:limit]:
         lines.append(_pad('', '  %-9s %s' % (release_version, fix)))
     if len(hits) > limit:

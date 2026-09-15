@@ -1090,6 +1090,66 @@ class VersionTests(unittest.TestCase):
         self.assertIn('LOG-TERMS', text)
         self.assertIn('terms pulled from the log, not a playbook', text)
 
+    def test_the_nearest_upgrade_is_shown_first_when_the_keyword_list_is_capped(self):
+        # Round 4 regression: with more keyword hits than the cap, the old newest-first
+        # order dropped the cheapest upgrade off the list. Fails under that order because
+        # it would show the 10.54.0 fix instead of the 10.53.1 fix.
+        text = '\n'.join(nrlog.version_block('10.40.1', ['wcf'], self.DATA, limit=1))
+        self.assertIn('Guard null OperationContext in WCF MethodInvokerWrapper', text)
+        self.assertNotIn('Release held WCF client transaction', text)
+        self.assertIn('nearest-upgrade-first', text)
+
+    def test_log_terms_block_shows_nearest_upgrade_first_when_capped(self):
+        newer = [
+            {'version': '10.50.0', 'date': '2026-06-01',
+             'fixes': ['Add Kafka internal metrics (#3555)']},
+            {'version': '10.45.0', 'date': '2026-03-01',
+             'fixes': ['Resolve issues with Kafka "Consume" instrumentation (#3257)']},
+        ]
+        text = '\n'.join(nrlog._log_terms_block(['kafka'], newer, limit=1))
+        self.assertIn('#3257', text)
+        self.assertNotIn('#3555', text)
+        self.assertIn('nearest-upgrade-first', text)
+
+    def test_worked_on_window_orders_nearest_upgrade_first(self):
+        # Round 4 regression: fails under the old order because 10.53.5's reconnect fix
+        # would appear before 10.53.1's WCF fix, even though 10.53.1 is the nearer upgrade.
+        text = '\n'.join(nrlog.version_block('10.53.5', ['wcf'], self.DATA,
+                                             worked_on='10.40.1'))
+        guard_idx = text.index('Guard null OperationContext in WCF MethodInvokerWrapper')
+        reconnect_idx = text.index('Send loaded modules on agent reconnect')
+        self.assertLess(guard_idx, reconnect_idx)
+
+    def test_unfiltered_list_stays_newest_first(self):
+        text = '\n'.join(nrlog.version_block('10.40.1', [], self.DATA))
+        newest_idx = text.index('#3772')
+        older_idx = text.index('#3534')
+        self.assertLess(newest_idx, older_idx)
+
+    def test_extract_log_terms_drops_level_tokens_and_newrelic(self):
+        evidence = [('newrelic_agent.log', 1,
+                     'NewRelic TRACE VERBOSE Kafka Confluent something')]
+        terms = nrlog.extract_log_terms(evidence)
+        lowered = [t.lower() for t in terms]
+        self.assertNotIn('newrelic', lowered)
+        self.assertNotIn('trace', lowered)
+        self.assertNotIn('verbose', lowered)
+        self.assertIn('kafka', lowered)
+        self.assertIn('confluent', lowered)
+
+    def test_full_shape_evidence_line_keeps_kafka_inside_the_cap(self):
+        evidence = [('newrelic_agent.log', 42,
+                     '2026-09-10 14:22:01,113 NewRelic FINEST 42 No transaction, skipping '
+                     'method Confluent.Kafka.Consumer`2.Consume(System.TimeSpan)')]
+        terms = nrlog.extract_log_terms(evidence)
+        lowered = [t.lower() for t in terms]
+        self.assertIn('kafka', lowered)
+        self.assertLessEqual(len(terms), nrlog.LOG_TERM_CAP)
+
+    def test_stoplist_covers_every_level_token(self):
+        for token in list(nrlog.LEVEL_ORDER.keys()) + list(nrlog.LEVEL_ALIASES.keys()):
+            self.assertIn(token.lower(), nrlog.LOG_TERM_STOPLIST)
+
     def test_triage_prints_the_version_block_by_default(self):
         if not os.path.isdir(FIXTURES):
             self.skipTest('run python tests/make_fixtures.py first')

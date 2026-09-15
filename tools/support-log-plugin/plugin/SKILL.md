@@ -40,11 +40,12 @@ are beside it, under
   unmatched and escalate. Ask for the symptom first if the engineer has not
   stated one.
 - **A mechanism is not a cause.** No transaction, a disabled wrapper, a
-  missing segment: each is the how, not the why, once the customer says an
-  upgrade changed the behaviour. Report the version delta that produced it.
-- **Use the version window.** When a version is named as working, pass
-  `--worked-on <version>` and read every entry in the window. If none is
-  named, ask; it is usually the cheapest question on the ticket.
+  missing segment: each is the how, not the why. The why is a change already
+  taken or a fix not yet taken, and both live in the changelog.
+- **Check the window either direction.** Carry a candidate fix release, or
+  "no entry matched", from `VERSION`/`LOG-TERMS`; do not wait for a reported
+  regression. When one is named, pass `--worked-on <version>` and read the
+  window - one direction of this rule, not the whole rule.
 
 ## Workflow
 
@@ -58,6 +59,8 @@ are beside it, under
    sessions, ask before rerunning with `--session N`.
 2. **Read the matched playbooks, then test each against the symptom.** The
    `NEXT` line names them; read only those files under `references/playbooks/`.
+   Once a mechanism is the answer, read `VERSION` and `LOG-TERMS`, and carry
+   a candidate fix release or "no entry in the window matched" forward.
 3. **Answer.** Verdict in chat, evidence lines quoted verbatim from the report,
    the limit stated. A `[field]` tier means the signature was confirmed by
    observation, not by reading agent source; say so.
