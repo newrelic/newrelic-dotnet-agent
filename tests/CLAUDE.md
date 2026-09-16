@@ -4,15 +4,21 @@ Layout, conventions, and the non-obvious facts for **writing** tests.
 - **Running** integration tests -> `run-integration-tests` skill (build-first, layer pick, CLI, env gotchas, troubleshooting). Don't duplicate it here.
 - **Building** first -> `build-dotnet-agent` skill. CLI build workarounds (`Core.UnitTest` `SolutionDir`, Extensions DLL-direct) and the no-unit-tests-for-wrappers rule -> [root claude.md](../CLAUDE.md). Building the **integration test solutions** themselves needs VS MSBuild + three specific flags -> [Building the solution](#building-the-solution) below.
 
-Five layers, all integration layers read the built `src/Agent/newrelichome_*` dirs (build `FullAgent.sln` first):
+Five layers (seven solutions), all integration layers read the built `src/Agent/newrelichome_*` dirs (build `FullAgent.sln` first):
 
 | Layer | Solution | Needs |
 |-------|----------|-------|
 | Unit | (in `tests/Agent/UnitTests/`) | nothing |
 | Integration (host-run) | `IntegrationTests.sln` | Windows + home dirs |
+| Integration (host-run, Core only) | `IntegrationTests.NetCore.sln` | home dirs; plain `dotnet build` |
 | Unbounded | `UnboundedIntegrationTests.sln` | real DB/broker infra |
+| Unbounded (Core only) | `UnboundedIntegrationTests.NetCore.sln` | as above; plain `dotnet build` |
 | Container | `ContainerIntegrationTests.sln` | Docker Desktop (Linux-agent coverage) |
 | Performance | `PerformanceTests.sln` | Python-driven, not `dotnet test` |
+
+The two `*.NetCore.sln` files are **additive**: they hold the Core-targeted projects only, build with plain `dotnet build`, and exist so the Linux CI lanes need no VS MSBuild. The original solutions are unchanged.
+
+**Lanes and the `Platform` trait.** CI splits the host-run suites into three lanes -- Linux-Core, Windows-Framework, and a two-shard Windows-Core smoke set. A portable test class carries no trait. Only a class that must run on Windows carries `[Trait("Platform", "WindowsOnly")]`, and that trait is machine-generated -- never hand-add or hand-remove it. The Linux-Core and Windows-Core lanes exclude `Platform=WindowsOnly`; the Windows-Framework lane includes it. `TestInfrastructure/RuntimeTraitPolicy.cs` (one copy per suite) holds the fixture-to-lane mapping plus the exemption and override tables; the lane lists are in `.github/workflows/test_selection.yml`. Absence of the `Platform` trait does not by itself mean a test runs on Linux: the shard lists in `test_selection.yml` are a second gate, and `Logging.ContextData` and `Logging.LocalDecoration` are portable shards that deliberately never reach a Linux runner. `TraitAttribute` is inherited and cannot be cancelled by a derived class, so a base class shared by portable and Windows-only derived classes must carry no trait. A guard test fails the build when the resolver cannot classify a test class.
 
 ## Layout
 
