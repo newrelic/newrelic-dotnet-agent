@@ -79,7 +79,7 @@ jobs:
 
   run-integration-tests:
     needs: build
-    name: Run IntegrationTests
+    name: Run IntegrationTests (Windows-Framework)
     if: inputs.namespaces != '[]'
     runs-on: windows-2025-vs2026
     timeout-minutes: 30 # the longest healthy lane runs 10 minutes; a hang must not burn the 6 hour default

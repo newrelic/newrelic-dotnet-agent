@@ -76,7 +76,7 @@ jobs:
 
   run-unbounded-tests:
     needs: build
-    name: Run Unbounded Tests
+    name: Run Unbounded Tests (Windows-Framework)
     if: inputs.namespaces != '[]'
     runs-on: windows-2025-vs2026
     permissions:
