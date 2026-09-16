@@ -54,17 +54,10 @@ try
         }
     }
 
-    // Save the modified assembly, preserving whatever debug info the input carried.
-    // Writing without symbols drops the PE debug directory entirely.
-    if (module.HasSymbols)
+    // Any other symbol format routes Mono.Cecil to NativePdbWriter, which faults intermittently, so drop symbols instead.
+    if (module.HasSymbols && hasEmbeddedPdb)
     {
-        var writerParameters = new WriterParameters { WriteSymbols = true };
-        if (hasEmbeddedPdb)
-        {
-            writerParameters.SymbolWriterProvider = new EmbeddedPortablePdbWriterProvider();
-        }
-
-        module.Write(writerParameters);
+        module.Write(new WriterParameters { WriteSymbols = true, SymbolWriterProvider = new EmbeddedPortablePdbWriterProvider() });
     }
     else
     {
