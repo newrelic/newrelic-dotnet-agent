@@ -1,6 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+#include <algorithm>
 #include <functional>
 #include <memory>
 #include <stdint.h>
@@ -12,6 +13,7 @@
 #include "../MethodRewriter/Instrumentors.h"
 #include "../MethodRewriter/InstrumentationSettings.h"
 #include "../Configuration/InstrumentationConfiguration.h"
+#include "../Configuration/TracerFlags.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
@@ -156,7 +158,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             Assert::IsFalse(result);
         }
 
-        // .NET 11 runtime-async methods (MethodImplAttributes.Async, 0x2000 in ImplFlags -- note
+        // Runtime-async methods (MethodImplAttributes.Async, 0x2000 in ImplFlags -- note
         // that mdPinvokeImpl above is also 0x2000, but in methodAttributes, a different field) do
         // not follow the return convention their signature declares: the body pushes nothing for
         // Task/ValueTask and an unwrapped T for Task<T>/ValueTask<T>.
@@ -283,6 +285,88 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             Assert::IsTrue(result);
         }
 
+        // A parameterless matcher (<exactMethodMatcher methodName="MyMethod" /> with no parameters
+        // attribute) yields ONE InstrumentationPoint that every overload of the name resolves to,
+        // and TryGetInstrumentationPoint hands back that stored object rather than a copy. So a
+        // per-function flag OR-ed into it stays set for every sibling instrumented afterwards. For
+        // RuntimeAsyncMethod that is not just a mislabel: WrapperService would swap the sibling's
+        // real pending Task for a synthesized completed one and end the segment early.
+
+        TEST_METHOD(default_runtime_async_flag_does_not_leak_onto_the_shared_instrumentation_point)
+        {
+            auto func = std::make_shared<MockFunction>();
+            func->_isRuntimeAsync = true;
+            func->_tracerFlags = Configuration::TracerFlags::RuntimeAsyncMethod;
+            MakeTaskReturning(func, L"System.Threading.Tasks.Task");
+
+            auto sharedPoint = func->GetInstrumentationPoint();
+            auto settings = MakeSettingsForPoint(sharedPoint);
+
+            DefaultInstrumentor instr;
+            Assert::IsTrue(instr.Instrument(func, settings, false, AgentCallStyle::Strategy::AppDomainFallbackCache));
+
+            Assert::AreEqual(uint32_t(0), sharedPoint->TracerFactoryArgs,
+                L"the configuration's instrumentation point must not accumulate per-function flags");
+        }
+
+        TEST_METHOD(default_declined_runtime_async_does_not_leak_onto_the_shared_instrumentation_point)
+        {
+            // the flags were applied before the return-shape guard ran, so the leak used to outlive
+            // even the methods the profiler refused to rewrite. Stock signature returns void, which
+            // no runtime-async method can, so this is declined.
+            auto func = std::make_shared<MockFunction>();
+            func->_isRuntimeAsync = true;
+            func->_tracerFlags = Configuration::TracerFlags::RuntimeAsyncMethod;
+
+            auto sharedPoint = func->GetInstrumentationPoint();
+            auto settings = MakeSettingsForPoint(sharedPoint);
+
+            DefaultInstrumentor instr;
+            Assert::IsFalse(instr.Instrument(func, settings, false, AgentCallStyle::Strategy::AppDomainFallbackCache));
+
+            Assert::AreEqual(uint32_t(0), sharedPoint->TracerFactoryArgs,
+                L"a declined method must not leave its flags on the shared point either");
+        }
+
+        TEST_METHOD(default_runtime_async_flag_reaches_its_own_method_but_not_a_sibling_overload)
+        {
+            // End to end, and the reason the copy cannot simply drop the flags: both overloads match
+            // the one parameterless point, and each method's own TracerFactoryArgs is observable
+            // because InstrumentFunctionManipulator emits it as `ldc.i4 <args>`.
+            auto sharedPoint = std::make_shared<Configuration::InstrumentationPoint>();
+            sharedPoint->AssemblyName = _X("MyAssembly");
+            sharedPoint->ClassName = _X("MyNamespace.MyClass");
+            sharedPoint->MethodName = _X("MyMethod");
+            auto settings = MakeSettingsForPoint(sharedPoint);
+
+            const auto runtimeAsyncFlagIl = LdcI4Bytes(Configuration::TracerFlags::RuntimeAsyncMethod);
+
+            ByteVector runtimeAsyncIl;
+            auto runtimeAsyncFunc = std::make_shared<MockFunction>();
+            runtimeAsyncFunc->_isRuntimeAsync = true;
+            runtimeAsyncFunc->_tracerFlags = Configuration::TracerFlags::RuntimeAsyncMethod;
+            MakeTaskReturning(runtimeAsyncFunc, L"System.Threading.Tasks.Task");
+            runtimeAsyncFunc->_writeMethodHandler = [&runtimeAsyncIl](const ByteVector& il) { runtimeAsyncIl = il; };
+
+            ByteVector siblingIl;
+            auto siblingFunc = std::make_shared<MockFunction>();
+            siblingFunc->_isRuntimeAsync = false;
+            siblingFunc->_tracerFlags = 0;
+            MakeTaskReturning(siblingFunc, L"System.Threading.Tasks.Task");
+            siblingFunc->_writeMethodHandler = [&siblingIl](const ByteVector& il) { siblingIl = il; };
+
+            DefaultInstrumentor instr;
+            instr.Instrument(runtimeAsyncFunc, settings, false, AgentCallStyle::Strategy::AppDomainFallbackCache);
+            instr.Instrument(siblingFunc, settings, false, AgentCallStyle::Strategy::AppDomainFallbackCache);
+
+            Assert::IsFalse(runtimeAsyncIl.empty(), L"the runtime-async method should have been rewritten");
+            Assert::IsFalse(siblingIl.empty(), L"the sibling overload should have been rewritten");
+            Assert::IsTrue(Contains(runtimeAsyncIl, runtimeAsyncFlagIl),
+                L"a method's own tracer flags must still reach its instrumented IL");
+            Assert::IsFalse(Contains(siblingIl, runtimeAsyncFlagIl),
+                L"the ordinary sibling overload must not inherit the runtime-async flag");
+        }
+
         TEST_METHOD(default_no_write_method_when_no_match_no_trace)
         {
             auto func = std::make_shared<MockFunction>();
@@ -315,6 +399,35 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             points->insert(func->GetInstrumentationPoint());
             auto instrumentation = std::make_shared<Configuration::InstrumentationConfiguration>(points, nullptr);
             return std::make_shared<InstrumentationSettings>(instrumentation, _X(""));
+        }
+
+        // Settings built around a caller-held instrumentation point, so a test can watch the exact
+        // object the configuration hands out to every matching function. The set constructor stores
+        // the pointer as-is (no class-name splitting, which only happens on the XML path).
+        static InstrumentationSettingsPtr MakeSettingsForPoint(Configuration::InstrumentationPointPtr point)
+        {
+            auto points = std::make_shared<Configuration::InstrumentationPointSet>();
+            points->insert(point);
+            auto instrumentation = std::make_shared<Configuration::InstrumentationConfiguration>(points, nullptr);
+            return std::make_shared<InstrumentationSettings>(instrumentation, _X(""));
+        }
+
+        // `ldc.i4 <value>` as InstrumentationSet emits it: the 0x20 opcode then a 4-byte
+        // little-endian operand.
+        static ByteVector LdcI4Bytes(uint32_t value)
+        {
+            return ByteVector {
+                0x20,
+                uint8_t(value & 0xff),
+                uint8_t((value >> 8) & 0xff),
+                uint8_t((value >> 16) & 0xff),
+                uint8_t((value >> 24) & 0xff)
+            };
+        }
+
+        static bool Contains(const ByteVector& haystack, const ByteVector& needle)
+        {
+            return std::search(haystack.begin(), haystack.end(), needle.begin(), needle.end()) != haystack.end();
         }
 
         // Creates a settings object with an instrumentation point for a .ctor method

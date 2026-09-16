@@ -22,6 +22,7 @@ namespace NewRelic.Agent.Tests.ProfiledMethods
         public String argumentSignature = null;
         public Object invocationTarget = null;
         public Object[] args = null;
+        public Type effectiveReturnType = null;
     }
 
     public class FinishTracerParameters

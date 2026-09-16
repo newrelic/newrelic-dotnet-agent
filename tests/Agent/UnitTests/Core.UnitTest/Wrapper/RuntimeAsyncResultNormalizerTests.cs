@@ -11,72 +11,33 @@ namespace NewRelic.Agent.Core.Wrapper;
 [TestFixture]
 public class RuntimeAsyncResultNormalizerTests
 {
-    // The RuntimeAsyncResultNormalizer reads only the DECLARED return type, so an ordinary method is a faithful
-    // stand-in for a runtime-async one; an actual runtime-async-capable .NET runtime is not required to test the normalizer's behavior.
-    private class Subject
+    private interface IThing
     {
-        public Task ReturnsTask() => Task.CompletedTask;
-        public ValueTask ReturnsValueTask() => default;
-        public Task<int> ReturnsTaskOfInt() => Task.FromResult(0);
-        public Task<string> ReturnsTaskOfString() => Task.FromResult<string>(null);
-        public ValueTask<string> ReturnsValueTaskOfString() => default;
-        public Task<IEnumerable<int>> ReturnsTaskOfInterface() => Task.FromResult<IEnumerable<int>>(null);
-        public int ReturnsInt() => 0;
-        public void ReturnsVoid() { }
-        public Task<T> ReturnsTaskOfGenericParameter<T>(T value) => Task.FromResult(value);
-        public Task<int> Overloaded(string a) => Task.FromResult(1);
-        public Task<string> Overloaded(int a) => Task.FromResult("two");
-        public List<int> ReturnsGenericNonTask() => null;
-
-        // Both have one generic-typed parameter, and a generic parameter's FullName is null, so
-        // both render as an empty signature string and cannot be told apart.
-        public Task<int> AmbiguousGeneric<T>(T a) => Task.FromResult(1);
-        public Task<int> AmbiguousGeneric<T, TOther>(TOther a) => Task.FromResult(2);
     }
 
-    // A generic declaring type, to cover the case the profiler actually hands us: an
-    // mdTypeDef resolves to the OPEN definition, so GetMethods() yields open MethodInfos.
-    private class GenericSubject<TDoc>
+    private class Thing : IThing
     {
-        public Task<TDoc> ReturnsTaskOfTypeParameter() => Task.FromResult(default(TDoc));
-        public Task<long> ReturnsClosedTaskOnGenericType() => Task.FromResult(0L);
     }
 
-    private static Func<object, Task> Create(string methodName, string parameterTypeNames = "")
+    private class GenericHolder<T>
     {
-        return RuntimeAsyncResultNormalizer.TryCreate(typeof(Subject), methodName, parameterTypeNames)?.Normalize;
-    }
-
-    private static RuntimeAsyncNormalization CreateFull(string methodName, string parameterTypeNames = "")
-    {
-        return RuntimeAsyncResultNormalizer.TryCreate(typeof(Subject), methodName, parameterTypeNames);
     }
 
     [Test]
-    public void TryCreate_ProducesCompletedTask_ForTaskReturn()
+    public void TryCreate_ReturnsACompletedTask_ForANullResultType()
     {
-        var task = Create(nameof(Subject.ReturnsTask))(null);
+        // null is not a failure: it is how the profiler reports a body that returns nothing, which
+        // is the runtime-async Task / ValueTask case.
+        var normalize = RuntimeAsyncResultNormalizer.TryCreate(null);
 
-        Assert.Multiple(() =>
-        {
-            Assert.That(task, Is.Not.Null);
-            Assert.That(task.IsCompleted, Is.True);
-            Assert.That(task.IsFaulted, Is.False);
-        });
+        Assert.That(normalize, Is.Not.Null);
+        Assert.That(normalize(null), Is.SameAs(Task.CompletedTask));
     }
 
     [Test]
-    public void TryCreate_ProducesCompletedTask_ForValueTaskReturn()
+    public void TryCreate_ProducesATypedCompletedTask_ForAValueType()
     {
-        var task = Create(nameof(Subject.ReturnsValueTask))(null);
-
-        Assert.That(task.IsCompleted, Is.True);
-    }
-
-    [Test]
-    public void TryCreate_ProducesTypedCompletedTask_ForTaskOfIntReturn()
-    {
-        var task = Create(nameof(Subject.ReturnsTaskOfInt))(42);
+        var task = RuntimeAsyncResultNormalizer.TryCreate(typeof(int))(42);
 
         Assert.Multiple(() =>
         {
@@ -87,9 +48,9 @@ public class RuntimeAsyncResultNormalizerTests
     }
 
     [Test]
-    public void TryCreate_ProducesTypedCompletedTask_ForValueTaskOfStringReturn()
+    public void TryCreate_ProducesATypedCompletedTask_ForAReferenceType()
     {
-        var task = Create(nameof(Subject.ReturnsValueTaskOfString))("hello");
+        var task = RuntimeAsyncResultNormalizer.TryCreate(typeof(string))("hello");
 
         Assert.Multiple(() =>
         {
@@ -98,162 +59,97 @@ public class RuntimeAsyncResultNormalizerTests
         });
     }
 
-    // The reason Task<object> is not an acceptable shortcut when the declared type IS known:
-    // wrappers cast with `as`, and Task<FooImpl> as Task<IFoo> is null.
     [Test]
-    public void TryCreate_ProducesTaskTypedToTheDeclaredInterface_NotTheRuntimeType()
+    public void TryCreate_TypesTheTaskToTheRequestedType_NotTheRuntimeType()
     {
-        var concreteResult = new List<int> { 1, 2, 3 };
-
-        var task = Create(nameof(Subject.ReturnsTaskOfInterface))(concreteResult);
+        // the property wrappers actually depend on: Delegates.OnSuccess narrows with `as`, and
+        // Task<Thing> as Task<IThing> is null, so the task must be typed to the declared type
+        var task = RuntimeAsyncResultNormalizer.TryCreate(typeof(IThing))(new Thing());
 
         Assert.Multiple(() =>
         {
-            Assert.That(task as Task<IEnumerable<int>>, Is.Not.Null);
-            Assert.That(((Task<IEnumerable<int>>)task).Result, Is.SameAs(concreteResult));
+            Assert.That(task, Is.TypeOf<Task<IThing>>());
+            Assert.That(task as Task<IThing>, Is.Not.Null);
+            Assert.That(((Task<IThing>)task).Result, Is.InstanceOf<Thing>());
         });
     }
 
     [Test]
-    public void TryCreate_UsesDefault_WhenResultIsNullForAValueType()
+    public void TryCreate_UsesDefault_WhenTheResultDoesNotMatchTheType()
     {
-        // Defensive: the profiler boxes a real value for Task<int>, so null should not occur.
-        // It must degrade to default(T) rather than throw inside instrumentation.
-        var task = Create(nameof(Subject.ReturnsTaskOfInt))(null);
-
-        Assert.That(((Task<int>)task).Result, Is.EqualTo(0));
-    }
-
-    [Test]
-    public void TryCreate_AllowsNullResult_ForAReferenceType()
-    {
-        var task = Create(nameof(Subject.ReturnsTaskOfString))(null);
-
-        Assert.That(((Task<string>)task).Result, Is.Null);
-    }
-
-    [Test]
-    public void TryCreate_ResolvesTheCorrectOverload_FromTheParameterSignature()
-    {
-        var stringOverload = Create(nameof(Subject.Overloaded), "System.String");
-        var intOverload = Create(nameof(Subject.Overloaded), "System.Int32");
+        // a mismatch must fail closed rather than throw -- the wrapper then sees a completed
+        // Task<int> holding 0, and the segment still ends
+        var task = RuntimeAsyncResultNormalizer.TryCreate(typeof(int))("not an int");
 
         Assert.Multiple(() =>
         {
-            Assert.That(stringOverload(7), Is.TypeOf<Task<int>>());
-            Assert.That(intOverload("seven"), Is.TypeOf<Task<string>>());
+            Assert.That(task, Is.TypeOf<Task<int>>());
+            Assert.That(((Task<int>)task).Result, Is.EqualTo(0));
         });
     }
 
     [Test]
-    public void TryCreate_ReturnsNull_WhenOverloadCannotBeDisambiguated()
+    public void TryCreate_AllowsANullResult_ForAReferenceType()
     {
-        Assert.That(Create(nameof(Subject.Overloaded), "System.Guid"), Is.Null);
-    }
-
-    [Test]
-    public void TryCreate_ReturnsNull_ForANonTaskReturnType()
-    {
-        Assert.That(Create(nameof(Subject.ReturnsInt)), Is.Null);
-    }
-
-    [Test]
-    public void TryCreate_ReturnsNull_ForAVoidReturnType()
-    {
-        Assert.That(Create(nameof(Subject.ReturnsVoid)), Is.Null);
-    }
-
-    [Test]
-    public void TryCreate_ReturnsNull_ForAGenericReturnTypeThatIsNotATaskType()
-    {
-        Assert.That(Create(nameof(Subject.ReturnsGenericNonTask)), Is.Null);
-    }
-
-    [Test]
-    public void TryCreate_ReturnsNull_WhenTwoCandidatesShareTheSameSignatureString()
-    {
-        // Refuse rather than pick one arbitrarily: guessing wrong would attach the wrong result
-        // shape to the wrong method.
-        Assert.That(Create("AmbiguousGeneric"), Is.Null);
-    }
-
-    [Test]
-    public void TryCreate_FallsBackToTaskOfObject_ForAGenericMethod()
-    {
-        var normalization = CreateFull(nameof(Subject.ReturnsTaskOfGenericParameter), "T");
-        var task = normalization.Normalize(42);
+        var task = RuntimeAsyncResultNormalizer.TryCreate(typeof(string))(null);
 
         Assert.Multiple(() =>
         {
-            Assert.That(normalization.IsExactlyTyped, Is.False);
-            Assert.That(task, Is.TypeOf<Task<object>>());
-            Assert.That(((Task<object>)task).Result, Is.EqualTo(42));
-            Assert.That(task.IsCompleted, Is.True);
-            // the gate every wrapper but HttpClient/SendAsync uses
-            Assert.That(task, Is.InstanceOf<Task>());
+            Assert.That(task, Is.TypeOf<Task<string>>());
+            Assert.That(((Task<string>)task).Result, Is.Null);
         });
     }
 
     [Test]
-    public void TryCreate_FallsBackToTaskOfObject_WhenTheDeclaringTypeIsAnOpenGeneric()
+    public void TryCreate_ProducesDistinctDelegates_ForDifferentResultTypes()
     {
-        var normalization = RuntimeAsyncResultNormalizer.TryCreate(
-            typeof(GenericSubject<>), nameof(GenericSubject<object>.ReturnsTaskOfTypeParameter), string.Empty);
-        var response = new object();
+        // The reason normalizers are cached by TYPE and not by functionId. A functionId is per
+        // method definition, so one generic runtime-async method arrives here once per
+        // instantiation with a different type each time. Caching by functionId would hand the
+        // second instantiation the first one's delegate, whose result would silently become
+        // default(T) rather than the real value.
+        var asInt = RuntimeAsyncResultNormalizer.TryCreate(typeof(int));
+        var asString = RuntimeAsyncResultNormalizer.TryCreate(typeof(string));
 
         Assert.Multiple(() =>
         {
-            Assert.That(normalization.IsExactlyTyped, Is.False);
-            Assert.That(normalization.Normalize(response), Is.TypeOf<Task<object>>());
-            Assert.That(((Task<object>)normalization.Normalize(response)).Result, Is.SameAs(response));
+            Assert.That(asInt(7), Is.TypeOf<Task<int>>());
+            Assert.That(asString("seven"), Is.TypeOf<Task<string>>());
+            Assert.That(((Task<int>)asInt(7)).Result, Is.EqualTo(7));
+            Assert.That(((Task<string>)asString("seven")).Result, Is.EqualTo("seven"));
         });
     }
 
     [Test]
-    public void TryCreate_StillTypesExactly_WhenOnlyTheDeclaringTypeIsGeneric()
+    public void TryCreate_ReturnsTheSameDelegate_ForTheSameResultType()
     {
-        var normalization = RuntimeAsyncResultNormalizer.TryCreate(
-            typeof(GenericSubject<>), nameof(GenericSubject<object>.ReturnsClosedTaskOnGenericType), string.Empty);
+        var first = RuntimeAsyncResultNormalizer.TryCreate(typeof(List<Guid>));
+        var second = RuntimeAsyncResultNormalizer.TryCreate(typeof(List<Guid>));
 
-        Assert.Multiple(() =>
-        {
-            Assert.That(normalization.IsExactlyTyped, Is.True);
-            Assert.That(normalization.Normalize(7L), Is.TypeOf<Task<long>>());
-        });
+        Assert.That(first, Is.SameAs(second), "the delegate must be generated once per type and cached");
     }
 
     [Test]
-    public void TryCreate_ReportsExactTyping_ForAClosedResultType()
+    public void TryCreate_ReturnsNull_WhenTheResultTypeCannotBeBound()
     {
-        Assert.That(CreateFull(nameof(Subject.ReturnsTaskOfInt)).IsExactlyTyped, Is.True);
+        // void is not a valid generic argument, so MakeGenericMethod throws. A null return tells
+        // the caller to keep synchronous completion semantics rather than guess.
+        Assert.That(RuntimeAsyncResultNormalizer.TryCreate(typeof(void)), Is.Null);
     }
 
     [Test]
-    public void TryCreate_ReportsExactTyping_ForAVoidEffectiveReturn()
+    public void TryCreate_ReturnsNull_ForAnOpenGenericResultType()
     {
-        Assert.That(CreateFull(nameof(Subject.ReturnsTask)).IsExactlyTyped, Is.True);
-    }
+        // Defensive: the profiler renders a generic parameter as a TypeSpec the CLR resolves in the
+        // method's generic context, so a closed type is what actually arrives. If an open one ever
+        // did, there is no concrete T to type the task to and we must degrade rather than hand back
+        // a delegate over a still-open method.
+        //
+        // This must hold on every target framework. It caught a real difference: .NET Framework
+        // binds an open generic without complaint, where .NET 10 throws -- so the normalizer rejects
+        // the case explicitly instead of relying on either behavior.
+        var openGenericParameter = typeof(GenericHolder<>).GetGenericArguments()[0];
 
-    [Test]
-    public void TryCreate_ReturnsNull_WhenTheMethodDoesNotExist()
-    {
-        Assert.That(Create("NoSuchMethod"), Is.Null);
-    }
-
-    [Test]
-    public void TryCreate_ReturnsNull_ForNullOrEmptyInputs()
-    {
-        Assert.Multiple(() =>
-        {
-            Assert.That(RuntimeAsyncResultNormalizer.TryCreate(null, "ReturnsTask", ""), Is.Null);
-            Assert.That(RuntimeAsyncResultNormalizer.TryCreate(typeof(Subject), null, ""), Is.Null);
-            Assert.That(RuntimeAsyncResultNormalizer.TryCreate(typeof(Subject), string.Empty, ""), Is.Null);
-        });
-    }
-
-    [Test]
-    public void TryCreate_TreatsNullParameterTypeNames_AsAnEmptySignature()
-    {
-        Assert.That(RuntimeAsyncResultNormalizer.TryCreate(typeof(Subject), nameof(Subject.ReturnsTask), null), Is.Not.Null);
+        Assert.That(RuntimeAsyncResultNormalizer.TryCreate(openGenericParameter), Is.Null);
     }
 }

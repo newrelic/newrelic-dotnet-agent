@@ -15,7 +15,7 @@ namespace NewRelic.Agent.Tests.ProfiledMethods
 {
     public class ProfilerTestsBase
     {
-        public delegate Object GetTracerDelegate(String tracerFactoryName, UInt32 tracerArguments, String metricName, String assemblyName, Type type, String typeName, String methodName, String argumentSignature, Object invocationTarget, Object[] args, UInt64 functionId);
+        public delegate Object GetTracerDelegate(String tracerFactoryName, UInt32 tracerArguments, String metricName, String assemblyName, Type type, String typeName, String methodName, String argumentSignature, Object invocationTarget, Object[] args, UInt64 functionId, Type effectiveReturnType);
         public delegate void FinishTracerDelegate(Object tracerObject, Object returnValue, Object exceptionObject);
         public delegate void AddCustomParameterDelegate(String key, String value);
         public delegate String GetBrowserTimingHeaderDelegate();
@@ -40,7 +40,7 @@ namespace NewRelic.Agent.Tests.ProfiledMethods
             var getTracerParameters = new GetTracerParameters();
 
             // setup the code to execute when NewRelic.Agent.Core.GetTracer is called
-            SetGetTracerDelegate((String tracerFactoryName, UInt32 tracerArguments, String metricName, String assemblyName, Type type, String typeName, String methodName, String argumentSignature, Object invocationTarget, Object[] args, UInt64 functionId) =>
+            SetGetTracerDelegate((String tracerFactoryName, UInt32 tracerArguments, String metricName, String assemblyName, Type type, String typeName, String methodName, String argumentSignature, Object invocationTarget, Object[] args, UInt64 functionId, Type effectiveReturnType) =>
             {
                 // we can't assert in here so save off the variables and assert later
                 getTracerParameters.tracerFactoryName = tracerFactoryName;
@@ -53,6 +53,7 @@ namespace NewRelic.Agent.Tests.ProfiledMethods
                 getTracerParameters.argumentSignature = argumentSignature;
                 getTracerParameters.invocationTarget = invocationTarget;
                 getTracerParameters.args = args;
+                getTracerParameters.effectiveReturnType = effectiveReturnType;
 
                 // set the flag indicating the tracer was called, we'll be asserting on that later
                 getTracerParameters.getTracerCalled = true;

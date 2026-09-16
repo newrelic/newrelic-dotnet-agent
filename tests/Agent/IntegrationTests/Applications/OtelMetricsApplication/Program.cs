@@ -12,11 +12,7 @@ class Program
     {
         var port = AppLifecycleManager.GetPortFromArgs(args);
 
-        var eventWaitHandleName = "app_server_wait_for_all_request_done_" + port;
-
-        Console.WriteLine($"Setting EventWaitHandle name to: {eventWaitHandleName}");
-
-        using var eventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset, eventWaitHandleName);
+        using var completion = AppLifecycleManager.ArmTestCompletion(port);
 
         AppLifecycleManager.CreatePidFile();
 
@@ -36,7 +32,7 @@ class Program
 
         Console.WriteLine("OtelMetricsTest complete. Waiting for signal to terminate.");
 
-        eventWaitHandle.WaitOne(TimeSpan.FromMinutes(5));
+        completion.Wait();
     }
 
     [Transaction]

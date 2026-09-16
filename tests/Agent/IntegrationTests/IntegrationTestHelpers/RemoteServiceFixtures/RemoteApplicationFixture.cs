@@ -56,11 +56,15 @@ public abstract class RemoteApplicationFixture : IDisposable
     public readonly RemoteApplication RemoteApplication;
 
     public string UniqueFolderName { get { return RemoteApplication.UniqueFolderName; } }
-    private string AgentLogFileName { get { return CommonUtils.GetAgentLogFileNameFromNewRelicConfig(DestinationNewRelicConfigFilePath); } }
+    // A fixture whose application shares its agent home with another instrumented
+    // process must name its log file, or AgentLogFile picks whichever log was
+    // written last.
+    protected virtual string AgentLogFileName { get { return CommonUtils.GetAgentLogFileNameFromNewRelicConfig(DestinationNewRelicConfigFilePath); } }
 
 
     private AgentLogFile _agentLogFile;
     public bool AgentLogExpected { get; set; } = true;
+    public bool RetainAgentLogOnExerciseException { get; set; }
 
     public AgentLogFile AgentLog => _agentLogFile ?? (_agentLogFile = new AgentLogFile(DestinationNewRelicLogFileDirectoryPath, TestLogger, AgentLogFileName, Timing.TimeToWaitForLog, AgentLogExpected));
 
@@ -398,7 +402,7 @@ public abstract class RemoteApplicationFixture : IDisposable
             catch (Exception ex)
             {
                 TestLogger?.WriteLine("Exception occurred in Initialize: " + ex.ToString());
-                AgentLogExpected = false;
+                AgentLogExpected = RetainAgentLogOnExerciseException;
                 throw;
             }
             finally

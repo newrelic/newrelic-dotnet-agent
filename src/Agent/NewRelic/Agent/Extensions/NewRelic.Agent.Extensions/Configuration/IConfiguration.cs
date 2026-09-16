@@ -185,6 +185,8 @@ public interface IConfiguration
     bool UseResourceBasedNamingForWCFEnabled { get; }
     bool EventListenerSamplersEnabled { get; set; }
     bool KafkaInternalMetricsEnabled { get; }
+    bool KafkaClusterMetricsEnabled { get; }
+    int? KafkaMetricsInterval { get; }
     int? SamplingTarget { get; }
     int SpanEventsMaxSamplesStored { get; }
     int? SamplingTargetPeriodInSeconds { get; }

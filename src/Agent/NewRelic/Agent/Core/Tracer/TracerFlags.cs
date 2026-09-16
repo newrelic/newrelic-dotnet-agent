@@ -20,7 +20,7 @@ public enum TracerFlags : uint
     WebTransaction = 1 << 21,
     AttributeInstrumentation = 1 << 20,
 
-    // A .NET 11 runtime-async method. Distinct from Async on purpose: see IsRuntimeAsync below.
+    // A runtime-async method. Distinct from Async on purpose: see IsRuntimeAsync below.
     RuntimeAsync = 1 << 19,
 
     UseInvocationTargetClassName = 1 << 15,
@@ -70,7 +70,7 @@ public static class TracerArgument
 
     /// <summary>
     /// Checks to see if the "RuntimeAsync" bit was set in the tracerArguments from the profiler.
-    /// True when the instrumented method carries MethodImplAttributes.Async, i.e. it is a .NET 11
+    /// True when the instrumented method carries MethodImplAttributes.Async, i.e. it is a
     /// runtime-async method. Such a method is NOT flagged <see cref="TracerFlags.Async"/>, because
     /// that flag promises the value handed to the after-delegate is a not-yet-complete Task, and a
     /// runtime-async body returns nothing (Task/ValueTask) or an unwrapped T (Task&lt;T&gt;/

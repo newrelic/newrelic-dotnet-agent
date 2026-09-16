@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Confluent.Kafka;
 using NewRelic.Agent.Api;
+using NewRelic.Agent.Extensions.Helpers;
 using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Extensions.SystemExtensions;
@@ -14,6 +15,8 @@ namespace NewRelic.Providers.Wrapper.Kafka;
 public class KafkaProducerWrapper : IWrapper
 {
     private const string WrapperName = "KafkaProducerWrapper";
+
+    private static readonly ClusterIdLookup ClusterIdLookupFunc = KafkaClusterIdResolver.TryGetClusterId;
 
     public bool IsTransactionRequired => true;
 
@@ -33,9 +36,12 @@ public class KafkaProducerWrapper : IWrapper
 
         transaction.InsertDistributedTraceHeaders(messageMetadata, DistributedTraceHeadersSetter);
 
-        if (KafkaHelper.TryGetBootstrapServersFromCache(instrumentedMethodCall.MethodCall.InvocationTarget, out var bootstrapServers))
+        if (KafkaHelper.TryGetClientInfo(instrumentedMethodCall.MethodCall.InvocationTarget, out var clientInfo))
         {
-            KafkaHelper.RecordKafkaNodeMetrics(agent, topicPartition.Topic, bootstrapServers, true);
+            KafkaHelper.RecordKafkaNodeMetrics(agent, topicPartition.Topic, clientInfo, true);
+
+            KafkaClusterIdResolver.RefreshClientReference(clientInfo.BootstrapServers, instrumentedMethodCall.MethodCall.InvocationTarget);
+            KafkaClusterMetricsHelper.RecordClusterMetrics(agent, segment, clientInfo.BootstrapServers, topicPartition.Topic, KafkaClusterOperation.Produce, ClusterIdLookupFunc);
         }
 
         return instrumentedMethodCall.MethodCall.Method.MethodName == "Produce" ? Delegates.GetDelegateFor(segment) : Delegates.GetAsyncDelegateFor<Task>(agent, segment);

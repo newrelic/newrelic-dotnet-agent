@@ -1,4 +1,4 @@
-// Copyright 2020 New Relic, Inc. All rights reserved.
+﻿// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using System.Collections.Generic;
@@ -404,7 +404,7 @@ namespace NewRelic.Agent.Tests.ProfiledMethods
             var getTracerParameters = new GetTracerParameters();
 
             // setup the code to execute when NewRelic.Agent.Core.GetTracer is called
-            SetGetTracerDelegate((String tracerFactoryName, UInt32 tracerArguments, String metricName, String assemblyName, Type type, String typeName, String methodName, String argumentSignature, Object invocationTarget, Object[] args, UInt64 functionId) =>
+            SetGetTracerDelegate((String tracerFactoryName, UInt32 tracerArguments, String metricName, String assemblyName, Type type, String typeName, String methodName, String argumentSignature, Object invocationTarget, Object[] args, UInt64 functionId, Type effectiveReturnType) =>
             {
                 if (methodName == "StaticMethod")
                 {
@@ -534,7 +534,7 @@ namespace NewRelic.Agent.Tests.ProfiledMethods
             var getOverloadStringTracerParameters = new GetTracerParameters();
 
             // setup the code to execute when NewRelic.Agent.Core.GetTracer is called
-            SetGetTracerDelegate((String tracerFactoryName, UInt32 tracerArguments, String metricName, String assemblyName, Type type, String typeName, String methodName, String argumentSignature, Object invocationTarget, Object[] args, UInt64 functionId) =>
+            SetGetTracerDelegate((String tracerFactoryName, UInt32 tracerArguments, String metricName, String assemblyName, Type type, String typeName, String methodName, String argumentSignature, Object invocationTarget, Object[] args, UInt64 functionId, Type effectiveReturnType) =>
             {
                 if (argumentSignature == "System.Object")
                 {

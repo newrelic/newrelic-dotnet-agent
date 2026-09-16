@@ -187,12 +187,31 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             }
         }
 
+        // Pushes the type the instrumented body actually returns, for the last slot of the tracer
+        // argument array. Only a runtime-async method needs it -- and only a runtime-async method can
+        // safely supply it: GetTypeTokenForReturnType throws for a by-ref return and
+        // GetTypeTokenForType throws for pointers, so tokenizing every method's declared return type
+        // here would newly fail instrumentation for methods the agent handles correctly today.
+        // AppendTypeOfArgument already pushes null for a void effective return type, which is the
+        // runtime-async Task/ValueTask case.
+        void LoadEffectiveReturnTypeOrNull()
+        {
+            if (_function->IsRuntimeAsync())
+            {
+                _instructions->AppendTypeOfArgument(_effectiveReturnType);
+            }
+            else
+            {
+                _instructions->Append(CEE_LDNULL);
+            }
+        }
+
         void CallGetTracer(NewRelic::Profiler::Configuration::InstrumentationPointPtr instrumentationPoint)
         {
             LoadGetTracerTarget();
 
-            // tracer = <target>(new object[] { tracerFactoryName, tracerFactoryArgs, metricName, assemblyName, type, typeName, functionName, argumentSignatureString, this, new object[], functionId });
-            _instructions->Append(_X("ldc.i4.s   11"));
+            // tracer = <target>(new object[] { tracerFactoryName, tracerFactoryArgs, metricName, assemblyName, type, typeName, functionName, argumentSignatureString, this, new object[], functionId, effectiveReturnType });
+            _instructions->Append(_X("ldc.i4.s   12"));
             _instructions->Append(_X("newarr     [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Object"));
             _instructions->Append(_X("dup"));
             _instructions->Append(_X("ldc.i4.0"));
@@ -245,6 +264,10 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             // It's important to upcast the function id here.  It's an int on WIN32
             _instructions->Append(CEE_LDC_I8, (uint64_t)_function->GetFunctionId());
             _instructions->Append(_X("box [") + _instructions->GetCoreLibAssemblyName() + _X("]System.UInt64"));
+            _instructions->Append(_X("stelem.ref"));
+            _instructions->Append(_X("dup"));
+            _instructions->Append(_X("ldc.i4.s 11"));
+            LoadEffectiveReturnTypeOrNull();
             _instructions->Append(_X("stelem.ref"));
             // make the call to GetTracer
             InvokeGetTracer();

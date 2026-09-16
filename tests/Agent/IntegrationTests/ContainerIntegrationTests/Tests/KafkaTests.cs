@@ -339,6 +339,47 @@ public abstract class LinuxKafkaTest<T> : NewRelicIntegrationTest<T> where T : K
         );
     }
 
+    [Fact]
+    public void KafkaClusterMetrics_AbsentWhenDisabled()
+    {
+        var metrics = _fixture.AgentLog.GetMetrics().ToList();
+        var spans = _fixture.AgentLog.GetSpanEvents();
+
+        var clusterMetrics = metrics.Where(m => m.MetricSpec.Name.StartsWith("MessageBroker/Kafka/Cluster/")).ToList();
+        var spansWithClusterId = spans.Where(s => s.UserAttributes.ContainsKey("kafka.cluster.id")).ToList();
+
+        NrAssert.Multiple(
+            () => Assert.Empty(clusterMetrics),
+            () => Assert.Empty(spansWithClusterId)
+        );
+    }
+
+    /// <summary>
+    /// No NR interval is configured for this fixture, so the agent must derive
+    /// max(5000, harvestCycle / 2) = 5000ms and apply it to the two clients that do not set
+    /// statistics.interval.ms themselves. Without this the internal metrics feature is inert
+    /// for any application that never configures librdkafka statistics.
+    /// </summary>
+    [Fact]
+    public void StatisticsInterval_DerivedFromHarvestCycle_IsAppliedToClientsThatDoNotSetIt()
+    {
+        var appliedLines = _fixture.AgentLog
+            .TryGetLogLines(@"Set statistics interval to (\d+)ms \(harvest cycle: (\d+)ms\)").ToList();
+        var failureLines = _fixture.AgentLog
+            .TryGetLogLines(@"could not set the statistics interval on the builder").ToList();
+
+        var appliedIntervals = appliedLines.Select(m => m.Groups[1].Value).Distinct().ToList();
+
+        NrAssert.Multiple(
+            () => Assert.True(appliedLines.Count >= 2,
+                $"Expected the agent to apply a derived statistics interval to at least the two clients that do not set one, but found {appliedLines.Count}."),
+            () => Assert.True(failureLines.Count == 0,
+                $"The agent failed to write the interval onto a builder {failureLines.Count} time(s); the Config property route may have broken: {string.Join(" | ", failureLines.Select(m => m.Value))}"),
+            () => Assert.True(appliedIntervals.Count == 1 && appliedIntervals[0] == "5000",
+                $"Expected every applied interval to be the derived 5000ms, but found: {string.Join(", ", appliedIntervals)}")
+        );
+    }
+
     /// <summary>
     /// Extracts a named count from a response string of the form "... {label}: N ...".
     /// Returns 0 if no count is found for that label.
@@ -381,5 +422,107 @@ public class KafkaDotNetLatestTest : LinuxKafkaTest<KafkaDotNetLatestTestFixture
 {
     public KafkaDotNetLatestTest(KafkaDotNetLatestTestFixture fixture, ITestOutputHelper output) : base(fixture, output)
     {
+    }
+}
+
+[Collection("KafkaTests")]
+[Trait("Architecture", "amd64")]
+[Trait("TestArea", "Messaging")]
+public class KafkaClusterMetricsEnabledTest : NewRelicIntegrationTest<KafkaClusterMetricsEnabledTestFixture>
+{
+    private const string ExpectedClusterId = "MkU3OEVBNTcwNTJENDM2Qg";
+
+    private readonly KafkaClusterMetricsEnabledTestFixture _fixture;
+
+    public KafkaClusterMetricsEnabledTest(KafkaClusterMetricsEnabledTestFixture fixture, ITestOutputHelper output) : base(fixture)
+    {
+        _fixture = fixture;
+        _fixture.TestLogger = output;
+
+        _fixture.Actions(setupConfiguration: () =>
+            {
+                var configModifier = new NewRelicConfigModifier(_fixture.DestinationNewRelicConfigFilePath);
+                configModifier.SetLogLevel("finest");
+                configModifier.ConfigureFasterMetricsHarvestCycle(10);
+
+                _fixture.RemoteApplication.SetAdditionalEnvironmentVariable("NEW_RELIC_KAFKA_TOPIC", _fixture.TopicName);
+                _fixture.RemoteApplication.SetAdditionalEnvironmentVariable("NEW_RELIC_KAFKA_METRICS_CLUSTER_METRICS_ENABLED", "true");
+                _fixture.RemoteApplication.SetAdditionalEnvironmentVariable("NEW_RELIC_KAFKA_METRICS_INTERVAL", "10");
+            },
+            exerciseApplication: () =>
+            {
+                _fixture.Delay(10); // wait for kafka and app to be ready
+                _fixture.TestLogger.WriteLine("Starting exercise application");
+                _fixture.ExerciseApplication();
+
+                _fixture.GetBootstrapServer();
+
+                _fixture.TestLogger.WriteLine("Waiting for metrics to be harvested");
+                _fixture.Delay(30);
+                _fixture.AgentLog.WaitForLogLine(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromSeconds(15));
+
+                _fixture.ShutdownRemoteApplication();
+                _fixture.AgentLog.WaitForLogLine(AgentLogBase.ShutdownLogLineRegex, TimeSpan.FromSeconds(10));
+            });
+
+        _fixture.Initialize();
+    }
+
+    [Fact]
+    public void KafkaClusterMetrics_PresentWhenEnabled()
+    {
+        var topicName = _fixture.TopicName;
+
+        var metrics = _fixture.AgentLog.GetMetrics().ToList();
+        var spans = _fixture.AgentLog.GetSpanEvents();
+
+        var produceClusterMetricPattern = $"^MessageBroker/Kafka/Cluster/[^/]+/Produce/{Regex.Escape(topicName)}$";
+        var consumeClusterMetricPattern = $"^MessageBroker/Kafka/Cluster/[^/]+/Consume/{Regex.Escape(topicName)}$";
+
+        var produceClusterMetrics = metrics.Where(m => Regex.IsMatch(m.MetricSpec.Name, produceClusterMetricPattern)).ToList();
+        var consumeClusterMetrics = metrics.Where(m => Regex.IsMatch(m.MetricSpec.Name, consumeClusterMetricPattern)).ToList();
+
+        var messageBrokerProduce = "MessageBroker/Kafka/Topic/Produce/Named/" + topicName;
+        var produceSpan = spans.FirstOrDefault(s => s.IntrinsicAttributes["name"].Equals(messageBrokerProduce));
+
+        NrAssert.Multiple(
+            () => Assert.True(produceClusterMetrics.Any(), $"Expected a metric matching {produceClusterMetricPattern}"),
+            () => Assert.True(consumeClusterMetrics.Any(), $"Expected a metric matching {consumeClusterMetricPattern}"),
+            () => Assert.All(produceClusterMetrics, m =>
+            {
+                var actual = ExtractClusterId(m.MetricSpec.Name);
+                Assert.Equal(ExpectedClusterId, actual);
+            }),
+            () => Assert.All(consumeClusterMetrics, m =>
+            {
+                var actual = ExtractClusterId(m.MetricSpec.Name);
+                Assert.Equal(ExpectedClusterId, actual);
+            }),
+            () => Assert.NotNull(produceSpan),
+            () => Assert.True(produceSpan.UserAttributes.ContainsKey("kafka.cluster.id")),
+            () =>
+            {
+                var actual = produceSpan.UserAttributes["kafka.cluster.id"] as string;
+                Assert.Equal(ExpectedClusterId, actual);
+            }
+        );
+    }
+
+    [Fact]
+    public void KafkaMetricsInterval_OverridesTheDerivedInterval()
+    {
+        var overrideLines = _fixture.AgentLog.TryGetLogLines(@"Set statistics interval to 10000ms \(harvest cycle: 10000ms\)").ToList();
+        var derivedLines = _fixture.AgentLog.TryGetLogLines(@"Set statistics interval to 5000ms \(harvest cycle: 10000ms\)").ToList();
+
+        NrAssert.Multiple(
+            () => Assert.True(overrideLines.Any(), $"Expected a log line reporting the 10000ms override, found {overrideLines.Count} matches."),
+            () => Assert.True(!derivedLines.Any(), $"Expected no log line reporting the 5000ms derived interval, but found {derivedLines.Count}: {string.Join(" | ", derivedLines.Select(m => m.Value))}")
+        );
+    }
+
+    private static string ExtractClusterId(string metricName)
+    {
+        var match = Regex.Match(metricName, @"^MessageBroker/Kafka/Cluster/([^/]+)/");
+        return match.Success ? match.Groups[1].Value : null;
     }
 }

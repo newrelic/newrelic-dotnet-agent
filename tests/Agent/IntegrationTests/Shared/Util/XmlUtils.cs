@@ -20,25 +20,41 @@ public static class XmlUtils
 
     public static XmlDocument AddXmlNode(string filePath, string @namespace, IEnumerable<string> parentNodeNames, string nodeName, string value, bool saveOnCompletion = true, XmlDocument alteredDocument = null)
     {
-        if (filePath == null)
-            throw new ArgumentNullException("filePath");
-        if (@namespace == null)
-            throw new ArgumentNullException("namespace");
-        if (parentNodeNames == null)
-            throw new ArgumentNullException("parentNodeNames");
-        if (nodeName == null)
-            throw new ArgumentNullException("nodeName");
+        var parentNodes = ToParentNodes(filePath, @namespace, parentNodeNames, nodeName);
         if (value == null)
             throw new ArgumentNullException("value");
 
-        var parentNodes = parentNodeNames
-            .Where(parentNodeName => parentNodeName != null)
-            .Select(parentNodeName => new NamespaceAndName { Namespace = @namespace, Name = parentNodeName });
         var leafNode = new NamespaceAndName { Namespace = @namespace, Name = nodeName };
         return AddXmlNode(filePath, parentNodes, leafNode, value, saveOnCompletion, alteredDocument);
     }
 
+    /// <summary>
+    /// Adds a childless element, e.g. &lt;alwaysOn /&gt;. Passing string.Empty as the value to
+    /// AddXmlNode instead yields &lt;alwaysOn&gt;&lt;/alwaysOn&gt; with a whitespace text child,
+    /// which the config schema rejects for an empty complex type.
+    /// </summary>
+    public static XmlDocument AddEmptyXmlNode(string filePath, string @namespace, IEnumerable<string> parentNodeNames, string nodeName, bool saveOnCompletion = true, XmlDocument alteredDocument = null)
+    {
+        var parentNodes = ToParentNodes(filePath, @namespace, parentNodeNames, nodeName);
+        var leafNode = new NamespaceAndName { Namespace = @namespace, Name = nodeName };
+        return AddEmptyXmlNode(filePath, parentNodes, leafNode, saveOnCompletion, alteredDocument);
+    }
+
     public static XmlDocument AddXmlNode(string filePath, string @namespace, IEnumerable<string> parentNodeNames, string nodeName, string nodeValue, string attributeName, string attributeValue, bool saveOnCompletion = true, XmlDocument alteredDocument = null)
+    {
+        var parentNodes = ToParentNodes(filePath, @namespace, parentNodeNames, nodeName);
+        if (nodeValue == null)
+            throw new ArgumentNullException("nodeValue");
+        if (attributeName == null)
+            throw new ArgumentNullException("attributeName");
+        if (attributeValue == null)
+            throw new ArgumentNullException("attributeValue");
+
+        var leafNode = new NamespaceAndName { Namespace = @namespace, Name = nodeName };
+        return AddXmlNode(filePath, parentNodes, leafNode, nodeValue, attributeName, attributeValue, saveOnCompletion, alteredDocument);
+    }
+
+    private static IEnumerable<NamespaceAndName> ToParentNodes(string filePath, string @namespace, IEnumerable<string> parentNodeNames, string nodeName)
     {
         if (filePath == null)
             throw new ArgumentNullException("filePath");
@@ -48,18 +64,10 @@ public static class XmlUtils
             throw new ArgumentNullException("parentNodeNames");
         if (nodeName == null)
             throw new ArgumentNullException("nodeName");
-        if (nodeValue == null)
-            throw new ArgumentNullException("nodeValue");
-        if (attributeName == null)
-            throw new ArgumentNullException("attributeName");
-        if (attributeValue == null)
-            throw new ArgumentNullException("attributeValue");
 
-        var parentNodes = parentNodeNames
+        return parentNodeNames
             .Where(parentNodeName => parentNodeName != null)
             .Select(parentNodeName => new NamespaceAndName { Namespace = @namespace, Name = parentNodeName });
-        var leafNode = new NamespaceAndName { Namespace = @namespace, Name = nodeName };
-        return AddXmlNode(filePath, parentNodes, leafNode, nodeValue, attributeName, attributeValue, saveOnCompletion, alteredDocument);
     }
 
     public static XmlDocument DeleteXmlNode(string filePath, string @namespace, IEnumerable<string> parentNodeNames, string nodeName, bool saveOnCompletion = true, XmlDocument alteredDocument = null)
@@ -255,14 +263,26 @@ public static class XmlUtils
 
     private static XmlDocument AddXmlNode(string filePath, IEnumerable<NamespaceAndName> parentNodes, NamespaceAndName node, string value, bool saveOnCompletion = true, XmlDocument alteredDocument = null)
     {
+        if (value == null)
+            throw new ArgumentNullException("value");
+
+        return AppendXmlNode(filePath, parentNodes, node, value, saveOnCompletion, alteredDocument);
+    }
+
+    // Only a null value makes XPathNavigator.AppendChildElement emit a childless element.
+    private static XmlDocument AddEmptyXmlNode(string filePath, IEnumerable<NamespaceAndName> parentNodes, NamespaceAndName node, bool saveOnCompletion = true, XmlDocument alteredDocument = null)
+    {
+        return AppendXmlNode(filePath, parentNodes, node, null, saveOnCompletion, alteredDocument);
+    }
+
+    private static XmlDocument AppendXmlNode(string filePath, IEnumerable<NamespaceAndName> parentNodes, NamespaceAndName node, string value, bool saveOnCompletion, XmlDocument alteredDocument)
+    {
         if (filePath == null)
             throw new ArgumentNullException("filePath");
         if (parentNodes == null)
             throw new ArgumentNullException("parentNodes");
         if (node == null)
             throw new ArgumentNullException("node");
-        if (value == null)
-            throw new ArgumentNullException("value");
 
         var document = alteredDocument ?? new XmlDocument();
         if (alteredDocument == null)

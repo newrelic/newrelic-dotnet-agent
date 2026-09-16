@@ -21,6 +21,8 @@ services:
         environment:
             - NEW_RELIC_KAFKA_TOPIC=${NEW_RELIC_KAFKA_TOPIC}
             - NEW_RELIC_KAFKA_BROKER_NAME=kafka-broker
+            - NEW_RELIC_KAFKA_METRICS_CLUSTER_METRICS_ENABLED=${NEW_RELIC_KAFKA_METRICS_CLUSTER_METRICS_ENABLED:-false}
+            - NEW_RELIC_KAFKA_METRICS_INTERVAL=${NEW_RELIC_KAFKA_METRICS_INTERVAL:-}
 
     kafka-broker:
         image: confluentinc/cp-kafka:7.5.0
@@ -45,7 +47,7 @@ services:
           KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
           KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
           KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
-          CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
+          CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qg
 
 networks:
     default:

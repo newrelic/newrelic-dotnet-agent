@@ -6,7 +6,7 @@ using System.Threading;
 
 namespace NewRelic.Agent.Core
 {
-    delegate Object GetTracerDelegate(String tracerFactoryName, UInt32 tracerArguments, String metricName, String assemblyName, Type type, String typeName, String methodName, String argumentSignature, Object invocationTarget, Object[] args, UInt64 functionId);
+    delegate Object GetTracerDelegate(String tracerFactoryName, UInt32 tracerArguments, String metricName, String assemblyName, Type type, String typeName, String methodName, String argumentSignature, Object invocationTarget, Object[] args, UInt64 functionId, Type effectiveReturnType);
     delegate void FinishTracerDelegate(Object tracerObject, Object returnValue, Object exceptionObject);
 
     /// <summary>
@@ -16,11 +16,11 @@ namespace NewRelic.Agent.Core
     /// </summary>
     public class AgentShim
     {
-        public static object GetTracer(String tracerFactoryName, UInt32 tracerArguments, String metricName, String assemblyName, Type type, String typeName, String methodName, String argumentSignature, Object invocationTarget, Object[] args, UInt64 functionId)
+        public static object GetTracer(String tracerFactoryName, UInt32 tracerArguments, String metricName, String assemblyName, Type type, String typeName, String methodName, String argumentSignature, Object invocationTarget, Object[] args, UInt64 functionId, Type effectiveReturnType)
         {
             var delegateDataSlot = Thread.GetNamedDataSlot("NEWRELIC_TEST_GET_TRACER_DELEGATE");
             var getTracerDelegate = (Delegate)Thread.GetData(delegateDataSlot);
-            var result = getTracerDelegate.DynamicInvoke(new object[] { tracerFactoryName, tracerArguments, metricName, assemblyName, type, typeName, methodName, argumentSignature, invocationTarget, args, functionId });
+            var result = getTracerDelegate.DynamicInvoke(new object[] { tracerFactoryName, tracerArguments, metricName, assemblyName, type, typeName, methodName, argumentSignature, invocationTarget, args, functionId, effectiveReturnType });
             return result;
         }
 
@@ -35,7 +35,8 @@ namespace NewRelic.Agent.Core
             String argumentSignature,
             Object invocationTarget,
             Object[] args,
-            UInt64 functionId)
+            UInt64 functionId,
+            Type effectiveReturnType)
         {
             var tracer = GetTracer(
                 tracerFactoryName,
@@ -48,7 +49,8 @@ namespace NewRelic.Agent.Core
                 argumentSignature,
                 invocationTarget,
                 args,
-                functionId);
+                functionId,
+                effectiveReturnType);
 
             return new TracerWrapper(tracer).FinishTracer;
         }

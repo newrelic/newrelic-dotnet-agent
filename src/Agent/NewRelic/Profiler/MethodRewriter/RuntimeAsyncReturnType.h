@@ -11,7 +11,7 @@
 
 namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace RuntimeAsync
 {
-    // A method compiled with .NET 11 runtime-async carries MethodImplAttributes.Async and does
+    // A method compiled with runtime-async carries MethodImplAttributes.Async and does
     // NOT follow the return convention its metadata signature implies. Per the ECMA-335 augment
     // (dotnet/runtime docs/design/specs/runtime-async.md, I.8.4.5), before `ret` the stack holds
     // nothing for Task/ValueTask, or the type argument for Task<T>/ValueTask<T>. The declared

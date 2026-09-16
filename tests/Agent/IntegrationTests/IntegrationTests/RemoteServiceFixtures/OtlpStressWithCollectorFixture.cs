@@ -12,7 +12,7 @@ public abstract class OtlpStressWithCollectorFixtureBase : OtlpMetricsWithCollec
     public int ThreadCount { get; set; } = 10;
 
     protected OtlpStressWithCollectorFixtureBase(string targetFramework, bool isCoreApp) 
-        : base(targetFramework, isCoreApp, "OTelMetricsApplication", "OTelMetricsApplication.exe")
+        : base(targetFramework, isCoreApp, "OtelMetricsApplication", "OtelMetricsApplication.exe")
     {
     }
 
