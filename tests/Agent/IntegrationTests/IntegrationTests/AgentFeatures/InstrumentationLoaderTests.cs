@@ -9,6 +9,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.AgentFeatures;
 
+[Trait("Platform", "WindowsOnly")]
 public class InstrumentationLoaderTests : NewRelicIntegrationTest<RemoteServiceFixtures.ConsoleInstrumentationLoaderFixture>
 {
     private readonly RemoteServiceFixtures.ConsoleInstrumentationLoaderFixture _fixture;

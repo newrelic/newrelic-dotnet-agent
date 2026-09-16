@@ -476,6 +476,7 @@ public class AzureFunctionHttpTriggerTestsCoreLatest : AzureFunctionHttpTriggerT
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class AzureFunctionHttpTriggerTestsFWLatest : AzureFunctionHttpTriggerTestsBase<AzureFunctionApplicationFixtureHttpTriggerFWLatest>
 {
     public AzureFunctionHttpTriggerTestsFWLatest(AzureFunctionApplicationFixtureHttpTriggerFWLatest fixture, ITestOutputHelper output)

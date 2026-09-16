@@ -75,6 +75,7 @@ public abstract class ErrorGroupCallbackTestsBase<TFixture> : NewRelicIntegratio
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class ErrorGroupCallbackReturnsStringTestsFW : ErrorGroupCallbackTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public ErrorGroupCallbackReturnsStringTestsFW(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)

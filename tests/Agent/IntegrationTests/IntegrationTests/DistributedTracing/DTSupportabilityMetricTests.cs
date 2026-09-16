@@ -10,6 +10,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.DistributedTracing;
 
+[Trait("Platform", "WindowsOnly")]
 public class DTSupportabilityMetricTests : NewRelicIntegrationTest<RemoteServiceFixtures.DTBasicMVCApplicationFixture>
 {
     readonly RemoteServiceFixtures.DTBasicMVCApplicationFixture _fixture;

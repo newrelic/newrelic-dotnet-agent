@@ -174,6 +174,7 @@ public abstract class AzureServiceBusProcessorTestsBase<TFixture> : NewRelicInte
 
 #region Queue Tests
 
+[Trait("Platform", "WindowsOnly")]
 public class
     AzureServiceBusProcessorQueueTestsFWLatest : AzureServiceBusProcessorTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
@@ -183,6 +184,7 @@ public class
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class
     AzureServiceBusProcessorQueueTestsFW462 : AzureServiceBusProcessorTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
@@ -216,6 +218,7 @@ public class
 
 #region Topic Tests
 
+[Trait("Platform", "WindowsOnly")]
 public class
     AzureServiceBusProcessorTopicTestsFWLatest : AzureServiceBusProcessorTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
@@ -225,6 +228,7 @@ public class
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class
     AzureServiceBusProcessorTopicTestsFW462 : AzureServiceBusProcessorTestsBase<ConsoleDynamicMethodFixtureFW462>
 {

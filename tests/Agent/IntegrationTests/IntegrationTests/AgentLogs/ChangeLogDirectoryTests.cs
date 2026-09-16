@@ -8,6 +8,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.AgentLogs;
 
+[Trait("Platform", "WindowsOnly")]
 public class ChangeLogDirectoryTests : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
 {
     private readonly RemoteServiceFixtures.BasicMvcApplicationTestFixture _fixture;

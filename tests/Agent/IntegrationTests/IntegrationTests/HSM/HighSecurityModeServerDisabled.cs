@@ -7,6 +7,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.HSM;
 
+[Trait("Platform", "WindowsOnly")]
 public class HighSecurityModeServerDisabled : NewRelicIntegrationTest<RemoteServiceFixtures.OwinWebApiFixture>
 {
 

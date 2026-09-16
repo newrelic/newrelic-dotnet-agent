@@ -12,6 +12,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.Api;
 
+[Trait("Platform", "WindowsOnly")]
 public class RecordDatastoreSegment_Full_TestsFWLatest : RecordDatastoreSegmentTests<ConsoleDynamicMethodFixtureFWLatest>
 {
     public RecordDatastoreSegment_Full_TestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -20,6 +21,7 @@ public class RecordDatastoreSegment_Full_TestsFWLatest : RecordDatastoreSegmentT
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class RecordDatastoreSegment_RequiredOnly_TestsFWLatest : RecordDatastoreSegmentTests<ConsoleDynamicMethodFixtureFWLatest>
 {
     public RecordDatastoreSegment_RequiredOnly_TestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)

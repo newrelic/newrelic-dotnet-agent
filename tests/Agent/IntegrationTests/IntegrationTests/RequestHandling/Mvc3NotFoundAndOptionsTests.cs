@@ -8,6 +8,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.RequestHandling;
 
+[Trait("Platform", "WindowsOnly")]
 public class Mvc3NotFoundAndOptionsTests : NotFoundAndOptionsTests<BasicMvcApplicationTestFixture>
 {
     public Mvc3NotFoundAndOptionsTests(BasicMvcApplicationTestFixture fixture, ITestOutputHelper output)

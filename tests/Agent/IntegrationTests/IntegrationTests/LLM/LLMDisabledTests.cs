@@ -77,6 +77,7 @@ public class LlmDisabledTest_CoreLatest : LlmDisabledTestsBase<ConsoleDynamicMet
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class LlmDisabledTest_FWLatest : LlmDisabledTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public LlmDisabledTest_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)

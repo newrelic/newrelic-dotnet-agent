@@ -142,6 +142,7 @@ public class BedrockInvokeTests_Basic_CoreLatest : BedrockInvokeTestsBase<Consol
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class BedrockInvokeTests_Basic_FWLatest : BedrockInvokeTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public BedrockInvokeTests_Basic_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)

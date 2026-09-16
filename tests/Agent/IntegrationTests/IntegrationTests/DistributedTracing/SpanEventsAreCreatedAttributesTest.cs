@@ -11,6 +11,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.DistributedTracing;
 
+[Trait("Platform", "WindowsOnly")]
 public class SpanEventsAreCreatedAttributesTest : NewRelicIntegrationTest<RemoteServiceFixtures.DTBasicMVCApplicationFixture>
 {
     private readonly RemoteServiceFixtures.DTBasicMVCApplicationFixture _fixture;

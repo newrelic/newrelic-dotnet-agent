@@ -107,6 +107,7 @@ public abstract class PostgresSqlStoredProcedureTestsBase<TFixture> : NewRelicIn
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class PostgresSqlStoredProcedureTestsFW462 : PostgresSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public PostgresSqlStoredProcedureTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -115,6 +116,7 @@ public class PostgresSqlStoredProcedureTestsFW462 : PostgresSqlStoredProcedureTe
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class PostgresSqlStoredProcedureTestsFWLatest : PostgresSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public PostgresSqlStoredProcedureTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)

@@ -152,6 +152,7 @@ public class BedrockConverseContentBlockTests_CoreLatest : BedrockConverseConten
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class BedrockConverseContentBlockTests_FWLatest : BedrockConverseContentBlockTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public BedrockConverseContentBlockTests_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)

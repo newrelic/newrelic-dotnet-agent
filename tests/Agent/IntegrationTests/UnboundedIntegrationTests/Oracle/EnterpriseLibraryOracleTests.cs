@@ -15,6 +15,7 @@ using Xunit;
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.Oracle;
 
+[Trait("Platform", "WindowsOnly")]
 public class EnterpriseLibraryOracleTests : NewRelicIntegrationTest<RemoteServiceFixtures.OracleBasicMvcFixture>
 {
     private readonly RemoteServiceFixtures.OracleBasicMvcFixture _fixture;

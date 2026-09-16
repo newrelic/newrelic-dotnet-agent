@@ -79,6 +79,7 @@ public abstract class EnvironmentTests<T> : NewRelicIntegrationTest<T> where T :
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class EnvironmentFrameworkTests : EnvironmentTests<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
 {
     public EnvironmentFrameworkTests(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output)

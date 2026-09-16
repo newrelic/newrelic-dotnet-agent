@@ -10,6 +10,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.DataTransmission;
 
+[Trait("Platform", "WindowsOnly")]
 public class FasterEventHarvestNetFrameworkTests : FasterEventHarvestTests<ConsoleDynamicMethodFixtureFWLatest>
 {
     public FasterEventHarvestNetFrameworkTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)

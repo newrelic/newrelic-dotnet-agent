@@ -117,6 +117,7 @@ public abstract class LocalDecorationTestsBase<TFixture> : NewRelicIntegrationTe
 
 #region Json layout, decoration enabled
 
+[Trait("Platform", "WindowsOnly")]
 public class Log4netJsonLayoutDecorationEnabledTestsFWLatestTests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public Log4netJsonLayoutDecorationEnabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -125,6 +126,7 @@ public class Log4netJsonLayoutDecorationEnabledTestsFWLatestTests : LocalDecorat
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class Log4netJsonLayoutDecorationEnabledTestsFW471Tests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     public Log4netJsonLayoutDecorationEnabledTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -153,6 +155,7 @@ public class Log4netJsonLayoutDecorationEnabledTestsNetCoreOldestTests : LocalDe
 
 #region Json layout, decoration disabled
 
+[Trait("Platform", "WindowsOnly")]
 public class Log4netJsonLayoutDecorationDisabledTestsFWLatestTests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public Log4netJsonLayoutDecorationDisabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -161,6 +164,7 @@ public class Log4netJsonLayoutDecorationDisabledTestsFWLatestTests : LocalDecora
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class Log4netJsonLayoutDecorationDisabledTestsFW471Tests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     public Log4netJsonLayoutDecorationDisabledTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -189,6 +193,7 @@ public class Log4netJsonLayoutDecorationDisabledTestsNetCoreOldestTests : LocalD
 
 #region Pattern layout, decoration enabled
 
+[Trait("Platform", "WindowsOnly")]
 public class Log4netPatternLayoutDecorationEnabledTestsFWLatestTests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public Log4netPatternLayoutDecorationEnabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -197,6 +202,7 @@ public class Log4netPatternLayoutDecorationEnabledTestsFWLatestTests : LocalDeco
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class Log4netPatternLayoutDecorationEnabledTestsFW471Tests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     public Log4netPatternLayoutDecorationEnabledTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -225,6 +231,7 @@ public class Log4netPatternLayoutDecorationEnabledTestsNetCoreOldestTests : Loca
 
 #region Pattern layout, decoration disabled
 
+[Trait("Platform", "WindowsOnly")]
 public class Log4netPatternLayoutDecorationDisabledTestsFWLatestTests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public Log4netPatternLayoutDecorationDisabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -233,6 +240,7 @@ public class Log4netPatternLayoutDecorationDisabledTestsFWLatestTests : LocalDec
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class Log4netPatternLayoutDecorationDisabledTestsFW471Tests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     public Log4netPatternLayoutDecorationDisabledTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -264,6 +272,7 @@ public class Log4netPatternLayoutDecorationDisabledTestsNetCoreOldestTests : Loc
 #region Serilog
 
 #region Json layout, decoration enabled
+[Trait("Platform", "WindowsOnly")]
 public class SerilogJsonLayoutDecorationEnabledTestsFWLatestTests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public SerilogJsonLayoutDecorationEnabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -272,6 +281,7 @@ public class SerilogJsonLayoutDecorationEnabledTestsFWLatestTests : LocalDecorat
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class SerilogJsonLayoutDecorationEnabledTestsFW471Tests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     public SerilogJsonLayoutDecorationEnabledTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -299,6 +309,7 @@ public class SerilogJsonLayoutDecorationEnabledTestsNetCoreOldestTests : LocalDe
 #endregion
 
 #region Json layout, decoration disabled
+[Trait("Platform", "WindowsOnly")]
 public class SerilogJsonLayoutDecorationDisabledTestsFWLatestTests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public SerilogJsonLayoutDecorationDisabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -307,6 +318,7 @@ public class SerilogJsonLayoutDecorationDisabledTestsFWLatestTests : LocalDecora
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class SerilogJsonLayoutDecorationDisabledTestsFW471Tests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     public SerilogJsonLayoutDecorationDisabledTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -335,6 +347,7 @@ public class SerilogJsonLayoutDecorationDisabledTestsNetCoreOldestTests : LocalD
 
 #region Pattern layout, decoration enabled
 
+[Trait("Platform", "WindowsOnly")]
 public class SerilogPatternLayoutDecorationEnabledTestsFWLatestTests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public SerilogPatternLayoutDecorationEnabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -343,6 +356,7 @@ public class SerilogPatternLayoutDecorationEnabledTestsFWLatestTests : LocalDeco
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class SerilogPatternLayoutDecorationEnabledTestsFW471Tests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     public SerilogPatternLayoutDecorationEnabledTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -380,6 +394,7 @@ public class SerilogPatternLayoutDecorationEnabledTestsNetCoreOldestTests : Loca
 
 #region Pattern Layout, decoration disabled
 
+[Trait("Platform", "WindowsOnly")]
 public class SerilogPatternLayoutDecorationDisabledTestsFWLatestTests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public SerilogPatternLayoutDecorationDisabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -388,6 +403,7 @@ public class SerilogPatternLayoutDecorationDisabledTestsFWLatestTests : LocalDec
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class SerilogPatternLayoutDecorationDisabledTestsFW471Tests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     public SerilogPatternLayoutDecorationDisabledTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -437,6 +453,7 @@ public class MicrosoftLoggingJsonLayoutDecorationEnabledTestsNetCoreOldestTests 
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class MicrosoftLoggingJsonLayoutDecorationEnabledTestsFWLatestTests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public MicrosoftLoggingJsonLayoutDecorationEnabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -465,6 +482,7 @@ public class MicrosoftLoggingJsonLayoutDecorationDisabledTestsNetCoreOldestTests
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class MicrosoftLoggingJsonLayoutDecorationDisabledTestsFWLatestTests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public MicrosoftLoggingJsonLayoutDecorationDisabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -493,6 +511,7 @@ public class MicrosoftLoggingPatternLayoutDecorationEnabledTestsNetCoreOldestTes
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class MicrosoftLoggingPatternLayoutDecorationEnabledTestsFWLatestTests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public MicrosoftLoggingPatternLayoutDecorationEnabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -521,6 +540,7 @@ public class MicrosoftLoggingPatternLayoutDecorationDisabledTestsNetCoreOldestTe
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class MicrosoftLoggingPatternLayoutDecorationDisabledTestsFWLatestTests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public MicrosoftLoggingPatternLayoutDecorationDisabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -537,6 +557,7 @@ public class MicrosoftLoggingPatternLayoutDecorationDisabledTestsFWLatestTests :
 
 #region Json layout, decoration enabled
 
+[Trait("Platform", "WindowsOnly")]
 public class NLogJsonLayoutDecorationEnabledTestsFWLatestTests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public NLogJsonLayoutDecorationEnabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -545,6 +566,7 @@ public class NLogJsonLayoutDecorationEnabledTestsFWLatestTests : LocalDecoration
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class NLogJsonLayoutDecorationEnabledTestsFW471Tests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     public NLogJsonLayoutDecorationEnabledTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -553,6 +575,7 @@ public class NLogJsonLayoutDecorationEnabledTestsFW471Tests : LocalDecorationTes
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class NLogJsonLayoutWithParamDecorationEnabledTestsFWLatestTests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public NLogJsonLayoutWithParamDecorationEnabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -561,6 +584,7 @@ public class NLogJsonLayoutWithParamDecorationEnabledTestsFWLatestTests : LocalD
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class NLogJsonLayoutWithParamDecorationEnabledTestsFW471Tests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     public NLogJsonLayoutWithParamDecorationEnabledTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -604,6 +628,7 @@ public class NLogJsonLayoutWithParamDecorationEnabledTestsNetCoreOldestTests : L
 
 #region Json layout, decoration disabled
 
+[Trait("Platform", "WindowsOnly")]
 public class NLogJsonLayoutDecorationDisabledTestsFWLatestTests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public NLogJsonLayoutDecorationDisabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -612,6 +637,7 @@ public class NLogJsonLayoutDecorationDisabledTestsFWLatestTests : LocalDecoratio
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class NLogJsonLayoutDecorationDisabledTestsFW471Tests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     public NLogJsonLayoutDecorationDisabledTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -640,6 +666,7 @@ public class NLogJsonLayoutDecorationDisabledTestsNetCoreOldestTests : LocalDeco
 
 #region Pattern layout, decoration enabled
 
+[Trait("Platform", "WindowsOnly")]
 public class NLogPatternLayoutDecorationEnabledTestsFWLatestTests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public NLogPatternLayoutDecorationEnabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -648,6 +675,7 @@ public class NLogPatternLayoutDecorationEnabledTestsFWLatestTests : LocalDecorat
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class NLogPatternLayoutDecorationEnabledTestsFW471Tests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     public NLogPatternLayoutDecorationEnabledTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -656,6 +684,7 @@ public class NLogPatternLayoutDecorationEnabledTestsFW471Tests : LocalDecoration
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class NLogPatternLayoutWithParamDecorationEnabledTestsFWLatestTests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public NLogPatternLayoutWithParamDecorationEnabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -664,6 +693,7 @@ public class NLogPatternLayoutWithParamDecorationEnabledTestsFWLatestTests : Loc
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class NLogPatternLayoutWithParamDecorationEnabledTestsFW471Tests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     public NLogPatternLayoutWithParamDecorationEnabledTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -709,6 +739,7 @@ public class NLogPatternLayoutWithParamDecorationEnabledTestsNetCoreOldestTests 
 
 #region Pattern layout, decoration disabled
 
+[Trait("Platform", "WindowsOnly")]
 public class NLogPatternLayoutDecorationDisabledTestsFWLatestTests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public NLogPatternLayoutDecorationDisabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -717,6 +748,7 @@ public class NLogPatternLayoutDecorationDisabledTestsFWLatestTests : LocalDecora
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class NLogPatternLayoutDecorationDisabledTestsFW471Tests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     public NLogPatternLayoutDecorationDisabledTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)

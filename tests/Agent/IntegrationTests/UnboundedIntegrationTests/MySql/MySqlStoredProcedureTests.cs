@@ -142,6 +142,7 @@ public abstract class MySqlStoredProcedureTestsBase<TFixture> : NewRelicIntegrat
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class MySqlStoredProcedureTestsFW462 : MySqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public MySqlStoredProcedureTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -150,6 +151,7 @@ public class MySqlStoredProcedureTestsFW462 : MySqlStoredProcedureTestsBase<Cons
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class MySqlStoredProcedureTestsFW471 : MySqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     public MySqlStoredProcedureTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -158,6 +160,7 @@ public class MySqlStoredProcedureTestsFW471 : MySqlStoredProcedureTestsBase<Cons
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class MySqlStoredProcedureTestsFW48 : MySqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFW48>
 {
     public MySqlStoredProcedureTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -166,6 +169,7 @@ public class MySqlStoredProcedureTestsFW48 : MySqlStoredProcedureTestsBase<Conso
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class MySqlStoredProcedureTestsFWLatest : MySqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public MySqlStoredProcedureTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)

@@ -11,6 +11,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation;
 
+[Trait("Platform", "WindowsOnly")]
 public class BasicWebForms : NewRelicIntegrationTest<RemoteServiceFixtures.BasicWebFormsApplication>
 {
 

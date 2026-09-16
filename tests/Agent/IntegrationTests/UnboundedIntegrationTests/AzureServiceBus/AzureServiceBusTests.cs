@@ -253,6 +253,7 @@ public abstract class AzureServiceBusTestsBase<TFixture> : NewRelicIntegrationTe
 
 #region Queue Tests
 
+[Trait("Platform", "WindowsOnly")]
 public class AzureServiceBusQueueTestsFWLatest : AzureServiceBusTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public AzureServiceBusQueueTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) :
@@ -261,6 +262,7 @@ public class AzureServiceBusQueueTestsFWLatest : AzureServiceBusTestsBase<Consol
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class AzureServiceBusQueueTestsFW462 : AzureServiceBusTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public AzureServiceBusQueueTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(
@@ -289,6 +291,7 @@ public class AzureServiceBusQueueTestsCoreLatest : AzureServiceBusTestsBase<Cons
 
 #region Topic Tests
 
+[Trait("Platform", "WindowsOnly")]
 public class AzureServiceBusTopicTestsFWLatest : AzureServiceBusTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public AzureServiceBusTopicTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) :
@@ -297,6 +300,7 @@ public class AzureServiceBusTopicTestsFWLatest : AzureServiceBusTestsBase<Consol
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class AzureServiceBusTopicTestsFW462 : AzureServiceBusTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public AzureServiceBusTopicTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(

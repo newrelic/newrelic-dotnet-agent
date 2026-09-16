@@ -135,6 +135,7 @@ public abstract class MsSqlStoredProcedureUsingOdbcDriverTestsBase<TFixture> : N
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class MsSqlStoredProcedureUsingOdbcDriverTests_FWLatest : MsSqlStoredProcedureUsingOdbcDriverTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public MsSqlStoredProcedureUsingOdbcDriverTests_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)

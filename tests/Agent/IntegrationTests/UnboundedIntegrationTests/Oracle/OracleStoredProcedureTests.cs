@@ -112,6 +112,7 @@ public abstract class OracleStoredProcedureTestsBase<TFixture> : NewRelicIntegra
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class OracleStoredProcedureTestsFramework462 : OracleStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public OracleStoredProcedureTestsFramework462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -120,12 +121,14 @@ public class OracleStoredProcedureTestsFramework462 : OracleStoredProcedureTests
 }
 
 
+[Trait("Platform", "WindowsOnly")]
 public class OracleStoredProcedureTestsFramework471 : OracleStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     public OracleStoredProcedureTestsFramework471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output) : base(fixture, output)
     {
     }
 }
+[Trait("Platform", "WindowsOnly")]
 public class OracleStoredProcedureTestsFrameworkLatest : OracleStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public OracleStoredProcedureTestsFrameworkLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)

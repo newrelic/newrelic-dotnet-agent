@@ -10,6 +10,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation;
 
+[Trait("Platform", "WindowsOnly")]
 public class OtherTransactionResponseTimeTestsWebApi : NewRelicIntegrationTest<RemoteServiceFixtures.WebApiAsyncFixture>
 {
     private readonly RemoteServiceFixtures.WebApiAsyncFixture _fixture;

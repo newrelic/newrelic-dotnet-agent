@@ -13,6 +13,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation;
 
+[Trait("Platform", "WindowsOnly")]
 public class AttributeInstrumentationTestsFW462 : AttributeInstrumentationTests<ConsoleDynamicMethodFixtureFW462>
 {
     public AttributeInstrumentationTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)

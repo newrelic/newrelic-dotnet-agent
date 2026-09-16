@@ -114,6 +114,7 @@ public abstract class PostgresMetadataCommentTestsBase<TFixture> : NewRelicInteg
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class PostgresMetadataCommentTestsFW462 : PostgresMetadataCommentTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public PostgresMetadataCommentTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -121,6 +122,7 @@ public class PostgresMetadataCommentTestsFW462 : PostgresMetadataCommentTestsBas
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class PostgresMetadataCommentTestsFWLatest : PostgresMetadataCommentTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public PostgresMetadataCommentTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)

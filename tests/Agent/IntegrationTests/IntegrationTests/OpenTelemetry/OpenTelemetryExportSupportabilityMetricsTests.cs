@@ -82,6 +82,7 @@ public class OtlpExportSuccessMetricsTestsCoreNet8 : OtlpExportSuccessMetricsTes
     public OtlpExportSuccessMetricsTestsCoreNet8(OtlpMetricsWithCollectorFixtureCoreNet8 fixture, ITestOutputHelper outputHelper) : base(fixture, outputHelper) { }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class OtlpExportSuccessMetricsTestsFWLatest : OtlpExportSuccessMetricsTestsBase<OtlpMetricsWithCollectorFixtureFWLatest>
 {
     public OtlpExportSuccessMetricsTestsFWLatest(OtlpMetricsWithCollectorFixtureFWLatest fixture, ITestOutputHelper outputHelper) : base(fixture, outputHelper) { }
@@ -169,6 +170,7 @@ public class OtlpExportRetryMetricsTestsCoreNet8 : OtlpExportRetryMetricsTestsBa
     public OtlpExportRetryMetricsTestsCoreNet8(OtlpMetricsWithCollectorFixtureCoreNet8 fixture, ITestOutputHelper outputHelper) : base(fixture, outputHelper) { }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class OtlpExportRetryMetricsTestsFWLatest : OtlpExportRetryMetricsTestsBase<OtlpMetricsWithCollectorFixtureFWLatest>
 {
     public OtlpExportRetryMetricsTestsFWLatest(OtlpMetricsWithCollectorFixtureFWLatest fixture, ITestOutputHelper outputHelper) : base(fixture, outputHelper) { }
@@ -256,6 +258,7 @@ public class OtlpExportFailureMetricsTestsCoreNet8 : OtlpExportFailureMetricsTes
     public OtlpExportFailureMetricsTestsCoreNet8(OtlpMetricsWithCollectorFixtureCoreNet8 fixture, ITestOutputHelper outputHelper) : base(fixture, outputHelper) { }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class OtlpExportFailureMetricsTestsFWLatest : OtlpExportFailureMetricsTestsBase<OtlpMetricsWithCollectorFixtureFWLatest>
 {
     public OtlpExportFailureMetricsTestsFWLatest(OtlpMetricsWithCollectorFixtureFWLatest fixture, ITestOutputHelper outputHelper) : base(fixture, outputHelper) { }

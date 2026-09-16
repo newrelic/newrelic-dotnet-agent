@@ -221,6 +221,7 @@ public abstract class MySqlConnectorTestBase<TFixture> : NewRelicIntegrationTest
     private static string GetTransactionName(string command) => $"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.MySql.MySqlConnectorExerciser/{command}";
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class MySqlConnectorTestFW462 : MySqlConnectorTestBase<ConsoleDynamicMethodFixtureFW462>
 {
     public MySqlConnectorTestFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -229,6 +230,7 @@ public class MySqlConnectorTestFW462 : MySqlConnectorTestBase<ConsoleDynamicMeth
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class MySqlConnectorTestFW471 : MySqlConnectorTestBase<ConsoleDynamicMethodFixtureFW471>
 {
     public MySqlConnectorTestFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -237,6 +239,7 @@ public class MySqlConnectorTestFW471 : MySqlConnectorTestBase<ConsoleDynamicMeth
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class MySqlConnectorTestFW48 : MySqlConnectorTestBase<ConsoleDynamicMethodFixtureFW48>
 {
     public MySqlConnectorTestFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
@@ -245,6 +248,7 @@ public class MySqlConnectorTestFW48 : MySqlConnectorTestBase<ConsoleDynamicMetho
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class MySqlConnectorTestFWLatest : MySqlConnectorTestBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public MySqlConnectorTestFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
