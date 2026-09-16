@@ -54,8 +54,12 @@ runs:
       shell: bash
       run: |
         exe="${{ inputs.tests-path }}/${{ inputs.assembly-name }}"
-        if [ "${{ runner.os }}" = "Windows" ]; then exe="$exe.exe"; fi
-        bash "$GITHUB_WORKSPACE/build/Scripts/check-trait-filter.sh" "$exe" "${{ inputs.trait }}"
+        if [ "${{ runner.os }}" = "Windows" ]; then
+          cmd=("$exe.exe")
+        else
+          cmd=(dotnet "$exe.dll")
+        fi
+        bash "$GITHUB_WORKSPACE/build/Scripts/check-trait-filter.sh" "${{ inputs.trait }}" "${cmd[@]}"
 
     - name: Run tests (Windows)
       if: runner.os == 'Windows'

@@ -9,7 +9,7 @@ fails=0
 
 expect() { # expect <label> <wanted-exit> <exe> [filter]
   local label="$1" want="$2" exe="$3" filter="${4:-Platform=WindowsOnly}" got
-  bash "$SUT" "$exe" "$filter" >"$TMP/out" 2>&1
+  bash "$SUT" "$filter" "$exe" >"$TMP/out" 2>&1
   got=$?
   if [ "$got" -ne "$want" ]; then
     echo "FAIL $label: wanted exit $want, got $got"
@@ -44,6 +44,26 @@ expect "exclusion that excludes nothing"    1 "$TMP/dead"
 expect "trait absent from assembly"         1 "$TMP/nomatch"
 expect "every class carries the trait"      1 "$TMP/allwin"
 expect "missing executable"                 1 "$TMP/absent"
+
+# Writes a stub that crashes instead of listing classes, to prove a launch
+# failure is reported as a launch failure and never mistaken for a missing
+# trait -- the defect this script fixes.
+cat > "$TMP/crashes" <<'STUB'
+#!/usr/bin/env bash
+echo "Unhandled exception: could not load file or assembly."
+exit 1
+STUB
+chmod +x "$TMP/crashes"
+
+bash "$SUT" "Platform=WindowsOnly" "$TMP/crashes" >"$TMP/out" 2>&1
+got=$?
+if [ "$got" -eq 1 ] && grep -q "Test launcher exited" "$TMP/out" && ! grep -q "No class matches" "$TMP/out"; then
+  echo "PASS launcher exits non-zero is reported as a launch failure, not a missing trait"
+else
+  echo "FAIL launcher exits non-zero is reported as a launch failure, not a missing trait: exit=$got"
+  sed 's/^/    /' "$TMP/out"
+  fails=$((fails + 1))
+fi
 
 echo "----"
 [ "$fails" -eq 0 ] && { echo "all checks passed"; exit 0; }

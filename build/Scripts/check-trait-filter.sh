@@ -3,24 +3,44 @@
 # cannot see a dead exclusion filter: a broken one excludes nothing, so the lane
 # runs everything and still passes on a Windows runner. Controls come from the
 # assembly itself, so there are no class names or counts to keep in sync.
-# Usage: check-trait-filter.sh <test-executable> <name=value>
+# Usage: check-trait-filter.sh <name=value> <command> [args...]
 set -uo pipefail
 
-exe="${1:?test executable required}"
-filter="${2:?trait filter as name=value required}"
+filter="${1:?trait filter as name=value required}"
+shift
+if [ "$#" -eq 0 ]; then
+  echo "::error::No launch command given. Usage: check-trait-filter.sh <name=value> <command> [args...]"
+  exit 1
+fi
+cmd=("$@")
+exe="${cmd[$(( $# - 1 ))]}"
 
 if [ ! -f "$exe" ]; then
-  echo "::error::No test executable at $exe."
+  echo "::error::No file at $exe to launch."
   exit 1
 fi
 
-classes() { # classes <-trait|-trait->
-  "$exe" -list classes "$1" "$filter" 2>/dev/null \
-    | grep -E '^[A-Za-z_][A-Za-z0-9_.]*\.[A-Za-z0-9_]+$'
+tmp="$(mktemp -d)"
+trap 'rm -rf "$tmp"' EXIT
+
+launch() { # launch <-trait|-trait-> <outfile> -- exits the script on a non-zero launcher exit
+  "${cmd[@]}" -list classes "$1" "$filter" >"$2" 2>&1
+  local rc=$?
+  if [ "$rc" -ne 0 ]; then
+    echo "::error::Test launcher exited $rc: ${cmd[*]} -list classes $1 $filter"
+    head -5 "$2" | sed 's/^/    /'
+    exit 1
+  fi
 }
 
-matched="$(classes -trait | sort)"
-remaining="$(classes -trait- | sort)"
+classes() { # classes <outfile> -- sorted class names found in it
+  grep -E '^[A-Za-z_][A-Za-z0-9_.]*\.[A-Za-z0-9_]+$' "$1" | sort
+}
+
+launch -trait "$tmp/matched.out"
+launch -trait- "$tmp/remaining.out"
+matched="$(classes "$tmp/matched.out")"
+remaining="$(classes "$tmp/remaining.out")"
 
 if [ -z "$matched" ]; then
   echo "::error::No class matches $filter. Either the trait is absent from this assembly (a stale binary, or the trait tool was never run) or the filter is misspelled. An exclusion lane cannot be trusted without it."
