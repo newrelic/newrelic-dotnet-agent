@@ -94,6 +94,7 @@ public abstract class RejitAddFileBase<TFixture> : NewRelicIntegrationTest<TFixt
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class RejitAddFileWithFileWatcherEnabled : RejitAddFileBase<AspNetFrameworkReJitMvcApplicationFixture>
 {
     public RejitAddFileWithFileWatcherEnabled(AspNetFrameworkReJitMvcApplicationFixture fixture, ITestOutputHelper output)
@@ -102,6 +103,7 @@ public class RejitAddFileWithFileWatcherEnabled : RejitAddFileBase<AspNetFramewo
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class RejitAddFileWithFileWatcherDisabled : RejitAddFileBase<AspNetFrameworkReJitMvcApplicationFixture>
 {
     public RejitAddFileWithFileWatcherDisabled(AspNetFrameworkReJitMvcApplicationFixture fixture, ITestOutputHelper output)

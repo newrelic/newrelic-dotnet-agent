@@ -84,6 +84,7 @@ public abstract class MongoDBDriverIndexManagerTestsBase<TFixture> : NewRelicInt
 
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class MongoDBDriverIndexManagerTestsFWLatest : MongoDBDriverIndexManagerTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public MongoDBDriverIndexManagerTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -92,6 +93,7 @@ public class MongoDBDriverIndexManagerTestsFWLatest : MongoDBDriverIndexManagerT
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class MongoDBDriverIndexManagerTestsFW48 : MongoDBDriverIndexManagerTestsBase<ConsoleDynamicMethodFixtureFW48>
 {
     public MongoDBDriverIndexManagerTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
@@ -100,6 +102,7 @@ public class MongoDBDriverIndexManagerTestsFW48 : MongoDBDriverIndexManagerTests
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class MongoDBDriverIndexManagerTestsFW471 : MongoDBDriverIndexManagerTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     public MongoDBDriverIndexManagerTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)

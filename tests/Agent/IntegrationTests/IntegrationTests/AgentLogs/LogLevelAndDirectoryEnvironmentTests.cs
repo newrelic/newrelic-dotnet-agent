@@ -76,6 +76,7 @@ public abstract class LogLevelAndDirectoryEnvironmentTests<T> : NewRelicIntegrat
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class LogLevelAndDirectoryEnvironmentTestsFrameworkLatest : LogLevelAndDirectoryEnvironmentTests<ConsoleDynamicMethodFixtureFWLatest>
 {
     public LogLevelAndDirectoryEnvironmentTestsFrameworkLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)

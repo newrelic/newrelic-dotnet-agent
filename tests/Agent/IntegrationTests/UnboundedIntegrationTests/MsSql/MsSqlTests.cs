@@ -268,6 +268,7 @@ public abstract class MsSqlTestsBase<TFixture> : NewRelicIntegrationTest<TFixtur
 
 
 #region System.Data.SqlClient
+[Trait("Platform", "WindowsOnly")]
 public class MsSqlTests_SystemData_FWLatest : MsSqlTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public MsSqlTests_SystemData_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -283,6 +284,7 @@ public class MsSqlTests_SystemData_FWLatest : MsSqlTestsBase<ConsoleDynamicMetho
 
 #region Microsoft.Data.SqlClient
 
+[Trait("Platform", "WindowsOnly")]
 public class MsSqlTests_MicrosoftDataSqlClient_FWLatest : MsSqlTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public MsSqlTests_MicrosoftDataSqlClient_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -295,6 +297,7 @@ public class MsSqlTests_MicrosoftDataSqlClient_FWLatest : MsSqlTestsBase<Console
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class MsSqlTests_MicrosoftDataSqlClient_FW462 : MsSqlTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public MsSqlTests_MicrosoftDataSqlClient_FW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -335,6 +338,7 @@ public class MsSqlTests_MicrosoftDataSqlClient_CoreLatest : MsSqlTestsBase<Conso
 
 #region System.Data.Odbc
 
+[Trait("Platform", "WindowsOnly")]
 public class MsSqlTests_SystemDataOdbc_FWLatest : MsSqlTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public MsSqlTests_SystemDataOdbc_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -347,6 +351,7 @@ public class MsSqlTests_SystemDataOdbc_FWLatest : MsSqlTestsBase<ConsoleDynamicM
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class MsSqlTests_SystemDataOdbc_FW462 : MsSqlTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public MsSqlTests_SystemDataOdbc_FW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)

@@ -124,6 +124,7 @@ public abstract class MongoDBDriverDatabaseTestsBase<TFixture> : NewRelicIntegra
 
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class MongoDBDriverDatabaseTestsFWLatest : MongoDBDriverDatabaseTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public MongoDBDriverDatabaseTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -132,6 +133,7 @@ public class MongoDBDriverDatabaseTestsFWLatest : MongoDBDriverDatabaseTestsBase
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class MongoDBDriverDatabaseTestsFW48 : MongoDBDriverDatabaseTestsBase<ConsoleDynamicMethodFixtureFW48>
 {
     public MongoDBDriverDatabaseTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
@@ -140,6 +142,7 @@ public class MongoDBDriverDatabaseTestsFW48 : MongoDBDriverDatabaseTestsBase<Con
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class MongoDBDriverDatabaseTestsFW471 : MongoDBDriverDatabaseTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     public MongoDBDriverDatabaseTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)

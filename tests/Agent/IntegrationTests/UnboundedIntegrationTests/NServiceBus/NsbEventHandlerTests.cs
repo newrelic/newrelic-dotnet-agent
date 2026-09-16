@@ -85,6 +85,7 @@ public abstract class NsbEventHandlerTestsBase<TFixture> : NewRelicIntegrationTe
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class NsbEventHandlerTestsFW471 : NsbEventHandlerTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     public NsbEventHandlerTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -93,6 +94,7 @@ public class NsbEventHandlerTestsFW471 : NsbEventHandlerTestsBase<ConsoleDynamic
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class NsbEventHandlerTestsFW48 : NsbEventHandlerTestsBase<ConsoleDynamicMethodFixtureFW48>
 {
     public NsbEventHandlerTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
@@ -101,6 +103,7 @@ public class NsbEventHandlerTestsFW48 : NsbEventHandlerTestsBase<ConsoleDynamicM
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class NsbEventHandlerTestsFWLatest : NsbEventHandlerTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public NsbEventHandlerTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)

@@ -84,6 +84,7 @@ public abstract class LogLevelDenyListTestsBase<TFixture> : NewRelicIntegrationT
 }
 #region log4net
 
+[Trait("Platform", "WindowsOnly")]
 public class Log4NetLogLevelDenyListTestsFWLatestTests : LogLevelDenyListTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public Log4NetLogLevelDenyListTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -92,6 +93,7 @@ public class Log4NetLogLevelDenyListTestsFWLatestTests : LogLevelDenyListTestsBa
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class Log4NetLogLevelDenyListTestsFW471Tests : LogLevelDenyListTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     public Log4NetLogLevelDenyListTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -100,6 +102,7 @@ public class Log4NetLogLevelDenyListTestsFW471Tests : LogLevelDenyListTestsBase<
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class Log4NetLogLevelDenyListTestsFW462Tests : LogLevelDenyListTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public Log4NetLogLevelDenyListTestsFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -146,6 +149,7 @@ public class
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class
     MELLogLevelDenyListTestsFWLatestTests : LogLevelDenyListTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
@@ -160,6 +164,7 @@ public class
 
 #region Serilog
 
+[Trait("Platform", "WindowsOnly")]
 public class
     SerilogLogLevelDenyListTestsFWLatestTests : LogLevelDenyListTestsBase<
     ConsoleDynamicMethodFixtureFWLatest>
@@ -171,6 +176,7 @@ public class
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class
     SerilogLogLevelDenyListTestsFW471Tests : LogLevelDenyListTestsBase<
     ConsoleDynamicMethodFixtureFW471>
@@ -182,6 +188,7 @@ public class
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class
     SerilogLogLevelDenyListTestsFW462Tests : LogLevelDenyListTestsBase<
     ConsoleDynamicMethodFixtureFW462>
@@ -219,6 +226,7 @@ public class
 
 #region NLog
 
+[Trait("Platform", "WindowsOnly")]
 public class
     NLogLogLevelDenyListTestsFWLatestTests : LogLevelDenyListTestsBase<
     ConsoleDynamicMethodFixtureFWLatest>
@@ -230,6 +238,7 @@ public class
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class
     NLogLogLevelDenyListTestsFW471Tests : LogLevelDenyListTestsBase<
     ConsoleDynamicMethodFixtureFW471>
@@ -241,6 +250,7 @@ public class
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class
     NLogLogLevelDenyListTestsFW462Tests : LogLevelDenyListTestsBase<
     ConsoleDynamicMethodFixtureFW462>

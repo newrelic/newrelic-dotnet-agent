@@ -211,6 +211,7 @@ public abstract class OpenSearchTestsTestsBase<TFixture> : NewRelicIntegrationTe
 }
 
 #region OpenSearchClient
+[Trait("Platform", "WindowsOnly")]
 public class OpenSearchClientTestsFWLatest : OpenSearchTestsTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public OpenSearchClientTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -219,6 +220,7 @@ public class OpenSearchClientTestsFWLatest : OpenSearchTestsTestsBase<ConsoleDyn
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class OpenSearchClientTestsFW462 : OpenSearchTestsTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public OpenSearchClientTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)

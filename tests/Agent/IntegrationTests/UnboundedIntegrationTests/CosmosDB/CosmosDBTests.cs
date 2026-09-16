@@ -243,6 +243,7 @@ public abstract class CosmosDBTestsBase<TFixture> : NewRelicIntegrationTest<TFix
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class CosmosDBTestsFW462 : CosmosDBTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public CosmosDBTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -251,6 +252,7 @@ public class CosmosDBTestsFW462 : CosmosDBTestsBase<ConsoleDynamicMethodFixtureF
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class CosmosDBTestsFWLatest : CosmosDBTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public CosmosDBTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)

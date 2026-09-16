@@ -37,6 +37,7 @@ public abstract class MySqlDatabaseSwitchTestsBase<TFixture> : DatabaseSwitchTes
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class MySqlDatabaseSwitchTests_FWLatest : MySqlDatabaseSwitchTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public MySqlDatabaseSwitchTests_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)

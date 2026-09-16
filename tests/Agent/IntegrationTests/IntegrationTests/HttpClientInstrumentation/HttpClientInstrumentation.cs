@@ -145,6 +145,7 @@ public class HttpClientInstrumentationTests_NetCoreLatest : HttpClientInstrument
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class HttpClientInstrumentationTests_FW462 : HttpClientInstrumentationTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     protected override string ExpectedClassName { get { return LEGACY_CLASS_NAME; } }
@@ -156,6 +157,7 @@ public class HttpClientInstrumentationTests_FW462 : HttpClientInstrumentationTes
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class HttpClientInstrumentationTests_FW471 : HttpClientInstrumentationTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     protected override string ExpectedClassName { get { return LEGACY_CLASS_NAME; } }
@@ -167,6 +169,7 @@ public class HttpClientInstrumentationTests_FW471 : HttpClientInstrumentationTes
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class HttpClientInstrumentationTests_FW48 : HttpClientInstrumentationTestsBase<ConsoleDynamicMethodFixtureFW48>
 {
     protected override string ExpectedClassName { get { return LEGACY_CLASS_NAME; } }
@@ -178,6 +181,7 @@ public class HttpClientInstrumentationTests_FW48 : HttpClientInstrumentationTest
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class HttpClientInstrumentationTests_FWLatest : HttpClientInstrumentationTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     protected override string ExpectedClassName { get { return LEGACY_CLASS_NAME; } }

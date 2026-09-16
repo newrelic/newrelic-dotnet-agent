@@ -119,6 +119,7 @@ public class OpenTelemetryMetricsExportConfigurationInvalidIntervalEqualsTimeout
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class OpenTelemetryMetricsExportConfigurationValidTests : OpenTelemetryMetricsExportConfigurationTestsBase<OtlpMetricsWithCollectorFixtureFW472>
 {
     public OpenTelemetryMetricsExportConfigurationValidTests(OtlpMetricsWithCollectorFixtureFW472 fixture, ITestOutputHelper outputHelper) 

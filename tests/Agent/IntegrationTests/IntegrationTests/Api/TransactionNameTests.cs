@@ -50,6 +50,7 @@ public abstract class TransactionNameTests<TFixture> : NewRelicIntegrationTest<T
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class TransactionNameTestsFW : TransactionNameTests<ConsoleDynamicMethodFixtureFWLatest>
 {
     public TransactionNameTestsFW(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)

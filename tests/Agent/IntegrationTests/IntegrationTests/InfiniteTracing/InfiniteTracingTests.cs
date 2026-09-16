@@ -66,6 +66,7 @@ public abstract class InfiniteTracingTestsBase<TFixture> : NewRelicIntegrationTe
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class InfiniteTracingFWLatestTests : InfiniteTracingTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public InfiniteTracingFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -75,6 +76,7 @@ public class InfiniteTracingFWLatestTests : InfiniteTracingTestsBase<ConsoleDyna
 }
 
 
+[Trait("Platform", "WindowsOnly")]
 public class InfiniteTracingFW471Tests : InfiniteTracingTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     public InfiniteTracingFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -83,6 +85,7 @@ public class InfiniteTracingFW471Tests : InfiniteTracingTestsBase<ConsoleDynamic
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class InfiniteTracingFW462Tests : InfiniteTracingTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public InfiniteTracingFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)

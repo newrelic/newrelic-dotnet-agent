@@ -99,6 +99,7 @@ public abstract class InvokeLambdaTestBase<TFixture> : NewRelicIntegrationTest<T
         }
     }
 }
+[Trait("Platform", "WindowsOnly")]
 public class InvokeLambdaTest_Sync_FW462 : InvokeLambdaTestBase<ConsoleDynamicMethodFixtureFW462>
 {
     public InvokeLambdaTest_Sync_FW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -106,6 +107,7 @@ public class InvokeLambdaTest_Sync_FW462 : InvokeLambdaTestBase<ConsoleDynamicMe
     {
     }
 }
+[Trait("Platform", "WindowsOnly")]
 public class InvokeLambdaTest_Sync_FWLatest : InvokeLambdaTestBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public InvokeLambdaTest_Sync_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)

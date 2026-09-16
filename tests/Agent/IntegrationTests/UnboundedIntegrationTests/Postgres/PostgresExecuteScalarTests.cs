@@ -122,6 +122,7 @@ public abstract class PostgresSqlExecuteScalarTestsBase<TFixture> : NewRelicInte
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class PostgresSqlExecuteScalarTestsFW462 : PostgresSqlExecuteScalarTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public PostgresSqlExecuteScalarTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -130,6 +131,7 @@ public class PostgresSqlExecuteScalarTestsFW462 : PostgresSqlExecuteScalarTestsB
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class PostgresSqlExecuteScalarTestsFWLatest : PostgresSqlExecuteScalarTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public PostgresSqlExecuteScalarTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)

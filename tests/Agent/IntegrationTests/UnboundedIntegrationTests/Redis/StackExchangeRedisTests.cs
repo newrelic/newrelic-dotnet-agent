@@ -124,6 +124,7 @@ public abstract class StackExchangeRedisTestsBase<TFixture> : NewRelicIntegratio
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class StackExchangeRedisTestsFW462 : StackExchangeRedisTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public StackExchangeRedisTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -132,6 +133,7 @@ public class StackExchangeRedisTestsFW462 : StackExchangeRedisTestsBase<ConsoleD
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class StackExchangeRedisTestsFW471 : StackExchangeRedisTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     public StackExchangeRedisTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -140,6 +142,7 @@ public class StackExchangeRedisTestsFW471 : StackExchangeRedisTestsBase<ConsoleD
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class StackExchangeRedisTestsFW48 : StackExchangeRedisTestsBase<ConsoleDynamicMethodFixtureFW48>
 {
     public StackExchangeRedisTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -148,6 +151,7 @@ public class StackExchangeRedisTestsFW48 : StackExchangeRedisTestsBase<ConsoleDy
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class StackExchangeRedisTestsFWLatest : StackExchangeRedisTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public StackExchangeRedisTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)

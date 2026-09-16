@@ -90,6 +90,7 @@ public abstract class MassTransitTestsBase<TFixture> : NewRelicIntegrationTest<T
 }
 
 // Tests using StartHost (hosted service configuration method)
+[Trait("Platform", "WindowsOnly")]
 public class MassTransitTests_StartHost_FW462 : MassTransitTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public MassTransitTests_StartHost_FW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -97,6 +98,7 @@ public class MassTransitTests_StartHost_FW462 : MassTransitTestsBase<ConsoleDyna
     {
     }
 }
+[Trait("Platform", "WindowsOnly")]
 public class MassTransitTests_StartHost_FWLatest : MassTransitTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public MassTransitTests_StartHost_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -120,6 +122,7 @@ public class MassTransitTests_StartHost_CoreLatest : MassTransitTestsBase<Consol
 }
 
 // Tests using StartBus (bus factory configuration method)
+[Trait("Platform", "WindowsOnly")]
 public class MassTransitTests_StartBus_FW462 : MassTransitTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public MassTransitTests_StartBus_FW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -127,6 +130,7 @@ public class MassTransitTests_StartBus_FW462 : MassTransitTestsBase<ConsoleDynam
     {
     }
 }
+[Trait("Platform", "WindowsOnly")]
 public class MassTransitTests_StartBus_FWLatest : MassTransitTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public MassTransitTests_StartBus_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)

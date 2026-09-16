@@ -12,6 +12,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.Errors;
 
+[Trait("Platform", "WindowsOnly")]
 public class ErrorTraceWebApi : NewRelicIntegrationTest<RemoteServiceFixtures.OwinWebApiFixture>
 {
     private readonly RemoteServiceFixtures.OwinWebApiFixture _fixture;

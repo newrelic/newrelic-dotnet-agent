@@ -130,6 +130,7 @@ public abstract class AppDomainCachingTestsBase<TFixture> : NewRelicIntegrationT
 }
 
 #region Enabled (not disabled) tests
+[Trait("Platform", "WindowsOnly")]
 public class AppDomainCachingEnabledTestsFWLatestTests : AppDomainCachingTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public AppDomainCachingEnabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -148,6 +149,7 @@ public class AppDomainCachingEnabledTestsNetCoreLatestTests : AppDomainCachingTe
 #endregion
 
 #region Disabled tests
+[Trait("Platform", "WindowsOnly")]
 public class AppDomainCachingDisabledTestsFWLatestTests : AppDomainCachingTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public AppDomainCachingDisabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)

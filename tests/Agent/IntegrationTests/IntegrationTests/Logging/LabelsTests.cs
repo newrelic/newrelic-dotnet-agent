@@ -103,6 +103,7 @@ public abstract class LabelsTestsBase<TFixture> : NewRelicIntegrationTest<TFixtu
 
 #region Serilog
 
+[Trait("Platform", "WindowsOnly")]
 public class SerilogLabelsEnabledFWLatestTests : LabelsTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public SerilogLabelsEnabledFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -111,6 +112,7 @@ public class SerilogLabelsEnabledFWLatestTests : LabelsTestsBase<ConsoleDynamicM
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class SerilogLabelsEnabledWithExcludesFWLatestTests : LabelsTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public SerilogLabelsEnabledWithExcludesFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -119,6 +121,7 @@ public class SerilogLabelsEnabledWithExcludesFWLatestTests : LabelsTestsBase<Con
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class SerilogLabelsDisabledFWLatestTests : LabelsTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public SerilogLabelsDisabledFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)

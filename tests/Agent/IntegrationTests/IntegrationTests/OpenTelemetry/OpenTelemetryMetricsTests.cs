@@ -134,6 +134,7 @@ public class OpenTelemetryMetricsTestsCoreNet8 : OpenTelemetryMetricsTestsBase<O
 }
 
 // Net472 test targets DiagnosticSource v8.x
+[Trait("Platform", "WindowsOnly")]
 public class OpenTelemetryMetricsTestsFw472 : OpenTelemetryMetricsTestsBase<OtlpMetricsWithCollectorFixtureFW472>
 {
     public OpenTelemetryMetricsTestsFw472(OtlpMetricsWithCollectorFixtureFW472 fixture, ITestOutputHelper outputHelper) : base(fixture, outputHelper) { }
@@ -142,6 +143,7 @@ public class OpenTelemetryMetricsTestsFw472 : OpenTelemetryMetricsTestsBase<Otlp
 }
 
 // Net481 test targets DiagnosticSource v9.x
+[Trait("Platform", "WindowsOnly")]
 public class OpenTelemetryMetricsTestsFw481 : OpenTelemetryMetricsTestsBase<OtlpMetricsWithCollectorFixtureFW481>
 {
     public OpenTelemetryMetricsTestsFw481(OtlpMetricsWithCollectorFixtureFW481 fixture, ITestOutputHelper outputHelper) : base(fixture, outputHelper) { }

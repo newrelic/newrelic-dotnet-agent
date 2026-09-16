@@ -52,6 +52,7 @@ public abstract class ConsoleLoggingTestsBase<TFixture> : NewRelicIntegrationTes
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class ConsoleLoggingFWLatestTests : ConsoleLoggingTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public ConsoleLoggingFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -60,6 +61,7 @@ public class ConsoleLoggingFWLatestTests : ConsoleLoggingTestsBase<ConsoleDynami
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class ConsoleLoggingFW462Tests : ConsoleLoggingTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public ConsoleLoggingFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)

@@ -11,6 +11,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.Api;
 
+[Trait("Platform", "WindowsOnly")]
 public class AgentApiTests : NewRelicIntegrationTest<RemoteServiceFixtures.AgentApiExecutor>
 {
 

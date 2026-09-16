@@ -163,6 +163,7 @@ public class AzureOpenAITests_CoreOldest : AzureOpenAITestsBase<ConsoleDynamicMe
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class AzureOpenAITests_FWLatest : AzureOpenAITestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public AzureOpenAITests_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)

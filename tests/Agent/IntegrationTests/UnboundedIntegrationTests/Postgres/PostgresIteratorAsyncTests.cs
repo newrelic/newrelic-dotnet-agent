@@ -103,6 +103,7 @@ public abstract class PostgresSqlIteratorAsyncTestsBase<TFixture> : NewRelicInte
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class PostgresSqlIteratorAsyncTestsFW462 : PostgresSqlIteratorAsyncTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public PostgresSqlIteratorAsyncTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -111,6 +112,7 @@ public class PostgresSqlIteratorAsyncTestsFW462 : PostgresSqlIteratorAsyncTestsB
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class PostgresSqlIteratorAsyncTestsFWLatest : PostgresSqlIteratorAsyncTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     // Npgsql 8.x async read path yields 2 Iterate rollups instead of 3 (see base class).

@@ -73,6 +73,7 @@ public abstract class ChangeLogFilenameTestsBase : NewRelicIntegrationTest<Remot
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class ChangeLogFilenameInConfigTests : ChangeLogFilenameTestsBase
 {
     public ChangeLogFilenameInConfigTests(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output) : base(fixture, output, ConfigSettingTestCase.ConfigFile)
@@ -80,6 +81,7 @@ public class ChangeLogFilenameInConfigTests : ChangeLogFilenameTestsBase
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class ChangeLogFilenameWithEnvVarTests : ChangeLogFilenameTestsBase
 {
     public ChangeLogFilenameWithEnvVarTests(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output) : base(fixture, output, ConfigSettingTestCase.EnvVar)
@@ -87,6 +89,7 @@ public class ChangeLogFilenameWithEnvVarTests : ChangeLogFilenameTestsBase
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class ChangeLogFilenameInBothTests : ChangeLogFilenameTestsBase
 {
     public ChangeLogFilenameInBothTests(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output) : base(fixture, output, ConfigSettingTestCase.Both)

@@ -335,6 +335,7 @@ public abstract class MetricsAndForwardingTestsBase<TFixture> : NewRelicIntegrat
 
 #region log4net
 
+[Trait("Platform", "WindowsOnly")]
 public class Log4NetMetricsAndForwardingTestsFWLatestTests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public Log4NetMetricsAndForwardingTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -343,6 +344,7 @@ public class Log4NetMetricsAndForwardingTestsFWLatestTests : MetricsAndForwardin
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class Log4NetMetricsAndForwardingTestsFW471Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     public Log4NetMetricsAndForwardingTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -351,6 +353,7 @@ public class Log4NetMetricsAndForwardingTestsFW471Tests : MetricsAndForwardingTe
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class Log4NetMetricsAndForwardingTestsFW462Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public Log4NetMetricsAndForwardingTestsFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -397,6 +400,7 @@ public class
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class
     MELMetricsAndForwardingTestsFWLatestTests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
@@ -411,6 +415,7 @@ public class
 
 #region Serilog
 
+[Trait("Platform", "WindowsOnly")]
 public class
     SerilogMetricsAndForwardingTestsFWLatestTests : MetricsAndForwardingTestsBase<
     ConsoleDynamicMethodFixtureFWLatest>
@@ -422,6 +427,7 @@ public class
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class
     SerilogMetricsAndForwardingTestsFW471Tests : MetricsAndForwardingTestsBase<
     ConsoleDynamicMethodFixtureFW471>
@@ -433,6 +439,7 @@ public class
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class
     SerilogMetricsAndForwardingTestsFW462Tests : MetricsAndForwardingTestsBase<
     ConsoleDynamicMethodFixtureFW462>
@@ -470,6 +477,7 @@ public class
 
 #region NLog
 
+[Trait("Platform", "WindowsOnly")]
 public class
     NLogMetricsAndForwardingTestsFWLatestTests : MetricsAndForwardingTestsBase<
     ConsoleDynamicMethodFixtureFWLatest>
@@ -481,6 +489,7 @@ public class
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class
     NLogMetricsAndForwardingTestsFW471Tests : MetricsAndForwardingTestsBase<
     ConsoleDynamicMethodFixtureFW471>
@@ -492,6 +501,7 @@ public class
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class
     NLogMetricsAndForwardingTestsFW462Tests : MetricsAndForwardingTestsBase<
     ConsoleDynamicMethodFixtureFW462>
