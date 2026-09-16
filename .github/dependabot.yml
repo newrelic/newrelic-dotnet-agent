@@ -24,18 +24,21 @@ updates:
         patterns:
           - "*"
 
-# Docker can't be updated until we modernize the profiler build process
-#  - package-ecosystem: docker
-#    directories: 
-#      - "/src/Agent/NewRelic/Profiler/linux"
-#      - "/build/**/"
-#      - "/deploy/**/"
-#    schedule:
-#      interval: monthly
-#    groups:
-#      docker:
-#        patterns:
-#          - "*"
+  # Linux package build, deploy, and post-deploy validation images. The profiler
+  # build image (/src/Agent/NewRelic/Profiler/linux) is excluded on purpose: its
+  # base image fixes the shipped profiler's glibc floor -- see that dir's README.
+  - package-ecosystem: docker
+    directories:
+      - "/build/**/"
+      - "/deploy/**/"
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: "chore(deps):"
+    groups:
+      docker:
+        patterns:
+          - "*"
 
   # Update all NuGet packages used by core agent projects. Under CPM, dependabot
   # updates the central Directory.Packages.props via any in-scope project that
