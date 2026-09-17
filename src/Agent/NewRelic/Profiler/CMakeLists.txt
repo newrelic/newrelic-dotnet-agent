@@ -51,8 +51,14 @@ else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -fno-strict-aliasing -Wno-invalid-noreturn -Wno-ignored-attributes -Wno-macro-redefined -fms-extensions -fdeclspec -fPIC -fdelayed-template-parsing")
     set(CMAKE_SHARED_LINKER_FLAGS "-static-libstdc++ -static-libgcc -Wl,-z,lazy")
   else()
-    # glibc path: unchanged from historical build to preserve byte-for-byte
-    # build behaviour.
+    # glibc path: pinned to C++11 (unlike Windows/musl, which are C++14 -- see
+    # Directory.Build.props). This is NOT an oversight: this path builds with
+    # -stdlib=libc++, and libc++ under C++14 provides std::make_unique
+    # natively, which collides with the shim in Common/xplat.h (gated on
+    # _LIBCPP_VERSION, not on language-standard version). Bumping this to
+    # C++14 fails with "call to 'make_unique' is ambiguous" across every
+    # xplat.h include site. Do not raise this without first fixing the
+    # xplat.h shim's gating condition.
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fno-strict-aliasing -stdlib=libc++ -Wno-invalid-noreturn -Wno-ignored-attributes -Wno-macro-redefined -fms-extensions -fdeclspec -fPIC")
     set(CMAKE_SHARED_LINKER_FLAGS "-static-libstdc++")
   endif()
@@ -61,6 +67,12 @@ endif()
 file(GLOB SOURCES
   "${CORECLR_HEADERS}/src/inc/corhlpr.cpp"
   "Common/*.cpp"
+  # ContinuousProfiler/ is header-only today, so this glob currently matches zero files. CP code still
+  # reaches this binary: EntryPoint.cpp (matched by the Profiler/*.cpp glob below) includes
+  # ClassFactory.hpp -> CorProfilerCallbackImpl.h -> ContinuousProfiler.h, pulling every CP header in as
+  # inline code compiled into EntryPoint.cpp's translation unit. This line is kept as future-proofing --
+  # harmless now, and picks up any .cpp CP ever adds without a separate CMakeLists.txt edit.
+  "ContinuousProfiler/*.cpp"
   "Logging/*.cpp"
   "MethodRewriter/*.cpp"
   "ProfiledMethods/*.cpp"

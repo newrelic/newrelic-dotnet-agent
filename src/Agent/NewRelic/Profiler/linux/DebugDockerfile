@@ -20,6 +20,7 @@ RUN DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y install tzdata
 
 RUN apt-get install -y \
   cmake llvm-7 clang-7 lldb-7 liblldb-7-dev libunwind8 libunwind8-dev gettext libicu-dev liblttng-ust-dev libcurl4-openssl-dev libssl-dev libnuma-dev libkrb5-dev \
+  binutils \
   libc++-dev \
   uuid-dev \
   zlib1g-dev \
