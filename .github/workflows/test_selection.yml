@@ -165,7 +165,9 @@ jobs:
             "Core/amd64",
             "Messaging/amd64",
             "Aws/amd64",
-            "Datastore/amd64"
+            "Datastore/amd64",
+            "ContinuousProfiling/amd64",
+            "ContinuousProfiling/arm64"
           ]'
 
           if [ "$MODE" = "all" ]; then

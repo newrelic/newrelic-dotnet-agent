@@ -80,7 +80,9 @@ jobs:
             {"arch":"amd64","name":"Core","runner":"ubuntu-latest","filter":"Architecture=amd64&TestArea=Core"},
             {"arch":"amd64","name":"Messaging","runner":"ubuntu-latest","filter":"Architecture=amd64&TestArea=Messaging"},
             {"arch":"amd64","name":"Aws","runner":"ubuntu-latest","filter":"Architecture=amd64&TestArea=Aws"},
-            {"arch":"amd64","name":"Datastore","runner":"ubuntu-latest","filter":"Architecture=amd64&TestArea=Datastore"}
+            {"arch":"amd64","name":"Datastore","runner":"ubuntu-latest","filter":"Architecture=amd64&TestArea=Datastore"},
+            {"arch":"amd64","name":"ContinuousProfiling","runner":"ubuntu-latest","filter":"Architecture=amd64&TestArea=ContinuousProfiling"},
+            {"arch":"arm64","name":"ContinuousProfiling","runner":"ubuntu-24.04-arm","filter":"Architecture=arm64&TestArea=ContinuousProfiling"}
           ]'
 
           requested=$(jq -Rc 'split(",") | map(gsub("^[ \t]+|[ \t]+$"; "")) | map(select(length > 0))' <<< "$REQUESTED_GROUPS")

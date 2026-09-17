@@ -26,4 +26,10 @@ public class AspNetCoreWebApiWithCollectorFixture : MockNewRelicFixture
         var address = $"http://{DestinationServerName}:{Port}/api/default/AwesomeName";
         GetStringAndAssertContains(address, "Chuck Norris");
     }
+
+    public void BurnCpu(int seconds = 8)
+    {
+        var address = $"http://{DestinationServerName}:{Port}/api/default/BurnCpu?seconds={seconds}";
+        GetStringAndAssertContains(address, "burned cpu");
+    }
 }
