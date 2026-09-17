@@ -90,6 +90,86 @@ public class LinuxNativeMethods : INativeMethods
     {
         ExternShutdownThreadProfiler();
     }
+
+    [DllImport(DllName, EntryPoint = "ContinuousProfilerStart", CallingConvention = CallingConvention.Cdecl)]
+    private static extern int ExternContinuousProfilerStart(int intervalMs);
+
+    [DllImport(DllName, EntryPoint = "ContinuousProfilerStop", CallingConvention = CallingConvention.Cdecl)]
+    private static extern int ExternContinuousProfilerStop();
+
+    [DllImport(DllName, EntryPoint = "ContinuousProfilerReadThreadSamples", CallingConvention = CallingConvention.Cdecl)]
+    private static extern int ExternContinuousProfilerReadThreadSamples(int len, byte[] buffer);
+
+    [DllImport(DllName, EntryPoint = "ContinuousProfilerSetTraceContext", CallingConvention = CallingConvention.Cdecl)]
+    private static extern int ExternContinuousProfilerSetTraceContext(long traceIdHigh, long traceIdLow, long spanId);
+
+    [DllImport(DllName, EntryPoint = "ContinuousProfilerResetTraceContext", CallingConvention = CallingConvention.Cdecl)]
+    private static extern int ExternContinuousProfilerResetTraceContext();
+
+    [DllImport(DllName, EntryPoint = "ContinuousProfilerRetireSpans", CallingConvention = CallingConvention.Cdecl)]
+    private static extern int ExternContinuousProfilerRetireSpans(long[] spanIds, int count);
+
+    [DllImport(DllName, EntryPoint = "ContinuousProfilerGetPendingPushCell", CallingConvention = CallingConvention.Cdecl)]
+    private static extern int ExternContinuousProfilerGetPendingPushCell([Out] out IntPtr cell);
+
+    [DllImport(DllName, EntryPoint = "ContinuousProfilerSetAgentWork", CallingConvention = CallingConvention.Cdecl)]
+    private static extern int ExternContinuousProfilerSetAgentWork();
+
+    [DllImport(DllName, EntryPoint = "ContinuousProfilerResetAgentWork", CallingConvention = CallingConvention.Cdecl)]
+    private static extern int ExternContinuousProfilerResetAgentWork();
+
+    [DllImport(DllName, EntryPoint = "ContinuousProfilerShutdown", CallingConvention = CallingConvention.Cdecl)]
+    private static extern int ExternContinuousProfilerShutdown();
+
+    public int ContinuousProfilerStart(int intervalMs)
+    {
+        return ExternContinuousProfilerStart(intervalMs);
+    }
+
+    public int ContinuousProfilerStop()
+    {
+        return ExternContinuousProfilerStop();
+    }
+
+    public int ContinuousProfilerReadThreadSamples(int len, byte[] buffer)
+    {
+        return ExternContinuousProfilerReadThreadSamples(len, buffer);
+    }
+
+    public int ContinuousProfilerSetTraceContext(long traceIdHigh, long traceIdLow, long spanId)
+    {
+        return ExternContinuousProfilerSetTraceContext(traceIdHigh, traceIdLow, spanId);
+    }
+
+    public int ContinuousProfilerResetTraceContext()
+    {
+        return ExternContinuousProfilerResetTraceContext();
+    }
+
+    public int ContinuousProfilerRetireSpans(long[] spanIds, int count)
+    {
+        return ExternContinuousProfilerRetireSpans(spanIds, count);
+    }
+
+    public int ContinuousProfilerGetPendingPushCell(out IntPtr cell)
+    {
+        return ExternContinuousProfilerGetPendingPushCell(out cell);
+    }
+
+    public int ContinuousProfilerSetAgentWork()
+    {
+        return ExternContinuousProfilerSetAgentWork();
+    }
+
+    public int ContinuousProfilerResetAgentWork()
+    {
+        return ExternContinuousProfilerResetAgentWork();
+    }
+
+    public int ContinuousProfilerShutdown()
+    {
+        return ExternContinuousProfilerShutdown();
+    }
 }
 
 public class WindowsNativeMethods : INativeMethods
@@ -175,5 +255,85 @@ public class WindowsNativeMethods : INativeMethods
     public void ShutdownNativeThreadProfiler()
     {
         ExternShutdownThreadProfiler();
+    }
+
+    [DllImport(DllName, EntryPoint = "ContinuousProfilerStart", CallingConvention = CallingConvention.Cdecl)]
+    private static extern int ExternContinuousProfilerStart(int intervalMs);
+
+    [DllImport(DllName, EntryPoint = "ContinuousProfilerStop", CallingConvention = CallingConvention.Cdecl)]
+    private static extern int ExternContinuousProfilerStop();
+
+    [DllImport(DllName, EntryPoint = "ContinuousProfilerReadThreadSamples", CallingConvention = CallingConvention.Cdecl)]
+    private static extern int ExternContinuousProfilerReadThreadSamples(int len, byte[] buffer);
+
+    [DllImport(DllName, EntryPoint = "ContinuousProfilerSetTraceContext", CallingConvention = CallingConvention.Cdecl)]
+    private static extern int ExternContinuousProfilerSetTraceContext(long traceIdHigh, long traceIdLow, long spanId);
+
+    [DllImport(DllName, EntryPoint = "ContinuousProfilerResetTraceContext", CallingConvention = CallingConvention.Cdecl)]
+    private static extern int ExternContinuousProfilerResetTraceContext();
+
+    [DllImport(DllName, EntryPoint = "ContinuousProfilerRetireSpans", CallingConvention = CallingConvention.Cdecl)]
+    private static extern int ExternContinuousProfilerRetireSpans(long[] spanIds, int count);
+
+    [DllImport(DllName, EntryPoint = "ContinuousProfilerGetPendingPushCell", CallingConvention = CallingConvention.Cdecl)]
+    private static extern int ExternContinuousProfilerGetPendingPushCell([Out] out IntPtr cell);
+
+    [DllImport(DllName, EntryPoint = "ContinuousProfilerSetAgentWork", CallingConvention = CallingConvention.Cdecl)]
+    private static extern int ExternContinuousProfilerSetAgentWork();
+
+    [DllImport(DllName, EntryPoint = "ContinuousProfilerResetAgentWork", CallingConvention = CallingConvention.Cdecl)]
+    private static extern int ExternContinuousProfilerResetAgentWork();
+
+    [DllImport(DllName, EntryPoint = "ContinuousProfilerShutdown", CallingConvention = CallingConvention.Cdecl)]
+    private static extern int ExternContinuousProfilerShutdown();
+
+    public int ContinuousProfilerStart(int intervalMs)
+    {
+        return ExternContinuousProfilerStart(intervalMs);
+    }
+
+    public int ContinuousProfilerStop()
+    {
+        return ExternContinuousProfilerStop();
+    }
+
+    public int ContinuousProfilerReadThreadSamples(int len, byte[] buffer)
+    {
+        return ExternContinuousProfilerReadThreadSamples(len, buffer);
+    }
+
+    public int ContinuousProfilerSetTraceContext(long traceIdHigh, long traceIdLow, long spanId)
+    {
+        return ExternContinuousProfilerSetTraceContext(traceIdHigh, traceIdLow, spanId);
+    }
+
+    public int ContinuousProfilerResetTraceContext()
+    {
+        return ExternContinuousProfilerResetTraceContext();
+    }
+
+    public int ContinuousProfilerRetireSpans(long[] spanIds, int count)
+    {
+        return ExternContinuousProfilerRetireSpans(spanIds, count);
+    }
+
+    public int ContinuousProfilerGetPendingPushCell(out IntPtr cell)
+    {
+        return ExternContinuousProfilerGetPendingPushCell(out cell);
+    }
+
+    public int ContinuousProfilerSetAgentWork()
+    {
+        return ExternContinuousProfilerSetAgentWork();
+    }
+
+    public int ContinuousProfilerResetAgentWork()
+    {
+        return ExternContinuousProfilerResetAgentWork();
+    }
+
+    public int ContinuousProfilerShutdown()
+    {
+        return ExternContinuousProfilerShutdown();
     }
 }
