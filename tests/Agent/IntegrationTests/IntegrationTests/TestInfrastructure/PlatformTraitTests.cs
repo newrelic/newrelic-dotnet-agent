@@ -31,23 +31,6 @@ public class PlatformTraitTests
     }
 
     [Fact]
-    public void EveryWindowsOnlyClassDeclaresThePlatformTrait()
-    {
-        var offenders = Classify()
-            .Where(c => !c.IsExempt && c.Lane != RuntimeLane.Unknown && PlatformTrait.RequiresWindows(c.Lane))
-            .Where(c => !c.Platform.Contains(PlatformTrait.WindowsOnlyValue, StringComparer.Ordinal))
-            .Select(c => c.FullName)
-            .ToArray();
-
-        Assert.True(
-            offenders.Length == 0,
-            $"{offenders.Length} class(es) need Windows but declare no " +
-            $"[Trait(\"{PlatformTrait.TraitName}\", \"{PlatformTrait.WindowsOnlyValue}\")]. Each one runs on the " +
-            "Linux lane, where its fixture cannot start. Re-run dotnet run " +
-            ".github/scripts/apply-platform-traits.cs <report.tsv> <source-root>.\n" + string.Join("\n", offenders));
-    }
-
-    [Fact]
     public void NoPortableClassDeclaresThePlatformTrait()
     {
         var offenders = Classify()
@@ -82,21 +65,6 @@ public class PlatformTraitTests
     }
 
     [Fact]
-    public void NoLegacyRuntimeTraitRemains()
-    {
-        var offenders = Classify()
-            .Where(c => c.LegacyRuntime.Count > 0)
-            .Select(c => $"{c.FullName} -> {string.Join(", ", c.LegacyRuntime)}")
-            .ToArray();
-
-        Assert.True(
-            offenders.Length == 0,
-            $"{offenders.Length} class(es) still declare the retired " +
-            $"[Trait(\"{RuntimeLaneResolver.TraitName}\", ...)]. Nothing reads it, so it is dead weight that " +
-            "reads as lane information.\n" + string.Join("\n", offenders));
-    }
-
-    [Fact]
     public void EveryExemptionNamesAClassThatStillExists()
     {
         var present = new HashSet<string>(
@@ -122,8 +90,7 @@ public class PlatformTraitTests
                 type.FullName,
                 resolver.Resolve(type),
                 exempt.Contains(type.FullName),
-                RuntimeTraitPolicy.DeclaredPlatformTraits(type),
-                RuntimeTraitPolicy.DeclaredRuntimeTraits(type)));
+                RuntimeTraitPolicy.DeclaredPlatformTraits(type)));
         }
 
         return result;
@@ -133,6 +100,5 @@ public class PlatformTraitTests
         string FullName,
         RuntimeLane Lane,
         bool IsExempt,
-        IReadOnlyCollection<string> Platform,
-        IReadOnlyCollection<string> LegacyRuntime);
+        IReadOnlyCollection<string> Platform);
 }

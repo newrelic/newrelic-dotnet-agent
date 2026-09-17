@@ -52,21 +52,6 @@ public static class RuntimeTraitPolicy
     }
 
     /// <summary>
-    /// The Runtime trait values declared on a class. AttributeUsage on
-    /// TraitAttribute is Inherited=True and AllowMultiple=True, so read the
-    /// effective set with inherit: true.
-    /// </summary>
-    public static IReadOnlyCollection<string> DeclaredRuntimeTraits(Type testClass)
-    {
-        return testClass.GetCustomAttributes<TraitAttribute>(inherit: true)
-            .Where(t => string.Equals(t.Name, RuntimeLaneResolver.TraitName, StringComparison.Ordinal))
-            .Select(t => t.Value)
-            .Distinct(StringComparer.Ordinal)
-            .OrderBy(v => v, StringComparer.Ordinal)
-            .ToArray();
-    }
-
-    /// <summary>
     /// The Platform trait values declared on a class. Read with inherit: true,
     /// because an inherited WindowsOnly cannot be cancelled by a derived class.
     /// </summary>
