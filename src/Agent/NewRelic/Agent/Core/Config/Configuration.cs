@@ -87,6 +87,8 @@ namespace NewRelic.Agent.Core.Config
         
         private List<string> threadProfilingField;
         
+        private configurationProfiling profilingField;
+        
         private string labelsField;
         
         private List<configurationAdd> appSettingsField;
@@ -133,6 +135,7 @@ namespace NewRelic.Agent.Core.Config
             this.processHostField = new configurationProcessHost();
             this.utilizationField = new configurationUtilization();
             this.appSettingsField = new List<configurationAdd>();
+            this.profilingField = new configurationProfiling();
             this.threadProfilingField = new List<string>();
             this.applicationLoggingField = new configurationApplicationLogging();
             this.aiMonitoringField = new configurationAiMonitoring();
@@ -544,6 +547,18 @@ namespace NewRelic.Agent.Core.Config
             set
             {
                 this.threadProfilingField = value;
+            }
+        }
+        
+        public configurationProfiling profiling
+        {
+            get
+            {
+                return this.profilingField;
+            }
+            set
+            {
+                this.profilingField = value;
             }
         }
         
@@ -6305,6 +6320,99 @@ namespace NewRelic.Agent.Core.Config
         public virtual configurationApplicationLoggingLocalDecorating Clone()
         {
             return ((configurationApplicationLoggingLocalDecorating)(this.MemberwiseClone()));
+        }
+        #endregion
+    }
+    
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Xsd2Code", "3.6.0.20097")]
+    [System.SerializableAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true, Namespace="urn:newrelic-config")]
+    public partial class configurationProfiling
+    {
+        
+        private bool enabledField;
+        
+        private string includeField;
+        
+        private int delayField;
+        
+        private int durationField;
+        
+        /// <summary>
+        /// configurationProfiling class constructor
+        /// </summary>
+        public configurationProfiling()
+        {
+            this.enabledField = false;
+            this.includeField = "all";
+            this.delayField = 0;
+            this.durationField = 0;
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(false)]
+        public bool enabled
+        {
+            get
+            {
+                return this.enabledField;
+            }
+            set
+            {
+                this.enabledField = value;
+            }
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute("all")]
+        public string include
+        {
+            get
+            {
+                return this.includeField;
+            }
+            set
+            {
+                this.includeField = value;
+            }
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(0)]
+        public int delay
+        {
+            get
+            {
+                return this.delayField;
+            }
+            set
+            {
+                this.delayField = value;
+            }
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(0)]
+        public int duration
+        {
+            get
+            {
+                return this.durationField;
+            }
+            set
+            {
+                this.durationField = value;
+            }
+        }
+        
+        #region Clone method
+        /// <summary>
+        /// Create a clone of this configurationProfiling object
+        /// </summary>
+        public virtual configurationProfiling Clone()
+        {
+            return ((configurationProfiling)(this.MemberwiseClone()));
         }
         #endregion
     }

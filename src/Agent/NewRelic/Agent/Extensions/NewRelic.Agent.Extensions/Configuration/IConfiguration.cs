@@ -292,4 +292,44 @@ public interface IConfiguration
     #endregion
 
     bool HybridHttpContextStorageEnabled { get; }
+
+    /// <summary>
+    /// Gets whether continuous profiling is enabled. Defaults to false.
+    /// </summary>
+    bool ContinuousProfilingEnabled { get; }
+
+    /// <summary>
+    /// Gets the continuous profiling sampling interval in milliseconds, clamped to [1000, 60000]. Defaults to 10000.
+    /// </summary>
+    int ContinuousProfilingSamplingIntervalMs { get; }
+
+    /// <summary>
+    /// Gets whether continuous profiling includes New Relic agent code (samples whose stack is the agent's own
+    /// threads/frames). Defaults to false, so detected agent-internal samples are dropped from the profile.
+    /// Note: frame-text matching cannot catch every agent-owned sample -- agent threads parked in runtime/BCL
+    /// code with no agent-core frame on the walked stack are not detected (measured ~25-31% recall; a
+    /// thread-identity-based filter is the tracked follow-up). Enabled via the undocumented appSettings key
+    /// "NewRelic.ContinuousProfilingIncludeAgentCode" (deliberately NOT in the XSD). Temporary stand-in until
+    /// the CP UI ships a self-frames filter (like the thread profiler's).
+    /// </summary>
+    bool ContinuousProfilingIncludeAgentCode { get; }
+
+    /// <summary>
+    /// Gets the delay, in milliseconds, before continuous profiling auto-starts locally once enabled.
+    /// Defaults to 0 (start immediately). No server-side config surface -- local/env only.
+    /// </summary>
+    int ContinuousProfilingDelayMs { get; }
+
+    /// <summary>
+    /// Gets the duration, in milliseconds, that a locally-started continuous profiling session runs before
+    /// automatically stopping. Defaults to 0, meaning the session runs until explicitly stopped. No
+    /// server-side config surface -- local/env only.
+    /// </summary>
+    int ContinuousProfilingDurationMs { get; }
+
+    /// <summary>
+    /// Gets the profile type tokens ("all", "cpu", "heap") requested for a locally-started continuous
+    /// profiling session. Defaults to ["all"]. No server-side config surface -- local/env only.
+    /// </summary>
+    IReadOnlyList<string> ContinuousProfilingInclude { get; }
 }

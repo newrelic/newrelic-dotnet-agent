@@ -826,5 +826,23 @@ public class ReportedConfiguration : IConfiguration
     [JsonProperty("hybrid_http_context_storage.enabled")]
     public bool HybridHttpContextStorageEnabled => _configuration.HybridHttpContextStorageEnabled;
 
+    [JsonProperty("profiling.enabled")]
+    public bool ContinuousProfilingEnabled => _configuration.ContinuousProfilingEnabled;
+
+    [JsonProperty("continuous_profiling.sampling_interval_ms")]
+    public int ContinuousProfilingSamplingIntervalMs => _configuration.ContinuousProfilingSamplingIntervalMs;
+
+    [JsonProperty("continuous_profiling.include_agent_code")]
+    public bool ContinuousProfilingIncludeAgentCode => _configuration.ContinuousProfilingIncludeAgentCode;
+
+    [JsonProperty("profiling.delay")]
+    public int ContinuousProfilingDelayMs => _configuration.ContinuousProfilingDelayMs;
+
+    [JsonProperty("profiling.duration")]
+    public int ContinuousProfilingDurationMs => _configuration.ContinuousProfilingDurationMs;
+
+    [JsonProperty("profiling.include")]
+    public IReadOnlyList<string> ContinuousProfilingInclude => _configuration.ContinuousProfilingInclude;
+
     #endregion
 }

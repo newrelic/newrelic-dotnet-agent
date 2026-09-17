@@ -370,7 +370,13 @@ public class AgentSettingsTests
                                         "opentelemetry.metrics.exclude": ["ExcludedMeter1","ExcludedMeter2"],
                                         "opentelemetry.metrics.export_interval_ms": 60000,
                                         "opentelemetry.metrics.export_timeout_ms": 10000,
-                                        "hybrid_http_context_storage.enabled":false
+                                        "hybrid_http_context_storage.enabled":false,
+                                        "profiling.enabled":true,
+                                        "continuous_profiling.sampling_interval_ms":30000,
+                                        "continuous_profiling.include_agent_code":true,
+                                        "profiling.delay":1000,
+                                        "profiling.duration":60000,
+                                        "profiling.include":["all"]
                                     }
                                     """;
 

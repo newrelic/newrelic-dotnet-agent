@@ -3037,6 +3037,90 @@ public class DefaultConfiguration : IConfiguration
 
     public bool HybridHttpContextStorageEnabled => EnvironmentOverrides(TryGetAppSettingAsBoolWithDefault("HybridHttpContextStorageEnabled", false), "NEW_RELIC_HYBRID_HTTP_CONTEXT_STORAGE_ENABLED");
 
+    private const int MinContinuousProfilingSamplingIntervalMs = 1000;
+    private const int MaxContinuousProfilingSamplingIntervalMs = 60000;
+    private const int DefaultContinuousProfilingSamplingIntervalMs = 10000;
+
+    private bool? _continuousProfilingEnabled;
+    // Precedence, matching AiMonitoringEnabled's shape: HSM kills it unconditionally (defense-in-depth,
+    // same as AI monitoring -- there is no server-side "strip the key" backstop for this setting the way
+    // there is for AIM, so the local guard here is the only enforcement). Below that, agent_config
+    // profiling.enabled (full override, in either direction) > env var > newrelic.config's <profiling
+    // enabled="..."/> > default (false). Per the cross-agent Profiling spec, server-side config is only
+    // supported for this one field -- delay/duration/include below have no server layer.
+    //
+    // NOTE: this is deliberately separate from ContinuousProfilingService._commandControlledTypes -- a
+    // start_continuous_profiling/stop_continuous_profiling agent command overrides this property's effect
+    // downstream (ApplyConfigChange skips command-owned types entirely), it does not change what this
+    // property itself resolves to.
+    public bool ContinuousProfilingEnabled => _continuousProfilingEnabled ??=
+        !HighSecurityModeEnabled &&
+        ServerOverrides(_serverConfiguration.RpmConfig.ContinuousProfilingEnabled,
+            EnvironmentOverrides(_localConfiguration.profiling.enabled, "NEW_RELIC_PROFILING_ENABLED"));
+
+    private int? _continuousProfilingDelayMs;
+    // Local/env only -- no server-side config surface (see ContinuousProfilingEnabled above).
+    // GetValueOrDefault is safe here: EnvironmentOverrides(int? local, ...) only returns null when local
+    // itself is null, and _localConfiguration.profiling.delay is a non-nullable int.
+    public int ContinuousProfilingDelayMs => (_continuousProfilingDelayMs ??=
+        EnvironmentOverrides(_localConfiguration.profiling.delay, "NEW_RELIC_PROFILING_DELAY")).GetValueOrDefault();
+
+    private int? _continuousProfilingDurationMs;
+    // Local/env only -- no server-side config surface (see ContinuousProfilingEnabled above).
+    public int ContinuousProfilingDurationMs => (_continuousProfilingDurationMs ??=
+        EnvironmentOverrides(_localConfiguration.profiling.duration, "NEW_RELIC_PROFILING_DURATION")).GetValueOrDefault();
+
+    private IReadOnlyList<string> _continuousProfilingInclude;
+    // Local/env only -- no server-side config surface (see ContinuousProfilingEnabled above). Lower-cased
+    // per spec ("Names MUST be accepted in lower-case... MAY also accept... regardless of case").
+    public IReadOnlyList<string> ContinuousProfilingInclude => _continuousProfilingInclude ??=
+        EnvironmentOverrides(_localConfiguration.profiling.include, "NEW_RELIC_PROFILING_INCLUDE")
+            .Split([StringSeparators.CommaChar, ' '], StringSplitOptions.RemoveEmptyEntries)
+            .Select(s => s.ToLowerInvariant())
+            .ToList();
+
+    private int? _continuousProfilingSamplingIntervalMs;
+    public int ContinuousProfilingSamplingIntervalMs
+    {
+        get
+        {
+            if (_continuousProfilingSamplingIntervalMs.HasValue)
+                return _continuousProfilingSamplingIntervalMs.Value;
+
+            // Env var only; no appSettings/XML surface for this setting. The clamp is applied last.
+            var configured = EnvironmentOverrides(DefaultContinuousProfilingSamplingIntervalMs, "NEW_RELIC_CONTINUOUS_PROFILING_SAMPLING_INTERVAL_MS")
+                .GetValueOrDefault();
+
+            int resolved;
+            if (configured <= 0)
+            {
+                // Non-positive is invalid input, not "sample as fast as possible" -- treating it like an
+                // out-of-range positive value and clamping up to the 1000ms floor would make an invalid
+                // override 10x MORE aggressive than the 10000ms default, which is backwards. Fall back
+                // instead, in precedence order: server-side config value > agent-command value > the
+                // hardcoded default. Neither of the first two exists at this layer today -- RpmConfig's
+                // only continuous_profiling.* wire field is ContinuousProfilingEnabled (no interval), and
+                // start_continuous_profiling/stop_continuous_profiling agent commands set
+                // ContinuousProfilingService's own _activeIntervalMs downstream, never routing back through
+                // this getter -- so the chain collapses to the default until one of those surfaces exists.
+                resolved = DefaultContinuousProfilingSamplingIntervalMs;
+            }
+            else
+            {
+                resolved = Math.Min(MaxContinuousProfilingSamplingIntervalMs, Math.Max(MinContinuousProfilingSamplingIntervalMs, configured));
+            }
+
+            _continuousProfilingSamplingIntervalMs = resolved;
+            return resolved;
+        }
+    }
+
+    // Undocumented, appSettings-only (deliberately NOT in the XSD): capture the agent's own threads/frames in
+    // the profile. Default false so agent-internal samples are dropped. No env-var override -- this is an
+    // internal toggle, not a customer-facing setting.
+    public bool ContinuousProfilingIncludeAgentCode =>
+        TryGetAppSettingAsBoolWithDefault("NewRelic.ContinuousProfilingIncludeAgentCode", false);
+
     public static bool GetLoggingEnabledValue(IEnvironment environment, configurationLog localLogConfiguration)
     {
         return EnvironmentOverrides(environment, localLogConfiguration.enabled, "NEW_RELIC_LOG_ENABLED");
