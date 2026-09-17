@@ -24,6 +24,12 @@ public interface IInternalTransaction : ITransaction, ITransactionExperimental
     /// parent segment (unless it is a root segment).
     /// </summary>
     IList<Segment> Segments { get; }
+
+    /// <summary>
+    /// Span ids of segments dropped from <see cref="Segments"/> for exceeding the max-segments cap, so a
+    /// terminating transaction can still retire them for continuous profiling. Never null.
+    /// </summary>
+    IEnumerable<string> DroppedSegmentSpanIds { get; }
     ICandidateTransactionName CandidateTransactionName { get; }
     void RollupTransactionNameByStatusCodeIfNeeded();
     ITransactionMetadata TransactionMetadata { get; }
