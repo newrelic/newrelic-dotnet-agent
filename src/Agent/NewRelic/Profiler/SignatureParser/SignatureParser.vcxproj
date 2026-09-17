@@ -141,6 +141,7 @@
     <ClInclude Include="ITokenResolver.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="Types.h" />
+    <ClInclude Include="SignatureFormatting.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -9,6 +9,7 @@
 #include "TestTemplates.h"
 #include "ByteVectorMacro.h"
 #include "../SignatureParser/SignatureParser.h"
+#include "../SignatureParser/SignatureFormatting.h"
 #include "MockTokenResolver.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
@@ -367,6 +368,188 @@ namespace NewRelic { namespace Profiler { namespace SignatureParser { namespace 
 
             MethodSignaturePtr expectedSignature(new MethodSignature(false, false, CorCallingConvention::IMAGE_CEE_CS_CALLCONV_DEFAULT, std::make_shared<VoidReturnType>(), parameters, 0));
             ParseAndVerifyMethodSignature(signatureBytes, expectedSignature);
+        }
+
+        // --- FormatParameterList (OTel-shaped method-signature param list) ---
+
+        TEST_METHOD(format_parameter_list_no_params)
+        {
+            BYTEVECTOR(signatureBytes,
+                0x00, // default calling convention
+                0x00, // 0 parameters
+                ELEMENT_TYPE_VOID,
+                );
+            auto iterator = signatureBytes.begin();
+            auto method = SignatureParser::ParseMethodSignature(iterator, signatureBytes.end());
+            auto resolver = std::make_shared<MockTokenResolver>();
+            Assert::AreEqual(std::wstring(L"()"), FormatParameterList(method, resolver));
+        }
+
+        TEST_METHOD(format_parameter_list_two_primitives)
+        {
+            BYTEVECTOR(signatureBytes,
+                0x20, // HASTHIS (instance method)
+                0x02, // 2 parameters
+                ELEMENT_TYPE_VOID,
+                ELEMENT_TYPE_OBJECT,
+                ELEMENT_TYPE_I4,
+                );
+            auto iterator = signatureBytes.begin();
+            auto method = SignatureParser::ParseMethodSignature(iterator, signatureBytes.end());
+            auto resolver = std::make_shared<MockTokenResolver>();
+            Assert::AreEqual(std::wstring(L"(System.Object, System.Int32)"), FormatParameterList(method, resolver));
+        }
+
+        TEST_METHOD(format_parameter_list_single_szarray)
+        {
+            BYTEVECTOR(signatureBytes,
+                0x00, // default calling convention
+                0x01, // 1 parameter
+                ELEMENT_TYPE_VOID,
+                ELEMENT_TYPE_SZARRAY,
+                ELEMENT_TYPE_STRING,
+                );
+            auto iterator = signatureBytes.begin();
+            auto method = SignatureParser::ParseMethodSignature(iterator, signatureBytes.end());
+            auto resolver = std::make_shared<MockTokenResolver>();
+            Assert::AreEqual(std::wstring(L"(System.String[])"), FormatParameterList(method, resolver));
+        }
+
+        // A generic instantiation (GENERICINST CLASS<...>) renders as base[arg,...]. The base class token is
+        // resolved through the token resolver; the single generic argument (I4) renders inline.
+        TEST_METHOD(format_parameter_list_generic_instantiation)
+        {
+            BYTEVECTOR(signatureBytes,
+                0x00, // default calling convention
+                0x01, // 1 parameter
+                ELEMENT_TYPE_VOID,
+                ELEMENT_TYPE_GENERICINST,
+                ELEMENT_TYPE_CLASS, 0x00, // generic base class, token 0 (resolver-mapped)
+                0x01,                     // 1 generic argument
+                ELEMENT_TYPE_I4,          // argument: System.Int32
+                );
+            auto iterator = signatureBytes.begin();
+            auto method = SignatureParser::ParseMethodSignature(iterator, signatureBytes.end());
+            auto resolver = std::make_shared<MockTokenResolver>();
+            Assert::AreEqual(std::wstring(L"(MyNamespace1.MyNamespace2.MyClass[System.Int32])"), FormatParameterList(method, resolver));
+        }
+
+        // A generic instantiation with multiple arguments joins them with a bare comma (GenericType::ToString
+        // uses no space between generic args, unlike the ", " between parameters).
+        TEST_METHOD(format_parameter_list_generic_instantiation_multiple_args)
+        {
+            BYTEVECTOR(signatureBytes,
+                0x00, // default calling convention
+                0x01, // 1 parameter
+                ELEMENT_TYPE_VOID,
+                ELEMENT_TYPE_GENERICINST,
+                ELEMENT_TYPE_CLASS, 0x00, // generic base class, token 0
+                0x02,                     // 2 generic arguments
+                ELEMENT_TYPE_I4,          // System.Int32
+                ELEMENT_TYPE_STRING,      // System.String
+                );
+            auto iterator = signatureBytes.begin();
+            auto method = SignatureParser::ParseMethodSignature(iterator, signatureBytes.end());
+            auto resolver = std::make_shared<MockTokenResolver>();
+            Assert::AreEqual(std::wstring(L"(MyNamespace1.MyNamespace2.MyClass[System.Int32,System.String])"), FormatParameterList(method, resolver));
+        }
+
+        // A byref parameter renders with a trailing '&' and a pointer parameter with a trailing '*'.
+        TEST_METHOD(format_parameter_list_byref_and_pointer)
+        {
+            BYTEVECTOR(signatureBytes,
+                0x00, // default calling convention
+                0x02, // 2 parameters
+                ELEMENT_TYPE_VOID,
+                ELEMENT_TYPE_BYREF, ELEMENT_TYPE_I4, // ref int -> System.Int32&
+                ELEMENT_TYPE_PTR, ELEMENT_TYPE_I4,   // int*    -> System.Int32*
+                );
+            auto iterator = signatureBytes.begin();
+            auto method = SignatureParser::ParseMethodSignature(iterator, signatureBytes.end());
+            auto resolver = std::make_shared<MockTokenResolver>();
+            Assert::AreEqual(std::wstring(L"(System.Int32&, System.Int32*)"), FormatParameterList(method, resolver));
+        }
+
+        // A void pointer parameter is the special-cased PTR-VOID form, rendered as "void*".
+        TEST_METHOD(format_parameter_list_void_pointer)
+        {
+            BYTEVECTOR(signatureBytes,
+                0x00, // default calling convention
+                0x01, // 1 parameter
+                ELEMENT_TYPE_VOID,
+                ELEMENT_TYPE_PTR, ELEMENT_TYPE_VOID, // void*
+                );
+            auto iterator = signatureBytes.begin();
+            auto method = SignatureParser::ParseMethodSignature(iterator, signatureBytes.end());
+            auto resolver = std::make_shared<MockTokenResolver>();
+            Assert::AreEqual(std::wstring(L"(void*)"), FormatParameterList(method, resolver));
+        }
+
+        // Generic type/method variables render as !N (VAR, class-level) and !!N (MVAR, method-level).
+        TEST_METHOD(format_parameter_list_var_and_mvar)
+        {
+            BYTEVECTOR(signatureBytes,
+                0x00, // default calling convention
+                0x02, // 2 parameters
+                ELEMENT_TYPE_VOID,
+                ELEMENT_TYPE_VAR, 0x01,  // class generic variable !1
+                ELEMENT_TYPE_MVAR, 0x00, // method generic variable !!0
+                );
+            auto iterator = signatureBytes.begin();
+            auto method = SignatureParser::ParseMethodSignature(iterator, signatureBytes.end());
+            auto resolver = std::make_shared<MockTokenResolver>();
+            Assert::AreEqual(std::wstring(L"(!1, !!0)"), FormatParameterList(method, resolver));
+        }
+
+        // Both token-resolved parameter kinds -- CLASS and VALUETYPE -- route their token through the
+        // resolver. The mock maps every token to the same name, so both render identically.
+        TEST_METHOD(format_parameter_list_class_and_valuetype_token_resolution)
+        {
+            BYTEVECTOR(signatureBytes,
+                0x00, // default calling convention
+                0x02, // 2 parameters
+                ELEMENT_TYPE_VOID,
+                ELEMENT_TYPE_CLASS, 0x00,     // reference type, token resolved
+                ELEMENT_TYPE_VALUETYPE, 0x00, // value type, token resolved
+                );
+            auto iterator = signatureBytes.begin();
+            auto method = SignatureParser::ParseMethodSignature(iterator, signatureBytes.end());
+            auto resolver = std::make_shared<MockTokenResolver>();
+            Assert::AreEqual(
+                std::wstring(L"(MyNamespace1.MyNamespace2.MyClass, MyNamespace1.MyNamespace2.MyClass)"),
+                FormatParameterList(method, resolver));
+        }
+
+        // A blob that ends mid-type (GENERICINST with no base type following) must fail safely with a
+        // SignatureParserException rather than reading past the end of the buffer.
+        TEST_METHOD(parse_truncated_signature_throws_rather_than_reading_out_of_bounds)
+        {
+            BYTEVECTOR(signatureBytes,
+                0x00, // default calling convention
+                0x01, // 1 parameter
+                ELEMENT_TYPE_VOID,
+                ELEMENT_TYPE_GENERICINST, // nothing follows -> parser must not read past end
+                );
+            Assert::ExpectException<SignatureParserException>([&]
+            {
+                SignatureParser::ParseMethodSignature(signatureBytes.begin(), signatureBytes.end());
+            });
+        }
+
+        // A blob whose parameter type byte is an unhandled/invalid element type (END, 0x00) must throw
+        // rather than mis-parse or crash.
+        TEST_METHOD(parse_malformed_signature_with_invalid_element_type_throws)
+        {
+            BYTEVECTOR(signatureBytes,
+                0x00, // default calling convention
+                0x01, // 1 parameter
+                ELEMENT_TYPE_VOID,
+                ELEMENT_TYPE_END, // 0x00 is not a valid standalone parameter type
+                );
+            Assert::ExpectException<SignatureParserException>([&]
+            {
+                SignatureParser::ParseMethodSignature(signatureBytes.begin(), signatureBytes.end());
+            });
         }
     };
 }}}}
