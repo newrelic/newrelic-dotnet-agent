@@ -24,10 +24,6 @@ public enum RuntimeLane
 /// </summary>
 public sealed class RuntimeLaneResolver
 {
-    public const string TraitName = "Runtime";
-    public const string CoreValue = "Core";
-    public const string FrameworkValue = "Framework";
-
     private static readonly string[] FrameworkNameMarkers = { "FWLatest", "FW481", "FW48", "FW471", "FW462", "Framework", "NetFramework" };
     private static readonly string[] CoreNameMarkers = { "CoreLatest", "CoreOldest", "Core100", "Core80", "NetCore", "Core" };
 
@@ -169,18 +165,5 @@ public sealed class RuntimeLaneResolver
         }
 
         return RuntimeLane.Unknown;
-    }
-
-    public static string ToTraitValue(RuntimeLane lane)
-    {
-        switch (lane)
-        {
-            case RuntimeLane.Core:
-                return CoreValue;
-            case RuntimeLane.Framework:
-                return FrameworkValue;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(lane), lane, "Unknown is not a trait value.");
-        }
     }
 }

@@ -19,7 +19,6 @@ public static class RuntimeTraitPolicy
     /// </summary>
     private static readonly string[] Exempt =
     {
-        "NewRelic.Agent.UnboundedIntegrationTests.TestInfrastructure.RuntimeLaneReport",
         "NewRelic.Agent.UnboundedIntegrationTests.TestInfrastructure.PlatformTraitTests",
     };
 

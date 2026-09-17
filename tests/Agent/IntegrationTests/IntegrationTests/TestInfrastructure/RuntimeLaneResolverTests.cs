@@ -94,18 +94,4 @@ public class RuntimeLaneResolverTests
     {
         Assert.Equal(RuntimeLane.Unknown, _resolver.Resolve(typeof(RuntimeLaneResolverTests)));
     }
-
-    [Theory]
-    [InlineData(RuntimeLane.Core, "Core")]
-    [InlineData(RuntimeLane.Framework, "Framework")]
-    public void ToTraitValue_MapsTheLaneToItsTraitValue(RuntimeLane lane, string expected)
-    {
-        Assert.Equal(expected, RuntimeLaneResolver.ToTraitValue(lane));
-    }
-
-    [Fact]
-    public void ToTraitValue_RejectsUnknown()
-    {
-        Assert.Throws<ArgumentOutOfRangeException>(() => RuntimeLaneResolver.ToTraitValue(RuntimeLane.Unknown));
-    }
 }
