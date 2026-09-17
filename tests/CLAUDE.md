@@ -182,7 +182,7 @@ How the Linux-agent container tests actually wire up (rediscovered often -- capt
 `linux_container_tests.yml`'s matrix selects which `ContainerIntegrationTests` classes run per job via an xunit `--filter` on two **disjoint** trait axes -- a class must carry exactly one combination that exactly one matrix entry asks for:
 
 - `[Trait("Distro", "...")]` -- **OS-compatibility smoke tests only** (current values: `Ubuntu`, `Alpine`, `Centos`, `Amazon`, `Fedora`). Do not add new functional coverage here; it does not scale (this is what previously piled 15+ unrelated classes onto `Distro=Ubuntu`).
-- `[Trait("TestArea", "...")]` -- **functional test groupings** (current values: `Core`, `Messaging`, `Aws`, `Datastore`).
+- `[Trait("TestArea", "...")]` -- **functional test groupings** (current values: `Core`, `Messaging`, `Aws`, `Datastore`, `ContinuousProfiling`).
 
 **A new functional container test class must get a `TestArea` trait, never `Distro`.** Reuse an existing `TestArea` value where it fits. Adding a **new** `TestArea` value requires adding a matching matrix `include:` entry in `linux_container_tests.yml` (filter `Architecture=<arch>&TestArea=<value>`) -- nothing checks this for you, so a class whose trait no matrix entry asks for is silently never run.
 
@@ -211,7 +211,7 @@ Three inputs, each a comma-separated list, each defaulting to empty:
 - `unbounded_namespaces` - e.g. `MsSql`. Validated against the 15 canonical
   unbounded namespaces. These still contend for the shared AKS
   `UnboundedServices` deployment, so two runs at once can interfere.
-- `container_groups` - `name/arch` pairs, e.g. `Ubuntu/amd64, Core/amd64`. The 12
+- `container_groups` - `name/arch` pairs, e.g. `Ubuntu/amd64, Core/amd64`. The 14
   valid pairs are the `name` and `arch` values listed in the `select-matrix` job
   in [`linux_container_tests.yml`](../.github/workflows/linux_container_tests.yml).
 
