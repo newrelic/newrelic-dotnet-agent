@@ -96,6 +96,41 @@ public class BasicMvcTests : NewRelicIntegrationTest<AspNetFrameworkBasicMvcAppl
 
 **Where new test apps go** (three parallel dirs under `IntegrationTests/`): `Applications/` (host-run FW/Core), `ContainerApplications/` (Docker), `UnboundedApplications/` (external infra, paired with `UnboundedServices/` compose). **Prefer the MFA pattern below over a new app.** Add a new `*Applications/` project only for a specific hosting model (IIS/OWIN, ASP.NET Core startup, WCF, Azure Functions, Lambda).
 
+### Target platforms
+
+`IntegrationTests.sln` and `UnboundedIntegrationTests.sln` build the Windows
+side. `IntegrationTests.NetCore.sln` and `UnboundedIntegrationTests.NetCore.sln`
+build the Linux side and hold the Core-only projects.
+
+CI runs one job per namespace on each target platform:
+
+- Windows runs every test in the namespace. No filter.
+- Linux runs `dotnet <assembly>.dll -namespace <FQN> -trait- Platform=WindowsOnly`.
+
+A test class that cannot run on Linux carries
+`[Trait("Platform", "WindowsOnly")]`. That attribute is the only per-test
+declaration -- nothing derives a target platform from a namespace, a fixture,
+or a target framework. `TraitAttribute` is inherited and `-trait-` is
+absolute, so never put the trait on a base class that has portable derived
+classes.
+
+Before the tests run, each Linux job runs
+`build/Scripts/check-namespace-eligible.sh`. It fails the job when the trait
+is absent from the assembly or the exclusion filter is dead, and it skips the
+rest of the job when the namespace has no class left after the exclusion. A
+Framework-only namespace therefore costs one discovery step and nothing else,
+and it needs no list entry anywhere.
+
+Adding a test:
+
+| Scenario | Manual steps |
+|---|---|
+| New portable test, existing namespace | none |
+| New Framework-only test, existing namespace | add `[Trait("Platform", "WindowsOnly")]` to the class |
+| New FW+Core fixture pair | add the trait to the FW leaf only |
+| New namespace | add it to `integration_all` or `unbounded_all` in `.github/workflows/test_selection.yml` |
+| Converting a Framework test to Core | delete the attribute |
+
 ### MFA (Console MultiFunction App) pattern
 
 Two shared console hosts dispatch string commands to **exerciser** classes; tests drive them via a `ConsoleDynamicMethodFixture*` fixture. Under `SharedApplications/`:
