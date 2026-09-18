@@ -12,6 +12,11 @@ on:
         type: boolean
         required: false
         default: false
+      max_tries:
+        description: 'Attempts a test gets when it fails with a known transient error. Empty falls back to the TEST_MAX_TRIES repository variable, then to 3. Set to 1 to fail fast.'
+        type: string
+        required: false
+        default: ''
 
 permissions:
   contents: read
@@ -36,6 +41,26 @@ jobs:
           search-paths: UnboundedApplications SharedApplications
           skip-projects: ''
           artifact-name: unboundedintegrationtests
+
+  build-linux:
+    name: Build UnboundedIntegrationTests (Linux)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          filter: blob:none
+
+      - name: Build test solution
+        uses: ./.github/actions/build-test-solution-linux
+        with:
+          solution-path: tests/Agent/IntegrationTests/UnboundedIntegrationTests.NetCore.sln
+          search-paths: UnboundedApplications SharedApplications
+          skip-projects: ''
+          artifact-name: unboundedtests-linux
 
   run-unbounded-tests:
     needs: build
@@ -372,4 +397,132 @@ jobs:
             C:\IntegrationTestWorkingDirectory\**\*.log
             C:\IntegrationTestWorkingDirectory\TestResults\**\*TestResults.trx
           if-no-files-found: error
+
+  run-unbounded-tests-linux:
+    needs: build-linux
+    name: Run Unbounded Tests (Linux)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      matrix:
+        namespace: ${{ fromJson(inputs.namespaces) }}
+      fail-fast: false
+    env:
+      integration_tests_shared_project: ${{ github.workspace }}/tests/Agent/IntegrationTests/Shared
+      unbounded_tests_path: ${{ github.workspace }}/tests/Agent/IntegrationTests/UnboundedIntegrationTests/bin/Release/net10.0
+      test_results_path: ${{ github.workspace }}/tests/TestResults
+      NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY: 1
+      NR_DOTNET_TEST_PREBUILT_APPS: 1
+      CI_NEW_RELIC_APP_NAME: ${{ github.event_name == 'schedule' && 'DotNetIngestTracking' || '' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          filter: blob:none
+
+      - name: Set up secrets
+        env:
+          INTEGRATION_TEST_SECRETS: ${{ secrets.TEST_SECRETS }}
+        run: |
+          "$Env:INTEGRATION_TEST_SECRETS" | dotnet user-secrets set --project ${{ env.integration_tests_shared_project }}
+        shell: pwsh
+
+      - name: Download Agent Home Folders
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: homefolders
+          path: src/Agent
+
+      - name: Download Unbounded Integration Test Artifacts
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: unboundedtests-linux
+
+      - name: Restore executable bits lost by the artifact round trip
+        shell: bash
+        run: |
+          # upload-artifact zips without Unix modes, so every apphost arrives
+          # non-executable and Process.Start fails with EACCES.
+          count=0
+          while IFS= read -r file; do
+            chmod +x "$file"
+            count=$((count + 1))
+          done < <(find tests/Agent/IntegrationTests -type f \( ! -name '*.*' -o -name '*.sh' \) -not -path '*/obj/*')
+          echo "Marked $count file(s) executable"
+          if [ "$count" -eq 0 ]; then
+            echo "::error::No apphost files found. Every Linux test app would fail to start with EACCES."
+            exit 1
+          fi
+
+      - name: Install .NET SDKs and runtimes
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: |
+            8.0.x
+            10.0.x
+          dotnet-quality: 'ga'
+
+      - name: Discover Linux-eligible tests
+        id: discover
+        shell: bash
+        run: |
+          bash build/Scripts/check-namespace-eligible.sh \
+            Platform=WindowsOnly \
+            "NewRelic.Agent.UnboundedIntegrationTests.${{ matrix.namespace }}" \
+            dotnet "${{ env.unbounded_tests_path }}/NewRelic.Agent.UnboundedIntegrationTests.dll"
+
+      - name: Ensure Microsoft ODBC Driver 18 for SQL Server
+        if: steps.discover.outputs.has_tests == 'true' && matrix.namespace == 'MsSql'
+        shell: bash
+        run: |
+          set -euo pipefail
+          if odbcinst -q -d | grep -q 'ODBC Driver 18 for SQL Server'; then
+            echo "Driver already present."
+            exit 0
+          fi
+          version="$(. /etc/os-release && echo "$VERSION_ID")"
+          curl -sSL -o /tmp/packages-microsoft-prod.deb \
+            "https://packages.microsoft.com/config/ubuntu/$version/packages-microsoft-prod.deb"
+          sudo dpkg -i /tmp/packages-microsoft-prod.deb
+          sudo apt-get update
+          sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18
+          # Assert registration here, or the failure resurfaces as IM002 inside a test.
+          odbcinst -q -d
+          if ! odbcinst -q -d | grep -q 'ODBC Driver 18 for SQL Server'; then
+            echo "::error::ODBC Driver 18 for SQL Server did not register."
+            exit 1
+          fi
+
+      - name: Run Unbounded Integration Tests
+        if: steps.discover.outputs.has_tests == 'true'
+        uses: ./.github/actions/run-host-tests
+        with:
+          tests-path: ${{ env.unbounded_tests_path }}
+          assembly-name: NewRelic.Agent.UnboundedIntegrationTests
+          namespace-prefix: NewRelic.Agent.UnboundedIntegrationTests
+          namespace: ${{ matrix.namespace }}
+          trait: Platform=WindowsOnly
+          exclude-trait: 'true'
+          trx-path: ${{ env.test_results_path }}/${{ matrix.namespace }}_testResults.trx
+          no-parallel-namespaces: NServiceBus NServiceBus5
+          test-type: unboundedTestsLinux
+          max-tries: ${{ inputs.max_tries || vars.TEST_MAX_TRIES }}
+
+      - name: Report test results
+        if: always() && steps.discover.outputs.has_tests == 'true'
+        uses: ./.github/actions/report-host-tests
+        with:
+          namespace: ${{ matrix.namespace }}
+          results-dir: ${{ env.test_results_path }}
+          payload-basename: ${{ matrix.namespace }}_linux
+          payload-artifact-name: unbounded-payload-bytes-linux-${{ matrix.namespace }}
+          results-artifact-name: unbounded-test-working-directory-linux-${{ matrix.namespace }}
+          archive-paths: |
+            /tmp/IntegrationTestWorkingDirectory/**/*.log
+            ${{ env.test_results_path }}/**/*.trx
+          aggregate-payload-data: ${{ inputs.aggregate_payload_data == true || github.event_name == 'schedule' }}
+          nr-ci-ingest-key: ${{ secrets.NR_CI_INGEST_KEY }}
+          nr-ci-account-id: ${{ secrets.NR_CI_ACCOUNT_ID }}
 
