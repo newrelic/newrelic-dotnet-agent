@@ -396,6 +396,18 @@ jobs:
           cp -f ${{ steps.write_gpgkeys.outputs.new_key_file }} ${{ github.workspace }}/deploy/linux/deploy_scripts/new-private-key.gpg
         shell: bash
 
+      # Test repository only.  Production keeps its static keys because we cannot
+      # create a role in the account that owns the production bucket.
+      - name: Configure AWS credentials for the test repository
+        if: ${{ !inputs.linux-deploy-to-production }}
+        uses: aws-actions/configure-aws-credentials@cbe3b392738ccf3f987d68400dafcf4b0624a56c # v6.2.4
+        with:
+          role-to-assume: ${{ secrets.TEST_REPO_DEPLOY_ROLE_ARN }}
+          # A full repo rebuild signs and re-syncs every index, so this needs far
+          # longer than the 900s used by the test workflows.
+          role-duration-seconds: 3600
+          aws-region: us-west-2
+
       - name: Prepare docker.env
         run: |
           # Confirm that the version is in the proper format.
@@ -419,10 +431,17 @@ jobs:
             echo "AWS_ACCESS_KEY_ID=${{ secrets.LINUX_AWS_ACCESS_KEY_ID }}" >> docker.env
             echo "AWS_SECRET_ACCESS_KEY=${{ secrets.LINUX_AWS_SECRET_ACCESS_KEY }}" >> docker.env
           else
-            # Deploy to the test bucket that mirrors apt/yum.newrelic.com
+            # Deploy to the test bucket that mirrors apt/yum.newrelic.com, using the
+            # short-lived credentials exported by the step above.  The session token
+            # is required: an assumed role is three values, not two.
+            if [ -z "$AWS_SESSION_TOKEN" ] ; then
+              echo "::error AWS_SESSION_TOKEN is empty - role assumption did not run or failed."
+              exit 1
+            fi
             echo "S3_BUCKET=${{ secrets.TEST_S3_BUCKET }}" >> docker.env
-            echo "AWS_ACCESS_KEY_ID=${{ secrets.TEST_BUCKET_AWS_ACCESS_KEY_ID }}" >> docker.env
-            echo "AWS_SECRET_ACCESS_KEY=${{ secrets.TEST_BUCKET_AWS_SECRET_ACCESS_KEY }}" >> docker.env
+            echo "AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID" >> docker.env
+            echo "AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY" >> docker.env
+            echo "AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN" >> docker.env
           fi
           echo "OLD_PRIVATE_KEY=/data/deploy_scripts/old-private-key.gpg" >> docker.env
           echo "NEW_PRIVATE_KEY=/data/deploy_scripts/new-private-key.gpg" >> docker.env
@@ -447,14 +466,14 @@ jobs:
 
       - name: Clear Fastly cache
         continue-on-error: true
-        if: ${{ inputs.deploy && success() }}
+        if: ${{ inputs.deploy && inputs.linux-deploy-to-production && success() }}
         run: |
           curl -i -X POST -H 'Fastly-Key:${{ secrets.FASTLY_TOKEN }}' ${{ secrets.FASTLY_URL }}
         shell: bash
 
       - name: Clear Cloudflare cache
         continue-on-error: true
-        if: ${{ inputs.deploy && success() }}
+        if: ${{ inputs.deploy && inputs.linux-deploy-to-production && success() }}
         run: |
           curl ${{ secrets.CLOUDFLARE_CACHE_URL }} -H 'Content-Type: application/json' -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_CACHE_TOKEN }}" -d '{"purge_everything": true}'
         shell: bash
