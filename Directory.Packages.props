@@ -23,7 +23,7 @@
     <PackageVersion Include="Mono.Cecil" Version="0.11.6" />
     <PackageVersion Include="MoreLinq" Version="2.4.0" />
     <PackageVersion Include="NUnit" Version="4.6.1" />
-    <PackageVersion Include="NUnit.Analyzers" Version="4.14.0" />
+    <PackageVersion Include="NUnit.Analyzers" Version="4.15.0" />
     <PackageVersion Include="NUnit3TestAdapter" Version="6.3.0" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageVersion Include="Nito.AsyncEx.Context" Version="5.1.2" />
@@ -49,10 +49,10 @@
     <PackageVersion Include="Verify.NUnit" Version="32.0.0" />
     <PackageVersion Include="coverlet.collector" Version="10.0.1" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="4.0.0" />
-    <PackageVersion Include="xunit.v3.assert" Version="4.0.0" />
+    <PackageVersion Include="xunit.v3.assert" Version="4.0.1" />
     <PackageVersion Include="xunit.v3.core.mtp-off" Version="4.0.0" />
-    <PackageVersion Include="xunit.v3.extensibility.core" Version="4.0.0" />
+    <PackageVersion Include="xunit.v3.extensibility.core" Version="4.0.1" />
     <PackageVersion Include="xunit.v3.mtp-off" Version="4.0.0" />
-    <PackageVersion Include="xunit.v3.runner.console" Version="4.0.0" />
+    <PackageVersion Include="xunit.v3.runner.console" Version="4.0.1" />
   </ItemGroup>
 </Project>
