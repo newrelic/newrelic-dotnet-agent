@@ -129,3 +129,6 @@ updates:
       - dependency-name: "xunit*"
       - dependency-name: "PublicApiGenerator"
       - dependency-name: "Verify.NUnit"
+    ignore:
+      - dependency-name: "Verify.NUnit"
+        update-types: ["version-update:semver-major"] # v33 adds a SponsorCheck maintenance-fee gate that fails the build
