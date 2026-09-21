@@ -26,6 +26,12 @@ inputs:
   archive-paths:
     description: "Newline-separated globs archived when the namespace's run fails."
     required: true
+  tests-outcome:
+    description: >
+      The test-run step's own outcome, passed as steps.<id>.outcome. Inside a
+      composite, failure() is scoped to this action's steps and never sees the
+      caller's, so the archive gates on this instead.
+    required: true
   aggregate-payload-data:
     description: 'Whether to extract and upload payload-byte data.'
     required: true
@@ -228,9 +234,9 @@ runs:
         if-no-files-found: warn
 
     - name: Archive test results on failure
-      # A timeout-minutes kill reports as cancelled, not failure, so failure()
-      # alone would discard the logs from exactly the hangs the cap exists for.
-      if: failure() || cancelled()
+      # A timeout-minutes kill reports as cancelled, not failure, so cancelled()
+      # is kept: it discards no logs from exactly the hangs the cap exists for.
+      if: inputs.tests-outcome == 'failure' || cancelled()
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
       with:
         name: ${{ inputs.results-artifact-name }}

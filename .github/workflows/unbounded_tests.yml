@@ -496,6 +496,7 @@ jobs:
           fi
 
       - name: Run Unbounded Integration Tests
+        id: run-tests
         if: steps.discover.outputs.has_tests == 'true'
         uses: ./.github/actions/run-host-tests
         with:
@@ -519,6 +520,7 @@ jobs:
           payload-basename: ${{ matrix.namespace }}_linux
           payload-artifact-name: unbounded-payload-bytes-linux-${{ matrix.namespace }}
           results-artifact-name: unbounded-test-working-directory-linux-${{ matrix.namespace }}
+          tests-outcome: ${{ steps.run-tests.outcome }}
           archive-paths: |
             /tmp/IntegrationTestWorkingDirectory/**/*.log
             ${{ env.test_results_path }}/**/*.trx
