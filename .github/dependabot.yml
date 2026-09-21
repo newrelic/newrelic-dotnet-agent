@@ -111,9 +111,13 @@ updates:
       xunit:
         patterns:
           - "xunit*"
+      # xunit* is excluded so both groups cannot claim the same xunit v3
+      # packages, which pin each other with exact versions.
       nuget-tests:
         patterns:
           - "*"
+        exclude-patterns:
+          - "xunit*"
     allow:
       - dependency-name: "coverlet.collector"
       - dependency-name: "JustMock"
@@ -125,3 +129,6 @@ updates:
       - dependency-name: "xunit*"
       - dependency-name: "PublicApiGenerator"
       - dependency-name: "Verify.NUnit"
+    ignore:
+      - dependency-name: "Verify.NUnit"
+        update-types: ["version-update:semver-major"] # v33 adds a SponsorCheck maintenance-fee gate that fails the build
