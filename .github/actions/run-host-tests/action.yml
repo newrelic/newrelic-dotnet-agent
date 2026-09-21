@@ -78,6 +78,7 @@ runs:
 
         $maxAttempts = 2
         $attempt = 1
+        $finalExitCode = 0
         while ($true) {
           & "$testsPath/${{ inputs.assembly-name }}.exe" -namespace $namespace @traitArgs -trx $trx 2>&1 |
             Tee-Object -FilePath $runLog
@@ -92,7 +93,8 @@ runs:
           }
           if ($attempt -ge $maxAttempts) {
             Write-Host "${{ inputs.test-type }} for ${{ inputs.namespace }} failed after $attempt attempt(s) (exit code $exitCode)."
-            exit $exitCode
+            $finalExitCode = $exitCode
+            break
           }
           Write-Host "${{ inputs.test-type }} for ${{ inputs.namespace }} failed on attempt $attempt (exit code $exitCode); retrying once to absorb a possible transient blip..."
           $attempt++
@@ -101,6 +103,7 @@ runs:
 
         & bash "$Env:GITHUB_WORKSPACE/build/Scripts/check-test-run.sh" "$trx" "$runLog"
         if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+        if ($finalExitCode -ne 0) { exit $finalExitCode }
 
     - name: Run tests (Linux)
       if: runner.os != 'Windows'
@@ -132,21 +135,28 @@ runs:
         mkdir -p "$(dirname "$trx")"
         max_attempts=2
         attempt=1
+        final_exit_code=0
+        : > "$run_log"
         while true; do
           set +e
           # Redirect to a file, never a pipe. A test app that outlives the test
           # host inherits a pipe's write end, so tee never sees EOF and the step
           # hangs after the run has finished. tail reads the file instead, which
           # streams the run live without handing anyone the host's stdout.
-          : > "$run_log"
+          # Each attempt gets its own file, appended to the run log, so a retry
+          # does not erase the failure that caused it.
+          attempt_run_log="$RUNNER_TEMP/run-${{ inputs.namespace }}-attempt-$attempt.log"
+          : > "$attempt_run_log"
           dotnet "$tests_path/${{ inputs.assembly-name }}.dll" \
-            -namespace "$namespace" "${trait_args[@]}" -trx "$trx" > "$run_log" 2>&1 &
+            -namespace "$namespace" "${trait_args[@]}" -trx "$trx" > "$attempt_run_log" 2>&1 &
           test_pid=$!
-          tail -n +1 -f --pid="$test_pid" "$run_log" &
+          tail -n +1 -f --pid="$test_pid" "$attempt_run_log" &
           tail_pid=$!
           wait "$test_pid"
           exit_code=$?
           wait "$tail_pid" 2>/dev/null
+          cat "$attempt_run_log" >> "$run_log"
+          rm -f "$attempt_run_log"
           set -e
           if [ "$exit_code" -eq 0 ]; then
             if [ "$attempt" -gt 1 ]; then
@@ -158,7 +168,8 @@ runs:
           fi
           if [ "$attempt" -ge "$max_attempts" ]; then
             echo "${{ inputs.test-type }} for ${{ inputs.namespace }} failed after $attempt attempt(s) (exit code $exit_code)."
-            exit "$exit_code"
+            final_exit_code="$exit_code"
+            break
           fi
           echo "${{ inputs.test-type }} for ${{ inputs.namespace }} failed on attempt $attempt (exit code $exit_code); retrying once to absorb a possible transient blip..."
           attempt=$((attempt + 1))
@@ -166,3 +177,4 @@ runs:
         done
 
         bash "$GITHUB_WORKSPACE/build/Scripts/check-test-run.sh" "$trx" "$run_log"
+        if [ "$final_exit_code" -ne 0 ]; then exit "$final_exit_code"; fi
