@@ -94,11 +94,13 @@ jobs:
             "CustomInstrumentation",
             "DataTransmission",
             "DistributedTracing",
+            "DistributedTracing.W3CInstrumentationTests",
             "Errors",
             "Grpc",
             "Hangfire",
             "HSM",
             "HttpClientInstrumentation",
+            "HttpClientInstrumentation.NetFramework",
             "HybridHttpContextStorage",
             "InfiniteTracing",
             "LLM",
@@ -148,6 +150,7 @@ jobs:
             "Oracle",
             "Postgres",
             "RabbitMq",
+            "RabbitMq.Legacy",
             "Redis"
           ]'
 

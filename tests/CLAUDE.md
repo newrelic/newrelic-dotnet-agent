@@ -138,7 +138,25 @@ Adding a test:
 | New Framework-only test, existing namespace | add `[Trait("Platform", "WindowsOnly")]` to the class |
 | New FW+Core fixture pair | add the trait to the FW leaf only |
 | New namespace | add it to `integration_all` or `unbounded_all` in `.github/workflows/test_selection.yml` |
+| New **sub**-namespace, e.g. `Foo.Bar` under existing `Foo` | add `Foo.Bar` as its own entry -- see below |
 | Converting a Framework test to Core | delete the attribute |
+
+**`-namespace` matches exactly, not by prefix.** An entry for `Foo` does not run
+anything in `Foo.Bar`, so a sub-namespace without its own list entry never runs
+on either platform, and nothing fails -- the job reports success having selected
+zero tests. Three namespaces sat that way undetected
+(`DistributedTracing.W3CInstrumentationTests`,
+`HttpClientInstrumentation.NetFramework`, `RabbitMq.Legacy`).
+
+To check the lists against reality, ask the assembly rather than grepping source
+(a grep counts fixtures as classes):
+
+```
+dotnet NewRelic.Agent.IntegrationTests.dll -list Classes
+```
+
+Strip each class name to its namespace, and every distinct namespace must appear
+verbatim in the matching list. The counts should be equal.
 
 ### MFA (Console MultiFunction App) pattern
 
