@@ -62,7 +62,7 @@ jobs:
       - name: Build test solution
         uses: ./.github/actions/build-test-solution-linux
         with:
-          solution-path: tests/Agent/IntegrationTests/IntegrationTests.NetCore.sln
+          project-path: tests/Agent/IntegrationTests/IntegrationTests/IntegrationTests.csproj
           search-paths: Applications SharedApplications
           artifact-name: integrationtests-linux
 

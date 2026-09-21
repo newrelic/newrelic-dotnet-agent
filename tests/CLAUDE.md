@@ -99,8 +99,17 @@ public class BasicMvcTests : NewRelicIntegrationTest<AspNetFrameworkBasicMvcAppl
 ### Target platforms
 
 `IntegrationTests.sln` and `UnboundedIntegrationTests.sln` build the Windows
-side. `IntegrationTests.NetCore.sln` and `UnboundedIntegrationTests.NetCore.sln`
-build the Linux side and hold the Core-only projects.
+side.
+
+**The Linux side has no solution file, on purpose.** A solution would only
+restate what the build already derives. `build-test-solution-linux` builds the
+test `.csproj` directly (`project-path`), which pulls in its helper libraries,
+and then pre-publishes the test apps by globbing `search-paths` for every
+csproj that is not a `Library` and declares a `net<n>.<n>` target framework.
+`dotnet publish` builds each app's own `ProjectReference` closure, so nothing
+needs to be enumerated anywhere. A new Core test app is picked up with no
+manual step -- which is the point: an include list would go stale silently,
+and a forgotten app would simply never run on Linux.
 
 CI runs one job per namespace on each target platform:
 

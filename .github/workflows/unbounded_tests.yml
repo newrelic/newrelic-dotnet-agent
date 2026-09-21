@@ -57,7 +57,7 @@ jobs:
       - name: Build test solution
         uses: ./.github/actions/build-test-solution-linux
         with:
-          solution-path: tests/Agent/IntegrationTests/UnboundedIntegrationTests.NetCore.sln
+          project-path: tests/Agent/IntegrationTests/UnboundedIntegrationTests/UnboundedIntegrationTests.csproj
           search-paths: UnboundedApplications SharedApplications
           skip-projects: ''
           artifact-name: unboundedtests-linux

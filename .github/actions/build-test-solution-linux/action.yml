@@ -1,13 +1,16 @@
 name: Build Test Solution (Linux)
 description: >
-  Restores and builds a NetCore test solution on Linux in Release, pre-publishes
-  its .NET Core test applications for linux-x64 so fixtures copy pre-built
-  output, and uploads the result as a named artifact. The caller must check out
-  the repository first.
+  Restores and builds the test project on Linux in Release, pre-publishes the
+  .NET Core test applications for linux-x64 so fixtures copy pre-built output,
+  and uploads the result as a named artifact. The caller must check out the
+  repository first.
 
 inputs:
-  solution-path:
-    description: 'Path to the NetCore solution to build, relative to the workspace.'
+  project-path:
+    description: >
+      Path to the test project to build, relative to the workspace. The test
+      apps are not referenced by it; the pre-publish step below finds them by
+      globbing search-paths, so no solution file is needed to enumerate them.
     required: true
   search-paths:
     description: 'Space-separated directory names under the integration tests root to scan for test apps.'
@@ -44,11 +47,11 @@ runs:
         dotnet --list-sdks
         dotnet --list-runtimes
 
-    - name: Build test solution
+    - name: Build test project
       shell: bash
       run: |
         dotnet nuget list source
-        dotnet build "${{ inputs.solution-path }}" -c Release
+        dotnet build "${{ inputs.project-path }}" -c Release
 
     - name: Pre-publish .NET Core test apps for linux-x64
       shell: bash
@@ -91,7 +94,7 @@ runs:
                   ;;
               esac
             done
-          done < <(find "$base/$search_path" -name '*.csproj')
+          done < <(find "$base/$search_path" -name '*.csproj' -not -path '*/obj/*')
         done
         echo "Pre-publish complete: $published succeeded, $skipped skipped, $failed failed"
         if [ "$published" -eq 0 ]; then
