@@ -35,7 +35,13 @@ public class AzureFuncTool : RemoteService
 
         // copy local.settings.json from the AzureFunctionApplication project to destination app folder
         var deployPath = Path.Combine(DestinationRootDirectoryPath, ApplicationDirectoryName, "local.settings.json");
-        var localSettingsPath = Path.Combine(SourceApplicationDirectoryPath, "local.settings.json");
+
+        // The file is CopyToPublishDirectory=Never, so it exists only in build output.
+        // A RID-scoped publish puts that output under <tfm>/<rid>, not <tfm>.
+        var ridScopedPath = Path.Combine(SourceApplicationDirectoryPath, Utilities.CurrentRuntime, "local.settings.json");
+        var localSettingsPath = File.Exists(ridScopedPath)
+            ? ridScopedPath
+            : Path.Combine(SourceApplicationDirectoryPath, "local.settings.json");
 
         File.Copy(localSettingsPath, deployPath, true);
     }
