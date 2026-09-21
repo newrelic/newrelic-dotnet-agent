@@ -647,6 +647,7 @@ namespace NewRelic { namespace Profiler { namespace ThreadProfiler
                         break;
                     }
 
+                    bool profilingFailedWhileSuspended = false;
                     {
                         // Serialize the runtime suspend/stack-walk with the always-on ContinuousProfiler:
                         // both share the single native stack-walk machinery and must never suspend the
@@ -673,13 +674,21 @@ namespace NewRelic { namespace Profiler { namespace ThreadProfiler
                             {
                                 // The show must go on -- a failed capture is never fatal. Caught here,
                                 // not by the outer catch, so ResumeRuntime below always still runs.
-                                LogError("TP: Exception thrown while profiling.");
+                                // Do NOT log here: the runtime is still suspended and a suspended thread
+                                // may hold the loader/heap lock that Logger's mutex + allocation need,
+                                // which deadlocks. Defer the log until after ResumeRuntime() returns.
+                                profilingFailedWhileSuspended = true;
                             }
                             _corProfilerInfo10->ResumeRuntime();
                         }
 #else
                         ProfileAllThreads();
 #endif
+                    }
+
+                    if (profilingFailedWhileSuspended)
+                    {
+                        LogError("TP: Exception thrown while profiling.");
                     }
 
                     SignalProfileCompleted();
