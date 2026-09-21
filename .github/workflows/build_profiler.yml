@@ -131,7 +131,7 @@ jobs:
             mv ${{ env.tests_base_path}}\LastCoverageResults.log ${{ env.tests_base_path}}\LastCoverageResults_x64.log
 
       - name: Upload coverage reports to Codecov.io
-        uses: codecov/codecov-action@0b35c9ecc4f0529d0eb674914510c22f85b196b4 # v7.1.0
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         with:
             flags: Profiler
             files: ${{ env.test_results_path }}/profilerx86.xml,${{ env.test_results_path }}/profilerx64.xml
