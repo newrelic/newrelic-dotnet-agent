@@ -304,7 +304,7 @@ public class ThreadProfilingService : ConfigurationBasedService, IThreadProfilin
             Log.Warn("Thread profiling session {0} stop timed out waiting for the sampling worker to wind down; leaving profile state intact so the still-running worker's aggregation is not corrupted.", profileId);
         }
 
-        return true;
+        return workerStopped;
     }
     public void SampleAcquired(ThreadSnapshot[] threadSnapshots)
     {
