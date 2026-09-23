@@ -470,7 +470,8 @@ jobs:
         shell: bash
 
       - name: Deploy YUM Repo Definitions
-        if: ${{ inputs.deploy && inputs.linux && inputs.linux-deploy-yum-repo-definitions }}
+        continue-on-error: true
+        if: ${{ inputs.deploy && inputs.linux-deploy-yum-repo-definitions }}
         # Deploy YUM repository definitions to the targeted repository (production or test, based on the 'linux-deploy-to-production' input).
         # The definitions are .repo files in ./build/Linux/yum directory at the root of the agent source tree.
         # The files just have to be copied to the <TARGET_S3_BUCKET>/dot_net_agent/yum directory, potentially overriding existing files.
@@ -484,7 +485,7 @@ jobs:
             # earlier in this job (AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY/AWS_SESSION_TOKEN)
             # are already present in the job environment.
             if [ -z "$AWS_SESSION_TOKEN" ] ; then
-              echo "::error AWS_SESSION_TOKEN is empty - role assumption did not run or failed."
+              echo "::error::AWS_SESSION_TOKEN is empty - role assumption did not run or failed."
               exit 1
             fi
             TARGET_S3_BUCKET="${{ secrets.TEST_S3_BUCKET }}"
