@@ -75,9 +75,12 @@ public class TransactionFinalizer : DisposableService, ITransactionFinalizer
     /// holding it. The rule being stated is about the CP-suspend-window reader, which never runs here.</para>
     ///
     /// <para>Deliberately probes for ALREADY-MATERIALIZED span ids rather than reading
-    /// <c>Segment.SpanId</c>: that getter is a lazy generator, so reading it would mint ids for spans that
-    /// are never reported (an unsampled transaction generates none today). An id that was never
-    /// materialized was never pushed, so there is nothing to retire.</para>
+    /// <c>Segment.SpanId</c>: that getter is a lazy generator, so reading it here would mint ids for
+    /// segments that never needed one. Only the segment that was current at some wrapped-method
+    /// entry/exit while CP was enabled (<c>WrapperService.PushContinuousProfilingContext</c>) is
+    /// guaranteed to already have a materialized id -- that push isn't gated by sampling or span-events
+    /// settings. An id that was never materialized was never pushed to the native profiler, so there is
+    /// nothing to retire.</para>
     ///
     /// <para><c>Transaction.End()</c>'s existing <c>ResetTraceContext()</c> call stays exactly where it is
     /// and is NOT moved here: it is thread-affine (it clears the calling thread's own native slot and a

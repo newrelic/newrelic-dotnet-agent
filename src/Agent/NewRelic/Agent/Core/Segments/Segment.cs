@@ -218,11 +218,15 @@ public class Segment : IInternalSpan, ISegmentDataState, IHybridAgentSegment
     /// <see cref="SpanId"/> read, or explicitly assigned. Returns null otherwise and NEVER generates one.
     ///
     /// <para>Exists so continuous profiling can retire a finished transaction's spans without minting ids
-    /// that were never used: <see cref="SpanId"/>'s getter is a lazy generator, and for an unsampled
-    /// transaction (or one with span events disabled) no segment's id is ever generated today. An id that
-    /// was never materialized was never pushed to the native profiler, so there is nothing to retire.
-    /// Probing instead of reading also avoids racing that getter, which is documented as able to hand back
-    /// two different ids if first read concurrently from two threads.</para>
+    /// that were never used: <see cref="SpanId"/>'s getter is a lazy generator, and only the segment that
+    /// was current at some wrapped-method entry/exit while CP was enabled (<see
+    /// cref="WrapperService.PushContinuousProfilingContext"/>) is guaranteed to have had its id
+    /// materialized -- sampling and span-events settings don't gate that push. Any other segment (never
+    /// current at such a boundary) has its id generated only if something else reads <see cref="SpanId"/>,
+    /// e.g. span event serialization. An id that was never materialized was never pushed to the native
+    /// profiler, so there is nothing to retire. Probing instead of reading also avoids racing that getter,
+    /// which is documented as able to hand back two different ids if first read concurrently from two
+    /// threads.</para>
     ///
     /// <para><c>Volatile.Read</c> is deliberate, not decoration: <c>_spanId</c> is a plain field
     /// written by whichever application thread first read <see cref="SpanId"/>, and this is read at
