@@ -8,12 +8,14 @@ using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.CallStack;
+using NewRelic.Agent.Core.ContinuousProfiling;
 using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.DistributedTracing.Samplers;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
+using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NUnit.Framework;
@@ -621,6 +623,126 @@ public class TransactionTests
 
         // Assert
         Assert.That(traceId, Is.EqualTo("tracing-state-trace-id"));
+    }
+
+    [Test]
+    public void DroppedSegmentSpanIds_is_empty_for_a_transaction_that_dropped_nothing()
+    {
+        var transaction = CreateTransaction();
+
+        Assert.That(transaction.DroppedSegmentSpanIds, Is.Empty);
+    }
+
+    // ---- CaptureDroppedSegmentSpanId (the over-limit capture path in CallStackPop) ----
+    //
+    // Driven through the real CallStackPop over-limit branch rather than by poking the private capture
+    // method: the branch, the ContinuousProfilingContext.AnyEnabled pre-filter, the lazy queue creation
+    // and the MaxDroppedSegmentSpanIds cap are one unit and the cap is only observable through it.
+
+    [Test]
+    public void CallStackPop_captures_the_span_id_of_an_over_limit_segment_that_had_materialized_one()
+    {
+        var originalAnyEnabled = ContinuousProfilingContext.AnyEnabled;
+        try
+        {
+            ContinuousProfilingContext.AnyEnabled = true;
+            var transaction = CreateTransactionWithMaxSegments(0);
+            var segment = AddSegment(transaction);
+            segment.SpanId = "0123456789abcdef";
+
+            transaction.CallStackPop(segment, notifyParent: true);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(new List<string>(transaction.DroppedSegmentSpanIds), Is.EqualTo(new[] { "0123456789abcdef" }));
+                // The over-limit slot really was nulled out, i.e. the id would have been unretirable
+                // without the capture.
+                Assert.That(transaction.Segments[segment.UniqueId], Is.Null);
+            });
+        }
+        finally
+        {
+            ContinuousProfilingContext.AnyEnabled = originalAnyEnabled;
+        }
+    }
+
+    [Test]
+    public void CallStackPop_does_not_capture_or_materialize_a_span_id_for_an_over_limit_segment_that_never_had_one()
+    {
+        var originalAnyEnabled = ContinuousProfilingContext.AnyEnabled;
+        try
+        {
+            ContinuousProfilingContext.AnyEnabled = true;
+            var transaction = CreateTransactionWithMaxSegments(0);
+            var segment = AddSegment(transaction);
+
+            transaction.CallStackPop(segment, notifyParent: true);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(transaction.DroppedSegmentSpanIds, Is.Empty, "a span id that was never materialized was never pushed, so there is nothing to retire");
+                Assert.That(segment.TryGetMaterializedSpanId(), Is.Null, "the capture attempt must not itself mint a span id");
+            });
+        }
+        finally
+        {
+            ContinuousProfilingContext.AnyEnabled = originalAnyEnabled;
+        }
+    }
+
+    [Test]
+    public void CallStackPop_stops_capturing_dropped_span_ids_at_the_cap_without_throwing_or_growing()
+    {
+        const int cap = 10000;      // MaxDroppedSegmentSpanIds
+        const int overshoot = 25;
+
+        var originalAnyEnabled = ContinuousProfilingContext.AnyEnabled;
+        try
+        {
+            ContinuousProfilingContext.AnyEnabled = true;
+            var transaction = CreateTransactionWithMaxSegments(0);
+
+            for (var i = 0; i < cap + overshoot; i++)
+            {
+                var segment = AddSegment(transaction);
+                segment.SpanId = i.ToString("x16");
+                transaction.CallStackPop(segment, notifyParent: true);
+            }
+
+            var captured = new List<string>(transaction.DroppedSegmentSpanIds);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(captured, Has.Count.EqualTo(cap), "the buffer must be bounded at MaxDroppedSegmentSpanIds");
+                // Degradation is "stop recording", not "evict": the FIRST cap ids are the ones kept.
+                Assert.That(captured[0], Is.EqualTo(0.ToString("x16")));
+                Assert.That(captured[cap - 1], Is.EqualTo((cap - 1).ToString("x16")));
+            });
+        }
+        finally
+        {
+            ContinuousProfilingContext.AnyEnabled = originalAnyEnabled;
+        }
+    }
+
+    private static Segment AddSegment(Transaction transaction)
+    {
+        // The Segment .ctor registers itself via ITransactionSegmentState.CallStackPush, which is what
+        // assigns UniqueId -- so the segment is in transaction.Segments at that index once this returns.
+        return new Segment(transaction, new MethodCallData("Type", "Method", 1));
+    }
+
+    // TransactionTracerMaxSegments is captured in the Transaction .ctor, so it has to be arranged before
+    // construction. maxSegments: 0 makes every segment over-limit, which is the branch under test.
+    private Transaction CreateTransactionWithMaxSegments(int maxSegments)
+    {
+        var config = Mock.Create<IConfiguration>();
+        Mock.Arrange(() => config.TransactionTracerMaxSegments).Returns(maxSegments);
+
+        return new Transaction(config, Mock.Create<ITransactionName>(), Mock.Create<ISimpleTimer>(),
+            DateTime.UtcNow, Mock.Create<ICallStackManager>(), Mock.Create<IDatabaseService>(),
+            _priority, _databaseStatementParser, _distributedTracePayloadHandler,
+            Mock.Create<IErrorService>(), AttribDefs, Mock.Create<ISamplerService>());
     }
 
     // Helper to create a Transaction with minimal dependencies

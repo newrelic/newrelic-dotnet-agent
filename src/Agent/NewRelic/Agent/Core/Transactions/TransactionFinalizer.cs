@@ -2,14 +2,17 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.Core.AgentHealth;
+using NewRelic.Agent.Core.ContinuousProfiling;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
+using NewRelic.Agent.Extensions.Logging;
 
 namespace NewRelic.Agent.Core.Transactions;
 
@@ -44,10 +47,112 @@ public class TransactionFinalizer : DisposableService, ITransactionFinalizer
         if (transaction.Finish())
         {
             UpdatePathHash(transaction);
+            RetireContinuousProfilingSpans(transaction);
             return true;
         }
 
         return false;
+    }
+
+    /// <summary>
+    /// Marks every span this transaction pushed to the native continuous profiler as ended, so no later
+    /// CPU sample is linked to it.
+    ///
+    /// <para>Lives here, not in <c>Transaction.End()</c>, because this is the one choke point EVERY
+    /// terminating transaction passes through exactly once: a transaction that never ends cleanly is
+    /// reaped via <c>~Transaction()</c> -&gt; <c>TransactionFinalizedEvent</c> -&gt; <c>OnTransactionFinalized</c>,
+    /// which never runs <c>End()</c>'s body. <c>Transaction.Finish()</c> is a double-checked-lock gate that
+    /// returns true to exactly one caller ever, so this cannot run twice for one transaction.</para>
+    ///
+    /// <para>Note this can run on the GC FINALIZER THREAD (the reaped path). It must therefore never
+    /// block, never take a lock an application thread could hold while the runtime is suspended, and never
+    /// throw -- an exception escaping here is swallowed by the destructor and would silently lose the
+    /// transaction, and a stall would stall every finalizer in the process. The <c>Segments</c> walk below
+    /// does take one lock -- <c>ConcurrentList&lt;T&gt;</c>'s <c>ReaderWriterLockSlim</c> READ lock -- and
+    /// that is deliberately accepted, not an oversight: the identical lock is already taken on this same
+    /// finalizer path by <c>ConvertToImmutableTransaction</c> (<c>ImmutableTransaction</c>'s ctor copies
+    /// <c>Segments</c>), and a finalizer runs with the world RESUMED, so no writer can be suspended while
+    /// holding it. The rule being stated is about the CP-suspend-window reader, which never runs here.</para>
+    ///
+    /// <para>Deliberately probes for ALREADY-MATERIALIZED span ids rather than reading
+    /// <c>Segment.SpanId</c>: that getter is a lazy generator, so reading it here would mint ids for
+    /// segments that never needed one. Only the segment that was current at some wrapped-method
+    /// entry/exit while CP was enabled (<c>WrapperService.PushContinuousProfilingContext</c>) is
+    /// guaranteed to already have a materialized id -- that push isn't gated by sampling or span-events
+    /// settings. An id that was never materialized was never pushed to the native profiler, so there is
+    /// nothing to retire.</para>
+    ///
+    /// <para><c>Transaction.End()</c>'s existing <c>ResetTraceContext()</c> call stays exactly where it is
+    /// and is NOT moved here: it is thread-affine (it clears the calling thread's own native slot and a
+    /// <c>[ThreadStatic]</c> guard), so running it on the finalizer thread would both miss the thread that
+    /// actually pushed and wrongly tombstone the finalizer thread's slot.</para>
+    /// </summary>
+    private static void RetireContinuousProfilingSpans(IInternalTransaction transaction)
+    {
+        // Single static volatile read for every customer without continuous profiling: no enumeration of
+        // Segments, no allocation, no interface dispatch.
+        if (!ContinuousProfilingContext.AnyEnabled)
+            return;
+
+        try
+        {
+            // AnyEnabled is armed ahead of the context going live and is explicitly "never the final
+            // word", so ask the context itself before doing any work: a retirement issued while the
+            // native side is not live is dropped there anyway, and the next Start() bumps the trace
+            // context generation, which invalidates every slot written before it.
+            var context = ContinuousProfilingContext.Instance;
+            if (!context.IsEnabled)
+                return;
+
+            List<string> spanIds = null;
+
+            // ConcurrentList<Segment>.GetEnumerator takes the read lock once and enumerates a defensive
+            // copy, so a straggler async continuation adding a segment cannot throw here. Entries can be
+            // null: a transaction past TransactionTracerMaxSegments has its over-limit slots nulled out.
+            //
+            // KNOWN RESIDUAL, and it is that same defensive copy: this walk is a POINT-IN-TIME SNAPSHOT.
+            // A straggler async continuation that starts a segment and pushes its span id AFTER this
+            // enumeration is not retired by it, so the thread that pushed it keeps a link to an
+            // already-finished transaction. That link survives until the pushing thread's next
+            // instrumented push overwrites its slot (the common self-heal) or the next CP Start() bumps
+            // the trace-context generation. This is a stated bound of retiring at a single choke point,
+            // not a bug to fix here: the alternative -- capturing every span id at push time -- puts an
+            // append and an allocation on the per-instrumented-call hot path, which the design forbids.
+            // Unreachable on the reaped path, where unreachability precludes stragglers by construction.
+            foreach (var segment in transaction.Segments)
+            {
+                var spanId = segment?.TryGetMaterializedSpanId();
+                if (spanId == null)
+                    continue;
+
+                spanIds = spanIds ?? new List<string>();
+                spanIds.Add(spanId);
+            }
+
+            // Segments dropped for exceeding the max-segments cap are unreachable from Segments above but
+            // had already pushed their ids, so they must be retired too.
+            foreach (var droppedSpanId in transaction.DroppedSegmentSpanIds)
+            {
+                if (droppedSpanId == null)
+                    continue;
+
+                spanIds = spanIds ?? new List<string>();
+                spanIds.Add(droppedSpanId);
+            }
+
+            if (spanIds == null)
+                return; // nothing was ever materialized -> nothing was ever pushed.
+
+            // Hex strings, one call for the whole transaction: the context is the single decoder, and it
+            // already drops unusable ids and skips the native call when nothing survives.
+            context.RetireSpans(spanIds);
+        }
+        catch (Exception ex)
+        {
+            // Never let continuous profiling break transaction finalization. See the finalizer-thread note
+            // above for why this catch is not optional.
+            Log.Finest(ex, "[ContinuousProfiling] Failed to retire ended spans for a finished transaction.");
+        }
     }
 
     private void OnTransactionFinalized(TransactionFinalizedEvent eventData)
