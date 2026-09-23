@@ -9,6 +9,9 @@ namespace NewRelic.Agent.IntegrationTestHelpers;
 
 public class XUnitTestLogger : ITestLogger
 {
+    // xunit buffers ITestOutputHelper until the test ends, so a hung test reports nothing. Echo progress lines to the console too.
+    private static readonly bool LiveLog = Environment.GetEnvironmentVariable("NR_DOTNET_TEST_LIVE_LOG") == "1";
+
     private readonly ITestOutputHelper _xunitOutput;
 
     public XUnitTestLogger(ITestOutputHelper xunitOutput)
@@ -23,17 +26,17 @@ public class XUnitTestLogger : ITestLogger
 
     public void WriteLine(string message)
     {
-        WriteSafe(Stamp(message));
+        WriteSafe(Stamp(message), live: true);
     }
 
     public void WriteLine(string format, params object[] args)
     {
-        WriteSafe(string.Format(Stamp(format), args));
+        WriteSafe(string.Format(Stamp(format), args), live: true);
     }
 
     public void WriteFormattedOutput(string formattedOutput)
     {
-        WriteSafe(formattedOutput);
+        WriteSafe(formattedOutput, live: false);
     }
 
     private static string Stamp(string message)
@@ -42,15 +45,25 @@ public class XUnitTestLogger : ITestLogger
     }
 
     // xunit v3 throws once the test has ended, so fixture Dispose hits it.
-    private void WriteSafe(string message)
+    private void WriteSafe(string message, bool live)
     {
+        var wroteToConsole = false;
+        if (live && LiveLog)
+        {
+            Console.WriteLine(message);
+            wroteToConsole = true;
+        }
+
         try
         {
             _xunitOutput?.WriteLine(message);
         }
         catch (InvalidOperationException)
         {
-            Console.WriteLine(message);
+            if (!wroteToConsole)
+            {
+                Console.WriteLine(message);
+            }
         }
     }
 }

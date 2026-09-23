@@ -17,6 +17,11 @@ on:
         type: boolean
         required: false
         default: true
+      max_tries:
+        description: 'Attempts a test gets when it fails with a known transient error. Empty falls back to the TEST_MAX_TRIES repository variable, then to 3. Set to 1 to fail fast.'
+        type: string
+        required: false
+        default: ''
 
 permissions:
   contents: read
@@ -41,6 +46,25 @@ jobs:
           search-paths: Applications SharedApplications
           skip-projects: AzureFunctionApplication AzureFunctionInProcApplication
           artifact-name: integrationtests
+
+  build-linux:
+    name: Build IntegrationTests (Linux)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          filter: blob:none
+
+      - name: Build test solution
+        uses: ./.github/actions/build-test-solution-linux
+        with:
+          project-path: tests/Agent/IntegrationTests/IntegrationTests/IntegrationTests.csproj
+          search-paths: Applications SharedApplications
+          artifact-name: integrationtests-linux
 
   run-integration-tests:
     needs: build
@@ -129,7 +153,8 @@ jobs:
           matrix.namespace == 'AgentFeatures' || matrix.namespace == 'AgentLogs' || matrix.namespace == 'AgentMetrics' || matrix.namespace == 'BasicInstrumentation' || 
           matrix.namespace == 'CatInbound' || matrix.namespace == 'CatOutbound' || matrix.namespace == 'CodeLevelMetrics' ||
           matrix.namespace == 'CustomAttributes' || matrix.namespace == 'CustomInstrumentation' || matrix.namespace == 'DataTransmission' || 
-          matrix.namespace == 'DistributedTracing' || matrix.namespace == 'Errors' || matrix.namespace == 'HSM' || matrix.namespace == 'HttpClientInstrumentation' || matrix.namespace == 'HybridHttpContextStorage' ||
+          matrix.namespace == 'DistributedTracing' || matrix.namespace == 'DistributedTracing.W3CInstrumentationTests' ||
+          matrix.namespace == 'Errors' || matrix.namespace == 'HSM' || matrix.namespace == 'HttpClientInstrumentation' || matrix.namespace == 'HybridHttpContextStorage' ||
           matrix.namespace == 'LLM' || matrix.namespace == 'MultiAppDomain' || matrix.namespace == 'Rejit.NetFramework' || matrix.namespace == 'RequestHandling' || matrix.namespace == 'RequestHeadersCapture.AspNet' ||
           matrix.namespace == 'RequestHeadersCapture.AspNetCore' || matrix.namespace == 'RequestHeadersCapture.EnvironmentVariables' ||
           matrix.namespace == 'RequestHeadersCapture.WCF' || matrix.namespace == 'WCF.Client.IIS.ASPDisabled' ||
@@ -318,4 +343,164 @@ jobs:
             C:\IntegrationTestWorkingDirectory\**\*.log
             C:\IntegrationTestWorkingDirectory\TestResults\**\*TestResults.trx
           if-no-files-found: error
+
+  run-integration-tests-linux:
+    needs: build-linux
+    name: Run IntegrationTests (Linux)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write
+    strategy:
+      matrix:
+        namespace: ${{ fromJson(inputs.namespaces) }}
+      fail-fast: false
+    env:
+      integration_tests_shared_project: ${{ github.workspace }}/tests/Agent/IntegrationTests/Shared
+      integration_tests_path: ${{ github.workspace }}/tests/Agent/IntegrationTests/IntegrationTests/bin/Release/net10.0
+      test_results_path: ${{ github.workspace }}/tests/TestResults
+      NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY: 1
+      NR_DOTNET_TEST_PREBUILT_APPS: 1
+      CI_NEW_RELIC_APP_NAME: ${{ github.event_name == 'schedule' && 'DotNetIngestTracking' || '' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          filter: blob:none
+
+      - name: Set up secrets
+        env:
+          INTEGRATION_TEST_SECRETS: ${{ secrets.TEST_SECRETS }}
+        run: |
+          "$Env:INTEGRATION_TEST_SECRETS" | dotnet user-secrets set --project ${{ env.integration_tests_shared_project }}
+        shell: pwsh
+
+      - name: Download Agent Home Folders
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: homefolders
+          path: src/Agent
+
+      - name: Download Integration Test Artifacts
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: integrationtests-linux
+
+      - name: Restore executable bits lost by the artifact round trip
+        shell: bash
+        run: |
+          # upload-artifact zips without Unix modes, so every apphost arrives
+          # non-executable and Process.Start fails with EACCES.
+          count=0
+          while IFS= read -r file; do
+            chmod +x "$file"
+            count=$((count + 1))
+          done < <(find tests/Agent/IntegrationTests -type f \( ! -name '*.*' -o -name '*.sh' \) -not -path '*/obj/*')
+          echo "Marked $count file(s) executable"
+          if [ "$count" -eq 0 ]; then
+            echo "::error::No apphost files found. Every Linux test app would fail to start with EACCES."
+            exit 1
+          fi
+
+      - name: Install .NET SDKs and runtimes
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: |
+            8.0.x
+            10.0.x
+          dotnet-quality: 'ga'
+
+      - name: Discover Linux-eligible tests
+        id: discover
+        shell: bash
+        run: |
+          bash build/Scripts/check-namespace-eligible.sh \
+            Platform=WindowsOnly \
+            "NewRelic.Agent.IntegrationTests.${{ matrix.namespace }}" \
+            dotnet "${{ env.integration_tests_path }}/NewRelic.Agent.IntegrationTests.dll"
+
+      - name: Configure AWS credentials for Bedrock
+        if: steps.discover.outputs.has_tests == 'true' && matrix.namespace == 'LLM'
+        uses: aws-actions/configure-aws-credentials@cbe3b392738ccf3f987d68400dafcf4b0624a56c # v6.2.4
+        with:
+          role-to-assume: ${{ secrets.AWS_BEDROCK_TEST_ROLE_ARN }}
+          role-duration-seconds: 900
+          aws-region: us-west-2
+
+      - name: Create and trust .NET development SSL certificate
+        if: steps.discover.outputs.has_tests == 'true'
+        shell: bash
+        # MockNewRelic serves HTTPS on localhost. Do not gate on
+        # "dev-certs https --check --trust": on Linux it reports the cert
+        # untrusted (exit 7) even when HttpClient trusts it through the CA store.
+        run: |
+          dotnet dev-certs https --clean
+          dotnet dev-certs https --export-path "$RUNNER_TEMP/devcert.crt" --format Pem --no-password
+          sudo cp "$RUNNER_TEMP/devcert.crt" /usr/local/share/ca-certificates/aspnet-devcert.crt
+          sudo update-ca-certificates
+          if [ ! -e /etc/ssl/certs/aspnet-devcert.pem ]; then
+            echo "::error::The dev certificate did not land in the system CA store."
+            exit 1
+          fi
+
+      - name: Install Azure Functions Core Tools
+        if: steps.discover.outputs.has_tests == 'true' && matrix.namespace == 'AzureFunction'
+        shell: bash
+        env:
+          # The native binary, not the npm package. The npm package installs a
+          # node shim that spawns the real host, so killing the process the
+          # fixture started leaves the host alive holding its output pipe.
+          FUNC_VERSION: 4.14.0
+        run: |
+          base=https://github.com/Azure/azure-functions-core-tools/releases/download/$FUNC_VERSION
+          zip=Azure.Functions.Cli.linux-x64.$FUNC_VERSION.zip
+          curl -fsSL -o "$RUNNER_TEMP/$zip" "$base/$zip"
+          curl -fsSL -o "$RUNNER_TEMP/$zip.sha2" "$base/$zip.sha2"
+          echo "$(tr -d '\r\n ' < "$RUNNER_TEMP/$zip.sha2")  $RUNNER_TEMP/$zip" | sha256sum -c -
+          unzip -q "$RUNNER_TEMP/$zip" -d "$RUNNER_TEMP/func"
+          find "$RUNNER_TEMP/func" -name func -exec chmod +x {} +
+          func_path="$RUNNER_TEMP/func/func"
+          if [ ! -x "$func_path" ]; then
+            echo "::error::Azure Functions Core Tools did not install; $func_path is not executable."
+            exit 1
+          fi
+          echo "azure_func_exe_path=$func_path" >> "$GITHUB_ENV"
+          "$func_path" --version
+
+      - name: Run Integration Tests
+        id: run-tests
+        if: steps.discover.outputs.has_tests == 'true'
+        uses: ./.github/actions/run-host-tests
+        with:
+          tests-path: ${{ env.integration_tests_path }}
+          assembly-name: NewRelic.Agent.IntegrationTests
+          namespace-prefix: NewRelic.Agent.IntegrationTests
+          namespace: ${{ matrix.namespace }}
+          trait: Platform=WindowsOnly
+          exclude-trait: 'true'
+          trx-path: ${{ env.test_results_path }}/${{ matrix.namespace }}_testResults.trx
+          parallelize: ${{ inputs.parallelize }}
+          no-parallel-namespaces: AzureFunction
+          test-type: integrationTestsLinux
+          max-tries: ${{ inputs.max_tries || vars.TEST_MAX_TRIES }}
+
+      - name: Report test results
+        if: always() && steps.discover.outputs.has_tests == 'true'
+        uses: ./.github/actions/report-host-tests
+        with:
+          namespace: ${{ matrix.namespace }}
+          results-dir: ${{ env.test_results_path }}
+          payload-basename: ${{ matrix.namespace }}_linux
+          payload-artifact-name: integration-payload-bytes-linux-${{ matrix.namespace }}
+          results-artifact-name: integration-test-results-linux-${{ matrix.namespace }}
+          tests-outcome: ${{ steps.run-tests.outcome }}
+          archive-paths: |
+            /tmp/IntegrationTestWorkingDirectory/**/*.log
+            ${{ env.test_results_path }}/**/*.trx
+            ${{ runner.temp }}/run-${{ matrix.namespace }}.log
+          aggregate-payload-data: ${{ inputs.aggregate_payload_data == true || github.event_name == 'schedule' }}
+          nr-ci-ingest-key: ${{ secrets.NR_CI_INGEST_KEY }}
+          nr-ci-account-id: ${{ secrets.NR_CI_ACCOUNT_ID }}
 

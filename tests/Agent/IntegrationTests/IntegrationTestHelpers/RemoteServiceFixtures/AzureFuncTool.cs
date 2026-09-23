@@ -3,7 +3,6 @@
 
 using System;
 using System.Diagnostics;
-using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -27,17 +26,6 @@ public class AzureFuncTool : RemoteService
         _inProc = inProc;
 
         CaptureStandardOutput = false; // we implement our own output capture here, so don't use the base class implementation
-    }
-
-    public override void CopyToRemote()
-    {
-        base.CopyToRemote();
-
-        // copy local.settings.json from the AzureFunctionApplication project to destination app folder
-        var deployPath = Path.Combine(DestinationRootDirectoryPath, ApplicationDirectoryName, "local.settings.json");
-        var localSettingsPath = Path.Combine(SourceApplicationDirectoryPath, "local.settings.json");
-
-        File.Copy(localSettingsPath, deployPath, true);
     }
 
     protected override string GetStartInfoArgs(string arguments)

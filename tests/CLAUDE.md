@@ -96,6 +96,68 @@ public class BasicMvcTests : NewRelicIntegrationTest<AspNetFrameworkBasicMvcAppl
 
 **Where new test apps go** (three parallel dirs under `IntegrationTests/`): `Applications/` (host-run FW/Core), `ContainerApplications/` (Docker), `UnboundedApplications/` (external infra, paired with `UnboundedServices/` compose). **Prefer the MFA pattern below over a new app.** Add a new `*Applications/` project only for a specific hosting model (IIS/OWIN, ASP.NET Core startup, WCF, Azure Functions, Lambda).
 
+### Target platforms
+
+`IntegrationTests.sln` and `UnboundedIntegrationTests.sln` build the Windows
+side.
+
+**The Linux side has no solution file, on purpose.** A solution would only
+restate what the build already derives. `build-test-solution-linux` builds the
+test `.csproj` directly (`project-path`), which pulls in its helper libraries,
+and then pre-publishes the test apps by globbing `search-paths` for every
+csproj that is not a `Library` and declares a `net<n>.<n>` target framework.
+`dotnet publish` builds each app's own `ProjectReference` closure, so nothing
+needs to be enumerated anywhere. A new Core test app is picked up with no
+manual step -- which is the point: an include list would go stale silently,
+and a forgotten app would simply never run on Linux.
+
+CI runs one job per namespace on each target platform:
+
+- Windows runs every test in the namespace. No filter.
+- Linux runs `dotnet <assembly>.dll -namespace <FQN> -trait- Platform=WindowsOnly`.
+
+A test class that cannot run on Linux carries
+`[Trait("Platform", "WindowsOnly")]`. That attribute is the only per-test
+declaration -- nothing derives a target platform from a namespace, a fixture,
+or a target framework. `TraitAttribute` is inherited and `-trait-` is
+absolute, so never put the trait on a base class that has portable derived
+classes.
+
+Before the tests run, each Linux job runs
+`build/Scripts/check-namespace-eligible.sh`. It fails the job when the trait
+is absent from the assembly or the exclusion filter is dead, and it skips the
+rest of the job when the namespace has no class left after the exclusion. A
+Framework-only namespace therefore costs one discovery step and nothing else,
+and it needs no list entry anywhere.
+
+Adding a test:
+
+| Scenario | Manual steps |
+|---|---|
+| New portable test, existing namespace | none |
+| New Framework-only test, existing namespace | add `[Trait("Platform", "WindowsOnly")]` to the class |
+| New FW+Core fixture pair | add the trait to the FW leaf only |
+| New namespace | add it to `integration_all` or `unbounded_all` in `.github/workflows/test_selection.yml` |
+| New **sub**-namespace, e.g. `Foo.Bar` under existing `Foo` | add `Foo.Bar` as its own entry -- see below |
+| Converting a Framework test to Core | delete the attribute |
+
+**`-namespace` matches exactly, not by prefix.** An entry for `Foo` does not run
+anything in `Foo.Bar`, so a sub-namespace without its own list entry never runs
+on either platform, and nothing fails -- the job reports success having selected
+zero tests. Three namespaces sat that way undetected
+(`DistributedTracing.W3CInstrumentationTests`,
+`HttpClientInstrumentation.NetFramework`, `RabbitMq.Legacy`).
+
+To check the lists against reality, ask the assembly rather than grepping source
+(a grep counts fixtures as classes):
+
+```
+dotnet NewRelic.Agent.IntegrationTests.dll -list Classes
+```
+
+Strip each class name to its namespace, and every distinct namespace must appear
+verbatim in the matching list. The counts should be equal.
+
 ### MFA (Console MultiFunction App) pattern
 
 Two shared console hosts dispatch string commands to **exerciser** classes; tests drive them via a `ConsoleDynamicMethodFixture*` fixture. Under `SharedApplications/`:
