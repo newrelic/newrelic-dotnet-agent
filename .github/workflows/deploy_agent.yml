@@ -39,6 +39,11 @@ on:
         description: Deploy APT / YUM Packages to Production Repository. (If not selected, will deploy to a test respository.)
         required: true
         default: true
+      linux-deploy-yum-repo-definitions:
+        type: boolean
+        description: Deploy YUM repository definitions to the targeted repository (production or test, based on the 'linux-deploy-to-production' input).
+        required: true
+        default: false
       indexdownloadsite:
         type: boolean
         description: Re-Index the Download Site S3 container
@@ -462,6 +467,31 @@ jobs:
             echo "Input:deploy was not true.  The following deploy command was not run:"
             echo "docker compose run deploy_packages"
           fi
+        shell: bash
+
+      - name: Deploy YUM Repo Definitions
+        continue-on-error: true
+        if: ${{ inputs.deploy && inputs.linux-deploy-yum-repo-definitions }}
+        # Deploy YUM repository definitions to the targeted repository (production or test, based on the 'linux-deploy-to-production' input).
+        # The definitions are .repo files in ./build/Linux/yum directory at the root of the agent source tree.
+        # The files just have to be copied to the <TARGET_S3_BUCKET>/dot_net_agent/yum directory, potentially overriding existing files.
+        run: |
+          if [ "${{ inputs.linux-deploy-to-production }}" == "true" ] ; then
+            export AWS_ACCESS_KEY_ID="${{ secrets.LINUX_AWS_ACCESS_KEY_ID }}"
+            export AWS_SECRET_ACCESS_KEY="${{ secrets.LINUX_AWS_SECRET_ACCESS_KEY }}"
+            TARGET_S3_BUCKET="${{ secrets.PROD_MAIN_S3 }}"
+          else
+            # Test repository - the short-lived credentials from the role assumed
+            # earlier in this job (AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY/AWS_SESSION_TOKEN)
+            # are already present in the job environment.
+            if [ -z "$AWS_SESSION_TOKEN" ] ; then
+              echo "::error::AWS_SESSION_TOKEN is empty - role assumption did not run or failed."
+              exit 1
+            fi
+            TARGET_S3_BUCKET="${{ secrets.TEST_S3_BUCKET }}"
+          fi
+
+          aws s3 cp ${{ github.workspace }}/build/Linux/yum "$TARGET_S3_BUCKET/dot_net_agent/yum/" --recursive --exclude "*" --include "*.repo"
         shell: bash
 
       - name: Clear Fastly cache
