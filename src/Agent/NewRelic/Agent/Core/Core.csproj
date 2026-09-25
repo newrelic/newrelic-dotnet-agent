@@ -73,6 +73,7 @@
     <!-- .NET Framework needs to use the legacy gRPC library -->
     <PackageReference Include="Grpc" />
     <PackageReference Include="Grpc.Core" />
+    <PackageReference Include="System.Net.Http.WinHttpHandler" />
     <PackageReference Include="System.Threading.Tasks.Extensions" />
     <PackageReference Include="System.ValueTuple" />
   </ItemGroup>
@@ -93,6 +94,7 @@
     <Reference Include="System.Web" />
     <Reference Include="System.Management" />
     <Reference Include="System.Configuration" />
+    <Reference Include="System.Net.Http" />
   </ItemGroup>
 
   <ItemGroup>
@@ -148,6 +150,8 @@
       <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'System.ValueTuple'" />
       <!-- Include System.Numerics.Vectors for net462 to satisfy OTel dependencies -->
       <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'System.Numerics.Vectors'" />
+      <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'System.Net.Http.WinHttpHandler'" />
+      <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'Microsoft.Bcl.HashCode'" />
     </ItemGroup>
 
     <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
@@ -166,7 +170,7 @@
     </ItemGroup>
 
     <PropertyGroup>
-      <ILRepackIncludeCount Condition="'$(TargetFramework)' == 'net462'">38</ILRepackIncludeCount>
+      <ILRepackIncludeCount Condition="'$(TargetFramework)' == 'net462'">40</ILRepackIncludeCount>
       <ILRepackIncludeCount Condition="'$(TargetFramework)' == 'netstandard2.0'">41</ILRepackIncludeCount>
     </PropertyGroup>
 

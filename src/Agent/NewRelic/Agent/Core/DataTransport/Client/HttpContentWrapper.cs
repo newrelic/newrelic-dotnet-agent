@@ -1,7 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-#if !NETFRAMEWORK
 using System.IO;
 using System.Net.Http;
 using NewRelic.Agent.Core.DataTransport.Client.Interfaces;
@@ -27,4 +26,3 @@ public class HttpContentWrapper : IHttpContentWrapper
 
     public IHttpContentHeadersWrapper Headers => new HttpContentHeadersWrapper(_httpContent.Headers);
 }
-#endif

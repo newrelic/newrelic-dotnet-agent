@@ -1,12 +1,15 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-#if !NETFRAMEWORK
 using System;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+#if NETFRAMEWORK
+using System.Security.Authentication;
+#else
 using System.Reflection;
+#endif
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.DataTransport.Client.Interfaces;
 using NewRelic.Agent.Core.Utilities;
@@ -37,6 +40,18 @@ public class NRHttpClient : HttpClientBase
     [NrExcludeFromCodeCoverage]
     private dynamic GetHttpHandler(IWebProxy proxy)
     {
+#if NETFRAMEWORK
+        var winHttpHandler = new WinHttpHandler
+        {
+            SslProtocols = SslProtocols.Tls12,
+            WindowsProxyUsePolicy = WindowsProxyUsePolicy.UseCustomProxy,
+            Proxy = proxy ?? WebRequest.DefaultWebProxy
+        };
+
+        Log.Info("Creating a WinHttpHandler with SslProtocols {SslProtocols}; ServicePointManager.SecurityProtocol is {SecurityProtocol}", winHttpHandler.SslProtocols, ServicePointManager.SecurityProtocol);
+
+        return winHttpHandler;
+#else
         // check whether the application is running .NET 6 or later
         if (System.Environment.Version.Major >= 6)
         {
@@ -72,6 +87,7 @@ public class NRHttpClient : HttpClientBase
         Log.Info("Current HttpClientHandler TLS Configuration (HttpClientHandler.SslProtocols): {SslProtocols}", httpClientHandler.SslProtocols.ToString());
 
         return httpClientHandler;
+#endif
     }
 
 
@@ -136,4 +152,3 @@ public class NRHttpClient : HttpClientBase
         _httpClientWrapper = httpClientWrapper;
     }
 }
-#endif

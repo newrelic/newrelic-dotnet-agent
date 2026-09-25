@@ -1,7 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-#if !NETFRAMEWORK
 using System;
 using System.Net.Http;
 using System.Threading;
@@ -47,4 +46,3 @@ public class HttpClientWrapper : IHttpClientWrapper
         }
     }
 }
-#endif

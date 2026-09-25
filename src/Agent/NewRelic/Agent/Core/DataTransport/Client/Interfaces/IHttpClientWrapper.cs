@@ -1,7 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-#if !NETFRAMEWORK
 using System;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -12,4 +11,3 @@ public interface IHttpClientWrapper : IDisposable
 {
     Task<IHttpResponseMessageWrapper> SendAsync(HttpRequestMessage message);
 }
-#endif
