@@ -1,8 +1,13 @@
 configurationDefinitions:
   - platform: KUBERNETESCLUSTER
-    description: Dotnet agent configuration
-    type: agent-config
+    type: AgentConfig
     version: 1.4.0
     schema: ../src/Agent/NewRelic/Agent/Core/Config/Configuration.xsd
     format: xml
     schemaFormat: xsd
+    bindings:
+      - type: CONFIGURES
+        targetType: AGENT
+        target: NRDotNetAgent
+        versions:
+          - ">=10.46.1"
