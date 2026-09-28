@@ -138,4 +138,111 @@ public class ManagedThreadIdRegistryTests
         registeringThread.Start();
         registeringThread.Join();
     }
+
+    [Test]
+    public void EnsureRegistered_TwoRegistryInstances_BothRegisterIndependently_OnSameThread()
+    {
+        // Pins the property that ruled out a bare [ThreadStatic] bool gate: two different registry
+        // instances calling EnsureRegistered on the SAME physical thread must both register, not have
+        // the second call find the first instance's gate and wrongly no-op.
+        var providerA = Mock.Create<ICurrentOsThreadIdProvider>();
+        var providerB = Mock.Create<ICurrentOsThreadIdProvider>();
+        var registryA = new ManagedThreadIdRegistry(providerA);
+        var registryB = new ManagedThreadIdRegistry(providerB);
+        Mock.Arrange(() => providerA.GetCurrentOsThreadId()).Returns(7001L);
+        Mock.Arrange(() => providerB.GetCurrentOsThreadId()).Returns(7002L);
+
+        registryA.EnsureRegistered();
+        registryB.EnsureRegistered();
+
+        var foundA = registryA.TryGetManagedThreadId(7001L, out var managedIdA);
+        var foundB = registryB.TryGetManagedThreadId(7002L, out var managedIdB);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(foundA, Is.True);
+            Assert.That(managedIdA, Is.EqualTo(Thread.CurrentThread.ManagedThreadId));
+            Assert.That(foundB, Is.True);
+            Assert.That(managedIdB, Is.EqualTo(Thread.CurrentThread.ManagedThreadId));
+        });
+    }
+
+    [Test]
+    public void EnsureRegistered_NewThreadReusingARecycledManagedThreadId_RegistersItsOwnMapping()
+    {
+        // Regression test for the bug tippmar-nr flagged on PR #3828: a ManagedThreadId-keyed gate
+        // finds a dead thread's entry already set when a new thread reuses that id, and silently skips
+        // registering its own OS TID -- a permanent miss for the life of the process. The [ThreadStatic]
+        // gate must NOT reproduce that: a new thread always gets fresh per-thread storage regardless of
+        // which ManagedThreadId the CLR handed it.
+        var mockProvider = Mock.Create<ICurrentOsThreadIdProvider>();
+        var registry = new ManagedThreadIdRegistry(mockProvider);
+        const long firstThreadOsTid = 6001L;
+        const long secondThreadOsTid = 6002L;
+
+        Mock.Arrange(() => mockProvider.GetCurrentOsThreadId()).Returns(firstThreadOsTid);
+        var firstThreadManagedId = RegisterOnBackgroundThreadAndReturnManagedId(registry);
+
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+        GC.Collect();
+
+        // Precondition: the dead thread's own mapping must already be unresolvable (proves the miss
+        // below is caused by id reuse hitting the gate, not by the first mapping still being alive).
+        Assert.That(registry.TryGetManagedThreadId(firstThreadOsTid, out _), Is.False);
+
+        // The CLR reuses a freed ManagedThreadId opportunistically, not deterministically -- spin up
+        // threads until one lands on the recycled id, bounded so the test can't hang if it never does.
+        const int maxAttempts = 2000;
+        var reusedId = false;
+        for (var attempt = 0; attempt < maxAttempts && !reusedId; attempt++)
+        {
+            reusedId = TryRegisterOnNewThreadIfItReusesManagedId(registry, mockProvider, firstThreadManagedId, secondThreadOsTid);
+        }
+
+        if (!reusedId)
+        {
+            Assert.Inconclusive($"CLR did not reuse managed thread id {firstThreadManagedId} within {maxAttempts} attempts; cannot exercise the reuse path on this run.");
+        }
+
+        var found = registry.TryGetManagedThreadId(secondThreadOsTid, out var resolvedManagedId);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(found, Is.True);
+            Assert.That(resolvedManagedId, Is.EqualTo(firstThreadManagedId));
+        });
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
+    private static int RegisterOnBackgroundThreadAndReturnManagedId(ManagedThreadIdRegistry registry)
+    {
+        var managedId = 0;
+        var registeringThread = new Thread(() =>
+        {
+            managedId = Thread.CurrentThread.ManagedThreadId;
+            registry.EnsureRegistered();
+        });
+        registeringThread.Start();
+        registeringThread.Join();
+        return managedId;
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
+    private static bool TryRegisterOnNewThreadIfItReusesManagedId(ManagedThreadIdRegistry registry, ICurrentOsThreadIdProvider mockProvider, int targetManagedId, long osTidToRegisterWith)
+    {
+        var matched = false;
+        var thread = new Thread(() =>
+        {
+            if (Thread.CurrentThread.ManagedThreadId == targetManagedId)
+            {
+                Mock.Arrange(() => mockProvider.GetCurrentOsThreadId()).Returns(osTidToRegisterWith);
+                registry.EnsureRegistered();
+                matched = true;
+            }
+        });
+        thread.Start();
+        thread.Join();
+        return matched;
+    }
 }

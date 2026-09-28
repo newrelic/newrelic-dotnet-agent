@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Threading;
 using NewRelic.Agent.Core.Utilities;
 
@@ -17,12 +18,13 @@ public class ManagedThreadIdRegistry : IManagedThreadIdRegistry
     // miss instead of resolving to the dead thread's stale managed id.
     private readonly ConcurrentDictionary<long, (WeakReference<Thread> ThreadRef, int ManagedThreadId)> _osTidToManagedId = new ConcurrentDictionary<long, (WeakReference<Thread> ThreadRef, int ManagedThreadId)>();
 
-    // Per-thread gate: track which threads have already registered on THIS registry instance.
-    // Uses ManagedThreadId as key; note the CLR can reuse a ManagedThreadId after a thread terminates, so
-    // a new thread reusing an id can find the gate already set. That does not go stale the way the OS-TID
-    // mapping above does -- see TryGetManagedThreadId's doc comment for the staleness mode that key choice
-    // introduces there.
-    private readonly ConcurrentDictionary<int, bool> _threadsRegistered = new ConcurrentDictionary<int, bool>();
+    // Per-thread gate: track which registry instances the CURRENT MANAGED THREAD has already registered
+    // with. [ThreadStatic] storage belongs to the managed thread, so a new thread that reuses a recycled
+    // ManagedThreadId gets fresh (empty) storage and always re-registers -- a ManagedThreadId-keyed
+    // dictionary instead would find the dead thread's gate entry already set and wrongly skip
+    // registration, permanently losing that OS TID's mapping for the life of the process.
+    [ThreadStatic]
+    private static HashSet<ManagedThreadIdRegistry> _registeredInstances;
 
     // Process-wide seam so TransactionService, ContinuousProfilingContext, and OtlpProfileBuilder can
     // all reach the same registry without DI plumbing through every layer between them -- mirrors
@@ -36,15 +38,14 @@ public class ManagedThreadIdRegistry : IManagedThreadIdRegistry
 
     public void EnsureRegistered()
     {
-        var threadId = Thread.CurrentThread.ManagedThreadId;
-        if (_threadsRegistered.ContainsKey(threadId))
+        var registeredInstances = _registeredInstances ??= new HashSet<ManagedThreadIdRegistry>();
+        if (!registeredInstances.Add(this))
         {
             return;
         }
 
         var osThreadId = _osThreadIdProvider.GetCurrentOsThreadId();
-        _osTidToManagedId[osThreadId] = (new WeakReference<Thread>(Thread.CurrentThread), threadId);
-        _threadsRegistered.TryAdd(threadId, true);
+        _osTidToManagedId[osThreadId] = (new WeakReference<Thread>(Thread.CurrentThread), Thread.CurrentThread.ManagedThreadId);
     }
 
     public bool TryGetManagedThreadId(long osThreadId, out int managedThreadId)
@@ -54,13 +55,21 @@ public class ManagedThreadIdRegistry : IManagedThreadIdRegistry
         // since that is the only state in which its OS TID is safe to have been reassigned to someone
         // else. Checking Thread.IsAlive here instead would wrongly miss on every thread that simply ran
         // to completion before this lookup, which is the common case for background/worker threads.
-        if (_osTidToManagedId.TryGetValue(osThreadId, out var entry) && entry.ThreadRef.TryGetTarget(out _))
+        if (_osTidToManagedId.TryGetValue(osThreadId, out var entry))
         {
-            managedThreadId = entry.ManagedThreadId;
-            return true;
+            if (entry.ThreadRef.TryGetTarget(out _))
+            {
+                managedThreadId = entry.ManagedThreadId;
+                return true;
+            }
+
+            // Remove only the exact dead entry just observed -- a plain TryRemove(osThreadId) would
+            // delete whatever is under that key NOW, which can be a different thread's fresh
+            // registration written between the TryGetValue above and this call.
+            ((ICollection<KeyValuePair<long, (WeakReference<Thread> ThreadRef, int ManagedThreadId)>>)_osTidToManagedId)
+                .Remove(new KeyValuePair<long, (WeakReference<Thread> ThreadRef, int ManagedThreadId)>(osThreadId, entry));
         }
 
-        _osTidToManagedId.TryRemove(osThreadId, out _);
         managedThreadId = 0;
         return false;
     }
