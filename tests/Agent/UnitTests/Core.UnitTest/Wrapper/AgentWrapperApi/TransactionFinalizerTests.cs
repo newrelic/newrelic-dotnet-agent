@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Attributes;
+using NewRelic.Agent.Core.ContinuousProfiling;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Segments.Tests;
@@ -83,6 +84,318 @@ public class TransactionFinalizerTests
     }
 
     #endregion Finish
+
+    #region Continuous profiling span retirement
+
+    [Test]
+    public void Finish_RetiresEveryMaterializedSegmentSpanId()
+    {
+        var originalInstance = ContinuousProfilingContext.Instance;
+        var originalAnyEnabled = ContinuousProfilingContext.AnyEnabled;
+        var cpContext = Mock.Create<IContinuousProfilingContext>();
+        Mock.Arrange(() => cpContext.IsEnabled).Returns(true);
+        IReadOnlyList<string> retired = null;
+        Mock.Arrange(() => cpContext.RetireSpans(Arg.IsAny<IReadOnlyList<string>>()))
+            .DoInstead((IReadOnlyList<string> ids) => retired = ids);
+        ContinuousProfilingContext.Instance = cpContext;
+        ContinuousProfilingContext.AnyEnabled = true;
+        try
+        {
+            var transaction = Mock.Create<IInternalTransaction>();
+            var first = GetBaseSegment();
+            var second = GetBaseSegment();
+            first.SpanId = "1111111111111111";
+            second.SpanId = "2222222222222222";
+            Mock.Arrange(() => transaction.Segments).Returns(new List<Segment> { first, second });
+            Mock.Arrange(() => transaction.DroppedSegmentSpanIds).Returns(Array.Empty<string>());
+            Mock.Arrange(() => transaction.Finish()).Returns(true);
+
+            _transactionFinalizer.Finish(transaction);
+
+            Assert.That(retired, Is.Not.Null);
+            Assert.That(retired, Is.EquivalentTo(new[] { "1111111111111111", "2222222222222222" }));
+        }
+        finally
+        {
+            ContinuousProfilingContext.Instance = originalInstance;
+            ContinuousProfilingContext.AnyEnabled = originalAnyEnabled;
+        }
+    }
+
+    // A segment whose span id was never generated was never pushed to native, so retiring it would be
+    // pointless -- and reading SpanId to find out would MINT one, which is the thing to avoid.
+    [Test]
+    public void Finish_DoesNotRetireOrGenerateSpanIdsForSegmentsThatNeverMaterializedOne()
+    {
+        var originalInstance = ContinuousProfilingContext.Instance;
+        var originalAnyEnabled = ContinuousProfilingContext.AnyEnabled;
+        var cpContext = Mock.Create<IContinuousProfilingContext>();
+        Mock.Arrange(() => cpContext.IsEnabled).Returns(true);
+        ContinuousProfilingContext.Instance = cpContext;
+        ContinuousProfilingContext.AnyEnabled = true;
+        try
+        {
+            var transaction = Mock.Create<IInternalTransaction>();
+            var untouched = GetBaseSegment();
+            Mock.Arrange(() => transaction.Segments).Returns(new List<Segment> { untouched });
+            Mock.Arrange(() => transaction.DroppedSegmentSpanIds).Returns(Array.Empty<string>());
+            Mock.Arrange(() => transaction.Finish()).Returns(true);
+
+            _transactionFinalizer.Finish(transaction);
+
+            Mock.Assert(() => cpContext.RetireSpans(Arg.IsAny<IReadOnlyList<string>>()), Occurs.Never());
+            Assert.That(untouched.TryGetMaterializedSpanId(), Is.Null);
+        }
+        finally
+        {
+            ContinuousProfilingContext.Instance = originalInstance;
+            ContinuousProfilingContext.AnyEnabled = originalAnyEnabled;
+        }
+    }
+
+    // Segments past the max-segments cap are nulled out of Segments before the transaction terminates.
+    // They still pushed, so they must still be retired -- otherwise a segment-heavy transaction leaves
+    // permanent stale links.
+    [Test]
+    public void Finish_RetiresSpanIdsOfSegmentsDroppedForExceedingTheMaxSegmentsCap()
+    {
+        var originalInstance = ContinuousProfilingContext.Instance;
+        var originalAnyEnabled = ContinuousProfilingContext.AnyEnabled;
+        var cpContext = Mock.Create<IContinuousProfilingContext>();
+        Mock.Arrange(() => cpContext.IsEnabled).Returns(true);
+        IReadOnlyList<string> retired = null;
+        Mock.Arrange(() => cpContext.RetireSpans(Arg.IsAny<IReadOnlyList<string>>()))
+            .DoInstead((IReadOnlyList<string> ids) => retired = ids);
+        ContinuousProfilingContext.Instance = cpContext;
+        ContinuousProfilingContext.AnyEnabled = true;
+        try
+        {
+            var transaction = Mock.Create<IInternalTransaction>();
+            var kept = GetBaseSegment();
+            kept.SpanId = "1111111111111111";
+            Mock.Arrange(() => transaction.Segments).Returns(new List<Segment> { kept });
+            Mock.Arrange(() => transaction.DroppedSegmentSpanIds).Returns(new[] { "3333333333333333" });
+            Mock.Arrange(() => transaction.Finish()).Returns(true);
+
+            _transactionFinalizer.Finish(transaction);
+
+            Assert.That(retired, Is.EquivalentTo(new[] { "1111111111111111", "3333333333333333" }));
+        }
+        finally
+        {
+            ContinuousProfilingContext.Instance = originalInstance;
+            ContinuousProfilingContext.AnyEnabled = originalAnyEnabled;
+        }
+    }
+
+    // A transaction whose live segments never materialized an id must still retire the dropped ones.
+    [Test]
+    public void Finish_RetiresDroppedSpanIdsEvenWhenNoLiveSegmentMaterializedOne()
+    {
+        var originalInstance = ContinuousProfilingContext.Instance;
+        var originalAnyEnabled = ContinuousProfilingContext.AnyEnabled;
+        var cpContext = Mock.Create<IContinuousProfilingContext>();
+        Mock.Arrange(() => cpContext.IsEnabled).Returns(true);
+        IReadOnlyList<string> retired = null;
+        Mock.Arrange(() => cpContext.RetireSpans(Arg.IsAny<IReadOnlyList<string>>()))
+            .DoInstead((IReadOnlyList<string> ids) => retired = ids);
+        ContinuousProfilingContext.Instance = cpContext;
+        ContinuousProfilingContext.AnyEnabled = true;
+        try
+        {
+            var transaction = Mock.Create<IInternalTransaction>();
+            Mock.Arrange(() => transaction.Segments).Returns(new List<Segment>());
+            Mock.Arrange(() => transaction.DroppedSegmentSpanIds).Returns(new[] { "3333333333333333" });
+            Mock.Arrange(() => transaction.Finish()).Returns(true);
+
+            _transactionFinalizer.Finish(transaction);
+
+            Assert.That(retired, Is.EquivalentTo(new[] { "3333333333333333" }));
+        }
+        finally
+        {
+            ContinuousProfilingContext.Instance = originalInstance;
+            ContinuousProfilingContext.AnyEnabled = originalAnyEnabled;
+        }
+    }
+
+    // Once a transaction exceeds the cap its Segments list carries nulls; enumerating must tolerate them.
+    [Test]
+    public void Finish_ToleratesNullEntriesInTheSegmentsList()
+    {
+        var originalInstance = ContinuousProfilingContext.Instance;
+        var originalAnyEnabled = ContinuousProfilingContext.AnyEnabled;
+        var cpContext = Mock.Create<IContinuousProfilingContext>();
+        Mock.Arrange(() => cpContext.IsEnabled).Returns(true);
+        IReadOnlyList<string> retired = null;
+        Mock.Arrange(() => cpContext.RetireSpans(Arg.IsAny<IReadOnlyList<string>>()))
+            .DoInstead((IReadOnlyList<string> ids) => retired = ids);
+        ContinuousProfilingContext.Instance = cpContext;
+        ContinuousProfilingContext.AnyEnabled = true;
+        try
+        {
+            var transaction = Mock.Create<IInternalTransaction>();
+            var kept = GetBaseSegment();
+            kept.SpanId = "1111111111111111";
+            Mock.Arrange(() => transaction.Segments).Returns(new List<Segment> { null, kept, null });
+            Mock.Arrange(() => transaction.DroppedSegmentSpanIds).Returns(Array.Empty<string>());
+            Mock.Arrange(() => transaction.Finish()).Returns(true);
+
+            Assert.DoesNotThrow(() => _transactionFinalizer.Finish(transaction));
+            Assert.That(retired, Is.EquivalentTo(new[] { "1111111111111111" }));
+        }
+        finally
+        {
+            ContinuousProfilingContext.Instance = originalInstance;
+            ContinuousProfilingContext.AnyEnabled = originalAnyEnabled;
+        }
+    }
+
+    // The second caller loses the once-only gate in Transaction.Finish, so it must not retire again.
+    [Test]
+    public void Finish_DoesNotRetireWhenTheTransactionWasAlreadyFinished()
+    {
+        var originalInstance = ContinuousProfilingContext.Instance;
+        var originalAnyEnabled = ContinuousProfilingContext.AnyEnabled;
+        var cpContext = Mock.Create<IContinuousProfilingContext>();
+        Mock.Arrange(() => cpContext.IsEnabled).Returns(true);
+        ContinuousProfilingContext.Instance = cpContext;
+        ContinuousProfilingContext.AnyEnabled = true;
+        try
+        {
+            var transaction = Mock.Create<IInternalTransaction>();
+            Mock.Arrange(() => transaction.Finish()).Returns(false);
+
+            var result = _transactionFinalizer.Finish(transaction);
+
+            Assert.That(result, Is.False);
+            Mock.Assert(() => cpContext.RetireSpans(Arg.IsAny<IReadOnlyList<string>>()), Occurs.Never());
+        }
+        finally
+        {
+            ContinuousProfilingContext.Instance = originalInstance;
+            ContinuousProfilingContext.AnyEnabled = originalAnyEnabled;
+        }
+    }
+
+    // Every non-CP customer must pay only the static bool read: no Segments enumeration, no allocation.
+    [Test]
+    public void Finish_DoesNotTouchSegmentsWhenContinuousProfilingIsDisabled()
+    {
+        var originalAnyEnabled = ContinuousProfilingContext.AnyEnabled;
+        ContinuousProfilingContext.AnyEnabled = false;
+        try
+        {
+            var transaction = Mock.Create<IInternalTransaction>();
+            Mock.Arrange(() => transaction.Finish()).Returns(true);
+
+            _transactionFinalizer.Finish(transaction);
+
+            Mock.Assert(() => transaction.Segments, Occurs.Never());
+            Mock.Assert(() => transaction.DroppedSegmentSpanIds, Occurs.Never());
+        }
+        finally
+        {
+            ContinuousProfilingContext.AnyEnabled = originalAnyEnabled;
+        }
+    }
+
+    // AnyEnabled is armed before Instance goes live and is deliberately never the final word, so the
+    // context's own IsEnabled must still gate the walk -- otherwise a transaction terminating in that
+    // window enumerates Segments and allocates for a retirement native would drop anyway.
+    [Test]
+    public void Finish_DoesNotTouchSegmentsWhenTheContinuousProfilingContextIsNotLive()
+    {
+        var originalInstance = ContinuousProfilingContext.Instance;
+        var originalAnyEnabled = ContinuousProfilingContext.AnyEnabled;
+        var cpContext = Mock.Create<IContinuousProfilingContext>();
+        Mock.Arrange(() => cpContext.IsEnabled).Returns(false);
+        ContinuousProfilingContext.Instance = cpContext;
+        ContinuousProfilingContext.AnyEnabled = true;
+        try
+        {
+            var transaction = Mock.Create<IInternalTransaction>();
+            Mock.Arrange(() => transaction.Finish()).Returns(true);
+
+            _transactionFinalizer.Finish(transaction);
+
+            Mock.Assert(() => transaction.Segments, Occurs.Never());
+            Mock.Assert(() => transaction.DroppedSegmentSpanIds, Occurs.Never());
+            Mock.Assert(() => cpContext.RetireSpans(Arg.IsAny<IReadOnlyList<string>>()), Occurs.Never());
+        }
+        finally
+        {
+            ContinuousProfilingContext.Instance = originalInstance;
+            ContinuousProfilingContext.AnyEnabled = originalAnyEnabled;
+        }
+    }
+
+    // A CP failure must never break transaction finalization -- this runs on the GC finalizer thread in
+    // the reaped path, where an escaping exception is swallowed by the destructor and the transaction is
+    // silently lost.
+    [Test]
+    public void Finish_StillSucceedsWhenSpanRetirementThrows()
+    {
+        var originalInstance = ContinuousProfilingContext.Instance;
+        var originalAnyEnabled = ContinuousProfilingContext.AnyEnabled;
+        var cpContext = Mock.Create<IContinuousProfilingContext>();
+        Mock.Arrange(() => cpContext.IsEnabled).Returns(true);
+        Mock.Arrange(() => cpContext.RetireSpans(Arg.IsAny<IReadOnlyList<string>>())).Throws<InvalidOperationException>();
+        ContinuousProfilingContext.Instance = cpContext;
+        ContinuousProfilingContext.AnyEnabled = true;
+        try
+        {
+            var transaction = Mock.Create<IInternalTransaction>();
+            var kept = GetBaseSegment();
+            kept.SpanId = "1111111111111111";
+            Mock.Arrange(() => transaction.Segments).Returns(new List<Segment> { kept });
+            Mock.Arrange(() => transaction.DroppedSegmentSpanIds).Returns(Array.Empty<string>());
+            Mock.Arrange(() => transaction.Finish()).Returns(true);
+
+            bool result = false;
+            Assert.DoesNotThrow(() => result = _transactionFinalizer.Finish(transaction));
+            Assert.That(result, Is.True);
+        }
+        finally
+        {
+            ContinuousProfilingContext.Instance = originalInstance;
+            ContinuousProfilingContext.AnyEnabled = originalAnyEnabled;
+        }
+    }
+
+    // Reading Segments itself can throw once a transaction is being torn down; that must not escape either.
+    [Test]
+    public void Finish_StillSucceedsWhenReadingTheSegmentsListThrows()
+    {
+        var originalInstance = ContinuousProfilingContext.Instance;
+        var originalAnyEnabled = ContinuousProfilingContext.AnyEnabled;
+        var cpContext = Mock.Create<IContinuousProfilingContext>();
+        Mock.Arrange(() => cpContext.IsEnabled).Returns(true);
+        ContinuousProfilingContext.Instance = cpContext;
+        ContinuousProfilingContext.AnyEnabled = true;
+        try
+        {
+            var transaction = Mock.Create<IInternalTransaction>();
+            Mock.Arrange(() => transaction.Segments).Throws<InvalidOperationException>();
+            Mock.Arrange(() => transaction.Finish()).Returns(true);
+
+            bool result = false;
+            Assert.DoesNotThrow(() => result = _transactionFinalizer.Finish(transaction));
+            Assert.That(result, Is.True);
+        }
+        finally
+        {
+            ContinuousProfilingContext.Instance = originalInstance;
+            ContinuousProfilingContext.AnyEnabled = originalAnyEnabled;
+        }
+    }
+
+    private static Segment GetBaseSegment()
+    {
+        return new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), new MethodCallData("Type", "Method", 1));
+    }
+
+    #endregion Continuous profiling span retirement
 
     #region OnTransactionFinalized
 
