@@ -20,7 +20,7 @@
     <PackageReference Include="log4net.Ext.Json" Version="2.0.10.1" Condition="'$(TargetFramework)' == 'net48'" />
 
     <!-- log4net .NET core references -->
-    <PackageReference Include="log4net" Version="2.0.10" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <PackageReference Include="log4net" Version="2.0.12" Condition="'$(TargetFramework)' == 'net8.0'" />
     <PackageReference Include="log4net.Ext.Json" Version="2.0.9.1" Condition="'$(TargetFramework)' == 'net8.0'" />
 
     <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.14.15">
