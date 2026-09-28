@@ -16,6 +16,7 @@ using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Api;
 using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.CallStack;
+using NewRelic.Agent.Core.ContinuousProfiling;
 using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.DistributedTracing.Samplers;
 using NewRelic.Agent.Core.Errors;
@@ -40,6 +41,11 @@ namespace NewRelic.Agent.Core.Transactions;
 
 public class Transaction : IInternalTransaction, ITransactionSegmentState, IHybridAgentTransaction
 {
+    // Hard cap on how many over-limit segments' span ids a single transaction will remember for
+    // continuous-profiling retirement. Only pathological transactions reach that path at all, so the cap
+    // exists purely to stop a runaway transaction from turning the capture buffer into a memory leak.
+    private const int MaxDroppedSegmentSpanIds = 10000;
+
     private static readonly int MaxSegmentLength = 255;
 
     private static readonly HashSet<string> HeadersNeedQueryParametersRemoval = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "Referer", "Location", "Refresh" };
@@ -177,6 +183,13 @@ public class Transaction : IInternalTransaction, ITransactionSegmentState, IHybr
 
         // We also want to remove the transaction from the transaction context before returning so that it won't be reused
         Agent._transactionService.RemoveOutstandingInternalTransactions(true, true);
+
+        // Continuous profiling: clear this thread's native trace/span context now that the transaction has
+        // ended, so a later unrelated CPU sample on this (often pooled) thread is not misattributed to this
+        // finished span. Runs once per transaction on the completing thread, and is a cheap no-op (a single
+        // volatile read) when continuous profiling is disabled. Only the completing thread is cleared; any
+        // other threads that ran async continuations self-heal on their next instrumented push.
+        ContinuousProfilingContext.Instance.ResetTraceContext();
 
         var timer = Agent._agentTimerService.StartNew("TransformDelay");
         Action transformWork = () =>
@@ -1026,6 +1039,32 @@ public class Transaction : IInternalTransaction, ITransactionSegmentState, IHybr
     private readonly ConcurrentList<Segment> _segments = new ConcurrentList<Segment>();
     public IList<Segment> Segments { get => _segments; }
 
+    // Span ids of segments that were REMOVED from _segments because the transaction exceeded
+    // TransactionTracerMaxSegments (see CallStackPop). Those segments had already materialized and pushed
+    // their span ids to the native continuous profiler, but they are unreachable from Segments by the time
+    // the transaction terminates -- so without capturing them here, a segment-heavy transaction could
+    // never retire them and their links would survive on any idle thread that pushed one.
+    //
+    // Lazily created and only ever populated while continuous profiling is armed, so a transaction in a
+    // process without continuous profiling allocates nothing. ConcurrentQueue because CallStackPop runs on
+    // whichever thread pops a segment, and a transaction's segments pop on many threads -- and it must be
+    // the lock-free System.Collections.Concurrent one, hence the fully qualified name: this file also has
+    // NewRelic.Agent.Extensions.Collections in scope, whose same-named ConcurrentQueue is a
+    // ReaderWriterLockSlim wrapper, and the retirement read happens on the GC finalizer thread where a
+    // lock an application thread could hold is exactly what must be avoided. Bounded at
+    // MaxDroppedSegmentSpanIds: the only transactions that reach this path are pathological ones, and an
+    // unbounded buffer would turn a runaway transaction into a memory leak. Over-retiring is harmless and
+    // under-retiring is the bug we are fixing, so the cap is set well above any realistic span-per-thread
+    // count -- past it we simply stop recording rather than evict.
+    private System.Collections.Concurrent.ConcurrentQueue<string> _droppedSegmentSpanIds;
+    private int _droppedSegmentSpanIdCount;
+
+    /// <summary>
+    /// Span ids of segments dropped from <see cref="Segments"/> for exceeding the max-segments cap. Never
+    /// null; empty when nothing was dropped.
+    /// </summary>
+    public IEnumerable<string> DroppedSegmentSpanIds => Volatile.Read(ref _droppedSegmentSpanIds) ?? (IEnumerable<string>)Array.Empty<string>();
+
     private readonly ISimpleTimer _timer;
 
     private TimeSpan? _forcedDuration;
@@ -1299,6 +1338,17 @@ public class Transaction : IInternalTransaction, ITransactionSegmentState, IHybr
             if (segment.UniqueId >= _transactionTracerMaxSegments)
             {
                 if (Log.IsFinestEnabled) LogFinest($"Nulling out reference to this segment {{{segment.ToStringForFinestLogging()}}}");
+
+                // Continuous profiling: this is the last moment this segment is reachable, so capture its
+                // span id now if it was ever materialized. Nulling the slot below is what would otherwise
+                // make the id unretirable at transaction end, leaving any idle thread that pushed it
+                // linked to a finished transaction forever. Gated on the static pre-filter so a process
+                // without continuous profiling pays one not-taken branch and allocates nothing.
+                if (ContinuousProfilingContext.AnyEnabled)
+                {
+                    CaptureDroppedSegmentSpanId(segment);
+                }
+
                 // we're over the segment limit.  Null out the reference to the segment.
                 _segments[segment.UniqueId] = null;
             }
@@ -1313,6 +1363,41 @@ public class Transaction : IInternalTransaction, ITransactionSegmentState, IHybr
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Records an over-limit segment's span id so a terminating transaction can still retire it for
+    /// continuous profiling after the segment itself has been dropped from <see cref="Segments"/>.
+    /// </summary>
+    private void CaptureDroppedSegmentSpanId(Segment segment)
+    {
+        // Probe rather than read Segment.SpanId: that getter is a lazy generator, and a segment whose id
+        // was never materialized was never pushed to native, so there is nothing to retire.
+        var droppedSpanId = segment.TryGetMaterializedSpanId();
+        if (droppedSpanId == null)
+            return;
+
+        // Reserve capacity before enqueuing so the buffer cannot grow without bound. The paired decrement
+        // keeps the counter pinned at the cap rather than climbing forever (so it can never wrap); the
+        // cost is that concurrently-popping threads can transiently over-reserve and drop an id they
+        // would otherwise have kept, which only ever costs us a retirement we were never required to
+        // make once the transaction is this far out of bounds.
+        if (Interlocked.Increment(ref _droppedSegmentSpanIdCount) > MaxDroppedSegmentSpanIds)
+        {
+            Interlocked.Decrement(ref _droppedSegmentSpanIdCount);
+            return;
+        }
+
+        var dropped = Volatile.Read(ref _droppedSegmentSpanIds);
+        if (dropped == null)
+        {
+            dropped = new System.Collections.Concurrent.ConcurrentQueue<string>();
+            var existing = Interlocked.CompareExchange(ref _droppedSegmentSpanIds, dropped, null);
+            if (existing != null)
+                dropped = existing;
+        }
+
+        dropped.Enqueue(droppedSpanId);
     }
 
     public int? ParentSegmentId()

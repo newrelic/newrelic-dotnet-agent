@@ -8,6 +8,7 @@ using MoreLinq;
 using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.CallStack;
+using NewRelic.Agent.Core.ContinuousProfiling;
 using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.DistributedTracing.Samplers;
 using NewRelic.Agent.Core.Errors;
@@ -50,6 +51,50 @@ public class TransactionBuilderServiceTests
     public void TearDown()
     {
         _transactionService.Dispose();
+    }
+
+    [Test]
+    public void GetOrCreateInternalTransaction_RegistersCurrentThreadWithManagedThreadIdRegistry_WhenCpEnabled()
+    {
+        var fakeRegistry = Mock.Create<IManagedThreadIdRegistry>();
+        var previousInstance = ManagedThreadIdRegistry.Instance;
+        var previousAnyEnabled = ContinuousProfilingContext.AnyEnabled;
+        ManagedThreadIdRegistry.Instance = fakeRegistry;
+        ContinuousProfilingContext.AnyEnabled = true;
+
+        try
+        {
+            _transactionService.GetOrCreateInternalTransaction(_initialTransactionName);
+
+            Mock.Assert(() => fakeRegistry.EnsureRegistered(), Occurs.AtLeastOnce());
+        }
+        finally
+        {
+            ManagedThreadIdRegistry.Instance = previousInstance;
+            ContinuousProfilingContext.AnyEnabled = previousAnyEnabled;
+        }
+    }
+
+    [Test]
+    public void GetOrCreateInternalTransaction_DoesNotRegister_WhenCpDisabled()
+    {
+        var fakeRegistry = Mock.Create<IManagedThreadIdRegistry>();
+        var previousInstance = ManagedThreadIdRegistry.Instance;
+        var previousAnyEnabled = ContinuousProfilingContext.AnyEnabled;
+        ManagedThreadIdRegistry.Instance = fakeRegistry;
+        ContinuousProfilingContext.AnyEnabled = false;
+
+        try
+        {
+            _transactionService.GetOrCreateInternalTransaction(_initialTransactionName);
+
+            Mock.Assert(() => fakeRegistry.EnsureRegistered(), Occurs.Never());
+        }
+        finally
+        {
+            ManagedThreadIdRegistry.Instance = previousInstance;
+            ContinuousProfilingContext.AnyEnabled = previousAnyEnabled;
+        }
     }
 
     [Test]
