@@ -213,7 +213,45 @@ public class Segment : IInternalSpan, ISegmentDataState, IHybridAgentSegment
         }
     }
 
-    public string TryGetActivityTraceId() => _activity?.TraceId;
+    /// <summary>
+    /// Returns this segment's span id only if it has already been materialized -- generated on a first
+    /// <see cref="SpanId"/> read, or explicitly assigned. Returns null otherwise and NEVER generates one.
+    ///
+    /// <para>Exists so continuous profiling can retire a finished transaction's spans without minting ids
+    /// that were never used: <see cref="SpanId"/>'s getter is a lazy generator, and only the segment that
+    /// was current at some wrapped-method entry/exit while CP was enabled (<see
+    /// cref="WrapperService.PushContinuousProfilingContext"/>) is guaranteed to have had its id
+    /// materialized -- sampling and span-events settings don't gate that push. Any other segment (never
+    /// current at such a boundary) has its id generated only if something else reads <see cref="SpanId"/>,
+    /// e.g. span event serialization. An id that was never materialized was never pushed to the native
+    /// profiler, so there is nothing to retire. Probing instead of reading also avoids racing that getter,
+    /// which is documented as able to hand back two different ids if first read concurrently from two
+    /// threads.</para>
+    ///
+    /// <para><c>Volatile.Read</c> is deliberate, not decoration: <c>_spanId</c> is a plain field
+    /// written by whichever application thread first read <see cref="SpanId"/>, and this is read at
+    /// transaction-end time on a different thread -- the completing thread, or the GC finalizer thread for
+    /// a transaction that was reaped rather than ended cleanly. Reference stores cannot tear, but without
+    /// the barrier there is no visibility guarantee, so a materialized id could read as null.</para>
+    /// </summary>
+    public string TryGetMaterializedSpanId() => Volatile.Read(ref _spanId);
+
+    private string _activityTraceId;
+    // Cached like SpanId above -- _activity.TraceId is stable for the activity's lifetime, and
+    // without caching this defeats the ReferenceEquals skip in ContinuousProfilingContext.PushTraceContext
+    // (a fresh string every call means every instrumented entry/exit pays full hex-decompose + P/Invoke).
+    // Activity.TraceId.ToString() returns "" (not null) before Start() is called, so an empty string
+    // must not be treated as resolved -- otherwise it locks in permanently even after the activity
+    // starts and gets a real trace id.
+    public string TryGetActivityTraceId()
+    {
+        if (string.IsNullOrEmpty(_activityTraceId))
+        {
+            _activityTraceId = _activity?.TraceId;
+        }
+
+        return _activityTraceId;
+    }
 
     public void End()
     {
