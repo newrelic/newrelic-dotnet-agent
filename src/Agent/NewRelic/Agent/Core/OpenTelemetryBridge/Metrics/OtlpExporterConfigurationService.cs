@@ -151,7 +151,12 @@ public class OtlpExporterConfigurationService : DisposableService, IOtlpExporter
                 httpClientHandler.UseProxy = false;
             }
 
-            var retryHandler = new CustomRetryHandler(_supportabilityMetricCounters) { InnerHandler = httpClientHandler };
+            // 2s is sized against the 10s default OpenTelemetryMetricsExportTimeoutMs, which users can
+            // configure lower. It is a fixed value rather than one derived from the configured timeout
+            // because this handler is constructed once while that timeout can change at runtime; a
+            // longer server-requested wait is declined and the handler falls back to its own exponential
+            // backoff instead, retrying within this same export call's existing timeout budget.
+            var retryHandler = new CustomRetryHandler(_supportabilityMetricCounters, TimeSpan.FromSeconds(2)) { InnerHandler = httpClientHandler };
             var auditHandler = new OtlpAuditHandler(_agentHealthReporter) { InnerHandler = retryHandler };
             var httpClient = new HttpClient(auditHandler);
             httpClient.Timeout = TimeSpan.FromMilliseconds(_configurationService.Configuration.OpenTelemetryMetricsExportTimeoutMs);
