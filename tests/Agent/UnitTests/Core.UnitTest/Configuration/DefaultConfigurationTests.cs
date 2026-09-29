@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Xml.Serialization;
 using NewRelic.Agent.Core.Config;
+using NewRelic.Agent.Core.DataTransport.ContinuousProfiling;
 using NewRelic.Agent.Core.SharedInterfaces;
 using NewRelic.Agent.Core.SharedInterfaces.Web;
 using NewRelic.Testing.Assertions;
@@ -2378,6 +2379,15 @@ public class DefaultConfigurationTests
         var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         Assert.That(defaultConfig.ContinuousProfilingLogPayloadMaxChars, Is.EqualTo(expected));
+    }
+
+    [Test]
+    public void ContinuousProfilingLogPayloadMaxChars_default_matches_ProfilesTransport_default()
+    {
+        Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_PROFILING_LOG_PAYLOAD_MAX_CHARS")).Returns<string>(null);
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+        Assert.That(defaultConfig.ContinuousProfilingLogPayloadMaxChars, Is.EqualTo(ProfilesTransport.DefaultMaxDiagnosticPayloadChars));
     }
 
     [Test]

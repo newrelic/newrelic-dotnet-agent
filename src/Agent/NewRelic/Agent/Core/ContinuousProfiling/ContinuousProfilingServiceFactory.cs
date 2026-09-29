@@ -46,7 +46,7 @@ public static class ContinuousProfilingServiceFactory
             var nativeMethods = container.Resolve<INativeMethods>();
             var supportabilityMetricCounters = container.Resolve<IContinuousProfilingSupportabilityMetricCounters>();
             var profilesDispatcher = new OtlpProfilesHttpDispatcher(configuration, supportabilityMetricCounters);
-            var profilesTransport = new ProfilesTransport(profilesDispatcher.Post, null, agentHealthReporter, supportabilityMetricCounters);
+            var profilesTransport = new ProfilesTransport(profilesDispatcher.Post, null, agentHealthReporter, supportabilityMetricCounters, configuration);
             var sampleSource = new NativeContinuousProfilerSampleSource(nativeMethods);
 
             return new ContinuousProfilingService(sampleSource, sampleSource, profilesTransport, container.Resolve<IScheduler>(), agentHealthReporter);
