@@ -220,7 +220,7 @@ public class Segment : IInternalSpan, ISegmentDataState, IHybridAgentSegment
     /// <para>Exists so continuous profiling can retire a finished transaction's spans without minting ids
     /// that were never used: <see cref="SpanId"/>'s getter is a lazy generator, and only the segment that
     /// was current at some wrapped-method entry/exit while CP was enabled (<see
-    /// cref="WrapperService.PushContinuousProfilingContext"/>) is guaranteed to have had its id
+    /// cref="NewRelic.Agent.Core.Wrapper.WrapperService.PushContinuousProfilingContext(NewRelic.Agent.Api.ITransaction)"/>) is guaranteed to have had its id
     /// materialized -- sampling and span-events settings don't gate that push. Any other segment (never
     /// current at such a boundary) has its id generated only if something else reads <see cref="SpanId"/>,
     /// e.g. span event serialization. An id that was never materialized was never pushed to the native
