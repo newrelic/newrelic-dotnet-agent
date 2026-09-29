@@ -228,11 +228,12 @@ public class Segment : IInternalSpan, ISegmentDataState, IHybridAgentSegment
     /// which is documented as able to hand back two different ids if first read concurrently from two
     /// threads.</para>
     ///
-    /// <para><c>Volatile.Read</c> is deliberate, not decoration: <c>_spanId</c> is a plain field
-    /// written by whichever application thread first read <see cref="SpanId"/>, and this is read at
-    /// transaction-end time on a different thread -- the completing thread, or the GC finalizer thread for
-    /// a transaction that was reaped rather than ended cleanly. Reference stores cannot tear, but without
-    /// the barrier there is no visibility guarantee, so a materialized id could read as null.</para>
+    /// <para><c>Volatile.Read</c> is deliberate, not decoration -- it keeps the JIT from caching or
+    /// hoisting <c>_spanId</c> across this read. It is not what makes a materialized id visible to the
+    /// retiring thread: that visibility comes from synchronization that already exists between the
+    /// writer and the transaction-end path (or the GC before a finalizer runs), since <c>Volatile.Read</c>
+    /// only pairs with a release on the writer side, and the plain lazy store in <see cref="SpanId"/>'s
+    /// getter is not one.</para>
     /// </summary>
     public string TryGetMaterializedSpanId() => Volatile.Read(ref _spanId);
 
