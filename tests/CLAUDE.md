@@ -55,9 +55,12 @@ tests/Agent/
 
 MSBuild is not on PATH outside a Developer Command Prompt. Resolve it with the `vswhere.exe` the repo ships -- the same one `build/build.ps1` uses. Never glob `Program Files\Microsoft Visual Studio\*`.
 
+Keep `Microsoft.NetCore.Component.SDK` in `-requires`. Without it, `-latest` can pick a newer VS Build Tools install (for example one installed for the profiler build) that has no .NET SDK workload, and every SDK-style project fails to load.
+
 ```
 MSBUILD=$(build/Tools/vswhere.exe -latest -prerelease -products '*' \
-  -requires Microsoft.Component.MSBuild -find 'MSBuild\**\Bin\MSBuild.exe' | tr -d '\r' | head -1)
+  -requires Microsoft.Component.MSBuild Microsoft.NetCore.Component.SDK \
+  -find 'MSBuild\**\Bin\MSBuild.exe' | tr -d '\r' | head -1)
 "$MSBUILD" tests/Agent/IntegrationTests/IntegrationTests.sln \
   -restore -m -p:Configuration=Debug -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy
 ```
