@@ -808,6 +808,31 @@ public static class MetricNames
     public const string SupportabilityOTelMetricsBridgeExportRetry = SupportabilityOTelMetricsBridgePs + "export/retry";
     #endregion
 
+    #region Continuous Profiling Export Supportability Metrics
+
+    // Dedicated CP export counters, distinct from the OpenTelemetry Metrics Bridge export/* metrics above --
+    // CP drains as often as every 1s vs. the metrics exporter's 60s, so the two send paths must not share counters.
+    private const string SupportabilityContinuousProfilingExportPs = SupportabilityPs + "DotNET" + PathSeparator + "ContinuousProfiling" + PathSeparator + "Export" + PathSeparator;
+
+    public const string SupportabilityContinuousProfilingExportSuccess = SupportabilityContinuousProfilingExportPs + "success";
+    public const string SupportabilityContinuousProfilingExportFailure = SupportabilityContinuousProfilingExportPs + "failure";
+    public const string SupportabilityContinuousProfilingExportRetry = SupportabilityContinuousProfilingExportPs + "retry";
+    public const string SupportabilityContinuousProfilingExportPayloadDropped = SupportabilityContinuousProfilingExportPs + "payload_dropped";
+
+    // A 2xx response whose OTLP partial_success reported every profile in the batch rejected --
+    // total silent data loss that would otherwise look identical to a normal success.
+    public const string SupportabilityContinuousProfilingExportFullRejection = SupportabilityContinuousProfilingExportPs + "full_rejection";
+
+    #endregion
+
+    #region Thread Profiling Supportability Metrics
+
+    // Recorded when Stop() (the agent-shutdown path) suppresses the report of an in-flight thread
+    // profiling session's collected data -- see ThreadProfilingService.Stop().
+    public const string SupportabilityThreadProfilingShutdownDataDiscarded = SupportabilityPs + "DotNET" + PathSeparator + "ThreadProfiling" + PathSeparator + "ShutdownDataDiscarded";
+
+    #endregion
+
     // CAT
     private const string SupportabilityCAT = SupportabilityPs + "CrossApplicationTracing" + PathSeparator;
     private const string SupportabilityCATRequest = SupportabilityCAT + "Request" + PathSeparator;
