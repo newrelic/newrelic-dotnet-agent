@@ -1,6 +1,8 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System;
+
 namespace NewRelic.Agent.Core.DataTransport.ContinuousProfiling;
 
 /// <summary>
@@ -22,6 +24,15 @@ public enum ProfilesSendFailureReason
 
     /// <summary>The send threw at the transport layer (network/proxy/TLS/timeout), including retries being exhausted by an exception.</summary>
     TransportException,
+
+    /// <summary>The send failed because a request/response deadline elapsed or the operation was canceled. Also counted as a <see cref="TransportException"/>-class failure.</summary>
+    TransportTimeout,
+
+    /// <summary>The send failed at the socket/DNS/connect level. Also counted as a <see cref="TransportException"/>-class failure.</summary>
+    TransportNetwork,
+
+    /// <summary>The send failed during TLS/authentication negotiation. Also counted as a <see cref="TransportException"/>-class failure.</summary>
+    TransportTls,
 }
 
 /// <summary>
@@ -54,8 +65,17 @@ public readonly struct ProfilesSendResult
     /// </summary>
     public long SentBytes { get; }
 
-    public ProfilesSendResult(bool accepted, int statusCode, string responseContent, long rejectedProfiles = 0, string partialSuccessErrorMessage = "", ProfilesSendFailureReason failureReason = ProfilesSendFailureReason.None, long sentBytes = 0)
+    /// <summary>
+    /// Wall-clock time <see cref="OtlpProfilesHttpDispatcher.Post"/> spent on the send (request build through
+    /// response body read), measured there because that is the only place that sees the whole round trip.
+    /// <see cref="ProfilesTransport"/> reports it as the send-duration supportability metric. Zero means the
+    /// send never reached the wire (invalid endpoint, oversized payload) and there is no latency to report.
+    /// </summary>
+    public TimeSpan Elapsed { get; }
+
+    public ProfilesSendResult(bool accepted, int statusCode, string responseContent, long rejectedProfiles = 0, string partialSuccessErrorMessage = "", ProfilesSendFailureReason failureReason = ProfilesSendFailureReason.None, long sentBytes = 0, TimeSpan elapsed = default)
     {
+        Elapsed = elapsed;
         Accepted = accepted;
         StatusCode = statusCode;
         ResponseContent = responseContent;

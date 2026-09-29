@@ -107,6 +107,8 @@ public class ProfilesTransport : IProfilesTransport
 
         var result = _httpPost(bytes, _endpoint);
 
+        RecordSendOutcomeMetrics(result);
+
         DataTransportAuditLogger.Log(DataTransportAuditLogger.AuditLogDirection.Sent, DataTransportAuditLogger.AuditLogSource.InstrumentedApp, _endpoint);
         DataTransportAuditLogger.Log(DataTransportAuditLogger.AuditLogDirection.Sent, DataTransportAuditLogger.AuditLogSource.InstrumentedApp, payloadJson);
 
@@ -152,6 +154,40 @@ public class ProfilesTransport : IProfilesTransport
         }
 
         return result.Accepted;
+    }
+
+    // Granular send-outcome metrics, additive to the flat success/failure counters the dispatcher records.
+    // Duration is reported for every send that reached the wire (accepted or not) -- CP has no other latency
+    // visibility; a zero Elapsed means it never left the process. The per-status metric needs a real HTTP
+    // status, so status 0 (no response) is skipped -- the transport-failure kinds below cover that case.
+    private void RecordSendOutcomeMetrics(ProfilesSendResult result)
+    {
+        if (result.Elapsed > TimeSpan.Zero)
+            _supportabilityMetricCounters?.RecordSendDuration(result.Elapsed);
+
+        if (!result.Accepted && result.StatusCode != 0)
+            _supportabilityMetricCounters?.RecordHttpError(result.StatusCode);
+
+        switch (result.FailureReason)
+        {
+            case ProfilesSendFailureReason.TransportTimeout:
+                _supportabilityMetricCounters?.RecordTimeoutFailure();
+                break;
+            case ProfilesSendFailureReason.TransportNetwork:
+                _supportabilityMetricCounters?.RecordNetworkFailure();
+                break;
+            case ProfilesSendFailureReason.TransportTls:
+                _supportabilityMetricCounters?.RecordTlsFailure();
+                break;
+        }
+
+        // Status signal only -- no restart/disconnect; CP keeps retrying on its own schedule. Set on every
+        // 401/403, not inside the rate-limited warn window, so the health file reflects the latest rejection.
+        // Deliberately never cleared on a later CP success: the agent has a single health slot shared with the
+        // collector path, so a CP "Healthy" could overwrite a collector fault. See
+        // HealthCodes.ContinuousProfilingLicenseKeyInvalid.
+        if (!result.Accepted && (result.StatusCode == 401 || result.StatusCode == 403))
+            _agentHealthReporter?.SetAgentControlStatus(HealthCodes.ContinuousProfilingLicenseKeyInvalid, result.StatusCode.ToString());
     }
 
     // See RejectionWarnIntervalStopwatchTicks for the rate-limit rationale. CompareExchange, not a plain
@@ -203,6 +239,15 @@ public class ProfilesTransport : IProfilesTransport
                     break;
                 case ProfilesSendFailureReason.OversizedPayloadDropped:
                     Log.Warn("[ContinuousProfiling] Profiles are not being delivered: the compressed payload exceeded the configured maximum payload size and was dropped client-side before sending. This warning is rate-limited; subsequent occurrences are logged at Debug.");
+                    break;
+                case ProfilesSendFailureReason.TransportTimeout:
+                    Log.Warn("[ContinuousProfiling] Profiles are not being delivered: the send timed out or was canceled at the transport layer. This warning is rate-limited; subsequent occurrences are logged at Debug.");
+                    break;
+                case ProfilesSendFailureReason.TransportNetwork:
+                    Log.Warn("[ContinuousProfiling] Profiles are not being delivered: the send failed at the network layer (socket, DNS, or connection). This warning is rate-limited; subsequent occurrences are logged at Debug.");
+                    break;
+                case ProfilesSendFailureReason.TransportTls:
+                    Log.Warn("[ContinuousProfiling] Profiles are not being delivered: the send failed during TLS negotiation. This warning is rate-limited; subsequent occurrences are logged at Debug.");
                     break;
                 default: // TransportException / None
                     Log.Warn("[ContinuousProfiling] Profiles are not being delivered: the send failed at the transport layer (network, proxy, TLS, or timeout). This warning is rate-limited; subsequent occurrences are logged at Debug.");

@@ -823,6 +823,22 @@ public static class MetricNames
     // total silent data loss that would otherwise look identical to a normal success.
     public const string SupportabilityContinuousProfilingExportFullRejection = SupportabilityContinuousProfilingExportPs + "full_rejection";
 
+    // Transport-layer failure kinds. Siblings of (never replacements for) Export/failure, which still counts
+    // every one of these so dashboards built against the flat counter keep working.
+    public const string SupportabilityContinuousProfilingExportFailureTimeout = SupportabilityContinuousProfilingExportPs + "failure_timeout";
+    public const string SupportabilityContinuousProfilingExportFailureNetwork = SupportabilityContinuousProfilingExportPs + "failure_network";
+    public const string SupportabilityContinuousProfilingExportFailureTls = SupportabilityContinuousProfilingExportPs + "failure_tls";
+
+    // CP-scoped so they can't collide with the classic collector's Supportability/Agent/Collector/... names.
+    private const string SupportabilityContinuousProfilingPs = SupportabilityPs + "DotNET" + PathSeparator + "ContinuousProfiling" + PathSeparator;
+
+    public const string SupportabilityContinuousProfilingSendDuration = SupportabilityContinuousProfilingPs + "Duration";
+
+    public static string GetSupportabilityContinuousProfilingHttpError(int statusCode)
+    {
+        return SupportabilityContinuousProfilingPs + "HTTPError" + PathSeparator + statusCode;
+    }
+
     #endregion
 
     #region Thread Profiling Supportability Metrics

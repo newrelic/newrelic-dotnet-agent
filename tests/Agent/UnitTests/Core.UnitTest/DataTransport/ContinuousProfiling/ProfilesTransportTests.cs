@@ -1,6 +1,8 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System;
+using System.Collections.Generic;
 using Google.Protobuf;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.DataTransport.ContinuousProfiling;
@@ -312,6 +314,176 @@ public class ProfilesTransportTests
     }
 
     [Test]
+    public void Send_reports_the_duration_metric_for_an_accepted_send()
+    {
+        var counters = new FakeContinuousProfilingCounters();
+        var transport = new ProfilesTransport(
+            (bytes, endpoint) => new ProfilesSendResult(true, 200, string.Empty, elapsed: TimeSpan.FromMilliseconds(120)),
+            "http://unused", null, counters);
+
+        transport.Send(BuildNonEmptyRequest());
+
+        Assert.That(counters.Durations, Is.EqualTo(new[] { TimeSpan.FromMilliseconds(120) }));
+    }
+
+    [Test]
+    public void Send_reports_the_duration_metric_for_a_failed_send_too()
+    {
+        var counters = new FakeContinuousProfilingCounters();
+        var transport = new ProfilesTransport(
+            (bytes, endpoint) => new ProfilesSendResult(false, 500, "error", elapsed: TimeSpan.FromMilliseconds(80)),
+            "http://unused", null, counters);
+
+        transport.Send(BuildNonEmptyRequest());
+
+        Assert.That(counters.Durations, Is.EqualTo(new[] { TimeSpan.FromMilliseconds(80) }));
+    }
+
+    [Test]
+    public void Send_does_not_report_a_duration_when_the_send_never_reached_the_wire()
+    {
+        var counters = new FakeContinuousProfilingCounters();
+        var transport = new ProfilesTransport(
+            (bytes, endpoint) => new ProfilesSendResult(false, 0, string.Empty, failureReason: ProfilesSendFailureReason.InvalidEndpoint),
+            "http://unused", null, counters);
+
+        transport.Send(BuildNonEmptyRequest());
+
+        Assert.That(counters.Durations, Is.Empty);
+    }
+
+    [TestCase(400)]
+    [TestCase(401)]
+    [TestCase(503)]
+    public void Send_reports_the_per_status_http_error_metric_for_a_rejected_non_zero_status(int statusCode)
+    {
+        var counters = new FakeContinuousProfilingCounters();
+        var transport = new ProfilesTransport((bytes, endpoint) => new ProfilesSendResult(false, statusCode, "error"), "http://unused", null, counters);
+
+        transport.Send(BuildNonEmptyRequest());
+
+        Assert.That(counters.HttpErrors, Is.EqualTo(new[] { statusCode }));
+    }
+
+    [Test]
+    public void Send_does_not_report_a_per_status_http_error_metric_for_status_zero_or_an_accepted_send()
+    {
+        var counters = new FakeContinuousProfilingCounters();
+        var zero = new ProfilesTransport(
+            (bytes, endpoint) => new ProfilesSendResult(false, 0, string.Empty, failureReason: ProfilesSendFailureReason.TransportException),
+            "http://unused", null, counters);
+        var accepted = new ProfilesTransport((bytes, endpoint) => new ProfilesSendResult(true, 200, string.Empty), "http://unused", null, counters);
+
+        zero.Send(BuildNonEmptyRequest());
+        accepted.Send(BuildNonEmptyRequest());
+
+        Assert.That(counters.HttpErrors, Is.Empty);
+    }
+
+    [Test]
+    public void Send_records_only_the_matching_transport_failure_counter()
+    {
+        var counters = new FakeContinuousProfilingCounters();
+        foreach (var reason in new[] { ProfilesSendFailureReason.TransportTimeout, ProfilesSendFailureReason.TransportNetwork, ProfilesSendFailureReason.TransportTls, ProfilesSendFailureReason.TransportException })
+        {
+            var failureReason = reason;
+            new ProfilesTransport((bytes, endpoint) => new ProfilesSendResult(false, 0, string.Empty, failureReason: failureReason), "http://unused", null, counters)
+                .Send(BuildNonEmptyRequest());
+        }
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(counters.TimeoutFailureCount, Is.EqualTo(1));
+            Assert.That(counters.NetworkFailureCount, Is.EqualTo(1));
+            Assert.That(counters.TlsFailureCount, Is.EqualTo(1));
+        });
+    }
+
+    [Test]
+    public void Send_names_the_timeout_cause_in_the_status_zero_warn()
+    {
+        var transport = new ProfilesTransport(
+            (bytes, endpoint) => new ProfilesSendResult(false, 0, string.Empty, failureReason: ProfilesSendFailureReason.TransportTimeout),
+            "http://unused", null);
+
+        transport.Send(BuildNonEmptyRequest());
+
+        Mock.Assert(() => _nrLogger.Warn(Arg.Matches<string>(m => m.Contains("timed out")), Arg.IsAny<object[]>()), Occurs.Once());
+    }
+
+    [Test]
+    public void Send_names_the_network_cause_in_the_status_zero_warn()
+    {
+        var transport = new ProfilesTransport(
+            (bytes, endpoint) => new ProfilesSendResult(false, 0, string.Empty, failureReason: ProfilesSendFailureReason.TransportNetwork),
+            "http://unused", null);
+
+        transport.Send(BuildNonEmptyRequest());
+
+        Mock.Assert(() => _nrLogger.Warn(Arg.Matches<string>(m => m.Contains("network layer")), Arg.IsAny<object[]>()), Occurs.Once());
+    }
+
+    [Test]
+    public void Send_names_the_tls_cause_in_the_status_zero_warn()
+    {
+        var transport = new ProfilesTransport(
+            (bytes, endpoint) => new ProfilesSendResult(false, 0, string.Empty, failureReason: ProfilesSendFailureReason.TransportTls),
+            "http://unused", null);
+
+        transport.Send(BuildNonEmptyRequest());
+
+        Mock.Assert(() => _nrLogger.Warn(Arg.Matches<string>(m => m.Contains("TLS")), Arg.IsAny<object[]>()), Occurs.Once());
+    }
+
+    [TestCase(401)]
+    [TestCase(403)]
+    public void Send_sets_the_cp_license_key_invalid_health_status_on_an_auth_rejection(int statusCode)
+    {
+        var health = Mock.Create<IAgentHealthReporter>();
+        var transport = new ProfilesTransport((bytes, endpoint) => new ProfilesSendResult(false, statusCode, "error"), "http://unused", health);
+
+        transport.Send(BuildNonEmptyRequest());
+
+        Mock.Assert(() => health.SetAgentControlStatus(HealthCodes.ContinuousProfilingLicenseKeyInvalid, statusCode.ToString()), Occurs.Once());
+    }
+
+    [Test]
+    public void Send_sets_the_health_status_on_every_auth_rejection_even_inside_the_warn_rate_limit_window()
+    {
+        var health = Mock.Create<IAgentHealthReporter>();
+        var transport = new ProfilesTransport((bytes, endpoint) => new ProfilesSendResult(false, 401, "error"), "http://unused", health);
+
+        transport.Send(BuildNonEmptyRequest());
+        transport.Send(BuildNonEmptyRequest());
+
+        Mock.Assert(() => health.SetAgentControlStatus(HealthCodes.ContinuousProfilingLicenseKeyInvalid, "401"), Occurs.Exactly(2));
+    }
+
+    [TestCase(false, 404)]
+    [TestCase(false, 500)]
+    [TestCase(false, 0)]
+    [TestCase(true, 200)]
+    public void Send_does_not_touch_the_health_status_for_anything_other_than_an_auth_rejection(bool accepted, int statusCode)
+    {
+        var health = Mock.Create<IAgentHealthReporter>();
+        var transport = new ProfilesTransport((bytes, endpoint) => new ProfilesSendResult(accepted, statusCode, "x"), "http://unused", health);
+
+        transport.Send(BuildNonEmptyRequest());
+
+        Mock.Assert(() => health.SetAgentControlStatus(Arg.IsAny<(bool IsHealthy, string Code, string Status)>(), Arg.IsAny<string[]>()), Occurs.Never());
+    }
+
+    [Test]
+    public void Send_tolerates_null_counters_and_health_reporter_for_the_new_outcome_metrics()
+    {
+        var transport = new ProfilesTransport(
+            (bytes, endpoint) => new ProfilesSendResult(false, 401, "error", failureReason: ProfilesSendFailureReason.TransportTimeout, elapsed: TimeSpan.FromSeconds(1)),
+            "http://unused", null);
+
+        Assert.That(() => transport.Send(BuildNonEmptyRequest()), Throws.Nothing);
+    }
+
+    [Test]
     public void Send_does_not_warn_when_accepted()
     {
         var transport = new ProfilesTransport((bytes, endpoint) => new ProfilesSendResult(true, 200, string.Empty), "http://unused", null);
@@ -545,11 +717,21 @@ public class ProfilesTransportTests
     private class FakeContinuousProfilingCounters : IContinuousProfilingSupportabilityMetricCounters
     {
         public int FullRejectionCount { get; private set; }
+        public int TimeoutFailureCount { get; private set; }
+        public int NetworkFailureCount { get; private set; }
+        public int TlsFailureCount { get; private set; }
+        public List<int> HttpErrors { get; } = new List<int>();
+        public List<TimeSpan> Durations { get; } = new List<TimeSpan>();
         public void RecordExportSuccess() { }
         public void RecordExportRetry() { }
         public void RecordExportFailure() { }
         public void RecordPayloadDropped() { }
         public void RecordFullRejection() => FullRejectionCount++;
+        public void RecordTimeoutFailure() => TimeoutFailureCount++;
+        public void RecordNetworkFailure() => NetworkFailureCount++;
+        public void RecordTlsFailure() => TlsFailureCount++;
+        public void RecordHttpError(int statusCode) => HttpErrors.Add(statusCode);
+        public void RecordSendDuration(TimeSpan duration) => Durations.Add(duration);
         public void CollectMetrics() { }
         public void RegisterPublishMetricHandler(PublishMetricDelegate publishMetricDelegate) { }
     }
