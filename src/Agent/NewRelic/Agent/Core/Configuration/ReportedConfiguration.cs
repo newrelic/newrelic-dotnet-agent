@@ -829,10 +829,10 @@ public class ReportedConfiguration : IConfiguration
     [JsonProperty("profiling.enabled")]
     public bool ContinuousProfilingEnabled => _configuration.ContinuousProfilingEnabled;
 
-    [JsonProperty("continuous_profiling.sampling_interval_ms")]
+    [JsonProperty("profiling.sampling_interval_ms")]
     public int ContinuousProfilingSamplingIntervalMs => _configuration.ContinuousProfilingSamplingIntervalMs;
 
-    [JsonProperty("continuous_profiling.include_agent_code")]
+    [JsonProperty("profiling.include_agent_code")]
     public bool ContinuousProfilingIncludeAgentCode => _configuration.ContinuousProfilingIncludeAgentCode;
 
     [JsonProperty("profiling.delay")]

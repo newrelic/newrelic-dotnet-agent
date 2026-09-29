@@ -3088,7 +3088,7 @@ public class DefaultConfiguration : IConfiguration
                 return _continuousProfilingSamplingIntervalMs.Value;
 
             // Env var only; no appSettings/XML surface for this setting. The clamp is applied last.
-            var configured = EnvironmentOverrides(DefaultContinuousProfilingSamplingIntervalMs, "NEW_RELIC_CONTINUOUS_PROFILING_SAMPLING_INTERVAL_MS")
+            var configured = EnvironmentOverrides(DefaultContinuousProfilingSamplingIntervalMs, "NEW_RELIC_PROFILING_SAMPLING_INTERVAL_MS")
                 .GetValueOrDefault();
 
             int resolved;
@@ -3099,7 +3099,8 @@ public class DefaultConfiguration : IConfiguration
                 // override 10x MORE aggressive than the 10000ms default, which is backwards. Fall back
                 // instead, in precedence order: server-side config value > agent-command value > the
                 // hardcoded default. Neither of the first two exists at this layer today -- RpmConfig's
-                // only continuous_profiling.* wire field is ContinuousProfilingEnabled (no interval), and
+                // wire field for continuous profiling is ContinuousProfilingEnabled, whose wire key is
+                // profiling.enabled; there is no server-received interval field. And
                 // start_continuous_profiling/stop_continuous_profiling agent commands set
                 // ContinuousProfilingService's own _activeIntervalMs downstream, never routing back through
                 // this getter -- so the chain collapses to the default until one of those surfaces exists.

@@ -5023,7 +5023,7 @@ public class DefaultConfigurationTests
     [TestCase("-1", ExpectedResult = 10000)]   // non-positive -> falls back to default, not the 1000ms floor
     public int ContinuousProfilingSamplingIntervalMs_env_var(string envValue)
     {
-        Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_CONTINUOUS_PROFILING_SAMPLING_INTERVAL_MS")).Returns(envValue);
+        Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_PROFILING_SAMPLING_INTERVAL_MS")).Returns(envValue);
 
         var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
         return defaultConfig.ContinuousProfilingSamplingIntervalMs;
@@ -5037,7 +5037,7 @@ public class DefaultConfigurationTests
     [Test]
     public void ContinuousProfilingSamplingIntervalMs_non_positive_falls_back_to_default()
     {
-        Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_CONTINUOUS_PROFILING_SAMPLING_INTERVAL_MS")).Returns("-5");
+        Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_PROFILING_SAMPLING_INTERVAL_MS")).Returns("-5");
 
         var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
