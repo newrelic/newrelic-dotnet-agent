@@ -36,6 +36,8 @@ public class ContinuousProfilingOtlpReceiverTests : NewRelicIntegrationTest<AspN
 
     private readonly AspNetCoreWebApiWithCollectorFixture _fixture;
     private List<ProfilesSummaryDto> _receivedProfiles = new List<ProfilesSummaryDto>();
+    private int _placeholderLineCount;
+    private int _encodedLineCount;
 
     private static readonly string SessionStartedLogLineRegex =
         AgentLogBase.InfoLogLinePrefixRegex + @"\[ContinuousProfiling\] Session started; sampling every (\d+) ms, draining every (\d+) ms\.";
@@ -68,6 +70,11 @@ public class ContinuousProfilingOtlpReceiverTests : NewRelicIntegrationTest<AspN
 
                 // A drain must build a non-empty ("built") profile before the mock can receive one.
                 _fixture.AgentLog.WaitForLogLine(BuiltProfileLogLineRegex, TimeSpan.FromMinutes(2));
+
+                // This test runs at Finest WITHOUT NEW_RELIC_PROFILING_LOG_PAYLOAD, so the payload line must carry
+                // the placeholder and never an encoded payload.
+                _placeholderLineCount = _fixture.AgentLog.WaitForLogLines(ContinuousProfilingPayloadLog.PlaceholderLogLineRegex, TimeSpan.FromSeconds(30)).Count();
+                _encodedLineCount = _fixture.AgentLog.TryGetLogLines(ContinuousProfilingPayloadLog.LogLineRegex).Count();
 
                 // Poll the mock collector until it has independently parsed a CONTENT-valid profile -- one
                 // that carries real decoded frames and resource identity, not just non-zero counts. Must
@@ -143,7 +150,11 @@ public class ContinuousProfilingOtlpReceiverTests : NewRelicIntegrationTest<AspN
             // one profile built after connect must carry it.
             () => Assert.NotNull(withEntityGuid),
             () => Assert.True(withEntityGuid != null && !string.IsNullOrEmpty(withEntityGuid.EntityGuid),
-                "No content-valid profile carried a non-empty entity.guid resource attribute.")
+                "No content-valid profile carried a non-empty entity.guid resource attribute."),
+
+            // Payload logging is opt-in: with the switch off, the Finest line is the placeholder, not a payload.
+            () => Assert.True(_placeholderLineCount > 0, "No placeholder payload line was logged with payload logging off."),
+            () => Assert.Equal(0, _encodedLineCount)
         );
     }
 }

@@ -14,8 +14,9 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures;
 /// <summary>
 /// End-to-end coverage for continuous profiling. Each drain now POSTs the built profile to the configured
 /// OTLP <c>/v1/profiles</c> endpoint -- but because these host tests run against the real staging collector,
-/// they are <b>log-based</b>: they assert the built-profile summary line, the protobuf-JSON payload dump
-/// (both Debug), and correlation from the dump's linkTable, not a received payload at the collector. Whether
+/// they are <b>log-based</b>: they assert the built-profile summary line (Debug), the opt-in gzip+base64
+/// payload line (Finest), and correlation from the decoded payload's linkTable, not a received payload at the
+/// collector. Whether
 /// the POST is actually accepted depends on the target endpoint/account being reachable from the test host,
 /// so assertions key off the built-payload log lines rather than send success. The drain also reports
 /// supportability metrics. Independent receiver-side validation of the actual OTLP protobuf bytes lives in
@@ -25,7 +26,7 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures;
 /// (<c>AgentManager.StartIfEnabled</c>) when the config/env flag is set, with no collector command required.
 /// We enable it via the environment overrides so no ad-hoc config XML is written.
 ///
-/// Trace/span correlation IS log-observable via the Debug payload dump: each sample's linkTable entry
+/// Trace/span correlation IS log-observable via the opt-in payload line: each sample's linkTable entry
 /// carries a <c>traceId</c> that is non-zero (i.e. not all-zero hex) whenever that sample was captured while
 /// a transaction/span was active. We exercise correlation by running the sampled work inside instrumented
 /// transactions/segments (<c>ContinuousProfilingExerciser</c>) and assert that at least one linkTable entry
@@ -46,13 +47,6 @@ public abstract class ContinuousProfilingTestsBase<TFixture> : NewRelicIntegrati
     // profile was built. Logged regardless of whether ingest accepts the POST.
     private static readonly string BuiltProfileLogLineRegex =
         AgentLogBase.DebugLogLinePrefixRegex + @"\[ContinuousProfiling\] Posting profile \((\w+)\); (\d+) bytes to (\S+)\.";
-
-    // Each drain logs the built profile at Debug as compact protobuf-JSON in the same shape POSTed to the
-    // collector (mirrors HttpCollectorWire): `Request(<guid>): Invoked "continuous_profiling" with : {...}`.
-    // Group 1 captures the single-line JSON blob. A matching line is the observable evidence that a profile
-    // was built (the summary line reports only "built"/"empty" + a byte count).
-    private static readonly string ProfileJsonLogLineRegex =
-        AgentLogBase.DebugLogLinePrefixRegex + @"Request\(.+?\): Invoked ""continuous_profiling"" with : (\{.*\})";
 
     // A trace-id in a linkTable entry. The diagnostic log rewrites the proto `bytes` id from base64 to
     // lowercase hex (16 bytes -> 32 hex chars), so the reserved "no link" entry is 32 zeros; any other value
@@ -81,13 +75,15 @@ public abstract class ContinuousProfilingTestsBase<TFixture> : NewRelicIntegrati
             setupConfiguration: () =>
             {
                 var configModifier = new NewRelicConfigModifier(_fixture.DestinationNewRelicConfigFilePath);
-                // Debug (via finest) so the payload dump + correlation lines are emitted; faster metrics cycle
+                // Finest so the payload line is emitted; faster metrics cycle
                 // so the drain supportability metrics harvest within the test window (default cycle is 60s).
                 configModifier.SetLogLevel("finest");
                 configModifier.ConfigureFasterMetricsHarvestCycle(10);
 
                 // Enable continuous profiling via the environment overrides (never ad-hoc config XML).
                 _fixture.EnvironmentVariables["NEW_RELIC_PROFILING_ENABLED"] = "true";
+                // Opt in to the gzip+base64 payload line (off by default; the line carries a placeholder otherwise).
+                _fixture.EnvironmentVariables["NEW_RELIC_PROFILING_LOG_PAYLOAD"] = "true";
                 _fixture.EnvironmentVariables["NEW_RELIC_PROFILING_SAMPLING_INTERVAL_MS"] = SamplingIntervalMs.ToString();
             },
             exerciseApplication: () =>
@@ -98,9 +94,9 @@ public abstract class ContinuousProfilingTestsBase<TFixture> : NewRelicIntegrati
                 // Wait for at least one drain to build a profile.
                 _fixture.AgentLog.WaitForLogLine(BuiltProfileLogLineRegex, TimeSpan.FromMinutes(2));
 
-                // Best-effort wait for the Debug JSON payload line; it only appears when a non-empty profile
+                // Best-effort wait for the payload line; it only appears when a non-empty profile
                 // was built. Don't fail the whole run here if it's slow -- the JSON fact asserts it directly.
-                _fixture.AgentLog.TryGetLogLines(ProfileJsonLogLineRegex);
+                _fixture.AgentLog.TryGetLogLines(ContinuousProfilingPayloadLog.LogLineRegex);
 
                 // Give the metric harvest a chance to ship the drain supportability metrics.
                 _fixture.AgentLog.WaitForLogLine(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromMinutes(1));
@@ -134,16 +130,17 @@ public abstract class ContinuousProfilingTestsBase<TFixture> : NewRelicIntegrati
     }
 
     [Fact]
-    public void ContinuousProfilingLogsBuiltProfileJsonAtDebug()
+    public void ContinuousProfilingLogsBuiltProfileJsonWhenPayloadLoggingIsOptedIn()
     {
-        // At Debug, each drain logs the built profile as compact protobuf-JSON in the same shape POSTed to
-        // the collector (mirrors HttpCollectorWire). A matching line is the log-observable evidence that a
-        // profile payload was produced. The captured blob must be the real OTLP profile request.
-        var jsonMatches = _fixture.AgentLog.WaitForLogLines(ProfileJsonLogLineRegex, TimeSpan.FromSeconds(30)).ToArray();
+        // With NEW_RELIC_PROFILING_LOG_PAYLOAD=true, each drain logs the built profile at Finest as
+        // gzip+base64 of the protobuf-JSON POSTed to the collector. A matching line is the log-observable
+        // evidence that a profile payload was produced. The decoded blob must be the real OTLP profile request.
+        var payloadMatches = _fixture.AgentLog.WaitForLogLines(ContinuousProfilingPayloadLog.LogLineRegex, TimeSpan.FromSeconds(30)).ToArray();
+        var json = ContinuousProfilingPayloadLog.DecodeToJson(payloadMatches[0].Groups[1].Value);
 
         NrAssert.Multiple(
-            () => Assert.Contains("resourceProfiles", jsonMatches[0].Groups[1].Value),
-            () => Assert.Contains("dictionary", jsonMatches[0].Groups[1].Value)
+            () => Assert.Contains("resourceProfiles", json),
+            () => Assert.Contains("dictionary", json)
         );
     }
 
@@ -155,13 +152,13 @@ public abstract class ContinuousProfilingTestsBase<TFixture> : NewRelicIntegrati
         // CorrelatedBusyTransaction -> CorrelatedBurnCpu) for several seconds, spanning multiple sampling
         // intervals, without ever handing the work off to another thread. SetTraceContext is pushed at the
         // wrapper boundary keyed by the calling OS thread only, so keeping the busy loop on that same thread
-        // is what makes a captured sample's trace/span link reliably observable. Across all drained JSON
-        // payloads, at least one linkTable entry must carry a non-zero (base64) trace id -- proof a sample
+        // is what makes a captured sample's trace/span link reliably observable. Across all drained (decoded)
+        // payloads, at least one linkTable entry must carry a non-zero trace id -- proof a sample
         // was correlated to the live transaction.
-        var jsonMatches = _fixture.AgentLog.WaitForLogLines(ProfileJsonLogLineRegex, TimeSpan.FromSeconds(30)).ToArray();
+        var payloadMatches = _fixture.AgentLog.WaitForLogLines(ContinuousProfilingPayloadLog.LogLineRegex, TimeSpan.FromSeconds(30)).ToArray();
 
-        var correlatedTraceIds = jsonMatches
-            .SelectMany(m => TraceIdInJsonRegex.Matches(m.Groups[1].Value).Cast<System.Text.RegularExpressions.Match>())
+        var correlatedTraceIds = payloadMatches
+            .SelectMany(m => TraceIdInJsonRegex.Matches(ContinuousProfilingPayloadLog.DecodeToJson(m.Groups[1].Value)).Cast<System.Text.RegularExpressions.Match>())
             .Select(tid => tid.Groups[1].Value)
             .Where(tid => tid != ZeroTraceIdHex)
             .ToArray();

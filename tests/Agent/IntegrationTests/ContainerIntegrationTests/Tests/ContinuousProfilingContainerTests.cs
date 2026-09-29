@@ -13,11 +13,11 @@ namespace NewRelic.Agent.ContainerIntegrationTests.Tests;
 /// <summary>
 /// Linux-container coverage for continuous profiling, exercising the native Linux sampler
 /// (SuspendRuntime/DoStackSnapshot + /proc thread-name resolution) that host-run tests never touch.
-/// Assertions here are log-based (built-profile summary + protobuf-JSON dump): this container tier connects
+/// Assertions here are log-based (built-profile summary + opt-in gzip+base64 payload line): this container tier connects
 /// to a real collector, so nothing checks the collector side. Independent receiver-side validation of the
 /// actual OTLP protobuf bytes lives in the host-run ContinuousProfilingOtlpReceiverTests (mock collector).
 /// The fixture burns CPU synchronously on the request thread so the sampler reliably captures an active
-/// trace/span for correlation assertions against the JSON dump's linkTable.
+/// trace/span for correlation assertions against the decoded payload's linkTable.
 /// </summary>
 [Trait("TestArea", "ContinuousProfiling")]
 public abstract class ContinuousProfilingContainerTest<T> : NewRelicIntegrationTest<T> where T : ContinuousProfilingContainerTestFixtureBase
@@ -33,12 +33,6 @@ public abstract class ContinuousProfilingContainerTest<T> : NewRelicIntegrationT
 
     private static readonly string BuiltProfileLogLineRegex =
         AgentLogBase.DebugLogLinePrefixRegex + @"\[ContinuousProfiling\] Posting profile \((\w+)\); (\d+) bytes to (\S+)\.";
-
-    // Each drain logs the built profile at Debug as compact protobuf-JSON in collector-send shape
-    // (mirrors HttpCollectorWire): `Request(<guid>): Invoked "continuous_profiling" with : {...}`. It is a
-    // SINGLE physical line, so the log prefix applies to the whole line and we anchor on it. Group 1 = JSON.
-    private static readonly string ProfileJsonLogLineRegex =
-        AgentLogBase.DebugLogLinePrefixRegex + @"Request\(.+?\): Invoked ""continuous_profiling"" with : (\{.*\})";
 
     // A trace id in a linkTable entry. The diagnostic log rewrites the proto `bytes` id from base64 to
     // lowercase hex (16 bytes -> 32 hex chars), so the reserved "no link" entry is 32 zeros; any other value
@@ -59,7 +53,8 @@ public abstract class ContinuousProfilingContainerTest<T> : NewRelicIntegrationT
             setupConfiguration: () =>
             {
                 var configModifier = new NewRelicConfigModifier(_fixture.DestinationNewRelicConfigFilePath);
-                // Debug (via finest) so the payload dump (with the correlation link) is emitted; faster
+                // Finest so the opt-in payload line (with the correlation link) is emitted (the Dockerfile sets
+                // NEW_RELIC_PROFILING_LOG_PAYLOAD=true); faster
                 // metrics cycle so the drain supportability metrics harvest within the test window.
                 configModifier.SetLogLevel("finest");
                 configModifier.ConfigureFasterMetricsHarvestCycle(10);
@@ -125,11 +120,11 @@ public abstract class ContinuousProfilingContainerTest<T> : NewRelicIntegrationT
         // The burn endpoint runs 8s of on-CPU work inside the instrumented web transaction, spanning
         // several 1000 ms sampling intervals, so the sampler reliably captures the request thread with an
         // active trace/span. This is the Linux-side proof of the suspend-window trace-context read. Across
-        // all drained JSON payloads, at least one linkTable entry must carry a non-zero (base64) trace id.
-        var jsonMatches = _fixture.AgentLog.WaitForLogLines(ProfileJsonLogLineRegex, TimeSpan.FromSeconds(30)).ToArray();
+        // all drained (decoded) payloads, at least one linkTable entry must carry a non-zero trace id.
+        var payloadMatches = _fixture.AgentLog.WaitForLogLines(ContinuousProfilingPayloadLog.LogLineRegex, TimeSpan.FromSeconds(30)).ToArray();
 
-        var correlatedTraceIds = jsonMatches
-            .SelectMany(m => TraceIdInJsonRegex.Matches(m.Groups[1].Value).Cast<System.Text.RegularExpressions.Match>())
+        var correlatedTraceIds = payloadMatches
+            .SelectMany(m => TraceIdInJsonRegex.Matches(ContinuousProfilingPayloadLog.DecodeToJson(m.Groups[1].Value)).Cast<System.Text.RegularExpressions.Match>())
             .Select(tid => tid.Groups[1].Value)
             .Where(tid => tid != ZeroTraceIdHex)
             .ToArray();
