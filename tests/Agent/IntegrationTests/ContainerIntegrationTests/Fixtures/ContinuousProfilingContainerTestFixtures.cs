@@ -7,7 +7,7 @@ namespace NewRelic.Agent.ContainerIntegrationTests.Fixtures;
 
 /// <summary>
 /// Fixture base for the continuous-profiling Linux container tests (CP enabled via
-/// NEW_RELIC_CONTINUOUS_PROFILING_* env in the Dockerfile). See ContinuousProfilingContainerTest for why
+/// NEW_RELIC_PROFILING_* env in the Dockerfile). See ContinuousProfilingContainerTest for why
 /// the CPU-burn endpoint and log-based-only assertions are used.
 /// </summary>
 public abstract class ContinuousProfilingContainerTestFixtureBase : ContainerTestFixtureBase

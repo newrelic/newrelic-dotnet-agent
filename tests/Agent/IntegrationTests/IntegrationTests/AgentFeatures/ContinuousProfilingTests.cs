@@ -88,7 +88,7 @@ public abstract class ContinuousProfilingTestsBase<TFixture> : NewRelicIntegrati
 
                 // Enable continuous profiling via the environment overrides (never ad-hoc config XML).
                 _fixture.EnvironmentVariables["NEW_RELIC_PROFILING_ENABLED"] = "true";
-                _fixture.EnvironmentVariables["NEW_RELIC_CONTINUOUS_PROFILING_SAMPLING_INTERVAL_MS"] = SamplingIntervalMs.ToString();
+                _fixture.EnvironmentVariables["NEW_RELIC_PROFILING_SAMPLING_INTERVAL_MS"] = SamplingIntervalMs.ToString();
             },
             exerciseApplication: () =>
             {

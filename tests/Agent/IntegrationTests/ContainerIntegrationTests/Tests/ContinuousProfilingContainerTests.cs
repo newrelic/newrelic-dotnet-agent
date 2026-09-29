@@ -23,7 +23,7 @@ namespace NewRelic.Agent.ContainerIntegrationTests.Tests;
 public abstract class ContinuousProfilingContainerTest<T> : NewRelicIntegrationTest<T> where T : ContinuousProfilingContainerTestFixtureBase
 {
     // Must match the interval baked into Dockerfile.continuousprofiling
-    // (NEW_RELIC_CONTINUOUS_PROFILING_SAMPLING_INTERVAL_MS).
+    // (NEW_RELIC_PROFILING_SAMPLING_INTERVAL_MS).
     private const int SamplingIntervalMs = 1000;
 
     private readonly T _fixture;

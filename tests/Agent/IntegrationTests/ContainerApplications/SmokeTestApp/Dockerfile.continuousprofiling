@@ -28,7 +28,7 @@ ARG NEW_RELIC_LICENSE_KEY
 ARG NEW_RELIC_APP_NAME
 
 # Continuous profiling is enabled here (rather than via ad-hoc config XML) exactly as the host-run
-# ContinuousProfilingTests do it -- through the NEW_RELIC_CONTINUOUS_PROFILING_* environment overrides.
+# ContinuousProfilingTests do it -- through the NEW_RELIC_PROFILING_* environment overrides.
 # The session starts at agent init (AgentManager.StartIfEnabled) with no collector command required.
 # CP's send-failure no-send guard was REMOVED 2026-07-21 -- this container DOES transmit real OTLP
 # profiles to the configured NEW_RELIC_HOST once the agent connects. The 1000 ms interval is the
@@ -41,8 +41,8 @@ NEW_RELIC_HOST=${NEW_RELIC_HOST} \
 NEW_RELIC_LICENSE_KEY=${NEW_RELIC_LICENSE_KEY} \
 NEW_RELIC_APP_NAME=${NEW_RELIC_APP_NAME} \
 NEW_RELIC_LOG_DIRECTORY=/app/logs \
-NEW_RELIC_CONTINUOUS_PROFILING_ENABLED=true \
-NEW_RELIC_CONTINUOUS_PROFILING_SAMPLING_INTERVAL_MS=1000
+NEW_RELIC_PROFILING_ENABLED=true \
+NEW_RELIC_PROFILING_SAMPLING_INTERVAL_MS=1000
 
 WORKDIR /app
 COPY --from=publish /app/publish .
