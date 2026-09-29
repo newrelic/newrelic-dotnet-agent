@@ -730,6 +730,22 @@ public class ProfilesTransportTests
     }
 
     [Test]
+    public void Send_encodes_payload_when_switch_is_on_and_only_audit_log_is_enabled()
+    {
+        // Log.Finest passes through without checking IsFinestEnabled, and the same payloadText goes to the audit
+        // log, so the audit-only case must still encode: pins the `|| AuditLog.IsAuditLogEnabled` half of the gate.
+        Mock.Arrange(() => _nrLogger.IsFinestEnabled).Returns(false);
+        AuditLog.IsAuditLogEnabled = true;
+
+        NewTransport(ConfigWith(true, 65536)).Send(BuildNonEmptyRequest());
+
+        Mock.Assert(() => _nrLogger.Finest(
+                Arg.Matches<string>(m => m.Contains("Invoked")),
+                Arg.Matches<object[]>(a => System.Linq.Enumerable.Any(a, x => IsEncodedProfilePayload(x)))),
+            Occurs.Once());
+    }
+
+    [Test]
     public void Send_no_longer_logs_the_payload_at_debug()
     {
         Mock.Arrange(() => _nrLogger.IsDebugEnabled).Returns(true);
@@ -804,8 +820,9 @@ public class ProfilesTransportTests
         Assert.That(json, Does.Not.Contain("truncated"));
     }
 
-    // The Finest diagnostic log line carries ToDiagnosticJson(request); testing the serialization directly
-    // avoids capturing the static logger while still pinning the payload's shape.
+    // The Finest "Invoked" log line carries payloadText: the gzip+base64 of ToDiagnosticJson(request), or a
+    // placeholder. Testing the JSON serialization directly avoids capturing the static logger while still
+    // pinning the payload's shape.
 
     [Test]
     public void ToDiagnosticJson_is_compact_single_line_valid_json()
