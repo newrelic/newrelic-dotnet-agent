@@ -15,7 +15,6 @@ public abstract class OpenTelemetryMetricsTestsBase<TFixture> : NewRelicIntegrat
     where TFixture : OtlpMetricsWithCollectorFixtureBase
 {
     protected readonly TFixture _fixture;
-    private IEnumerable<MetricsSummaryDto> _otlpSummaries;
 
     protected OpenTelemetryMetricsTestsBase(TFixture fixture, ITestOutputHelper outputHelper) : base(fixture)
     {
@@ -39,7 +38,7 @@ public abstract class OpenTelemetryMetricsTestsBase<TFixture> : NewRelicIntegrat
                 // harvest (every 60s), which can race with the WaitForLogLine timeout on slow CI.
                 _fixture.AgentLog.WaitForLogLine(AgentLogFile.OtlpMetricsExportedLogLineRegex, TimeSpan.FromMinutes(1));
 
-                _otlpSummaries = _fixture.GetCollectedOTLPMetrics();
+                _fixture.CollectedOtlpMetrics = _fixture.GetCollectedOTLPMetrics();
             }
         );
 
@@ -49,12 +48,13 @@ public abstract class OpenTelemetryMetricsTestsBase<TFixture> : NewRelicIntegrat
     [Fact]
     public void OtlpMetrics_are_collected_with_expected_names_counts_and_histogram_aggregation()
     {
-        Assert.NotNull(_otlpSummaries);
-        Assert.NotEmpty(_otlpSummaries);
+        var otlpSummaries = _fixture.CollectedOtlpMetrics;
+        Assert.NotNull(otlpSummaries);
+        Assert.NotEmpty(otlpSummaries);
 
         // Aggregate metrics from summaries
         var metricEntries = new List<MetricSummary>();
-        foreach (var s in _otlpSummaries)
+        foreach (var s in otlpSummaries)
         {
             foreach (var r in s.Resources)
             {
@@ -114,9 +114,10 @@ public abstract class OpenTelemetryMetricsTestsBase<TFixture> : NewRelicIntegrat
     [Fact]
     public void OtlpMetrics_resource_carries_connect_response_otlp_resource_attributes()
     {
-        Assert.NotNull(_otlpSummaries);
+        var otlpSummaries = _fixture.CollectedOtlpMetrics;
+        Assert.NotNull(otlpSummaries);
 
-        var resources = _otlpSummaries.SelectMany(s => s.Resources).ToList();
+        var resources = otlpSummaries.SelectMany(s => s.Resources).ToList();
         Assert.NotEmpty(resources);
 
         foreach (var resource in resources)
@@ -127,6 +128,10 @@ public abstract class OpenTelemetryMetricsTestsBase<TFixture> : NewRelicIntegrat
                     $"Resource attribute '{expected.Key}' not found. Available: {string.Join(", ", resource.Attributes.Keys)}");
                 Assert.Equal(expected.Value, actual);
             }
+
+            Assert.True(resource.Attributes.TryGetValue("entity.guid", out var entityGuid),
+                $"Resource attribute 'entity.guid' not found. Available: {string.Join(", ", resource.Attributes.Keys)}");
+            Assert.False(string.IsNullOrEmpty(entityGuid));
         }
     }
 

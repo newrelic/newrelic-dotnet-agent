@@ -163,7 +163,7 @@ public class MeterListenerBridgeTests
         // (The method may be called multiple times: once on connect, once on server config update)
         Mock.Assert(() => _otlpExporterConfigurationService.GetOrCreateMeterProvider(
             Arg.IsAny<IConnectionInfo>(), "new-entity-guid", Arg.IsAny<IReadOnlyDictionary<string, string>>()), Occurs.AtLeastOnce());
-
+            
         // Cleanup
         bridge?.Dispose();
     }

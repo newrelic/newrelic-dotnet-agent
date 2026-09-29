@@ -9,9 +9,12 @@ public static class MockOtlpResourceAttributes
 {
     public static readonly IReadOnlyDictionary<string, string> Values = new Dictionary<string, string>
     {
-        { "tags.team", "dotnet-agent" },
-        { "host", "mock-collector-host" },
-        { "k8s.podName", "" },
-        { "licenseKey", "12345678" }
+        { "realAgentId", "1147483647" },
+        { "host", "mock-agent-host" },
+        { "host.displayName", "mock-agent-display-host" },
+        { "instanceName", "mock-agent-instance" },
+        { "agent.version", "10.99.0.0" },
+        { "appName", "MockAppName" },
+        { "licenseKey", "b25fd3ca" }
     };
 }

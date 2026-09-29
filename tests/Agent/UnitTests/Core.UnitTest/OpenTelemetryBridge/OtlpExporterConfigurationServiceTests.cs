@@ -9,6 +9,8 @@ using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.OpenTelemetryBridge.Metrics;
 using NUnit.Framework;
+using OpenTelemetry;
+using OpenTelemetry.Metrics;
 using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.UnitTest.OpenTelemetryBridge;
@@ -90,6 +92,33 @@ public class OtlpExporterConfigurationServiceTests
 
         // Assert
         Assert.That(result1, Is.SameAs(result2));
+    }
+
+    [Test]
+    public void GetOrCreateMeterProvider_ResourceCarriesServerAttributes()
+    {
+        // Arrange
+        var mockConnectionInfo = Mock.Create<IConnectionInfo>();
+        Mock.Arrange(() => mockConnectionInfo.HttpProtocol).Returns("https");
+        Mock.Arrange(() => mockConnectionInfo.Host).Returns("collector.newrelic.com");
+        Mock.Arrange(() => mockConnectionInfo.Port).Returns(443);
+        Mock.Arrange(() => mockConnectionInfo.Proxy).Returns<System.Net.IWebProxy>(null);
+        var serverAttributes = new Dictionary<string, string>
+        {
+            { "host", "h1" },
+            { "entity.guid", "server-guid" }
+        };
+
+        // Act
+        var result = _service.GetOrCreateMeterProvider(mockConnectionInfo, "agent-guid", serverAttributes);
+
+        // Assert
+        var attributes = ((MeterProvider)result).GetResource().Attributes.ToDictionary(a => a.Key, a => a.Value);
+        Assert.Multiple(() =>
+        {
+            Assert.That(attributes["host"], Is.EqualTo("h1"));
+            Assert.That(attributes["entity.guid"], Is.EqualTo("server-guid"));
+        });
     }
 
     [Test]
