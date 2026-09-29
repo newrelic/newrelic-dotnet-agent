@@ -1,7 +1,9 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+#if !NETFRAMEWORK
 using System;
+#endif
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.ContinuousProfiling;
@@ -33,6 +35,19 @@ public class ContinuousProfilingServiceFactoryTests
         _container.Dispose();
     }
 
+#if NETFRAMEWORK
+    [Test]
+    public void TryCreate_ReturnsNullWithoutResolvingAnything_OnNetFramework()
+    {
+        Mock.Arrange(() => _configuration.ContinuousProfilingEnabled).Returns(true);
+
+        var result = ContinuousProfilingServiceFactory.TryCreate(_container, _configuration, _agentHealthReporter);
+
+        Assert.That(result, Is.Null);
+        Mock.Assert(() => _container.Resolve<INativeMethods>(), Occurs.Never());
+        Mock.Assert(() => _container.Resolve<IContinuousProfilingSupportabilityMetricCounters>(), Occurs.Never());
+    }
+#else
     [Test]
     public void TryCreate_AlwaysConstructsTheService_RegardlessOfConfiguration()
     {
@@ -68,4 +83,5 @@ public class ContinuousProfilingServiceFactoryTests
         Assert.DoesNotThrow(() => result = ContinuousProfilingServiceFactory.TryCreate(_container, _configuration, _agentHealthReporter));
         Assert.That(result, Is.Null);
     }
+#endif
 }
