@@ -137,9 +137,9 @@ public static class OtlpProfileBuilder
         // match the zero value (an empty-name frame, a zero-frame stack, an unset attribute) resolves back to
         // index 0 instead of being re-added as a duplicate entry that a naive "index 0 means empty" reader
         // downstream wouldn't recognize as such. Function/attribute are keyed the same way InternFunction/
-        // InternAttribute key them; stack is keyed by InternStack's empty-frames join ("").
+        // InternAttribute key them; stack is keyed by InternStack's count-prefixed join ("0:" for zero frames).
         functionTable[string.Empty] = 0;
-        stackTable[string.Empty] = 0;
+        stackTable["0:"] = 0;
         attributeTable[(0, 0L, null)] = 0;
 
         // link_table[0] is the reserved "no linked span" sentinel and is REQUIRED by the OTLP profiles
@@ -405,13 +405,17 @@ public static class OtlpProfileBuilder
 
     private static int InternStack(ProfilesDictionary dictionary, Dictionary<string, int> stringCache, Dictionary<string, int> functionCache, Dictionary<string, int> locationCache, Dictionary<string, int> stackCache, Dictionary<(int, long, string), int> attributeCache, IReadOnlyList<string> frames)
     {
+        // Key on the frame names themselves so a cache hit skips both the int[] allocation and every
+        // InternLocation call below -- those only need to run once per distinct stack. Count-prefixed so a
+        // single empty-name frame (1 frame, name "") can't collide with the seeded zero-frames key below (0
+        // frames) -- both would otherwise join to the same empty string.
+        var key = frames.Count + ":" + string.Join(",", frames);
+        if (stackCache.TryGetValue(key, out var index))
+            return index;
+
         var locationIndices = new int[frames.Count];
         for (var i = 0; i < frames.Count; i++)
             locationIndices[i] = InternLocation(dictionary, stringCache, functionCache, locationCache, attributeCache, frames[i]);
-
-        var key = string.Join(",", locationIndices);
-        if (stackCache.TryGetValue(key, out var index))
-            return index;
 
         var stack = new Stack();
         stack.LocationIndices.AddRange(locationIndices); // leaf-first
