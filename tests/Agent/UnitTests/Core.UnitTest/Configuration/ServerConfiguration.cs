@@ -154,6 +154,22 @@ public class Method_FromJson
         var serverConfiguration = ServerConfiguration.FromJson(@"{""agent_run_id"":42,""agent_config"": {""slow_sql.enabled"":true}}", ignoreServerConfig);
         return serverConfiguration.RpmConfig.SlowSqlEnabled;
     }
+
+    [Test]
+    public void otlp_resource_attributes_deserializes_to_map()
+    {
+        var serverConfiguration = ServerConfiguration.FromJson("{\"agent_run_id\":42,\"otlp_resource_attributes\":{\"tags.team\":\"dotnet\",\"k8s.podName\":\"\"}}");
+
+        Assert.That(serverConfiguration.OtlpResourceAttributes, Is.EqualTo(new Dictionary<string, string> { { "tags.team", "dotnet" }, { "k8s.podName", "" } }));
+    }
+
+    [Test]
+    public void otlp_resource_attributes_is_null_when_absent()
+    {
+        var serverConfiguration = ServerConfiguration.FromJson("{\"agent_run_id\":42}");
+
+        Assert.That(serverConfiguration.OtlpResourceAttributes, Is.Null);
+    }
 }
 
 [TestFixture]

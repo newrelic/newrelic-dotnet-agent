@@ -111,6 +111,25 @@ public abstract class OpenTelemetryMetricsTestsBase<TFixture> : NewRelicIntegrat
         }
     }
 
+    [Fact]
+    public void OtlpMetrics_resource_carries_connect_response_otlp_resource_attributes()
+    {
+        Assert.NotNull(_otlpSummaries);
+
+        var resources = _otlpSummaries.SelectMany(s => s.Resources).ToList();
+        Assert.NotEmpty(resources);
+
+        foreach (var resource in resources)
+        {
+            foreach (var expected in MockOtlpResourceAttributes.Values)
+            {
+                Assert.True(resource.Attributes.TryGetValue(expected.Key, out var actual),
+                    $"Resource attribute '{expected.Key}' not found. Available: {string.Join(", ", resource.Attributes.Keys)}");
+                Assert.Equal(expected.Value, actual);
+            }
+        }
+    }
+
     protected virtual string[] GetExpectedMetrics()
     {
         return new[] { "requests_total", "payload_size_bytes", "active_requests", "queue_depth", "cpu_usage_percent", "active_connections" };

@@ -76,6 +76,9 @@ public class ServerConfiguration
     [JsonProperty("request_headers_map")]
     public Dictionary<string, string> RequestHeadersMap { get; set; }
 
+    [JsonProperty("otlp_resource_attributes")]
+    public Dictionary<string, string> OtlpResourceAttributes { get; set; }
+
 
     // Server Side Config
 

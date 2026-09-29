@@ -236,6 +236,25 @@ public class DefaultConfigurationTests
     }
 
     [Test]
+    public void OtlpResourceAttributes_ReturnsServerMap()
+    {
+        var serverMap = new Dictionary<string, string> { { "host", "host-1" } };
+        _serverConfig.OtlpResourceAttributes = serverMap;
+        var config = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+        Assert.That(config.OtlpResourceAttributes, Is.SameAs(serverMap));
+    }
+
+    [Test]
+    public void OtlpResourceAttributes_IsNull_WhenServerMapIsNull()
+    {
+        _serverConfig.OtlpResourceAttributes = null;
+        var config = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+        Assert.That(config.OtlpResourceAttributes, Is.Null);
+    }
+
+    [Test]
     public void DisableServerConfigIsFalseByDefault()
     {
         Assert.That(_defaultConfig.IgnoreServerSideConfiguration, Is.False);

@@ -356,6 +356,9 @@ public class ReportedConfiguration : IConfiguration
     [JsonProperty("agent.entity_guid")]
     public string EntityGuid => _configuration.EntityGuid;
 
+    [JsonIgnore]
+    public IReadOnlyDictionary<string, string> OtlpResourceAttributes => _configuration.OtlpResourceAttributes;
+
     [JsonProperty("agent.high_security_mode_enabled")]
     public bool HighSecurityModeEnabled => _configuration.HighSecurityModeEnabled;
 

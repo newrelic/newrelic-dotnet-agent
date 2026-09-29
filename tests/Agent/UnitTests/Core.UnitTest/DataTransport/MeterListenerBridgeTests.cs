@@ -162,10 +162,58 @@ public class MeterListenerBridgeTests
         // Assert - Verify GetOrCreateMeterProvider was called at least once with the new entity GUID
         // (The method may be called multiple times: once on connect, once on server config update)
         Mock.Assert(() => _otlpExporterConfigurationService.GetOrCreateMeterProvider(
-            Arg.IsAny<IConnectionInfo>(), "new-entity-guid"), Occurs.AtLeastOnce());
-            
+            Arg.IsAny<IConnectionInfo>(), "new-entity-guid", Arg.IsAny<IReadOnlyDictionary<string, string>>()), Occurs.AtLeastOnce());
+
         // Cleanup
         bridge?.Dispose();
+    }
+
+    [Test]
+    public void OnAgentConnected_PassesResourceAttributesFromConfiguration()
+    {
+        var configMap = new Dictionary<string, string> { { "host", "h1" } };
+        Mock.Arrange(() => _configuration.OtlpResourceAttributes).Returns(configMap);
+
+        EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent { ConnectInfo = _connectionInfo });
+
+        Mock.Assert(() => _otlpExporterConfigurationService.GetOrCreateMeterProvider(
+            Arg.IsAny<IConnectionInfo>(), "test-entity-guid",
+            Arg.Matches<IReadOnlyDictionary<string, string>>(d => ReferenceEquals(d, configMap))), Occurs.AtLeastOnce());
+    }
+
+    [Test]
+    public void OnAgentConnected_ReconnectWithSameGuidAndNewMap_PassesNewMap()
+    {
+        var firstMap = new Dictionary<string, string> { { "host", "h1" } };
+        var secondMap = new Dictionary<string, string> { { "host", "h2" } };
+        Mock.Arrange(() => _configuration.OtlpResourceAttributes).Returns(firstMap);
+        EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent { ConnectInfo = _connectionInfo });
+
+        Mock.Arrange(() => _configuration.OtlpResourceAttributes).Returns(secondMap);
+        EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent { ConnectInfo = _connectionInfo });
+
+        Mock.Assert(() => _otlpExporterConfigurationService.GetOrCreateMeterProvider(
+            Arg.IsAny<IConnectionInfo>(), "test-entity-guid",
+            Arg.Matches<IReadOnlyDictionary<string, string>>(d => ReferenceEquals(d, secondMap))), Occurs.AtLeastOnce());
+    }
+
+    [Test]
+    public void OnServerConfigurationUpdated_NewGuid_PassesResourceAttributesFromEvent()
+    {
+        var configMap = new Dictionary<string, string> { { "host", "from-config" } };
+        var eventMap = new Dictionary<string, string> { { "host", "from-event" } };
+        Mock.Arrange(() => _configuration.OtlpResourceAttributes).Returns(configMap);
+        EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent { ConnectInfo = _connectionInfo });
+
+        var serverConfig = new ServerConfiguration { EntityGuid = "new-entity-guid", OtlpResourceAttributes = eventMap };
+        EventBus<ServerConfigurationUpdatedEvent>.Publish(new ServerConfigurationUpdatedEvent(serverConfig));
+
+        Mock.Assert(() => _otlpExporterConfigurationService.GetOrCreateMeterProvider(
+            Arg.IsAny<IConnectionInfo>(), "new-entity-guid",
+            Arg.Matches<IReadOnlyDictionary<string, string>>(d => ReferenceEquals(d, eventMap))), Occurs.Once());
+        Mock.Assert(() => _otlpExporterConfigurationService.GetOrCreateMeterProvider(
+            Arg.IsAny<IConnectionInfo>(), "new-entity-guid",
+            Arg.Matches<IReadOnlyDictionary<string, string>>(d => ReferenceEquals(d, configMap))), Occurs.Never());
     }
 
     [Test]

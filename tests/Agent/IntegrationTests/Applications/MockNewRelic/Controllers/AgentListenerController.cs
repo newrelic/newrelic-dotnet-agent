@@ -77,6 +77,7 @@ public class AgentListenerController : Controller
 
                 serverConfig["agent_run_id"] = Guid.NewGuid();
                 serverConfig["entity_guid"] = Guid.NewGuid();
+                serverConfig["otlp_resource_attributes"] = MockOtlpResourceAttributes.Values;
 
                 if (_setLiveInstrumentationOnConnect)
                 {
