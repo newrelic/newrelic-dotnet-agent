@@ -236,6 +236,22 @@ public abstract class AgentLogBase
         return WaitForLogLines(regularExpression, timeoutOrZero).First();
     }
 
+    // Non-throwing variant of WaitForLogLine for tests that need to assert a line's ABSENCE within the
+    // timeout is a valid outcome, not a failure -- e.g. probing whether a rejection was logged without
+    // failing the test when it wasn't.
+    public bool TryWaitForLogLine(string regularExpression, TimeSpan? timeoutOrZero = null)
+    {
+        try
+        {
+            WaitForLogLine(regularExpression, timeoutOrZero);
+            return true;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
+
     public IEnumerable<Match> TryGetLogLines(string regularExpression)
     {
         var regex = new Regex(regularExpression);

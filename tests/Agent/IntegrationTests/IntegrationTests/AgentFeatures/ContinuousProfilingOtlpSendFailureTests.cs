@@ -73,7 +73,7 @@ public class ContinuousProfilingOtlpSendFailureTests : NewRelicIntegrationTest<A
                 _fixture.BurnCpu(8);
                 _fixture.AgentLog.WaitForLogLine(BuiltProfileLogLineRegex, TimeSpan.FromMinutes(2));
 
-                _rejectionWarningLogged = TryWaitForLogLine(RejectionWarnLogLineRegex, TimeSpan.FromMinutes(1));
+                _rejectionWarningLogged = _fixture.AgentLog.TryWaitForLogLine(RejectionWarnLogLineRegex, TimeSpan.FromMinutes(1));
 
                 // Recovery: the session must NOT have disabled itself on failure. Heal the endpoint and prove
                 // a subsequent drain succeeds and lands a real profile at the collector.
@@ -84,19 +84,6 @@ public class ContinuousProfilingOtlpSendFailureTests : NewRelicIntegrationTest<A
         );
 
         _fixture.Initialize();
-    }
-
-    private bool TryWaitForLogLine(string regex, TimeSpan timeout)
-    {
-        try
-        {
-            _fixture.AgentLog.WaitForLogLine(regex, timeout);
-            return true;
-        }
-        catch (Exception)
-        {
-            return false;
-        }
     }
 
     private List<ProfilesSummaryDto> WaitForContentValidProfile(TimeSpan timeout)
