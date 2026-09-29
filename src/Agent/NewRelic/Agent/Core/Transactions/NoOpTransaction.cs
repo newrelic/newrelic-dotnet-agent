@@ -97,7 +97,7 @@ public class NoOpTransaction : ITransaction, ITransactionExperimental
     public ISegment StartMessageBrokerSerializationSegment(MethodCall methodCall, MessageBrokerDestinationType destinationType, MessageBrokerAction operation, string brokerVendorName, string destinationName, string kind)
     {
 #if DEBUG
-        Log.Finest("Skipping StartMessageBrokerSegment outside of a transaction");
+        Log.Finest("Skipping StartMessageBrokerSerializationSegment outside of a transaction");
 #endif
         return Segment.NoOpSegment;
     }
