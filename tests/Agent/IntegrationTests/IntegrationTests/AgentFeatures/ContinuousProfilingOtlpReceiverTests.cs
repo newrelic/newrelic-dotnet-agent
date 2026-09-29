@@ -71,15 +71,16 @@ public class ContinuousProfilingOtlpReceiverTests : NewRelicIntegrationTest<AspN
                 // A drain must build a non-empty ("built") profile before the mock can receive one.
                 _fixture.AgentLog.WaitForLogLine(BuiltProfileLogLineRegex, TimeSpan.FromMinutes(2));
 
-                // This test runs at Finest WITHOUT NEW_RELIC_PROFILING_LOG_PAYLOAD, so the payload line must carry
-                // the placeholder and never an encoded payload.
-                _placeholderLineCount = _fixture.AgentLog.WaitForLogLines(ContinuousProfilingPayloadLog.PlaceholderLogLineRegex, TimeSpan.FromSeconds(30)).Count();
-                _encodedLineCount = _fixture.AgentLog.TryGetLogLines(ContinuousProfilingPayloadLog.LogLineRegex).Count();
-
                 // Poll the mock collector until it has independently parsed a CONTENT-valid profile -- one
                 // that carries real decoded frames and resource identity, not just non-zero counts. Must
                 // happen here, before Initialize() tears the collector process down.
                 _receivedProfiles = WaitForContentValidProfile(TimeSpan.FromMinutes(1));
+
+                // This test runs at Finest WITHOUT NEW_RELIC_PROFILING_LOG_PAYLOAD, so the payload line must carry
+                // the placeholder and never an encoded payload. Counted only now that a send has certainly happened;
+                // TryGetLogLines (non-throwing) so a missing placeholder fails just the fact's own assertion.
+                _placeholderLineCount = _fixture.AgentLog.TryGetLogLines(ContinuousProfilingPayloadLog.PlaceholderLogLineRegex).Count();
+                _encodedLineCount = _fixture.AgentLog.TryGetLogLines(ContinuousProfilingPayloadLog.LogLineRegex).Count();
             }
         );
 

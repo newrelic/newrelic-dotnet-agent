@@ -16,11 +16,10 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures;
 /// OTLP <c>/v1/profiles</c> endpoint -- but because these host tests run against the real staging collector,
 /// they are <b>log-based</b>: they assert the built-profile summary line (Debug), the opt-in gzip+base64
 /// payload line (Finest), and correlation from the decoded payload's linkTable, not a received payload at the
-/// collector. Whether
-/// the POST is actually accepted depends on the target endpoint/account being reachable from the test host,
-/// so assertions key off the built-payload log lines rather than send success. The drain also reports
-/// supportability metrics. Independent receiver-side validation of the actual OTLP protobuf bytes lives in
-/// <see cref="ContinuousProfilingOtlpReceiverTests"/>, which runs against the mock collector.
+/// collector. Whether the POST is actually accepted depends on the target endpoint/account being reachable
+/// from the test host, so assertions key off the built-payload log lines rather than send success. The drain
+/// also reports supportability metrics. Independent receiver-side validation of the actual OTLP protobuf
+/// bytes lives in <see cref="ContinuousProfilingOtlpReceiverTests"/>, which runs against the mock collector.
 ///
 /// Continuous profiling is enabled purely by configuration -- the session starts at agent initialization
 /// (<c>AgentManager.StartIfEnabled</c>) when the config/env flag is set, with no collector command required.
@@ -75,8 +74,8 @@ public abstract class ContinuousProfilingTestsBase<TFixture> : NewRelicIntegrati
             setupConfiguration: () =>
             {
                 var configModifier = new NewRelicConfigModifier(_fixture.DestinationNewRelicConfigFilePath);
-                // Finest so the payload line is emitted; faster metrics cycle
-                // so the drain supportability metrics harvest within the test window (default cycle is 60s).
+                // Finest so the payload line is emitted; faster metrics cycle so the drain supportability
+                // metrics harvest within the test window (default cycle is 60s).
                 configModifier.SetLogLevel("finest");
                 configModifier.ConfigureFasterMetricsHarvestCycle(10);
 
