@@ -314,6 +314,34 @@ public class ContinuousProfilingServiceTests
     }
 
     [Test]
+    public void StartFromCommand_failure_leaves_the_cpu_bundle_command_owned_but_not_running()
+    {
+        // Known limitation (see PR description): ownership is claimed BEFORE RealizeCommandStartLocked
+        // attempts the native start, and a failure there does not release it -- the type ends up
+        // command-owned but not running, with no way back to config control except a matching stop
+        // command. Pinned here so a later fix (rollback on failure) or an accidental regression of this
+        // exact state is visible, not silent.
+        Mock.Arrange(() => _native.Start(Arg.AnyInt)).Throws(new InvalidOperationException("boom"));
+        ArrangeEnabled(10000);
+
+        _service.StartFromCommand(new[] { "cpu" }, null, null);
+        Assert.That(_service.IsActive, Is.False, "the failed native start must not report itself as active");
+
+        // ApplyConfigChange's command-ownership guard is the observable proof: it refuses to touch a
+        // command-owned type (see ApplyConfigChange), so a config-driven start attempt here must be
+        // refused precisely because ownership survived the earlier failure -- if the failure had rolled
+        // ownership back, this call would reach _native.Start a second time.
+        _service.ApplyConfigChange();
+        Mock.Assert(() => _native.Start(Arg.AnyInt), Occurs.Once(),
+            "a config-driven start must be refused while the cpu bundle remains command-owned from the failed command start");
+
+        // A matching stop command is still accepted cleanly, confirming the type really is command-owned
+        // (StopFromCommand's own release path has nothing else to fail on for an unrecognized type).
+        var stopResult = _service.StopFromCommand(new string[0]);
+        Assert.That(stopResult.Exceptions, Is.Empty);
+    }
+
+    [Test]
     public void StartFromCommand_with_heap_reports_not_supported_and_does_not_start_anything()
     {
         ArrangeEnabled(10000);
@@ -2837,6 +2865,32 @@ public class ContinuousProfilingServiceTests
         var disabled = Mock.Create<IConfiguration>();
         Mock.Arrange(() => disabled.ContinuousProfilingEnabled).Returns(false);
         _service.OverrideConfigForTesting(disabled);
+
+        delayedStart.Invoke();
+
+        Mock.Assert(() => _native.Start(Arg.IsAny<int>()), Occurs.Never());
+        Assert.That(_service.IsActive, Is.False);
+    }
+
+    [Test]
+    public void Delayed_start_is_a_noop_if_a_command_stopped_the_cpu_bundle_before_the_delay_elapsed()
+    {
+        // Mirrors Duration_auto_stop_is_a_noop_if_a_command_claimed_ownership_before_it_elapsed, but for the
+        // delay path's own early return (StartFromDelayElapsed) instead of the duration path's. Uses
+        // StopFromCommand rather than StartFromCommand so _isActive stays false throughout -- isolating the
+        // command-ownership check from the method's separate (and separately-tested) _isActive guard.
+        ArrangeEnabled(10000);
+        Mock.Arrange(() => _config.ContinuousProfilingDelayMs).Returns(1000);
+
+        Action delayedStart = null;
+        Mock.Arrange(() => _scheduler.ExecuteOnce(Arg.IsAny<Action>(), TimeSpan.FromMilliseconds(1000)))
+            .DoInstead((Action action, TimeSpan delay) => delayedStart = action);
+
+        _service.StartIfEnabled();
+
+        // Operator issues a stop for the cpu bundle before the local delay timer fires -- the stale local
+        // timer must not undo it.
+        _service.StopFromCommand(new string[0]);
 
         delayedStart.Invoke();
 

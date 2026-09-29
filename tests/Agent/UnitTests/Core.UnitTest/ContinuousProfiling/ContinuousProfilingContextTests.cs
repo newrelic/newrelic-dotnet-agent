@@ -698,6 +698,51 @@ public class ContinuousProfilingContextTests
         Mock.Assert(() => _native.GetPendingPushCell(), Occurs.Once());
     }
 
+    // "Once per thread" above is scoped to a single armed session, not forever: a re-arm (Disable then
+    // Enable, e.g. a CP stop/start retune) bumps the epoch, and this thread's cached cell must not survive
+    // across that boundary -- a cell address from a torn-down session could point at a since-reused native
+    // slot.
+    [Test]
+    public void PushTraceContext_re_enable_after_disable_resolves_the_cell_again()
+    {
+        ArrangeResolvableCell();
+        _context.Enable(_native);
+        _context.PushTraceContext("0123456789abcdeffedcba9876543210", "1122334455667788");
+
+        _context.Disable();
+        _context.Enable(_native); // bumps the epoch
+
+        _context.PushTraceContext("0123456789abcdeffedcba9876543210", "1122334455667788");
+
+        Mock.Assert(() => _native.GetPendingPushCell(), Occurs.Exactly(2),
+            "the re-arm must force a fresh cell resolution, not reuse the pre-re-arm cached cell");
+    }
+
+    // The comment on ResetTraceContext calls this a safety property, not an optimization: a cell resolved
+    // in an earlier epoch must never be written through, because by the time a later epoch is live, that
+    // cell's native slot may already belong to a different thread's session. Exercised by resolving (and
+    // caching) the cell in epoch 1, re-arming to epoch 2 WITHOUT an intervening push (so the ThreadStatic
+    // cache still holds the stale epoch-1 stamp), then calling ResetTraceContext and proving it left the
+    // cell untouched.
+    [Test]
+    public void ResetTraceContext_does_not_write_through_a_cell_resolved_in_an_earlier_epoch()
+    {
+        ArrangeResolvableCell();
+        _context.Enable(_native); // epoch 1
+        _context.PushTraceContext("0123456789abcdeffedcba9876543210", "1122334455667788"); // resolves+caches epoch 1, clears the cell
+
+        const long staleIntentSentinel = 0x5A5A5A5A5A5A5A5AL;
+        Marshal.WriteInt64(_cell, staleIntentSentinel); // simulate intent left behind by the epoch-1 session
+
+        _context.Disable();
+        _context.Enable(_native); // epoch 2 -- no push yet, so the cached cell/epoch on this thread is still stamped epoch 1
+
+        _context.ResetTraceContext();
+
+        Assert.That(Marshal.ReadInt64(_cell), Is.EqualTo(staleIntentSentinel),
+            "a cell resolved for a stale epoch must not be written through by a reset in the new epoch");
+    }
+
     // A thread whose resolution failed must not P/Invoke GetPendingPushCell again on every push.
     [Test]
     public void PushTraceContext_does_not_retry_a_failed_cell_resolution_on_every_push()
