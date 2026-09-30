@@ -242,11 +242,11 @@ public class ContinuousProfilingServiceTests
     public void StartFromCommand_uses_sample_interval_for_native_sampling_and_cpu_report_interval_for_the_drain_cadence()
     {
         // Cluster 3 (Major), the core invariant: the two independently-meaningful wire fields must not
-        // collapse. sample_interval drives native sampling (fine capture cadence + the profile's period);
-        // cpu_report_interval drives the managed drain/report schedule (coarse cadence). The old
-        // `cpuReportIntervalMs ?? sampleIntervalMs ?? config` collapse drove native sampling off the coarse
-        // report interval, silently under-sampling by orders of magnitude on the normal collector shape --
-        // this test fails against that collapse (it would have called _native.Start(30000)).
+        // collapse. sample_interval drives native sampling cadence (and the profile's period);
+        // cpu_report_interval drives the managed drain/report schedule. The old
+        // `cpuReportIntervalMs ?? sampleIntervalMs ?? config` collapse drove native sampling off the
+        // report interval instead, silently under-sampling by orders of magnitude whenever the two
+        // differed -- this test fails against that collapse (it would have called _native.Start(30000)).
         ArrangeEnabled(10000);
 
         var result = _service.StartFromCommand(new[] { "cpu" }, sampleIntervalMs: 2000, cpuReportIntervalMs: 30000);
@@ -260,6 +260,22 @@ public class ContinuousProfilingServiceTests
             Assert.That(result.SampleIntervalMs, Is.EqualTo(2000));
             Assert.That(result.CpuReportIntervalMs, Is.EqualTo(30000));
         });
+    }
+
+    [TestCase(2000, 30000, 1)]
+    [TestCase(2000, 2000, 0)]
+    [TestCase(30000, 2000, 0)]
+    public void StartFromCommand_logs_at_finest_only_when_the_report_interval_exceeds_the_sample_interval(int sampleIntervalMs, int cpuReportIntervalMs, int expectedLogs)
+    {
+        // A report interval longer than the sample interval drops native sweeps between drains. That is
+        // left to the caller, but it is surfaced at Finest so a thin profile can be explained from the log.
+        var logger = Mock.Create<ILogger>();
+        Log.Initialize(logger);
+        ArrangeEnabled(10000);
+
+        _service.StartFromCommand(new[] { "cpu" }, sampleIntervalMs: sampleIntervalMs, cpuReportIntervalMs: cpuReportIntervalMs);
+
+        Mock.Assert(() => logger.Finest(Arg.Matches<string>(m => m.Contains("exceeds sample interval")), Arg.IsAny<object[]>()), Occurs.Exactly(expectedLogs));
     }
 
     [Test]
@@ -2916,6 +2932,69 @@ public class ContinuousProfilingServiceTests
         autoStop.Invoke();
 
         Mock.Assert(() => _scheduler.StopExecuting(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan?>()), Occurs.Once());
+        Assert.That(_service.IsActive, Is.False);
+    }
+
+    [Test]
+    public void StopFromDurationElapsed_from_an_earlier_stopped_session_does_not_stop_a_later_session()
+    {
+        // Regression for the stale-duration-timer bug: IScheduler can't cancel a pending one-shot, so a
+        // duration timer armed for session A must not be able to stop a later, unrelated session B that
+        // happens to be active when A's stale timer finally fires.
+        ArrangeEnabled(10000);
+        Mock.Arrange(() => _config.ContinuousProfilingDurationMs).Returns(60000);
+
+        var autoStops = new List<Action>();
+        Mock.Arrange(() => _scheduler.ExecuteOnce(Arg.IsAny<Action>(), TimeSpan.FromMilliseconds(60000)))
+            .DoInstead((Action action, TimeSpan delay) => autoStops.Add(action));
+
+        _service.StartIfEnabled(); // session A: generation 1
+        Assert.That(_service.IsActive, Is.True);
+
+        // Stop session A (config disable), then start session B (config re-enable) -- a fresh generation.
+        var disabled = Mock.Create<IConfiguration>();
+        Mock.Arrange(() => disabled.ContinuousProfilingEnabled).Returns(false);
+        _service.OverrideConfigForTesting(disabled);
+        _service.ApplyConfigChange();
+        Assert.That(_service.IsActive, Is.False);
+
+        _service.OverrideConfigForTesting(_config);
+        _service.ApplyConfigChange(); // session B: generation 2
+        Assert.That(_service.IsActive, Is.True);
+        Assert.That(autoStops, Has.Count.EqualTo(2), "session A and session B must each arm their own duration timer.");
+
+        // Session A's stale duration timer fires late -- must not touch session B.
+        autoStops[0].Invoke();
+
+        Assert.That(_service.IsActive, Is.True,
+            "a stale duration timer from an earlier, already-stopped session must not stop a later, unrelated session.");
+    }
+
+    [Test]
+    public void StopFromDurationElapsed_still_stops_the_session_that_armed_it()
+    {
+        // Contrast case: the CURRENT session's own duration timer (matching generation) must still work.
+        ArrangeEnabled(10000);
+        Mock.Arrange(() => _config.ContinuousProfilingDurationMs).Returns(60000);
+
+        var autoStops = new List<Action>();
+        Mock.Arrange(() => _scheduler.ExecuteOnce(Arg.IsAny<Action>(), TimeSpan.FromMilliseconds(60000)))
+            .DoInstead((Action action, TimeSpan delay) => autoStops.Add(action));
+
+        _service.StartIfEnabled(); // session A: generation 1
+
+        var disabled = Mock.Create<IConfiguration>();
+        Mock.Arrange(() => disabled.ContinuousProfilingEnabled).Returns(false);
+        _service.OverrideConfigForTesting(disabled);
+        _service.ApplyConfigChange();
+
+        _service.OverrideConfigForTesting(_config);
+        _service.ApplyConfigChange(); // session B: generation 2
+        Assert.That(_service.IsActive, Is.True);
+
+        // Session B's own duration timer fires -- must stop session B.
+        autoStops[1].Invoke();
+
         Assert.That(_service.IsActive, Is.False);
     }
 

@@ -11,9 +11,13 @@ namespace NewRelic.Agent.Core.Commands;
 /// <summary>
 /// Parses the arguments of a start_continuous_profiling/stop_continuous_profiling agent command. Wire
 /// argument names are snake_case ("include", "sample_interval", "cpu_report_interval"), matching every
-/// other agent command in this codebase (profile_id, sample_period, report_data) -- the DACI's GraphQL
-/// block (sampleInterval/cpuReportInterval) belongs to the separate sibling backend service's public API,
-/// not the agent_commands wire shape sent to the agent.
+/// other agent command in this codebase (profile_id, sample_period, report_data). sample_interval and
+/// cpu_report_interval are two independently-meaningful fields and must not collapse into one:
+/// sample_interval drives native sampling cadence (and the profile's reported period);
+/// cpu_report_interval drives the managed drain/POST cadence. Each falls back to local config
+/// independently when absent. Keep cpu_report_interval &lt;= sample_interval -- each drain reads one
+/// native sweep and the native queue holds only two, so a report interval longer than the sample
+/// interval drops sweeps between drains.
 /// </summary>
 public class ContinuousProfilerCommandArgs
 {

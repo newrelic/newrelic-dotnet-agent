@@ -439,36 +439,16 @@ public class ProfilesTransportTests
         Mock.Assert(() => _nrLogger.Warn(Arg.Matches<string>(m => m.Contains("TLS")), Arg.IsAny<object[]>()), Occurs.Once());
     }
 
-    [TestCase(401)]
-    [TestCase(403)]
-    public void Send_sets_the_cp_license_key_invalid_health_status_on_an_auth_rejection(int statusCode)
-    {
-        var health = Mock.Create<IAgentHealthReporter>();
-        var transport = new ProfilesTransport((bytes, endpoint) => new ProfilesSendResult(false, statusCode, "error"), "http://unused", health);
-
-        transport.Send(BuildNonEmptyRequest());
-
-        Mock.Assert(() => health.SetAgentControlStatus(HealthCodes.ContinuousProfilingLicenseKeyInvalid, statusCode.ToString()), Occurs.Once());
-    }
-
-    [Test]
-    public void Send_sets_the_health_status_on_every_auth_rejection_even_inside_the_warn_rate_limit_window()
-    {
-        var health = Mock.Create<IAgentHealthReporter>();
-        var transport = new ProfilesTransport((bytes, endpoint) => new ProfilesSendResult(false, 401, "error"), "http://unused", health);
-
-        transport.Send(BuildNonEmptyRequest());
-        transport.Send(BuildNonEmptyRequest());
-
-        Mock.Assert(() => health.SetAgentControlStatus(HealthCodes.ContinuousProfilingLicenseKeyInvalid, "401"), Occurs.Exactly(2));
-    }
-
+    [TestCase(false, 401)]
+    [TestCase(false, 403)]
     [TestCase(false, 404)]
     [TestCase(false, 500)]
     [TestCase(false, 0)]
     [TestCase(true, 200)]
-    public void Send_does_not_touch_the_health_status_for_anything_other_than_an_auth_rejection(bool accepted, int statusCode)
+    public void Send_never_sets_agent_health_status(bool accepted, int statusCode)
     {
+        // CP shares the agent's single health slot with the collector connection path and has no way to
+        // clear it again on a later success, so no send outcome -- including a 401/403 -- writes it.
         var health = Mock.Create<IAgentHealthReporter>();
         var transport = new ProfilesTransport((bytes, endpoint) => new ProfilesSendResult(accepted, statusCode, "x"), "http://unused", health);
 

@@ -163,39 +163,40 @@ public sealed class AgentManager : IAgentManager, IDisposable
 
         EventBus<KillAgentEvent>.Subscribe(OnShutdownAgent);
 
+        //Initialize the extensions loader with extensions folder based on the the install path
+        ExtensionsLoader.Initialize(AgentInstallConfiguration.InstallPathExtensionsDirectory);
+
+        // Resolve all services once we've ensured that the agent is enabled
+        // The AgentApiImplementation needs to be resolved before the WrapperService, because
+        // resolving the WrapperService triggers an agent connect but it doesn't instantiate
+        // the CustomEventAggregator, so we need to resolve the AgentApiImplementation to
+        // get the CustomEventAggregator instantiated before the connect process is triggered.
+        // If that doesn't happen the CustomEventAggregator will not start its harvest timer
+        // when the agent connect response comes back. The agent DI, startup, and connect
+        // process really needs to be refactored so that it's more explicit in its behavior.
+        var agentApi = _container.Resolve<IAgentApi>();
+        _wrapperService = _container.Resolve<IWrapperService>();
+
+        if (Configuration.OpenTelemetryEnabled)
+        {
+            _container.Resolve<OpenTelemetryBridge.Tracing.ActivityBridge>().Start();
+
+            if (!bootstrapConfig.ServerlessModeEnabled)
+            {
+                // We need to resolve the MeterListenerBridge before the connect event is triggered so that
+                // the MeterListenerBridge is ready to receive the connect event and start listening for
+                // metrics.
+                _container.Resolve<OpenTelemetryBridge.Metrics.MeterListenerBridge>().Start();
+            }
+        }
+
         // AgentSingleton.CreateInstance's catch swaps in the DisabledAgentManager but never gets a
-        // reference to this half-built manager, so it can't clean up whatever background work already
-        // started below. Guard the startup sequence and route any failure through the same Shutdown(false)
-        // the other teardown paths use, so a throw here still stops/disposes what's already running.
+        // reference to this half-built manager, so it can't stop CP's native sampler if a later startup
+        // step throws after CP has already been created/started. Guard only from CP creation onward --
+        // everything before this point cannot have started CP, so it stays on the original plain-throw
+        // path (propagates straight to AgentSingleton.CreateInstance's catch, same as before CP existed).
         try
         {
-            //Initialize the extensions loader with extensions folder based on the the install path
-            ExtensionsLoader.Initialize(AgentInstallConfiguration.InstallPathExtensionsDirectory);
-
-            // Resolve all services once we've ensured that the agent is enabled
-            // The AgentApiImplementation needs to be resolved before the WrapperService, because
-            // resolving the WrapperService triggers an agent connect but it doesn't instantiate
-            // the CustomEventAggregator, so we need to resolve the AgentApiImplementation to
-            // get the CustomEventAggregator instantiated before the connect process is triggered.
-            // If that doesn't happen the CustomEventAggregator will not start its harvest timer
-            // when the agent connect response comes back. The agent DI, startup, and connect
-            // process really needs to be refactored so that it's more explicit in its behavior.
-            var agentApi = _container.Resolve<IAgentApi>();
-            _wrapperService = _container.Resolve<IWrapperService>();
-
-            if (Configuration.OpenTelemetryEnabled)
-            {
-                _container.Resolve<OpenTelemetryBridge.Tracing.ActivityBridge>().Start();
-
-                if (!bootstrapConfig.ServerlessModeEnabled)
-                {
-                    // We need to resolve the MeterListenerBridge before the connect event is triggered so that
-                    // the MeterListenerBridge is ready to receive the connect event and start listening for
-                    // metrics.
-                    _container.Resolve<OpenTelemetryBridge.Metrics.MeterListenerBridge>().Start();
-                }
-            }
-
             // Must be constructed -- and therefore subscribed to AgentConnectedEvent -- BEFORE
             // AttemptAutoStart() below: ConnectionManager.Start() schedules the actual connect
             // asynchronously, so a fast connect can publish AgentConnectedEvent before a later-constructed
@@ -232,28 +233,12 @@ public sealed class AgentManager : IAgentManager, IDisposable
         }
         catch
         {
-            // Drop the KillAgentEvent subscription so this abandoned manager isn't kept alive (and called)
-            // by the static event bus after we hand back the DisabledAgentManager.
-            EventBus<KillAgentEvent>.Unsubscribe(OnShutdownAgent);
-
-            try
-            {
-                Shutdown(false, closeLogging: false);
-            }
-            catch
-            {
-                // ignored -- a cleanup failure must never mask the original startup exception below
-            }
-            finally
-            {
-                // Serilog's file/console sinks are wrapped in Serilog.Sinks.Async, which buffers
-                // events on a background thread with no public flush other than Dispose. CloseAndFlush
-                // guarantees the failure logged above actually reaches disk before the process
-                // potentially exits; re-initializing right after restores a live (startup) logger so
-                // the DisabledAgentManager that AgentSingleton swaps in next can still log.
-                Serilog.Log.CloseAndFlush();
-                LoggerBootstrapper.Initialize();
-            }
+            // Only tear down CP here -- nothing else started by this try has state that outlives the
+            // exception (Initialize()'s own partial work is either idempotent-safe or immaterial once we
+            // never become the live instance). CP's native sampler thread is the one piece that would
+            // otherwise leak for the life of the process, since AgentSingleton.CreateInstance's catch never
+            // gets a reference to this half-built manager.
+            StopProfilerServices(null, () => _continuousProfilingService?.Dispose());
 
             throw;
         }

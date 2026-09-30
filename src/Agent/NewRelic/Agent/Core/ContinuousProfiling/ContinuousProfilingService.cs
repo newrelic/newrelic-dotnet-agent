@@ -88,6 +88,15 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
     // checks its captured generation against this before resuming sampling.
     private int _backoffGeneration;
 
+    // Generation counter for the current local (config/delay-driven) session, bumped under
+    // _lifecycleLock every time StartLocked actually starts native sampling. IScheduler can't cancel a
+    // scheduled callback, so the ExecuteOnce duration timer armed in ArmDurationTimerIfNeededLocked
+    // captures the generation at arm time and StopFromDurationElapsed compares it against the current
+    // value before stopping anything -- otherwise a duration timer from an earlier session could stop a
+    // later, unrelated session that happens to be active when the stale timer fires. Same pattern as
+    // _backoffGeneration/EndBackoffProbeIfCurrent.
+    private int _sessionGeneration;
+
     // Managed->native trace-context push seam. Armed while a session is active (published as the process-wide
     // ContinuousProfilingContext.Instance so the wrapper hot path can reach it), disarmed when it stops.
     private readonly ContinuousProfilingContext _continuousProfilingContext = new ContinuousProfilingContext();
@@ -391,7 +400,13 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
     /// <summary>
     /// Deferred local start callback for a non-zero IConfiguration.ContinuousProfilingDelayMs.
     /// Runs as the Scheduler's callback with no lock held; re-validates everything a command or a later
-    /// config-update event may have changed while this was pending.
+    /// config-update event may have changed while this was pending. Unlike
+    /// <see cref="StopFromDurationElapsed(int)"/>, this callback needs no session-generation guard: it only
+    /// ever STARTS a session, gated on <c>!_isActive</c>, and re-reads every interval/include/enabled
+    /// value from live config at fire time rather than from anything captured when the delay was armed.
+    /// So a stale delay timer either finds a session already running (no-ops) or finds nothing running
+    /// and performs a legitimate, up-to-date start -- there is no earlier session state it could
+    /// incorrectly act on the way a stale duration timer could incorrectly stop an unrelated later one.
     /// </summary>
     private void StartFromDelayElapsed()
     {
@@ -430,8 +445,12 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
         var durationMs = _configuration.ContinuousProfilingDurationMs;
         if (durationMs > 0)
         {
+            // Capture the just-started session's generation -- see _sessionGeneration. IScheduler can't
+            // cancel this callback, so StopFromDurationElapsed must re-check it against the current
+            // generation before stopping anything.
+            var generation = _sessionGeneration;
             Log.Info("[ContinuousProfiling] Local session will auto-stop after {0} ms (profiling.duration).", durationMs);
-            _scheduler.ExecuteOnce(StopFromDurationElapsed, TimeSpan.FromMilliseconds(durationMs));
+            _scheduler.ExecuteOnce(() => StopFromDurationElapsed(generation), TimeSpan.FromMilliseconds(durationMs));
         }
     }
 
@@ -439,12 +458,18 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
     /// Local auto-stop callback for <see cref="ArmDurationTimerIfNeededLocked"/>. Runs as the Scheduler's
     /// callback with no lock held; respects command ownership the same way <see cref="ApplyConfigChange"/>
     /// does, so a command that took over the cpu bundle after this timer was armed isn't undone by it.
+    /// <paramref name="generation"/> is the session generation captured when this timer was armed -- see
+    /// _sessionGeneration; a mismatch means the session this timer was meant for is already gone (stopped
+    /// and possibly replaced by a newer one), so this stale callback must not touch whatever is running now.
     /// </summary>
-    private void StopFromDurationElapsed()
+    private void StopFromDurationElapsed(int generation)
     {
         lock (_lifecycleLock)
         {
             if (_disposed)
+                return;
+
+            if (generation != _sessionGeneration)
                 return;
 
             if (_commandControlledTypes.Contains(ContinuousProfilingCommandTypes.Cpu))
@@ -568,19 +593,24 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
                     _commandStoppedTypes.Remove(ContinuousProfilingCommandTypes.Cpu);
 
                     // sample_interval and cpu_report_interval are two independently-meaningful wire fields
-                    // (see ContinuousProfilerCommandArgs: fine sampling cadence vs. coarser report/drain
-                    // cadence, matching the sibling backend service's public API). They must NOT collapse
-                    // into one value: sample_interval drives native sampling (how often stacks are captured
-                    // and the profile's reported period), cpu_report_interval drives the managed drain/report
-                    // schedule (how often the native buffer is drained and POSTed). Each falls back to the
-                    // local config interval independently when absent, so neither ever steals the other's
-                    // value -- the previous `cpuReportIntervalMs ?? sampleIntervalMs ?? config` collapse made
-                    // native sample at the coarse report rate, silently under-sampling by orders of magnitude
-                    // whenever the collector sent the normal fine-sample/coarse-report shape.
+                    // (snake_case on the wire; see ContinuousProfilerCommandArgs). They must NOT collapse
+                    // into one value: sample_interval drives native sampling cadence (how often stacks are
+                    // captured) and the profile's reported period; cpu_report_interval drives the managed
+                    // drain/report schedule (how often the native buffer is drained and POSTed). Each falls
+                    // back to the local config interval independently when absent, so neither ever steals
+                    // the other's value -- the previous `cpuReportIntervalMs ?? sampleIntervalMs ?? config`
+                    // collapse made native sample at the coarse report rate, silently under-sampling by
+                    // orders of magnitude.
+                    //
+                    // Keep cpu_report_interval <= sample_interval: each drain reads exactly one native
+                    // sweep, and the native queue only holds two, so a report interval longer than the
+                    // sample interval drops sweeps between drains.
                     var requestedSample = sampleIntervalMs ?? _configuration.ContinuousProfilingSamplingIntervalMs;
                     var clampedSample = Math.Min(MaxCommandIntervalMs, Math.Max(MinCommandIntervalMs, requestedSample));
                     var requestedReport = cpuReportIntervalMs ?? _configuration.ContinuousProfilingSamplingIntervalMs;
                     var clampedReport = Math.Min(MaxCommandIntervalMs, Math.Max(MinCommandIntervalMs, requestedReport));
+                    if (clampedReport > clampedSample)
+                        Log.Finest("[ContinuousProfiling] Command report interval {0}ms exceeds sample interval {1}ms; native sweeps produced between drains beyond the two-slot buffer will be dropped.", clampedReport, clampedSample);
                     // RealizeCommandStartLocked, not StartLocked directly: a config retune's StopLocked
                     // transiently drops _lifecycleLock for its bounded drain wait, and this command can
                     // acquire it in that window and observe a stale _isActive == true (the retune's stop
@@ -863,6 +893,8 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
             // Arm the reverse-guard flag before starting native sampling, while still holding the Gate,
             // so ThreadProfilingService can't observe a stale "not active" value.
             _isActive = true;
+            // New session identity for this start -- see _sessionGeneration.
+            _sessionGeneration++;
 
             try
             {

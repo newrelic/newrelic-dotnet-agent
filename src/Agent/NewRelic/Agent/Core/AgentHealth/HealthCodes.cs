@@ -80,12 +80,4 @@ public static class HealthCodes
     /// </summary>
     public static readonly (bool IsHealthy, string Code, string Status) AgentShutdownError = (false, "NR-APM-200",
         "Agent has shutdown with exception {0}");
-
-    /// <summary>
-    /// The continuous profiling ingest endpoint rejected the license key (HTTP status code [%s]).
-    /// Distinct from <see cref="LicenseKeyInvalid"/>, which means the collector connection itself was
-    /// unauthorized -- here the collector connection may be perfectly healthy.
-    /// </summary>
-    public static readonly (bool IsHealthy, string Code, string Status) ContinuousProfilingLicenseKeyInvalid = (false, "NR-APM-201",
-        "Continuous profiling ingest rejected the license key (HTTP status code {0})");
 }

@@ -53,11 +53,24 @@ public class ThreadProfilingSampler : IThreadProfilingSampler
             //it exit at the next tick.
             _shutdownEvent.Reset();
 
-            _samplingWorker = new Thread(() => InternalPolling_WaitCallback(frequencyInMsec, durationInMsec, sampleSink, nativeMethods))
+            try
             {
-                IsBackground = true
-            };
-            _samplingWorker.Start();
+                _samplingWorker = new Thread(() => InternalPolling_WaitCallback(frequencyInMsec, durationInMsec, sampleSink, nativeMethods))
+                {
+                    IsBackground = true
+                };
+                _samplingWorker.Start();
+            }
+            catch
+            {
+                // The worker never ran, so nothing will clear _workerRunning via its normal finally
+                // block. Left at 1, IsRunning would report true forever, which permanently blocks both
+                // this sampler (CompareExchange above always loses the race) and continuous profiling
+                // (mutual-exclusion gate keyed on IsRunning) for the life of the process.
+                _samplingWorker = null;
+                Volatile.Write(ref _workerRunning, 0);
+                throw;
+            }
         }
 
         //return whether or not we created a session

@@ -140,6 +140,51 @@ public class ManagedThreadIdRegistryTests
     }
 
     [Test]
+    public void EnsureRegistered_DoesNotThrow_WhenProviderThrows()
+    {
+        var mockProvider = Mock.Create<ICurrentOsThreadIdProvider>();
+        var registry = new ManagedThreadIdRegistry(mockProvider);
+        Mock.Arrange(() => mockProvider.GetCurrentOsThreadId()).Throws(new PlatformNotSupportedException("unsupported architecture"));
+
+        Assert.DoesNotThrow(() => registry.EnsureRegistered());
+    }
+
+    [Test]
+    public void TryGetManagedThreadId_ReturnsFalse_WhenProviderThrew()
+    {
+        var mockProvider = Mock.Create<ICurrentOsThreadIdProvider>();
+        var registry = new ManagedThreadIdRegistry(mockProvider);
+        Mock.Arrange(() => mockProvider.GetCurrentOsThreadId()).Throws(new PlatformNotSupportedException("unsupported architecture"));
+
+        registry.EnsureRegistered();
+
+        var found = registry.TryGetManagedThreadId(Thread.CurrentThread.ManagedThreadId, out var managedThreadId);
+
+        Assert.That(found, Is.False);
+        Assert.That(managedThreadId, Is.EqualTo(0));
+    }
+
+    [Test]
+    public void EnsureRegistered_OnlyInvokesProviderOnce_AcrossRepeatedCallsAfterItThrows()
+    {
+        // Use fresh threads for every call: the [ThreadStatic] per-thread gate would otherwise short
+        // circuit repeated calls from the SAME thread regardless of the provider-failure latch, which
+        // would not prove the latch (rather than the per-thread gate) is what's preventing the retries.
+        var mockProvider = Mock.Create<ICurrentOsThreadIdProvider>();
+        var registry = new ManagedThreadIdRegistry(mockProvider);
+        Mock.Arrange(() => mockProvider.GetCurrentOsThreadId()).Throws(new DllNotFoundException("libc"));
+
+        for (var i = 0; i < 3; i++)
+        {
+            var thread = new Thread(() => registry.EnsureRegistered());
+            thread.Start();
+            thread.Join();
+        }
+
+        Mock.Assert(() => mockProvider.GetCurrentOsThreadId(), Occurs.Once());
+    }
+
+    [Test]
     public void EnsureRegistered_TwoRegistryInstances_BothRegisterIndependently_OnSameThread()
     {
         // Pins the property that ruled out a bare [ThreadStatic] bool gate: two different registry
