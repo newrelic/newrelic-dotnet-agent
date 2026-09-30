@@ -7,6 +7,7 @@ using System.Linq;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.WireModels;
 using NUnit.Framework;
+using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.UnitTests.Metrics;
 
@@ -277,5 +278,33 @@ public class ContinuousProfilingSupportabilityMetricCountersTests
         countersWithoutDelegate.RecordExportSuccess();
 
         Assert.DoesNotThrow(() => countersWithoutDelegate.CollectMetrics());
+    }
+
+    [Test]
+    public void CollectMetrics_SkipsPublish_WhenBuilderReturnsNullMetric()
+    {
+        // The builder returning null (e.g. metric name/value rejected) must be tolerated silently -- TrySend's
+        // null check -- rather than publishing a null MetricWireModel or throwing.
+        var metricBuilder = Mock.Create<IMetricBuilder>();
+        Mock.Arrange(() => metricBuilder.TryBuildSupportabilityCountMetric(Arg.AnyString, Arg.AnyLong)).Returns((MetricWireModel)null);
+        var counters = new ContinuousProfilingSupportabilityMetricCounters(metricBuilder);
+        counters.RegisterPublishMetricHandler(metric => _publishedMetrics.Add(metric));
+
+        counters.RecordExportSuccess();
+
+        Assert.DoesNotThrow(() => counters.CollectMetrics());
+        Assert.That(_publishedMetrics, Is.Empty);
+    }
+
+    [Test]
+    public void CollectMetrics_LogsError_WhenPublishDelegateThrows()
+    {
+        // TrySend's catch around the registered delegate must swallow the exception rather than let it
+        // propagate out of CollectMetrics.
+        _metricCounters.RegisterPublishMetricHandler(metric => throw new InvalidOperationException("boom"));
+
+        _metricCounters.RecordExportSuccess();
+
+        Assert.DoesNotThrow(() => _metricCounters.CollectMetrics());
     }
 }

@@ -47,6 +47,11 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
         // (and thus track SlotBits) rather than keeping a hand-copied hash that silently goes stale.
         friend class TraceContextMapTest;
 
+        // RetiredSpanRegistryTest wedges a slot mid-write (odd Seq) via FindSlot to force
+        // SnapshotLiveSpanIds to fail, exercising RetiredSpanRegistry::CompactAgainst's aborted-pass
+        // branch. Same rationale as TraceContextMapTest above: friendship over a hand-copied layout.
+        friend class RetiredSpanRegistryTest;
+
     public:
         // Store (or overwrite) the calling thread's active context. Called from an app thread. Uses a
         // seqlock write: bump the slot seq to odd (write in progress), publish the three int64s, then

@@ -98,4 +98,20 @@ public class ReportedConfigurationTests
 
         Assert.That(_reportedConfiguration.GetAppSettings(), Is.SameAs(appSettings));
     }
+
+    [Test]
+    public void ContinuousProfilingLogPayload_delegates_to_underlying_configuration()
+    {
+        Mock.Arrange(() => _configuration.ContinuousProfilingLogPayload).Returns(true);
+
+        Assert.That(_reportedConfiguration.ContinuousProfilingLogPayload, Is.True);
+    }
+
+    [Test]
+    public void ContinuousProfilingLogPayloadMaxChars_delegates_to_underlying_configuration()
+    {
+        Mock.Arrange(() => _configuration.ContinuousProfilingLogPayloadMaxChars).Returns(12345);
+
+        Assert.That(_reportedConfiguration.ContinuousProfilingLogPayloadMaxChars, Is.EqualTo(12345));
+    }
 }

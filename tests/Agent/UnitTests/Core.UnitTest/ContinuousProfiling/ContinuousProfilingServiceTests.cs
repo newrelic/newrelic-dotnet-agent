@@ -3106,4 +3106,351 @@ public class ContinuousProfilingServiceTests
     }
 
     #endregion
+
+    #region PR #3860 coverage-gaps (Task 1) -- guards, failure paths
+
+    [Test]
+    public void StartFromDelayElapsed_after_dispose_is_a_noop()
+    {
+        // Covers StartFromDelayElapsed's own _disposed guard: the deferred delay callback is captured via
+        // ExecuteOnce, then fired AFTER Dispose, bypassing anything the still-running session would have
+        // otherwise done.
+        ArrangeEnabled(10000);
+        Mock.Arrange(() => _config.ContinuousProfilingDelayMs).Returns(1000);
+
+        Action delayedStart = null;
+        Mock.Arrange(() => _scheduler.ExecuteOnce(Arg.IsAny<Action>(), TimeSpan.FromMilliseconds(1000)))
+            .DoInstead((Action action, TimeSpan delay) => delayedStart = action);
+
+        _service.StartIfEnabled();
+        Assert.That(delayedStart, Is.Not.Null);
+
+        _service.Dispose();
+
+        delayedStart.Invoke();
+
+        Mock.Assert(() => _native.Start(Arg.IsAny<int>()), Occurs.Never(), "a delay timer firing after Dispose must not start native sampling");
+        Assert.That(_service.IsActive, Is.False);
+    }
+
+    [Test]
+    public void StopFromDurationElapsed_after_dispose_is_a_noop()
+    {
+        // Covers StopFromDurationElapsed's own _disposed guard.
+        ArrangeEnabled(10000);
+        Mock.Arrange(() => _config.ContinuousProfilingDurationMs).Returns(60000);
+
+        Action autoStop = null;
+        Mock.Arrange(() => _scheduler.ExecuteOnce(Arg.IsAny<Action>(), TimeSpan.FromMilliseconds(60000)))
+            .DoInstead((Action action, TimeSpan delay) => autoStop = action);
+
+        _service.StartIfEnabled();
+        Assert.That(autoStop, Is.Not.Null);
+
+        _service.Dispose();
+        Mock.Assert(() => _native.Stop(), Occurs.Once(), "precondition: Dispose already stopped the active session");
+
+        autoStop.Invoke();
+
+        Mock.Assert(() => _native.Stop(), Occurs.Once(), "a duration timer firing after Dispose must not stop anything a second time");
+    }
+
+    [Test]
+    public void ApplyConfigChange_fresh_enable_when_include_does_not_request_cpu_does_not_start()
+    {
+        // Covers ApplyConfigChange's OWN IncludesCpuBundleLocked check on the fresh-enable (!_isActive)
+        // branch -- distinct from StartIfEnabled's copy of the same guard (already covered) and from
+        // ApplyConfigChange_fresh_enable_honors_include_and_delay (which uses an include that DOES request cpu).
+        Mock.Arrange(() => _config.ContinuousProfilingEnabled).Returns(false);
+        _service.OverrideConfigForTesting(_config);
+        _service.StartIfEnabled(); // no-op, disabled
+
+        var enabling = Mock.Create<IConfiguration>();
+        Mock.Arrange(() => enabling.ContinuousProfilingEnabled).Returns(true);
+        Mock.Arrange(() => enabling.ContinuousProfilingSamplingIntervalMs).Returns(10000);
+        Mock.Arrange(() => enabling.ApplicationNames).Returns(new[] { "MyApp" });
+        Mock.Arrange(() => enabling.ContinuousProfilingInclude).Returns(new[] { "heap" });
+        _service.OverrideConfigForTesting(enabling);
+
+        _service.ApplyConfigChange();
+
+        Mock.Assert(() => _native.Start(Arg.IsAny<int>()), Occurs.Never());
+        Assert.That(_service.IsActive, Is.False);
+    }
+
+    [Test]
+    public void RetryCommandStart_after_dispose_is_a_noop()
+    {
+        // Covers RetryCommandStart's own _disposed guard: the deferred command-retry callback is captured
+        // via ExecuteOnce (deferred behind a live thread-profiling session), then fired AFTER Dispose.
+        ArrangeEnabled(10000);
+
+        var tpStatus = Mock.Create<IThreadProfilingStatus>();
+        Mock.Arrange(() => tpStatus.IsThreadProfilingActive).Returns(true);
+        _service.ThreadProfilingStatus = tpStatus;
+
+        Action retry = null;
+        Mock.Arrange(() => _scheduler.ExecuteOnce(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>()))
+            .DoInstead((Action action, TimeSpan delay) => retry = action);
+
+        _service.StartFromCommand(new[] { "cpu" }, null, null);
+        Assert.That(retry, Is.Not.Null);
+
+        Mock.Arrange(() => tpStatus.IsThreadProfilingActive).Returns(false);
+        _service.Dispose();
+
+        retry.Invoke();
+
+        Mock.Assert(() => _native.Start(Arg.IsAny<int>()), Occurs.Never(), "a deferred command retry firing after Dispose must not start native sampling");
+        Assert.That(_service.IsActive, Is.False);
+    }
+
+    [Test]
+    public void StopFromCommand_after_dispose_is_a_noop()
+    {
+        // Covers StopFromCommand's own _disposed guard.
+        ArrangeEnabled(10000);
+        _service.StartFromCommand(new[] { "cpu" }, null, null);
+
+        _service.Dispose();
+        Mock.Assert(() => _native.Stop(), Occurs.Once(), "precondition: Dispose already stopped the active session");
+
+        var result = _service.StopFromCommand(new[] { "cpu" });
+
+        Mock.Assert(() => _native.Stop(), Occurs.Once(), "a stop command arriving after Dispose must not stop anything a second time");
+        Assert.That(result.Exceptions, Is.Empty);
+    }
+
+    [Test]
+    public void StopFromCommand_with_heap_reports_not_supported_and_does_not_release_cpu_ownership()
+    {
+        // Mirrors StartFromCommand_with_heap_reports_not_supported_and_does_not_start_anything, but for
+        // StopFromCommand's own (separate) heap/unrecognized-token classification block.
+        ArrangeEnabled(10000);
+        _service.StartFromCommand(new[] { "cpu" }, null, null);
+
+        var result = _service.StopFromCommand(new[] { "heap" });
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Exceptions["heap"], Is.EqualTo("not supported"));
+            Assert.That(_service.IsActive, Is.True, "a heap-only stop request must not touch the running cpu bundle");
+        });
+        Mock.Assert(() => _native.Stop(), Occurs.Never());
+    }
+
+    [Test]
+    public void StopFromCommand_with_unknown_token_reports_it_as_not_supported()
+    {
+        ArrangeEnabled(10000);
+        _service.StartFromCommand(new[] { "cpu" }, null, null);
+
+        var result = _service.StopFromCommand(new[] { "bogus" });
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Exceptions["bogus"], Is.EqualTo("not supported"));
+            Assert.That(_service.IsActive, Is.True, "an unrecognized-token-only stop request must not touch the running cpu bundle");
+        });
+        Mock.Assert(() => _native.Stop(), Occurs.Never());
+    }
+
+    [Test]
+    public void StartFromCommand_when_scheduling_the_drain_throws_stops_the_half_started_session_and_reports_the_failure()
+    {
+        // Covers StartLocked's post-Gate catch: native sampling started successfully, but wiring the drain
+        // schedule (_scheduler.ExecuteEvery) threw -- the half-started session must be unwound via
+        // StopLocked and the failure must reach the command result, not just the log.
+        Mock.Arrange(() => _scheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>(), Arg.IsAny<bool>()))
+            .Throws(new InvalidOperationException("schedule boom"));
+        ArrangeEnabled(10000);
+
+        var result = _service.StartFromCommand(new[] { "cpu" }, null, null);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(_service.IsActive, Is.False);
+            Assert.That(result.Exceptions["cpu"], Is.EqualTo("schedule boom"));
+        });
+        Mock.Assert(() => _native.Stop(), Occurs.Once(), "StopLocked must unwind the half-started native session");
+    }
+
+    [Test]
+    public void Drain_tick_logs_batch_stats_at_finest_when_enabled()
+    {
+        // Covers the Finest batch-stats log line, gated on Log.IsFinestEnabled, distinct from the
+        // always-on TruncatedThreads/DroppedTicks supportability metrics it sits next to.
+        var logger = Mock.Create<ILogger>();
+        Mock.Arrange(() => logger.IsFinestEnabled).Returns(true);
+        Log.Initialize(logger);
+
+        ArrangeEnabled(10000);
+        _service.StartIfEnabled();
+
+        var batch = OneSampleV5BatchWithStats(emittedThreads: 2, truncatedThreads: 1, droppedTicks: 1);
+        Mock.Arrange(() => _source.ReadBatch(Arg.IsAny<byte[]>())).Returns((byte[] dest) =>
+        {
+            Array.Copy(batch, dest, batch.Length);
+            return batch.Length;
+        });
+
+        _service.DrainOnce();
+
+        Mock.Assert(() => logger.Finest(Arg.Matches<string>(m => m.Contains("batch stats")), Arg.IsAny<object[]>()), Occurs.Once());
+    }
+
+    [Test]
+    public void A_backoff_probe_whose_native_resume_returns_nonzero_reschedules_itself_instead_of_wedging_CP()
+    {
+        // Mirrors A_backoff_probe_whose_native_resume_throws_reschedules_itself_instead_of_wedging_CP, but
+        // for the OTHER non-throwing native failure mode: TryResumeSamplingLocked converts a non-zero
+        // _native.Start(...) result into a thrown InvalidOperationException so the existing catch/reschedule
+        // handling treats it identically to a P/Invoke throw, instead of clearing the backoff gate and
+        // reporting a resume that never actually happened.
+        var (service, transport) = NewConnectedService();
+        using var _ = service;
+
+        var resumeShouldFail = false;
+        var startCalls = 0;
+        Mock.Arrange(() => _native.Start(Arg.IsAny<int>()))
+            .Returns((int intervalMs) => { startCalls++; return resumeShouldFail ? 1 : 0; });
+
+        EnableAndStart(service, 12345);
+        ArrangeReadableBatch();
+
+        var probes = new List<Action>();
+        Mock.Arrange(() => _scheduler.ExecuteOnce(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>()))
+            .DoInstead((Action action, TimeSpan delay) => probes.Add(action));
+        Mock.Arrange(() => transport.Send(Arg.IsAny<ExportProfilesRequest>())).Returns(false);
+
+        service.DrainOnce();
+        service.DrainOnce(); // trips backoff, schedules probe[0]
+        Assert.That(probes, Has.Count.EqualTo(1));
+
+        resumeShouldFail = true;
+        probes[0].Invoke();
+
+        Assert.That(probes, Has.Count.EqualTo(2), "a non-zero native resume result must reschedule a fresh probe, exactly like a thrown exception");
+        Assert.That(service.IsActive, Is.False, "the backoff gate must stay armed after a failed resume");
+
+        resumeShouldFail = false;
+        probes[1].Invoke();
+
+        Assert.That(service.IsActive, Is.True, "CP must recover once native resume succeeds again");
+        Assert.That(startCalls, Is.EqualTo(3), "EnableAndStart + the failing resume + the successful retry resume");
+    }
+
+    [Test]
+    public void ResumeAfterReconnect_after_dispose_is_a_noop()
+    {
+        // Covers ResumeAfterReconnect's own _disposed guard. OnAgentConnected's own _disposed check (a
+        // DIFFERENT guard) would otherwise mask this one, so this reaches ResumeAfterReconnect directly via
+        // the retry callback it schedules on a throwing resume -- bypassing OnAgentConnected entirely.
+        var (service, transport) = NewConnectedService();
+
+        var resumeShouldThrow = false;
+        var startCalls = 0;
+        Mock.Arrange(() => _native.Start(Arg.IsAny<int>()))
+            .DoInstead(() => { startCalls++; if (resumeShouldThrow) throw new InvalidOperationException("transient P/Invoke failure in Start"); });
+
+        EnableAndStart(service);
+        ArrangeReadableBatch();
+
+        var scheduled = new List<Action>();
+        Mock.Arrange(() => _scheduler.ExecuteOnce(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>()))
+            .DoInstead((Action action, TimeSpan delay) => scheduled.Add(action));
+        Mock.Arrange(() => transport.Send(Arg.IsAny<ExportProfilesRequest>())).Returns(false);
+
+        service.DrainOnce();
+        service.DrainOnce(); // trips backoff, schedules the trip probe (scheduled[0])
+
+        resumeShouldThrow = true;
+        var connectionInfo = Mock.Create<IConnectionInfo>();
+        Mock.Arrange(() => connectionInfo.HttpProtocol).Returns("https");
+        Mock.Arrange(() => connectionInfo.Host).Returns("collector.eu01.nr-data.net");
+        Mock.Arrange(() => connectionInfo.Port).Returns(443);
+        EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent { ConnectInfo = connectionInfo }); // reconnect resume throws -> reschedules itself
+
+        Assert.That(scheduled, Has.Count.EqualTo(2), "precondition: the failed reconnect resume rescheduled itself before dispose runs");
+
+        var startCallsBeforeDispose = startCalls;
+        resumeShouldThrow = false;
+        service.Dispose();
+
+        // Fire the rescheduled reconnect resume directly -- this calls ResumeAfterReconnect itself, bypassing
+        // OnAgentConnected's own (already-tested) _disposed guard.
+        scheduled[1].Invoke();
+
+        Assert.That(startCalls, Is.EqualTo(startCallsBeforeDispose), "a reconnect resume firing after Dispose must not touch native sampling");
+    }
+
+    [Test]
+    public void SafeReportError_swallows_a_throwing_health_reporter_instead_of_surfacing_it_from_DrainOnce()
+    {
+        // A drain failure must never surface in the instrumented application -- including a failure
+        // reporting the drain-error metric itself.
+        var (service, transport) = NewConnectedService();
+        using var _ = service;
+        EnableAndStart(service);
+        ArrangeReadableBatch();
+        Mock.Arrange(() => transport.Send(Arg.IsAny<ExportProfilesRequest>())).Returns(false);
+        Mock.Arrange(() => _health.ReportSupportabilityCountMetric("Supportability/DotNET/ContinuousProfiling/Error"))
+            .Throws(new InvalidOperationException("health reporter boom"));
+
+        Assert.DoesNotThrow(() => service.DrainOnce(), "a failed error-metric report must not escape DrainOnce and surface in the instrumented app");
+    }
+
+    [Test]
+    public void DrainOnce_reports_zero_duration_when_a_reentrant_restart_advances_the_origin_past_now()
+    {
+        // ElapsedNanos' defensive floor: a config-disable/re-enable cycle that runs REENTRANTLY on this
+        // very thread, from inside this drain's own ReadBatch (same technique as
+        // A_drain_that_outruns_a_stops_bounded_wait_does_not_send_an_empty_profile), advances
+        // _lastDrainTimestamp to a Stopwatch reading captured AFTER this drain's own `now` -- the reentrant
+        // stop's bounded wait alone spends the whole short timeout before the restart runs. By the time
+        // this drain reaches ElapsedNanos, fromTimestamp (the restarted session's origin) is not strictly
+        // behind toTimestamp (this drain's own `now`), so the duration must come out as zero, not negative
+        // or garbage.
+        var transport = Mock.Create<IProfilesTransport>();
+        ExportProfilesRequest captured = null;
+        Mock.Arrange(() => transport.Send(Arg.IsAny<ExportProfilesRequest>()))
+            .Returns((ExportProfilesRequest req) => { captured = req; return true; });
+        using var service = new ContinuousProfilingService(_source, _native, transport, _scheduler, _health, TimeSpan.FromMilliseconds(50));
+
+        var connectionInfo = Mock.Create<IConnectionInfo>();
+        Mock.Arrange(() => connectionInfo.HttpProtocol).Returns("https");
+        Mock.Arrange(() => connectionInfo.Host).Returns("collector.nr-data.net");
+        Mock.Arrange(() => connectionInfo.Port).Returns(443);
+        EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent { ConnectInfo = connectionInfo });
+
+        Mock.Arrange(() => _config.ContinuousProfilingEnabled).Returns(true);
+        Mock.Arrange(() => _config.ContinuousProfilingSamplingIntervalMs).Returns(10000);
+        Mock.Arrange(() => _config.ApplicationNames).Returns(new[] { "MyApp" });
+        Mock.Arrange(() => _config.ContinuousProfilingIncludeAgentCode).Returns(true);
+        service.OverrideConfigForTesting(_config);
+        service.StartIfEnabled();
+
+        var batch = OneSampleBatch("worker-1", 1, 0, 0, 0, new[] { "F()" });
+        Mock.Arrange(() => _source.ReadBatch(Arg.IsAny<byte[]>())).Returns((byte[] dest) =>
+        {
+            var disabled = Mock.Create<IConfiguration>();
+            Mock.Arrange(() => disabled.ContinuousProfilingEnabled).Returns(false);
+            service.OverrideConfigForTesting(disabled);
+            service.ApplyConfigChange(); // reentrant stop; its bounded drain wait times out on THIS drain
+
+            service.OverrideConfigForTesting(_config);
+            service.ApplyConfigChange(); // reentrant restart; re-seeds _lastDrainTimestamp after this drain's own `now`
+
+            Array.Copy(batch, dest, batch.Length);
+            return batch.Length;
+        });
+
+        service.DrainOnce();
+
+        Assert.That(captured, Is.Not.Null, "the drain must still have sent a request despite the reentrant restart");
+        var profile = captured.ResourceProfiles.Single().ScopeProfiles.Single().Profiles.Single();
+        Assert.That(profile.DurationNano, Is.EqualTo(0UL), "a drain window whose origin is not strictly behind `now` must report zero duration, not a negative/garbage span");
+    }
+
+    #endregion
 }

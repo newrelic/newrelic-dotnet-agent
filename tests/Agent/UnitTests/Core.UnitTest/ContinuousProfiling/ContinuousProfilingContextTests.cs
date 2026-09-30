@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using Google.Protobuf;
@@ -47,6 +48,11 @@ public class ContinuousProfilingContextTests
         // the epoch bump every Enable() performs, so the next test re-resolves before it writes anything.
         Marshal.FreeHGlobal(_cell);
         _cell = IntPtr.Zero;
+
+        // The Order(0) test below installs a real Serilog logger (Serilog.Log.Logger) and initializes the
+        // shared Log seam with it. Reset both back to the no-op logger so that installed logger (and its
+        // now-discarded InMemorySink) can't leak into later tests in the process.
+        global::NewRelic.Agent.Extensions.Logging.Log.Initialize(new global::NewRelic.Agent.Extensions.Logging.NoOpLogger());
     }
 
     [Test]
@@ -683,6 +689,31 @@ public class ContinuousProfilingContextTests
         Assert.DoesNotThrow(() => _context.PushTraceContext("0123456789abcdeffedcba9876543210", "1122334455667788"));
 
         Mock.Assert(() => _native.SetTraceContext(Arg.AnyLong, Arg.AnyLong, Arg.AnyLong), Occurs.Once());
+    }
+
+    // LogPendingPushCellUnavailableOnce has two overloads (with/without an exception) behind a single
+    // process-wide once-only guard (_loggedPendingPushCellUnavailable is a static field, not per-instance),
+    // so whichever failure mode -- a Zero cell or a throwing resolution -- runs FIRST across the whole test
+    // run wins the log and every later test hits the early-return guard instead. Order(0) forces this test
+    // to run before the sibling Zero-cell test below (and everything else unordered in this fixture), so the
+    // exception overload specifically is what claims the guard and reaches line 347's Log.Finest(ex, ...).
+    [Test]
+    [Order(0)]
+    public void PushTraceContext_logs_the_exception_when_cell_resolution_throws()
+    {
+        Mock.Arrange(() => _native.GetPendingPushCell()).Throws(new InvalidOperationException("simulated cell resolution failure"));
+        _context.Enable(_native);
+
+        var sink = new global::NewRelic.Agent.Core.Logging.InMemorySink();
+        var loggerConfig = new Serilog.LoggerConfiguration().MinimumLevel.Verbose().WriteTo.Sink(sink);
+        Serilog.Log.Logger = loggerConfig.CreateLogger();
+        global::NewRelic.Agent.Extensions.Logging.Log.Initialize(new global::NewRelic.Agent.Core.Logging.Logger());
+
+        _context.PushTraceContext("0123456789abcdeffedcba9876543210", "1122334455667788");
+
+        var matching = sink.LogEvents.Where(e => e.RenderMessage().Contains("No pending-push cell available")).ToList();
+        Assert.That(matching.Any(e => e.Exception != null), Is.True,
+            "expected the pending-push-cell-unavailable message to be logged with the triggering exception attached");
     }
 
     [Test]

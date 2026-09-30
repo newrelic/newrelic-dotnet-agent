@@ -92,6 +92,39 @@ public class ThreadProfilingServiceTests
     }
 
     [Test]
+    public void SetContinuousProfilingSessionControl_WiresTheControl_SoStartConsultsIt()
+    {
+        // The default-constructed service has no CP control (ctor param defaults to null); this seam is
+        // how AgentManager.Initialize wires it in after construction. Prove the wired-in control is
+        // actually consulted by StartThreadProfilingSession, not merely stored.
+        var cpControl = Mock.Create<IContinuousProfilingSessionControl>();
+        Mock.Arrange(() => cpControl.IsActive).Returns(true);
+
+        _threadProfilingService.SetContinuousProfilingSessionControl(cpControl);
+
+        var result = _threadProfilingService.StartThreadProfilingSession(1, 100, 1000);
+
+        Assert.That(result, Is.False, "Start should be refused once the wired-in CP control reports active.");
+        Mock.Assert(() => cpControl.IsActive, Occurs.AtLeastOnce());
+    }
+
+    [Test]
+    public void StartThreadProfilingSession_LogsErrorAndReturnsFalse_WhenSamplerStartThrows()
+    {
+        var sampler = Mock.Create<IThreadProfilingSampler>();
+        Mock.Arrange(() => sampler.Start(Arg.IsAny<uint>(), Arg.IsAny<uint>(), Arg.IsAny<ISampleSink>(), Arg.IsAny<INativeMethods>()))
+            .Throws(new InvalidOperationException("simulated sampler start failure"));
+        var service = new ThreadProfilingService(_dataTransportService, _nativeMethods, sampler: sampler);
+
+        var result = true;
+        Assert.DoesNotThrow(() => result = service.StartThreadProfilingSession(1, 100, 1000), "the catch around sampler.Start must prevent the exception from escaping");
+
+        Assert.That(result, Is.False);
+
+        service.Dispose();
+    }
+
+    [Test]
     public void StartThreadProfilingSession_serializes_on_ProfilingMutualExclusionGate()
     {
         // Proves the guard-check-and-arm sequence actually takes ProfilingMutualExclusionGate.Acquire() --

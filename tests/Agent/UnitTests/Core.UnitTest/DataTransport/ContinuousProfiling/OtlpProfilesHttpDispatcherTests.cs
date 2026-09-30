@@ -439,6 +439,29 @@ public class OtlpProfilesHttpDispatcherTests
         });
     }
 
+#if NETFRAMEWORK
+    [Test]
+    public void Post_handles_a_response_with_null_content()
+    {
+        // On .NET Framework's in-box System.Net.Http, HttpResponseMessage.Content is genuinely null by
+        // default (and stays null if explicitly set to null) -- unlike .NET Core/.NET 5+, where the
+        // setter substitutes an EmptyContent instance and Content can never observably be null. This
+        // exercises ReadResponseBodyBounded's `content == null` short-circuit, reachable only here.
+        using var response = new HttpResponseMessage(HttpStatusCode.OK) { Content = null };
+        var dispatcher = new OtlpProfilesHttpDispatcher(_configuration, _ => response);
+
+        var result = default(ProfilesSendResult);
+        Assert.That(() => result = dispatcher.Post(new byte[] { 1 }, Endpoint), Throws.Nothing);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Accepted, Is.True);
+            Assert.That(result.StatusCode, Is.EqualTo(200));
+            Assert.That(result.ResponseContent, Is.Empty);
+        });
+    }
+#endif
+
     [Test]
     public void Post_does_not_read_the_body_into_memory_when_content_length_declares_it_oversized()
     {
@@ -487,15 +510,55 @@ public class OtlpProfilesHttpDispatcherTests
         Assert.That(trackingContent.ReadToEnd, Is.True);
     }
 
+    [Test]
+    public void Post_truncates_a_response_body_larger_than_the_cap_with_no_declared_content_length()
+    {
+        // No Content-Length (TryComputeLength returns false, matching a chunked/streamed response), so
+        // ReadResponseBodyBounded can't short-circuit on the declared-length branch -- it must discover
+        // the overage mid-read. The body is many 8192-byte chunks (the dispatcher's internal read buffer
+        // size) totalling well past the cap, so at least one full read lands after truncated is already
+        // set, exercising the "if (truncated) continue" branch on top of the read that first crosses the
+        // cap.
+        // ASCII-only bytes so the ResponseContent UTF8 round-trip below stays byte-for-byte -- arbitrary
+        // bytes could decode/re-encode to a different length and defeat the length assertion.
+        var hugeBody = new byte[OtlpProfilesHttpDispatcher.MaxResponseBodyBytes + 8192 * 4];
+        for (var i = 0; i < hugeBody.Length; i++)
+            hugeBody[i] = (byte)('a' + (i % 26));
+        using var trackingContent = new StreamTrackingContent(hugeBody, declareLength: false);
+        using var response = new HttpResponseMessage(HttpStatusCode.OK) { Content = trackingContent };
+        // Must be checked before Post disposes the response -- Content-Length must be absent for this
+        // test to exercise the no-declared-length path.
+        Assert.That(response.Content.Headers.ContentLength, Is.Null);
+        var dispatcher = new OtlpProfilesHttpDispatcher(_configuration, _ => response);
+
+        var result = default(ProfilesSendResult);
+        Assert.That(() => result = dispatcher.Post(new byte[] { 1 }, Endpoint), Throws.Nothing);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Accepted, Is.True);
+            // Buffering stops exactly at the cap once truncation is detected -- proves the post-cap reads
+            // were skipped (continue) rather than appended.
+            Assert.That(Encoding.UTF8.GetBytes(result.ResponseContent).Length, Is.EqualTo(OtlpProfilesHttpDispatcher.MaxResponseBodyBytes));
+            // The stream is still drained to EOF afterward (see ReadResponseBodyBounded's remarks).
+            Assert.That(trackingContent.ReadToEnd, Is.True);
+        });
+    }
+
     // Wraps ByteArrayContent's stream so a test can observe whether the dispatcher read all the way to
     // EOF (ReadToEnd becomes true only once a 0-byte read is returned) rather than stopping partway
     // through once its size cap is hit.
     private class StreamTrackingContent : HttpContent
     {
         private readonly byte[] _body;
+        private readonly bool _declareLength;
         public bool ReadToEnd { get; private set; }
 
-        public StreamTrackingContent(byte[] body) => _body = body;
+        public StreamTrackingContent(byte[] body, bool declareLength = true)
+        {
+            _body = body;
+            _declareLength = declareLength;
+        }
 
         protected override Task<Stream> CreateContentReadStreamAsync() => Task.FromResult<Stream>(new TrackingStream(_body, this));
 
@@ -503,8 +566,8 @@ public class OtlpProfilesHttpDispatcherTests
 
         protected override bool TryComputeLength(out long length)
         {
-            length = _body.Length;
-            return true;
+            length = _declareLength ? _body.Length : 0;
+            return _declareLength;
         }
 
         private class TrackingStream : MemoryStream

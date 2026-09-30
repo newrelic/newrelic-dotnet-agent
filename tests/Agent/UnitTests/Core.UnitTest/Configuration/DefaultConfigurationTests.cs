@@ -5109,6 +5109,24 @@ public class DefaultConfigurationTests
         Assert.That(defaultConfig.ContinuousProfilingSamplingIntervalMs, Is.EqualTo(10000));
     }
 
+    // Guards the cached-value fast path: a second read must return the memoized result rather than
+    // re-resolving from the environment, even if the environment value changes in between.
+    [Test]
+    public void ContinuousProfilingSamplingIntervalMs_second_read_returns_cached_value()
+    {
+        Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_PROFILING_SAMPLING_INTERVAL_MS")).Returns("2500");
+
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+        var firstRead = defaultConfig.ContinuousProfilingSamplingIntervalMs;
+        Assert.That(firstRead, Is.EqualTo(2500));
+
+        Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_PROFILING_SAMPLING_INTERVAL_MS")).Returns("9999");
+
+        var secondRead = defaultConfig.ContinuousProfilingSamplingIntervalMs;
+        Assert.That(secondRead, Is.EqualTo(2500), "second read must return the cached value, not re-resolve from the environment");
+    }
+
     [Test]
     public void KafkaClusterMetricsEnabled_DefaultsToFalse()
     {

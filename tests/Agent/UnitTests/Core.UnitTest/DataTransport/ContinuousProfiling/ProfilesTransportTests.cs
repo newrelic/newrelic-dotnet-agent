@@ -227,6 +227,28 @@ public class ProfilesTransportTests
         Mock.Assert(() => _nrLogger.Warn(Arg.Matches<string>(m => m.Contains("license key")), Arg.IsAny<object[]>()), Occurs.Exactly(2));
     }
 
+    [Test]
+    public void Send_does_not_repeat_the_full_rejection_warn_within_the_rate_limit_window()
+    {
+        // Mirrors Send_does_not_repeat_the_auth_failure_warn_within_the_rate_limit_window, but for the
+        // full-rejection path (WarnOnFullRejectionRateLimited): a second 100%-rejected partial_success
+        // within the same rate-limit window must not warn again (the early return on the shared
+        // TryEnterRejectionWarnWindow gate).
+        var counters = new FakeContinuousProfilingCounters();
+        var transport = new ProfilesTransport(
+            (bytes, endpoint) => new ProfilesSendResult(true, 200, string.Empty, 1, "schema drift"),
+            "http://unused", null, counters);
+
+        transport.Send(BuildNonEmptyRequest()); // first full rejection: warns, arms the window
+        transport.Send(BuildNonEmptyRequest()); // second full rejection, same window: suppressed
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(counters.FullRejectionCount, Is.EqualTo(2), "The counter still increments every time -- only the Warn is rate-limited.");
+            Mock.Assert(() => _nrLogger.Warn(Arg.Matches<string>(m => m.Contains("all") && m.Contains("rejected")), Arg.IsAny<object[]>()), Occurs.Once());
+        });
+    }
+
     [TestCase(404)]
     [TestCase(413)]
     [TestCase(400)]
@@ -862,6 +884,25 @@ public class ProfilesTransportTests
             Assert.That(json, Does.Contain("\"traceId\":\"1cb9b22a7bfd433d29dcdfe11ab7fe27\""), "traceId should be lowercase hex.");
             Assert.That(json, Does.Contain("\"spanId\":\"3783ccdeba841391\""), "spanId should be lowercase hex.");
             Assert.That(json, Does.Not.Contain("=="), "No base64-padded ids should remain.");
+        });
+    }
+
+    [Test]
+    public void ToDiagnosticJson_leaves_a_default_empty_link_id_as_an_empty_string()
+    {
+        // trace_id/span_id are proto `bytes`; an unset Link renders each as "" (proto3 default, forced by
+        // WithFormatDefaultValues(true)) rather than the field being absent. RewriteBase64BytesAsHex's
+        // IsNullOrEmpty guard must leave that "" alone rather than trying to hex-decode it.
+        var dictionary = new ProfilesDictionary();
+        dictionary.LinkTable.Add(new Link());
+        var request = new ExportProfilesServiceRequest { Dictionary = dictionary };
+
+        var json = ProfilesTransport.ToDiagnosticJson(request);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(json, Does.Contain("\"traceId\":\"\""), "An empty traceId must stay an empty string, not be rewritten or dropped.");
+            Assert.That(json, Does.Contain("\"spanId\":\"\""), "An empty spanId must stay an empty string, not be rewritten or dropped.");
         });
     }
 
