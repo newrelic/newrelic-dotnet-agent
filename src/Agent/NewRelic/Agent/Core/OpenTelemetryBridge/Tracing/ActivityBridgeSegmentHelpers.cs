@@ -16,6 +16,7 @@ using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Extensions.Llm;
 using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Agent.Extensions.Parsing;
+using NewRelic.Agent.Extensions.Parsing.ConnectionString;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Extensions.SystemExtensions;
 using Newtonsoft.Json;
@@ -485,6 +486,7 @@ public static class ActivityBridgeSegmentHelpers
         {
             DatastoreVendor.Elasticsearch => GetElasticSearchDatastoreSegmentData(agent, tags, vendor, activityLogPrefix),
             DatastoreVendor.DynamoDB => GetDynamoDbDatastoreSegmentData(agent, activity, activityLogPrefix, tags, segment),
+            DatastoreVendor.MongoDB => GetMongoDbDatastoreSegmentData(agent, activityLogPrefix, tags),
             _ => GetDefaultDatastoreSegmentData(agent, activity, activityLogPrefix, tags, vendor)
         };
 
@@ -521,6 +523,50 @@ public static class ActivityBridgeSegmentHelpers
 
         Log.Finest($"Created DatastoreSegmentData for {activityLogPrefix}");
         return new DatastoreSegmentData(agent.GetExperimentalApi().DatabaseService, parsedSqlStatement, commandText, connectionInfo);
+    }
+
+    private static ISegmentData GetMongoDbDatastoreSegmentData(IAgent agent, string activityLogPrefix, Dictionary<string, object> tags)
+    {
+        if (!tags.TryGetAndRemoveTag<string>(["db.operation.name"], out var operation) || string.IsNullOrEmpty(operation))
+        {
+            tags.TryGetAndRemoveTag<string>(["db.command.name"], out operation);
+        }
+        else
+        {
+            tags.Remove("db.command.name");
+        }
+
+        if (string.IsNullOrEmpty(operation))
+        {
+            Log.Finest($"MongoDB {activityLogPrefix} has no operation or command name. Not creating a DatastoreSegmentData.");
+            return null;
+        }
+
+        tags.TryGetAndRemoveTag<string>(["db.collection.name"], out var collectionName);
+        tags.TryGetAndRemoveTag<string>(["db.query.text", "db.statement"], out _);
+        tags.TryGetAndRemoveTag<string>(["db.namespace"], out var databaseName);
+        tags.TryGetAndRemoveTag<string>(["server.address"], out var serverAddress);
+
+        var serverPort = -1;
+        if (tags.TryGetValue("server.port", out var rawPort) && rawPort != null)
+        {
+            try
+            {
+                serverPort = Convert.ToInt32(rawPort);
+            }
+            catch (Exception ex) when (ex is FormatException or InvalidCastException or OverflowException)
+            {
+                serverPort = -1;
+            }
+        }
+        tags.Remove("server.port");
+
+        var host = ConnectionStringParserHelper.NormalizeHostname(serverAddress, agent.Configuration.UtilizationHostName);
+        var parsedSqlStatement = new ParsedSqlStatement(DatastoreVendor.MongoDB, collectionName, operation);
+        var connectionInfo = new ConnectionInfo(host, serverPort, databaseName);
+
+        Log.Finest($"Created DatastoreSegmentData for MongoDB {activityLogPrefix}");
+        return new DatastoreSegmentData(agent.GetExperimentalApi().DatabaseService, parsedSqlStatement, null, connectionInfo);
     }
 
     private static ISegmentData GetElasticSearchDatastoreSegmentData(IAgent agent, Dictionary<string, object> tags, DatastoreVendor vendor, string activityLogPrefix)

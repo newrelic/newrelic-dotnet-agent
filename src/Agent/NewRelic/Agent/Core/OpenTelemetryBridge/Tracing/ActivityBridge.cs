@@ -490,7 +490,7 @@ public class ActivityBridge : IDisposable
         }
 
         // TODO: We need a better way to detect activities created by a segment.  Could we use a custom property instead?
-        if (activity.DisplayName != TemporarySegmentName)
+        if (activity.DisplayName != TemporarySegmentName && !IsMongoCommandUnderOperation(originalActivity, requireParentSegment: true))
         {
             if (transaction.GetExperimentalApi().StartActivitySegment(ActivityStartedMethodCall, new RuntimeNewRelicActivity(originalActivity)) is IHybridAgentSegment segment)
             {
@@ -515,10 +515,78 @@ public class ActivityBridge : IDisposable
     }
 
 
+    private const string MongoDriverActivitySourceName = "MongoDB.Driver";
+
+    private static readonly string[] MongoErrorTagsToCopy = ["exception.type", "exception.message", "exception.stacktrace", "db.response.status_code"];
+
+    private static bool IsMongoCommandUnderOperation(object originalActivity, bool requireParentSegment)
+    {
+        try
+        {
+            dynamic activity = originalActivity;
+            if ((string)activity.Source.Name != MongoDriverActivitySourceName || activity.GetTagItem("db.command.name") == null)
+                return false;
+
+            object parent = activity.Parent;
+            if (parent == null)
+                return false;
+
+            dynamic dynamicParent = parent;
+            if ((string)dynamicParent.Source.Name != MongoDriverActivitySourceName || dynamicParent.GetTagItem("db.operation.name") == null)
+                return false;
+
+            return !requireParentSegment || RuntimeNewRelicActivity.GetSegmentFromActivity(parent) != null;
+        }
+        catch (Exception ex)
+        {
+            Log.Finest(ex, "Unable to determine whether the activity is a MongoDB command under an operation.");
+            return false;
+        }
+    }
+
+    private static void CopyMongoCommandDataToOperation(object originalActivity)
+    {
+        dynamic child = originalActivity;
+        dynamic parent = child.Parent;
+
+        object serverAddress = child.GetTagItem("server.address");
+        if (serverAddress != null)
+            parent.SetTag("server.address", serverAddress);
+
+        object serverPort = child.GetTagItem("server.port");
+        if (serverPort != null)
+            parent.SetTag("server.port", serverPort);
+
+        object childCollection = child.GetTagItem("db.collection.name");
+        if (childCollection != null && parent.GetTagItem("db.collection.name") == null)
+            parent.SetTag("db.collection.name", childCollection);
+
+        foreach (var tagName in MongoErrorTagsToCopy)
+        {
+            object value = child.GetTagItem(tagName);
+            if (value != null)
+                parent.SetTag(tagName, value);
+        }
+
+        Log.Finest($"Copied MongoDB command activity {(string)child.Id} data to operation activity {(string)parent.Id}.");
+    }
+
     private static void ActivityStopped(object originalActivity, IAgent agent, IErrorService errorService)
     {
         // This method will be called when an activity is stopped. This is where we would end a segment or transaction.
         var segment = RuntimeNewRelicActivity.GetSegmentFromActivity(originalActivity);
+
+        if (segment == null && IsMongoCommandUnderOperation(originalActivity, requireParentSegment: false))
+        {
+            try
+            {
+                CopyMongoCommandDataToOperation(originalActivity);
+            }
+            catch (Exception ex)
+            {
+                Log.Finest(ex, "Unable to copy MongoDB command activity data to the operation activity.");
+            }
+        }
 
         if (segment != null)
         {
