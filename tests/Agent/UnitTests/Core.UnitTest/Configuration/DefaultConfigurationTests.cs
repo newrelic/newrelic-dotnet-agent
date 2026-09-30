@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Xml.Serialization;
 using NewRelic.Agent.Core.Config;
+using NewRelic.Agent.Core.DataTransport.ContinuousProfiling;
 using NewRelic.Agent.Core.SharedInterfaces;
 using NewRelic.Agent.Core.SharedInterfaces.Web;
 using NewRelic.Testing.Assertions;
@@ -2361,6 +2362,51 @@ public class DefaultConfigurationTests
         var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
         Assert.That(defaultConfig.ContinuousProfilingIncludeAgentCode, Is.EqualTo(expected));
+    }
+
+    [Test]
+    [TestCase(null, null, false)]          // absent -> default off
+    [TestCase("true", null, true)]         // appSetting on
+    [TestCase("false", "true", true)]      // env var wins over appSetting
+    [TestCase("true", "false", false)]     // env var wins in the other direction
+    [TestCase("notabool", null, false)]    // unparseable appSetting -> default
+    public void ContinuousProfilingLogPayload_appSetting_and_env_precedence(string appSettingValue, string envValue, bool expected)
+    {
+        Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_PROFILING_LOG_PAYLOAD")).Returns(envValue);
+        if (appSettingValue != null)
+            _localConfig.appSettings.Add(new configurationAdd { key = "NewRelic.ContinuousProfilingLogPayload", value = appSettingValue });
+
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+        Assert.That(defaultConfig.ContinuousProfilingLogPayload, Is.EqualTo(expected));
+    }
+
+    [Test]
+    [TestCase(null, null, 65536)]      // absent -> 64K default
+    [TestCase("200000", null, 200000)] // appSetting
+    [TestCase("200000", "4096", 4096)] // env var wins
+    [TestCase("0", null, 65536)]       // non-positive -> default (not "unlimited", not floor)
+    [TestCase("-5", null, 65536)]
+    [TestCase("10", null, 1024)]       // below floor -> floor
+    [TestCase("notanint", null, 65536)]
+    public void ContinuousProfilingLogPayloadMaxChars_appSetting_env_default_and_floor(string appSettingValue, string envValue, int expected)
+    {
+        Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_PROFILING_LOG_PAYLOAD_MAX_CHARS")).Returns(envValue);
+        if (appSettingValue != null)
+            _localConfig.appSettings.Add(new configurationAdd { key = "NewRelic.ContinuousProfilingLogPayloadMaxChars", value = appSettingValue });
+
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+        Assert.That(defaultConfig.ContinuousProfilingLogPayloadMaxChars, Is.EqualTo(expected));
+    }
+
+    [Test]
+    public void ContinuousProfilingLogPayloadMaxChars_default_matches_ProfilesTransport_default()
+    {
+        Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_PROFILING_LOG_PAYLOAD_MAX_CHARS")).Returns<string>(null);
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+        Assert.That(defaultConfig.ContinuousProfilingLogPayloadMaxChars, Is.EqualTo(ProfilesTransport.DefaultMaxDiagnosticPayloadChars));
     }
 
     [Test]

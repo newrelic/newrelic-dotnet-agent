@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Text;
 using System.Threading;
 using Google.Protobuf;
+using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.DataTransport.Client;
 using NewRelic.Agent.Core.Logging;
@@ -34,9 +35,15 @@ public class ProfilesTransport : IProfilesTransport
     private const string DataUsageApi = "OTLP";
     private const string DataUsageArea = "Profiles";
 
-    // Cap on the rendered diagnostic JSON -- a full request (every frame/thread name in the batch) can
-    // reach multiple MB; this bounds the allocation and what gets written to the Debug/audit logs.
-    public const int MaxDiagnosticJsonLength = 64 * 1024;
+    // Default cap on the encoded payload a log line may carry -- a full request (every frame/thread name in the
+    // batch) can reach multiple MB of JSON. Overridable via ContinuousProfilingLogPayloadMaxChars.
+    public const int DefaultMaxDiagnosticPayloadChars = 64 * 1024;
+
+    // What the "Invoked" line and the audit log carry when payload logging is not opted in.
+    public const string PayloadUnavailablePlaceholder = "{json not available by default; set NEW_RELIC_PROFILING_LOG_PAYLOAD=true to include it}";
+
+    // Marks an encoded payload so consumers can tell it from the {placeholder} forms.
+    public const string EncodedPayloadPrefix = "gzip+base64:";
 
     // A non-2xx (bad/expired license key, path not enabled, oversized payload, schema rejection, etc.)
     // fails identically every drain until the underlying cause is fixed -- rate-limit the Warn to once
@@ -52,6 +59,7 @@ public class ProfilesTransport : IProfilesTransport
     private readonly IAgentHealthReporter _agentHealthReporter;
     private readonly Func<long> _nowTicks;
     private readonly IContinuousProfilingSupportabilityMetricCounters _supportabilityMetricCounters;
+    private readonly IConfiguration _configuration;
 
     // volatile: swapped by UpdateEndpoint (e.g. on AgentConnectedEvent) on a different thread than the
     // scheduler thread that reads it in Send; a plain field would risk a stale read across cores.
@@ -63,20 +71,21 @@ public class ProfilesTransport : IProfilesTransport
     // read on 32-bit hosts).
     private long _lastRejectionWarnTicks = long.MinValue;
 
-    public ProfilesTransport(Func<byte[], string, ProfilesSendResult> httpPost, string endpoint, IAgentHealthReporter agentHealthReporter, IContinuousProfilingSupportabilityMetricCounters supportabilityMetricCounters = null)
-        : this(httpPost, endpoint, agentHealthReporter, Stopwatch.GetTimestamp, supportabilityMetricCounters)
+    public ProfilesTransport(Func<byte[], string, ProfilesSendResult> httpPost, string endpoint, IAgentHealthReporter agentHealthReporter, IContinuousProfilingSupportabilityMetricCounters supportabilityMetricCounters = null, IConfiguration configuration = null)
+        : this(httpPost, endpoint, agentHealthReporter, Stopwatch.GetTimestamp, supportabilityMetricCounters, configuration)
     {
     }
 
     // Test seam: lets a test fast-forward past RejectionWarnIntervalStopwatchTicks without a real
     // 5-minute sleep, e.g. to prove the rate-limited Warn fires again once the window elapses.
-    public ProfilesTransport(Func<byte[], string, ProfilesSendResult> httpPost, string endpoint, IAgentHealthReporter agentHealthReporter, Func<long> nowTicks, IContinuousProfilingSupportabilityMetricCounters supportabilityMetricCounters = null)
+    public ProfilesTransport(Func<byte[], string, ProfilesSendResult> httpPost, string endpoint, IAgentHealthReporter agentHealthReporter, Func<long> nowTicks, IContinuousProfilingSupportabilityMetricCounters supportabilityMetricCounters = null, IConfiguration configuration = null)
     {
         _httpPost = httpPost;
         _endpoint = endpoint;
         _agentHealthReporter = agentHealthReporter;
         _nowTicks = nowTicks;
         _supportabilityMetricCounters = supportabilityMetricCounters;
+        _configuration = configuration;
     }
 
     public void UpdateEndpoint(string endpoint)
@@ -99,18 +108,20 @@ public class ProfilesTransport : IProfilesTransport
         // Log + audit exactly like HttpCollectorWire.SendData so CP payloads are observable the same way.
         Log.Finest("Request({0}): Invoking \"{1}\"", requestGuid, ProfilesMethodName);
 
-        // Built once, only when a sink is listening -- the JSON render is not free: at a 1s drain interval,
-        // rendering the full protobuf-to-JSON-DOM-to-string pipeline (and only then truncating it) on every
-        // drain would allocate several MB per drain purely for a Debug-level log line. Gated on Finest
-        // (stricter/rarer than plain Debug, which routine CP troubleshooting runs at) rather than Debug.
-        var payloadJson = (Log.IsFinestEnabled || AuditLog.IsAuditLogEnabled) ? ToDiagnosticJson(request) : null;
+        // Render + gzip is not free (protobuf -> JSON DOM -> string -> gzip), so it only happens when the
+        // operator opted in AND a sink will read it (Finest log or audit log). Everyone else gets the placeholder.
+        var payloadText = (_configuration?.ContinuousProfilingLogPayload ?? false) && (Log.IsFinestEnabled || AuditLog.IsAuditLogEnabled)
+            ? BuildPayloadText(request, ResolveMaxChars())
+            : PayloadUnavailablePlaceholder;
 
         var result = _httpPost(bytes, _endpoint);
 
-        DataTransportAuditLogger.Log(DataTransportAuditLogger.AuditLogDirection.Sent, DataTransportAuditLogger.AuditLogSource.InstrumentedApp, _endpoint);
-        DataTransportAuditLogger.Log(DataTransportAuditLogger.AuditLogDirection.Sent, DataTransportAuditLogger.AuditLogSource.InstrumentedApp, payloadJson);
+        RecordSendOutcomeMetrics(result);
 
-        Log.Debug("Request({0}): Invoked \"{1}\" with : {2}", requestGuid, ProfilesMethodName, payloadJson);
+        DataTransportAuditLogger.Log(DataTransportAuditLogger.AuditLogDirection.Sent, DataTransportAuditLogger.AuditLogSource.InstrumentedApp, _endpoint);
+        DataTransportAuditLogger.Log(DataTransportAuditLogger.AuditLogDirection.Sent, DataTransportAuditLogger.AuditLogSource.InstrumentedApp, payloadText);
+
+        Log.Finest("Request({0}): Invoked \"{1}\" with : {2}", requestGuid, ProfilesMethodName, payloadText);
         Log.Debug("Request({0}): Invocation of \"{1}\" yielded response : {2}", requestGuid, ProfilesMethodName, result.ResponseContent);
         if (!result.Accepted)
         {
@@ -152,6 +163,40 @@ public class ProfilesTransport : IProfilesTransport
         }
 
         return result.Accepted;
+    }
+
+    // Granular send-outcome metrics, additive to the flat success/failure counters the dispatcher records.
+    // Duration is reported for every send that reached the wire (accepted or not) -- CP has no other latency
+    // visibility; a zero Elapsed means it never left the process. The per-status metric needs a real HTTP
+    // status, so status 0 (no response) is skipped -- the transport-failure kinds below cover that case.
+    private void RecordSendOutcomeMetrics(ProfilesSendResult result)
+    {
+        if (result.Elapsed > TimeSpan.Zero)
+            _supportabilityMetricCounters?.RecordSendDuration(result.Elapsed);
+
+        if (!result.Accepted && result.StatusCode != 0)
+            _supportabilityMetricCounters?.RecordHttpError(result.StatusCode);
+
+        switch (result.FailureReason)
+        {
+            case ProfilesSendFailureReason.TransportTimeout:
+                _supportabilityMetricCounters?.RecordTimeoutFailure();
+                break;
+            case ProfilesSendFailureReason.TransportNetwork:
+                _supportabilityMetricCounters?.RecordNetworkFailure();
+                break;
+            case ProfilesSendFailureReason.TransportTls:
+                _supportabilityMetricCounters?.RecordTlsFailure();
+                break;
+        }
+
+        // Status signal only -- no restart/disconnect; CP keeps retrying on its own schedule. Set on every
+        // 401/403, not inside the rate-limited warn window, so the health file reflects the latest rejection.
+        // Deliberately never cleared on a later CP success: the agent has a single health slot shared with the
+        // collector path, so a CP "Healthy" could overwrite a collector fault. See
+        // HealthCodes.ContinuousProfilingLicenseKeyInvalid.
+        if (!result.Accepted && (result.StatusCode == 401 || result.StatusCode == 403))
+            _agentHealthReporter?.SetAgentControlStatus(HealthCodes.ContinuousProfilingLicenseKeyInvalid, result.StatusCode.ToString());
     }
 
     // See RejectionWarnIntervalStopwatchTicks for the rate-limit rationale. CompareExchange, not a plain
@@ -204,6 +249,15 @@ public class ProfilesTransport : IProfilesTransport
                 case ProfilesSendFailureReason.OversizedPayloadDropped:
                     Log.Warn("[ContinuousProfiling] Profiles are not being delivered: the compressed payload exceeded the configured maximum payload size and was dropped client-side before sending. This warning is rate-limited; subsequent occurrences are logged at Debug.");
                     break;
+                case ProfilesSendFailureReason.TransportTimeout:
+                    Log.Warn("[ContinuousProfiling] Profiles are not being delivered: the send timed out or was canceled at the transport layer. This warning is rate-limited; subsequent occurrences are logged at Debug.");
+                    break;
+                case ProfilesSendFailureReason.TransportNetwork:
+                    Log.Warn("[ContinuousProfiling] Profiles are not being delivered: the send failed at the network layer (socket, DNS, or connection). This warning is rate-limited; subsequent occurrences are logged at Debug.");
+                    break;
+                case ProfilesSendFailureReason.TransportTls:
+                    Log.Warn("[ContinuousProfiling] Profiles are not being delivered: the send failed during TLS negotiation. This warning is rate-limited; subsequent occurrences are logged at Debug.");
+                    break;
                 default: // TransportException / None
                     Log.Warn("[ContinuousProfiling] Profiles are not being delivered: the send failed at the transport layer (network, proxy, TLS, or timeout). This warning is rate-limited; subsequent occurrences are logged at Debug.");
                     break;
@@ -233,7 +287,8 @@ public class ProfilesTransport : IProfilesTransport
         return total;
     }
 
-    // Compact single-line protobuf-JSON for the payload log line + audit log. Public + static so it can be
+    // Compact single-line protobuf-JSON, the input to the encoded payload log line + audit log. Untruncated:
+    // size is bounded downstream by the encoded-size cap (see BuildPayloadText). Public + static so it can be
     // unit-tested without capturing the static logger. Google.Protobuf's JsonFormatter
     // HTML-escapes `<`/`>` (-> </>), which litters the common .NET closure frames (`<>c`, `<M>d__`);
     // we round-trip through Newtonsoft (a first-party agent dependency present on every TFM) to re-emit
@@ -258,11 +313,25 @@ public class ProfilesTransport : IProfilesTransport
             }
         }
 
-        var json = root.ToString(Formatting.None);
-        if (json.Length > MaxDiagnosticJsonLength)
-            json = json.Substring(0, MaxDiagnosticJsonLength) + $"...(truncated, {json.Length} chars total)";
+        return root.ToString(Formatting.None);
+    }
 
-        return json;
+    private int ResolveMaxChars()
+    {
+        var configured = _configuration?.ContinuousProfilingLogPayloadMaxChars ?? 0;
+        return configured > 0 ? configured : DefaultMaxDiagnosticPayloadChars;
+    }
+
+    // Public for unit tests (Core internals are not visible to Core.UnitTest). A truncated gzip/base64 blob
+    // cannot be decoded, so an over-cap payload becomes a placeholder rather than a cut-off blob.
+    public static string BuildPayloadText(ExportProfilesServiceRequest request, int maxChars)
+    {
+        var json = ToDiagnosticJson(request);
+        var encoded = DiagnosticPayloadEncoder.EncodeGzipBase64(json);
+
+        return encoded.Length > maxChars
+            ? $"{{payload too large: {json.Length} JSON chars, {encoded.Length} gzip+base64 chars exceeds the {maxChars}-char cap; raise NEW_RELIC_PROFILING_LOG_PAYLOAD_MAX_CHARS}}"
+            : EncodedPayloadPrefix + encoded;
     }
 
     // In-place: if the named property is a base64 string (proto3 `bytes` rendering), replace it with

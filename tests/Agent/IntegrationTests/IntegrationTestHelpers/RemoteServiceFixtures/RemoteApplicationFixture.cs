@@ -755,6 +755,16 @@ public abstract class RemoteApplicationFixture : IDisposable
         {
             try
             {
+                var payloadText = payload.Value;
+
+                // Continuous profiling logs its payload as gzip+base64 (opt-in) or a "{...}" placeholder, never as
+                // raw JSON. Validate the decoded JSON when present; a placeholder has nothing to validate.
+                if (payload.Key == ContinuousProfilingPayloadLog.CollectorMethodName &&
+                    !ContinuousProfilingPayloadLog.TryDecodeLoggedPayload(payload.Value, out payloadText))
+                {
+                    continue;
+                }
+
                 // JToken rather than JObject: several payloads (e.g. metric_data and
                 // analytic_event_data) are top-level JSON arrays, not objects.
                 //
@@ -764,7 +774,7 @@ public abstract class RemoteApplicationFixture : IDisposable
                 // routinely exceeds 64 levels - that is valid JSON, not a corrupt payload. MaxDepth =
                 // null removes the limit; the trailing Read() loop preserves JToken.Parse's rejection
                 // of additional content after the root token.
-                using (var jsonReader = new JsonTextReader(new StringReader(payload.Value)) { MaxDepth = null })
+                using (var jsonReader = new JsonTextReader(new StringReader(payloadText)) { MaxDepth = null })
                 {
                     JToken.ReadFrom(jsonReader);
                     while (jsonReader.Read()) { }

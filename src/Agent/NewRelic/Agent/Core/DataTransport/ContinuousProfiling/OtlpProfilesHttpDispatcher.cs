@@ -2,12 +2,15 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Net.Sockets;
 using System.Reflection;
+using System.Security.Authentication;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -157,6 +160,7 @@ public class OtlpProfilesHttpDispatcher
     /// </remarks>
     public ProfilesSendResult Post(byte[] payload, string endpoint)
     {
+        var stopwatch = Stopwatch.StartNew();
         try
         {
             if (string.IsNullOrEmpty(endpoint) || !Uri.IsWellFormedUriString(endpoint, UriKind.Absolute))
@@ -189,7 +193,7 @@ public class OtlpProfilesHttpDispatcher
             if (response == null)
             {
                 _supportabilityMetricCounters?.RecordExportFailure();
-                return new ProfilesSendResult(false, 0, string.Empty, failureReason: ProfilesSendFailureReason.TransportException);
+                return new ProfilesSendResult(false, 0, string.Empty, failureReason: ProfilesSendFailureReason.TransportException, elapsed: stopwatch.Elapsed);
             }
 
             byte[] contentBytes;
@@ -207,7 +211,7 @@ public class OtlpProfilesHttpDispatcher
                 // diagnostics are available since the body could not be read.
                 Log.Debug(ex, "[ContinuousProfiling] Response body read from {0} failed after a successful ({1}) response; treating as delivered since the body is diagnostics-only.", endpoint, (int)response.StatusCode);
                 _supportabilityMetricCounters?.RecordExportSuccess();
-                return new ProfilesSendResult(true, (int)response.StatusCode, string.Empty, sentBytes: sentBytes);
+                return new ProfilesSendResult(true, (int)response.StatusCode, string.Empty, sentBytes: sentBytes, elapsed: stopwatch.Elapsed);
             }
 
             var content = Encoding.UTF8.GetString(contentBytes);
@@ -232,7 +236,7 @@ public class OtlpProfilesHttpDispatcher
             else
                 _supportabilityMetricCounters?.RecordExportFailure();
 
-            return new ProfilesSendResult(response.IsSuccessStatusCode, (int)response.StatusCode, content, rejectedProfiles, partialSuccessErrorMessage, sentBytes: sentBytes);
+            return new ProfilesSendResult(response.IsSuccessStatusCode, (int)response.StatusCode, content, rejectedProfiles, partialSuccessErrorMessage, sentBytes: sentBytes, elapsed: stopwatch.Elapsed);
         }
         catch (Exception ex)
         {
@@ -245,8 +249,35 @@ public class OtlpProfilesHttpDispatcher
             // anywhere before the body read (request build, send itself).
             Log.Debug(ex, "[ContinuousProfiling] Profiles POST to {0} failed; dropping the batch.", endpoint);
             _supportabilityMetricCounters?.RecordExportFailure();
-            return new ProfilesSendResult(false, 0, string.Empty, failureReason: ProfilesSendFailureReason.TransportException);
+            return new ProfilesSendResult(false, 0, string.Empty, failureReason: ClassifyTransportException(ex), elapsed: stopwatch.Elapsed);
         }
+    }
+
+    // Small fixed taxonomy (timeout / network / TLS / generic) -- not a full exception hierarchy. Walks the
+    // InnerException chain because HttpClient wraps the real cause (HttpRequestException -> SocketException /
+    // AuthenticationException, or WebException on .NET Framework); the outermost recognized type wins, so a
+    // cancellation wrapping a socket error reads as the timeout it is.
+    private static ProfilesSendFailureReason ClassifyTransportException(Exception exception)
+    {
+        for (var current = exception; current != null; current = current.InnerException)
+        {
+            switch (current)
+            {
+                case OperationCanceledException:
+                    return ProfilesSendFailureReason.TransportTimeout;
+                case AuthenticationException:
+                    return ProfilesSendFailureReason.TransportTls;
+                case WebException { Status: WebExceptionStatus.Timeout }:
+                    return ProfilesSendFailureReason.TransportTimeout;
+                case WebException { Status: WebExceptionStatus.SecureChannelFailure or WebExceptionStatus.TrustFailure }:
+                    return ProfilesSendFailureReason.TransportTls;
+                case SocketException:
+                case WebException:
+                    return ProfilesSendFailureReason.TransportNetwork;
+            }
+        }
+
+        return ProfilesSendFailureReason.TransportException;
     }
 
     /// <summary>

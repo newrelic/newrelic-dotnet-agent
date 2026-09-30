@@ -555,6 +555,8 @@ public class ExhaustiveTestConfiguration : IConfiguration
     public bool ContinuousProfilingEnabled => true;
     public int ContinuousProfilingSamplingIntervalMs => 30000;
     public bool ContinuousProfilingIncludeAgentCode => true;
+    public bool ContinuousProfilingLogPayload => true;
+    public int ContinuousProfilingLogPayloadMaxChars => 65536;
     public int ContinuousProfilingDelayMs => 1000;
     public int ContinuousProfilingDurationMs => 60000;
     public IReadOnlyList<string> ContinuousProfilingInclude => new[] { "all" };

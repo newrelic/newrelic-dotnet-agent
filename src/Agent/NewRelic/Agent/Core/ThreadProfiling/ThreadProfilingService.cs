@@ -6,6 +6,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.ContinuousProfiling;
 using NewRelic.Agent.Core.DataTransport;
@@ -34,8 +35,11 @@ public class ThreadProfilingService : ConfigurationBasedService, IThreadProfilin
     // null, skip the "CP is active" guard, and let both profilers arm concurrently.
     private volatile IContinuousProfilingSessionControl _continuousProfilingSessionControl;
     // volatile: assigned on the collector-command thread that starts a session, read on the
-    // continuous-profiling scheduler thread through IsThreadProfilingActive. Without the release/acquire
-    // that read could see a stale null and report "no thread-profiling session" while one is starting.
+    // continuous-profiling scheduler thread through IsThreadProfilingActive. Both of CP's current readers
+    // of IsThreadProfilingActive already run inside ProfilingMutualExclusionGate.Acquire(), which is the
+    // same lock the lazy assignment below runs under -- the lock already gives the acquire/release here.
+    // volatile is harmless and covers any future reader that reaches IsThreadProfilingActive from outside
+    // the gate.
     private volatile IThreadProfilingSampler _sampler;
     private int _profileSessionId;
     private DateTime _startSessionTime;
@@ -60,7 +64,10 @@ public class ThreadProfilingService : ConfigurationBasedService, IThreadProfilin
     // constructed once for the process lifetime and never re-registered/re-disposed. This guard exists
     // for test callers (unit test TearDown, and tests that call Dispose() directly) that can invoke
     // Dispose() more than once; base.Dispose() releases subscriptions that must not be released again.
-    private volatile bool _disposed;
+    // int, not bool+volatile: Interlocked.Exchange makes the check-and-set atomic, so two concurrent
+    // Dispose() calls can't both pass the check the way a plain "if (_disposed) return; _disposed = true;"
+    // would.
+    private int _disposed;
 
     // i.e.,  this is a dictionary of ManagedThreadId, Total Call Count
     private readonly Dictionary<UIntPtr, int> _managedThreadsFromProfiler = new Dictionary<UIntPtr, int>();
@@ -181,9 +188,8 @@ public class ThreadProfilingService : ConfigurationBasedService, IThreadProfilin
     /// </summary>
     public override void Dispose()
     {
-        if (_disposed)
+        if (Interlocked.Exchange(ref _disposed, 1) == 1)
             return;
-        _disposed = true;
 
         // Stop() already suppresses the report send, so disposal never blocks CLR exit.
         Stop();

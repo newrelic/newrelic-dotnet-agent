@@ -352,7 +352,7 @@ public class ThreadProfilingServiceTests
 
         Assert.Multiple(() =>
         {
-            Assert.That(stopResult, Is.True, "the stop was signaled");
+            Assert.That(stopResult, Is.False, "the join timed out; the worker may still be running");
             // ResetCache must NOT have run -- the worker is still reading the pruning list.
             Assert.That(service.PruningList, Has.Count.EqualTo(1), "pruning list was cleared out from under the still-running worker");
             // _profileSessionId must still be 1 (not reset to InvalidSessionId): a stop for a different id
