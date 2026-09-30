@@ -142,6 +142,11 @@ Test commands per layer and infra state: see the
 with publish flags; the `dotnet` SDK cannot build their legacy ASP.NET FW web
 apps. Invocation: [tests/CLAUDE.md](tests/CLAUDE.md#building-the-solution).
 
+**Linux target platform:** integration and unbounded tests also run on Linux.
+There is no Linux solution file -- CI builds the test `.csproj` directly and
+globs the test apps. Tests are selected with `-trait- Platform=WindowsOnly`.
+See [tests/CLAUDE.md](tests/CLAUDE.md) under Target platforms.
+
 **Extensions tests** (`NewRelic.Agent.Extensions.Tests`) build fine with
 plain `dotnet build`, but `dotnet test` against the `.csproj` silently fails
 via VSTestTask. Run against the built DLL instead:

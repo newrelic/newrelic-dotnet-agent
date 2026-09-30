@@ -7,12 +7,20 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+#if NET10_0_OR_GREATER
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+#endif
 using MultiFunctionApplicationHelpers.NetStandardLibraries.NServiceBus.Handlers;
 using MultiFunctionApplicationHelpers.NetStandardLibraries.NServiceBus.Models;
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using NewRelic.Api.Agent;
 using NServiceBus;
 using EventHandler = MultiFunctionApplicationHelpers.NetStandardLibraries.NServiceBus.Handlers.EventHandler;
+#if NET10_0_OR_GREATER
+using IHost = Microsoft.Extensions.Hosting.IHost;
+#endif
 
 namespace MultiFunctionApplicationHelpers.NetStandardLibraries.NServiceBus;
 
@@ -28,15 +36,10 @@ class NServiceBusDriver
     // routing the command elsewhere leaves all NsbSendTests assertions unchanged.
     private const string UnconsumedDestinationQueue = "NsbSendTestsUnconsumedQueue";
 
-    // NServiceBus 10.2 deprecated the self-hosting API (IEndpointInstance, Endpoint.Start/Stop) in favor
-    // of an IHostApplicationBuilder-based host with IServiceCollection.AddNServiceBusEndpoint. These MFA
-    // console apps have no generic host and only start an endpoint on demand when a test exercises
-    // NServiceBus, so migrating to the hosted model isn't practical here. Suppress the obsolete warnings
-    // (promoted to errors by TreatWarningsAsErrors) at each usage site until self-hosting is removed in
-    // NServiceBus 12. TODO: revisit before upgrading past NServiceBus 11.
-#pragma warning disable CS0618 // Type or member is obsolete
-    private IEndpointInstance _endpoint;
-#pragma warning restore CS0618 // Type or member is obsolete
+#if NET10_0_OR_GREATER
+    private IHost _host;
+#endif
+    private IMessageSession _session;
 
 
     private void StartNServiceBusInternal(Type handlerToAllow = null)
@@ -78,9 +81,16 @@ class NServiceBusDriver
                 immediate.NumberOfRetries(0);
             });
 
-#pragma warning disable CS0618 // Type or member is obsolete - self-hosting deprecated in NServiceBus 10.2
-        _endpoint = Endpoint.Start(endpointConfiguration).Result;
-#pragma warning restore CS0618 // Type or member is obsolete
+#if NET10_0_OR_GREATER
+        var builder = Host.CreateApplicationBuilder();
+        builder.Logging.ClearProviders();
+        builder.Services.AddNServiceBusEndpoint(endpointConfiguration);
+        _host = builder.Build();
+        _host.StartAsync().Wait();
+        _session = _host.Services.GetRequiredService<IMessageSession>();
+#else
+        _session = Endpoint.Start(endpointConfiguration).Result;
+#endif
     }
 
     [LibraryMethod]
@@ -123,9 +133,12 @@ class NServiceBusDriver
     public void StopNServiceBus()
     {
         ConsoleMFLogger.Info($"Stopping NServiceBus");
-#pragma warning disable CS0618 // Type or member is obsolete - self-hosting deprecated in NServiceBus 10.2
-        _endpoint?.Stop().Wait();
-#pragma warning restore CS0618 // Type or member is obsolete
+#if NET10_0_OR_GREATER
+        _host?.StopAsync().Wait();
+        _host?.Dispose();
+#else
+        ((IEndpointInstance)_session)?.Stop().Wait();
+#endif
     }
 
     [LibraryMethod]
@@ -141,7 +154,7 @@ class NServiceBusDriver
     {
         var @event = new Event();
         ConsoleMFLogger.Info($"Sending NServiceBus Event with Id: {@event.Id}");
-        await _endpoint.Publish(@event);
+        await _session.Publish(@event);
     }
 
     [LibraryMethod]
@@ -151,7 +164,7 @@ class NServiceBusDriver
     {
         var command = new Command();
         ConsoleMFLogger.Info($"Sending NServiceBus Command with Id: {command.Id} to {UnconsumedDestinationQueue}");
-        await _endpoint.Send(UnconsumedDestinationQueue, command);
+        await _session.Send(UnconsumedDestinationQueue, command);
     }
 
     [LibraryMethod]
@@ -159,7 +172,7 @@ class NServiceBusDriver
     {
         var command = new Command();
         ConsoleMFLogger.Info($"Sending NServiceBus Command with Id: {command.Id}");
-        await _endpoint.SendLocal(command);
+        await _session.SendLocal(command);
     }
 }
 #endif

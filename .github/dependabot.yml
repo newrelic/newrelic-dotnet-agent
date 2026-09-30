@@ -1,7 +1,10 @@
 version: 2
 updates:
   - package-ecosystem: github-actions
-    directory: /
+    # "/" covers .github/workflows only; the composite actions need their own entry.
+    directories:
+      - "/"
+      - "/.github/actions/*"
     schedule:
       interval: monthly
     commit-message:
@@ -24,18 +27,26 @@ updates:
         patterns:
           - "*"
 
-# Docker can't be updated until we modernize the profiler build process
-#  - package-ecosystem: docker
-#    directories: 
-#      - "/src/Agent/NewRelic/Profiler/linux"
-#      - "/build/**/"
-#      - "/deploy/**/"
-#    schedule:
-#      interval: monthly
-#    groups:
-#      docker:
-#        patterns:
-#          - "*"
+  # Linux package build, deploy, and post-deploy validation images. The profiler
+  # build image (/src/Agent/NewRelic/Profiler/linux) is excluded on purpose: its
+  # base image fixes the shipped profiler's glibc floor -- see that dir's README.
+  - package-ecosystem: docker
+    directories:
+      - "/build/**/"
+      - "/deploy/**/"
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: "chore(deps):"
+    # validate-yum must stay on Rocky 9: EL10's crypto policy rejects the retired
+    # DSA key still listed in the published yum .repo file, so the install aborts.
+    ignore:
+      - dependency-name: "rockylinux/rockylinux"
+        update-types: ["version-update:semver-major"]
+    groups:
+      docker:
+        patterns:
+          - "*"
 
   # Update all NuGet packages used by core agent projects. Under CPM, dependabot
   # updates the central Directory.Packages.props via any in-scope project that
@@ -103,9 +114,13 @@ updates:
       xunit:
         patterns:
           - "xunit*"
+      # xunit* is excluded so both groups cannot claim the same xunit v3
+      # packages, which pin each other with exact versions.
       nuget-tests:
         patterns:
           - "*"
+        exclude-patterns:
+          - "xunit*"
     allow:
       - dependency-name: "coverlet.collector"
       - dependency-name: "JustMock"
@@ -117,3 +132,6 @@ updates:
       - dependency-name: "xunit*"
       - dependency-name: "PublicApiGenerator"
       - dependency-name: "Verify.NUnit"
+    ignore:
+      - dependency-name: "Verify.NUnit"
+        update-types: ["version-update:semver-major"] # v33 adds a SponsorCheck maintenance-fee gate that fails the build

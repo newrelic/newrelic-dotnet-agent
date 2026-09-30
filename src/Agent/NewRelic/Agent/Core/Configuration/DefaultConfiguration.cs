@@ -2825,6 +2825,7 @@ public class DefaultConfiguration : IConfiguration
         "Microsoft.AspNetCore.SignalR.Server",
         "Microsoft.Azure.Functions.Worker",
         "Microsoft.Data.SqlClient",
+        "MongoDB.Driver",
         "MongoDB.Driver.Core.Extensions.DiagnosticSources",
         "MySqlConnector",
         "Npgsql",

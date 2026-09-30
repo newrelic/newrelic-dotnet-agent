@@ -56,6 +56,10 @@ jobs:
                   - '!LICENSE'
                   - '!CODEOWNERS'
                   - '!docs/**'
+                  - '!deploy/**'
+                  - '!.fleetControl/**'
+                  - '!release-please/**'
+                  - '!.lycheeignore'
                   - '!tests/Agent/IntegrationTests/UnboundedServices/**'
               list-files: 'csv'
 

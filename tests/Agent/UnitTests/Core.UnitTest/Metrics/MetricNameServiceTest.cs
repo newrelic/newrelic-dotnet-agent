@@ -92,6 +92,16 @@ class MetricNameServiceTest
         Assert.That(result, Is.EqualTo("/customer/put"));
     }
 
+    [Test]
+    public void NormalizeUrl_ReturnsInputUnchanged_IfNoRegexRulesConfigured()
+    {
+        Mock.Arrange(() => _configuration.UrlRegexRules).Returns(Enumerable.Empty<RegexRule>());
+
+        var actualOutput = _metricNameService.NormalizeUrl("/apple/banana");
+
+        Assert.That(actualOutput, Is.EqualTo("/apple/banana"));
+    }
+
     [TestCaseSource(typeof(MetricNameServiceTest), nameof(CrossAgentRegexRuleTestCases))]
     public void NormalizeUrl_PassesAllCrossAgentUrlTests(RegexRuleTestCase testCase)
     {
@@ -222,6 +232,22 @@ class MetricNameServiceTest
         Assert.That(newName.PrefixedName, Is.EqualTo(originalMetricName.PrefixedName));
     }
 
+    [Test]
+    public void RenameTransaction_ReturnsInputUnchanged_IfNoRegexOrWhitelistRulesConfigured()
+    {
+        Mock.Arrange(() => _configuration.TransactionNameRegexRules).Returns(Enumerable.Empty<RegexRule>());
+        Mock.Arrange(() => _configuration.TransactionNameWhitelistRules).Returns(new Dictionary<string, IEnumerable<string>>());
+
+        var originalMetricName = AsTransactionMetricName("WebTransaction/apple/banana");
+        var actualOutput = _metricNameService.RenameTransaction(originalMetricName);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(actualOutput.ShouldIgnore, Is.False);
+            Assert.That(actualOutput.PrefixedName, Is.EqualTo(originalMetricName.PrefixedName));
+        });
+    }
+
     private void CallRenameTransactionAndAssert(string originalName, string expectedRename, bool isWebTransaction = true)
     {
         var originalMetricName = AsTransactionMetricName(originalName);
@@ -331,6 +357,16 @@ class MetricNameServiceTest
         var actualOutput = _metricNameService.RenameMetric(input);
 
         Assert.That(actualOutput, Is.EqualTo(expectedOutput));
+    }
+
+    [Test]
+    public void RenameMetric_ReturnsInputUnchanged_IfNoRegexRulesConfigured()
+    {
+        Mock.Arrange(() => _configuration.MetricNameRegexRules).Returns(Enumerable.Empty<RegexRule>());
+
+        var actualOutput = _metricNameService.RenameMetric("/apple/banana");
+
+        Assert.That(actualOutput, Is.EqualTo("/apple/banana"));
     }
 
     [TestCaseSource(typeof(MetricNameServiceTest), nameof(CrossAgentRegexRuleTestCases))]

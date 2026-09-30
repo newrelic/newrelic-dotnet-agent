@@ -1,6 +1,6 @@
 
 
-FROM ubuntu:noble-20240605@sha256:2e863c44b718727c860746568e1d54afd13b2fa71b160f5cd9058fc436217b30
+FROM ubuntu:noble-20260911@sha256:6896323949d7acdf78c9fa087b858849920791181bc34eb41d432005cfdcd5d7
 
 # archive.ubuntu.com round-robins over hosts that intermittently refuse port 80
 RUN printf 'Acquire::Retries "5";\nAcquire::http::Timeout "20";\n' > /etc/apt/apt.conf.d/99-nr-retries \
