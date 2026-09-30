@@ -111,6 +111,7 @@ public interface IConfiguration
     Dictionary<string, string> RequestHeadersMap { get; }
     string EncodingKey { get; }
     string EntityGuid { get; }
+    IReadOnlyDictionary<string, string> OtlpResourceAttributes { get; }
     bool HighSecurityModeEnabled { get; }
     bool CustomInstrumentationEditorEnabled { get; }
     string CustomInstrumentationEditorEnabledSource { get; }

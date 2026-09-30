@@ -76,7 +76,13 @@ public class AgentListenerController : Controller
                 var serverConfig = new Dictionary<string, object>();
 
                 serverConfig["agent_run_id"] = Guid.NewGuid();
-                serverConfig["entity_guid"] = Guid.NewGuid();
+                var entityGuid = Guid.NewGuid();
+                serverConfig["entity_guid"] = entityGuid;
+                var otlpResourceAttributes = new Dictionary<string, string>(MockOtlpResourceAttributes.Values)
+                {
+                    ["entity.guid"] = entityGuid.ToString()
+                };
+                serverConfig["otlp_resource_attributes"] = otlpResourceAttributes;
 
                 if (_setLiveInstrumentationOnConnect)
                 {
