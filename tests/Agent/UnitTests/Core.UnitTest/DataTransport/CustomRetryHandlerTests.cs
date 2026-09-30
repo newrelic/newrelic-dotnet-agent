@@ -229,56 +229,90 @@ public class CustomRetryHandlerTests
     public async Task SendAsync_With400BadRequest_DoesNotRetry()
     {
         // Arrange
+        var counters = new FakeMetricCounters();
+        using var retryHandler = CreateHandler(counters);
+        using var client = new HttpClient(retryHandler);
         _innerHandler.SetResponse(new HttpResponseMessage(HttpStatusCode.BadRequest));
 
         // Act
-        var response = await _httpClient.GetAsync("http://test.com");
+        var response = await client.GetAsync("http://test.com");
 
         // Assert
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
         Assert.That(_innerHandler.RequestCount, Is.EqualTo(1));
+        Assert.That(counters.Recorded.FindAll(m => m == OtelBridgeSupportabilityMetric.ExportFailure), Has.Count.EqualTo(1));
     }
 
     [Test]
     public async Task SendAsync_With401Unauthorized_DoesNotRetry()
     {
         // Arrange
+        var counters = new FakeMetricCounters();
+        using var retryHandler = CreateHandler(counters);
+        using var client = new HttpClient(retryHandler);
         _innerHandler.SetResponse(new HttpResponseMessage(HttpStatusCode.Unauthorized));
 
         // Act
-        var response = await _httpClient.GetAsync("http://test.com");
+        var response = await client.GetAsync("http://test.com");
 
         // Assert
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.Unauthorized));
         Assert.That(_innerHandler.RequestCount, Is.EqualTo(1));
+        Assert.That(counters.Recorded.FindAll(m => m == OtelBridgeSupportabilityMetric.ExportFailure), Has.Count.EqualTo(1));
     }
 
     [Test]
     public async Task SendAsync_With403Forbidden_DoesNotRetry()
     {
         // Arrange
+        var counters = new FakeMetricCounters();
+        using var retryHandler = CreateHandler(counters);
+        using var client = new HttpClient(retryHandler);
         _innerHandler.SetResponse(new HttpResponseMessage(HttpStatusCode.Forbidden));
 
         // Act
-        var response = await _httpClient.GetAsync("http://test.com");
+        var response = await client.GetAsync("http://test.com");
 
         // Assert
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.Forbidden));
         Assert.That(_innerHandler.RequestCount, Is.EqualTo(1));
+        Assert.That(counters.Recorded.FindAll(m => m == OtelBridgeSupportabilityMetric.ExportFailure), Has.Count.EqualTo(1));
     }
 
     [Test]
     public async Task SendAsync_With404NotFound_DoesNotRetry()
     {
         // Arrange
+        var counters = new FakeMetricCounters();
+        using var retryHandler = CreateHandler(counters);
+        using var client = new HttpClient(retryHandler);
         _innerHandler.SetResponse(new HttpResponseMessage(HttpStatusCode.NotFound));
 
         // Act
-        var response = await _httpClient.GetAsync("http://test.com");
+        var response = await client.GetAsync("http://test.com");
 
         // Assert
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
         Assert.That(_innerHandler.RequestCount, Is.EqualTo(1));
+        Assert.That(counters.Recorded.FindAll(m => m == OtelBridgeSupportabilityMetric.ExportFailure), Has.Count.EqualTo(1));
+    }
+
+    [Test]
+    public async Task SendAsync_With413PayloadTooLarge_DoesNotRetry()
+    {
+        // Arrange
+        var counters = new FakeMetricCounters();
+        using var retryHandler = CreateHandler(counters);
+        using var client = new HttpClient(retryHandler);
+        _innerHandler.SetResponse(new HttpResponseMessage((HttpStatusCode)413)); // RequestEntityTooLarge
+
+        // Act
+        var response = await client.GetAsync("http://test.com");
+
+        // Assert
+        Assert.That(response.StatusCode, Is.EqualTo((HttpStatusCode)413));
+        Assert.That(_innerHandler.RequestCount, Is.EqualTo(1));
+        Assert.That(counters.Recorded.FindAll(m => m == OtelBridgeSupportabilityMetric.ExportFailure), Has.Count.EqualTo(1));
     }
 
     #endregion
@@ -853,6 +887,32 @@ public class CustomRetryHandlerTests
         Assert.ThrowsAsync<TaskCanceledException>(async () => await client.GetAsync("http://test.com"));
         Assert.That(counters.Recorded, Does.Contain(OtelBridgeSupportabilityMetric.ExportFailure));
         Assert.That(_innerHandler.RequestCount, Is.EqualTo(1));
+    }
+
+    [Test]
+    public void SendAsync_CancellationTokenCancelledDuringRetryDelay_RecordsExportFailureAndPropagates()
+    {
+        // Arrange -- distinct from both SendAsync_WithUserCancellation_DoesNotRetry (cancelled before any
+        // send is attempted, so the loop's delay is never reached) and
+        // SendAsync_TimeoutDuringRetryDelay_RecordsExportFailure (a delayFunc that throws synchronously,
+        // simulating the delay failing rather than genuinely racing it). Here the real default delayFunc
+        // (Task.Delay) is used and a live CancellationTokenSource fires partway through the ~1s backoff
+        // sleep, so the cancellation is observed by Task.Delay itself while the loop is actually waiting.
+        var counters = new FakeMetricCounters();
+        // Constructed directly (not via CreateHandler) so delayFunc keeps CustomRetryHandler's own
+        // default -- the real Task.Delay -- instead of CreateHandler's null-coalesced RecordDelay stub.
+        using var retryHandler = new CustomRetryHandler(counters, TimeSpan.FromSeconds(DefaultCeilingSeconds))
+        {
+            InnerHandler = _innerHandler
+        };
+        using var client = new HttpClient(retryHandler);
+        _innerHandler.SetResponse(new HttpResponseMessage(HttpStatusCode.ServiceUnavailable));
+        using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(50));
+
+        // Act & Assert
+        Assert.ThrowsAsync<TaskCanceledException>(async () => await client.GetAsync("http://test.com", cts.Token));
+        Assert.That(counters.Recorded, Does.Contain(OtelBridgeSupportabilityMetric.ExportFailure));
+        Assert.That(_innerHandler.RequestCount, Is.EqualTo(1), "cancellation during the delay must pre-empt the second send attempt");
     }
 
     #endregion

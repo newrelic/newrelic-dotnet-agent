@@ -189,14 +189,6 @@ public class ProfilesTransport : IProfilesTransport
                 _supportabilityMetricCounters?.RecordTlsFailure();
                 break;
         }
-
-        // Status signal only -- no restart/disconnect; CP keeps retrying on its own schedule. Set on every
-        // 401/403, not inside the rate-limited warn window, so the health file reflects the latest rejection.
-        // Deliberately never cleared on a later CP success: the agent has a single health slot shared with the
-        // collector path, so a CP "Healthy" could overwrite a collector fault. See
-        // HealthCodes.ContinuousProfilingLicenseKeyInvalid.
-        if (!result.Accepted && (result.StatusCode == 401 || result.StatusCode == 403))
-            _agentHealthReporter?.SetAgentControlStatus(HealthCodes.ContinuousProfilingLicenseKeyInvalid, result.StatusCode.ToString());
     }
 
     // See RejectionWarnIntervalStopwatchTicks for the rate-limit rationale. CompareExchange, not a plain

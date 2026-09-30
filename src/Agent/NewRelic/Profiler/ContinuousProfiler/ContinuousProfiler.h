@@ -515,7 +515,10 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
         // the bounded LRU re-populates lazily. Never throws.
         void InvalidateNameCache() noexcept
         {
-            _nameCacheInvalidationPending.store(true, std::memory_order_relaxed);
+            // release-paired with the two acquire reads on the worker (the tick-top exchange and the
+            // post-resume ResolveCapturedFrames load): once either read observes true, everything this
+            // unload callback did is ordered before the worker's decision to clear / emit-unknown.
+            _nameCacheInvalidationPending.store(true, std::memory_order_release);
         }
 
         // Test seam: report whether the sampler worker thread currently exists (is joinable), read
@@ -1334,7 +1337,7 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
             // tick's frames, repopulates fresh under the reissued addresses. exchange() so a burst of
             // unloads between ticks collapses to a single clear. Outside SuspendMutex on purpose: it is
             // worker-owned cache work unrelated to the suspend-serialization the mutex protects.
-            if (_nameCacheInvalidationPending.exchange(false, std::memory_order_relaxed))
+            if (_nameCacheInvalidationPending.exchange(false, std::memory_order_acquire))
             {
                 _nameCache.clear();
             }
@@ -1467,9 +1470,22 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
             // Enumerate managed threads BEFORE suspending the runtime. EnumThreads + building the ID list
             // allocate/iterate, which must never run inside the actual stop-the-world window (heap-lock
             // deadlock hazard) -- though the SuspendMutex is already held at function scope above, that
-            // only serializes against the OTHER profiler; it does not suspend THIS runtime. A thread that
-            // dies between here and its DoStackSnapshot simply fails the snapshot and is counted -- never
-            // fatal. Mirrors OTel's pre-suspend enumerate.
+            // only serializes against the OTHER profiler; it does not suspend THIS runtime. Mirrors OTel's
+            // pre-suspend enumerate.
+            //
+            // M4a -- exited-thread window. A thread that dies between this EnumThreads and SuspendRuntime
+            // leaves a stale ThreadID (a freed Thread*) in _threadList, handed to DoStackSnapshot below.
+            // On Windows the DoStackSnapshotContained __try/__except CONTAINS the resulting fault, turning
+            // it into a failed-snapshot HRESULT that is counted and skipped. On Linux/CoreCLR there is no
+            // SEH: the same access is a process-level signal that is NOT contained here (see
+            // DoStackSnapshotContained). The window is small -- it opens only for the handful of
+            // instructions between this call and SuspendRuntime -- but it is not zero on Linux.
+            //
+            // The documented mitigation (block in the ThreadDestroyed callback until an in-flight walk
+            // completes, so a ThreadID cannot be freed mid-tick) is DEFERRED: it is only safe if CoreCLR
+            // does not invoke ThreadDestroyed while holding the ThreadStore lock. If it does, blocking
+            // there would deadlock against this EnumThreads (which takes that same lock) under SuspendMutex.
+            // That ordering must be verified against the CoreCLR source before the mitigation lands.
             EnumerateThreadsInto(_threadList);
 
             {
@@ -2001,8 +2017,45 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
 
         // POST-RESUME: resolve every captured thread's FunctionID sequence into fully-qualified frame
         // names (metadata + signature + string work, out of the suspend window).
+        //
+        // M4b -- stale-FunctionID guard. This tick's FunctionIDs were captured under suspend, but the
+        // metadata resolution below runs AFTER ResumeRuntime. A collectible-ALC / module / class unload
+        // that lands in that gap frees the MethodDesc*/Module* those FunctionIDs (and the surviving
+        // _nameCache entries) are raw addresses of, and the allocator may reissue them to unrelated code.
+        // Calling the metadata APIs (ResolveIntoCache -> GetTokenAndMetaDataFromFunction / GetFunctionInfo
+        // / GetMethodProps) on such a stale FunctionID could dereference freed memory, and a stale cache
+        // hit would report the wrong name. InvalidateNameCache (raised from those unload callbacks) sets
+        // _nameCacheInvalidationPending; the tick top cleared+consumed any invalidation pending when THIS
+        // tick began, so observing it true again here means an unload was signalled during this tick's
+        // setup/suspend/capture/resume -- exactly the hazard window. Conversely, false here proves no
+        // unload occurred across [tick-top clear, this load], so both the cache and this tick's captured
+        // FunctionIDs are coherent and normal resolution is safe.
+        //
+        // On detection: touch NO metadata for this tick. Clear the (possibly-stale) cache so every frame
+        // falls through AssembleFrameName's unknown-frame path (UnknownClass.UnknownMethod(<id>)) -- the
+        // same path already taken for any uncached/unresolvable function, which the managed
+        // OtlpProfileBuilder handles as an ordinary unresolved .NET frame. The batch is still published,
+        // so this tick's thread count and trace-context correlation are preserved; only the frame NAMES
+        // are dropped to unknown for this one tick. Chosen over dropping the whole batch because it reuses
+        // an already-handled downstream shape and loses strictly less data.
+        //
+        // Detection is a plain acquire LOAD, never an exchange: the tick top is the SOLE reset point.
+        // Consuming the flag here would steal the signal the next tick's top clear relies on and leave the
+        // cache stale on the following tick. Leaving it set means the next tick's top re-clears (cheap --
+        // the cache is already empty from below) and re-resolves fresh under the reissued addresses.
+        //
+        // Residual window: an unload landing AFTER this load but during the resolution loop is not caught
+        // this tick -- its frame carries the pre-unload name for one tick and it sets the flag, which the
+        // next tick's top absorbs. That is the same one-tick staleness the deferred-clear design already
+        // accepts, not a permanent wrong-name.
         void ResolveCapturedFrames()
         {
+            const bool unloadSignalledThisTick = _nameCacheInvalidationPending.load(std::memory_order_acquire);
+            if (unloadSignalledThisTick)
+            {
+                _nameCache.clear();
+            }
+
             for (size_t i = 0; i < _capturedCount; ++i)
             {
                 const auto& raw = _capture[i];
@@ -2013,7 +2066,12 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
                 resolved.Frames.clear();
                 for (const auto functionId : raw.FunctionIds)
                 {
-                    ResolveIntoCache(functionId);
+                    // Skip metadata resolution entirely when an unload was signalled this tick (see above);
+                    // AssembleFrameName then emits the frame as unknown from the just-cleared cache.
+                    if (!unloadSignalledThisTick)
+                    {
+                        ResolveIntoCache(functionId);
+                    }
                     resolved.Frames.emplace_back(AssembleFrameName(functionId));
                 }
             }
@@ -2414,11 +2472,19 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
         std::atomic<uint32_t> _intervalMs{ 0 };
 
         // Set by InvalidateNameCache() (raised from the CLR's Assembly/Module/Class unload callbacks, on
-        // an arbitrary CLR thread) and honored by the sampler worker at the top of its next capture tick,
-        // which clears _nameCache before resolving any frame. Deferred rather than cleared inline because
-        // _nameCache is single-threaded, worker-owned, and not safe to mutate from the callback thread
-        // while the worker may be mid-resolution. Relaxed ordering suffices: the flag carries no data, only
-        // the fact that an invalidation is due, and the worker re-reads it every tick.
+        // an arbitrary CLR thread) and read by the sampler worker at TWO points per tick:
+        //   1. the tick top (CaptureAllThreads), which exchange()s it false and clears _nameCache before
+        //      any frame is resolved -- the SOLE reset point; and
+        //   2. post-resume (ResolveCapturedFrames), a plain LOAD that, if true, means an unload was
+        //      signalled DURING this tick (after the tick-top reset), so this tick's captured FunctionIDs
+        //      may be stale -- resolution is skipped and frames are emitted unknown (M4b).
+        // Deferred rather than cleared inline because _nameCache is single-threaded, worker-owned, and not
+        // safe to mutate from the callback thread while the worker may be mid-resolution.
+        //
+        // Ordering: InvalidateNameCache stores with release; both worker reads acquire. The flag itself
+        // carries no data payload (the freed MethodDesc*/Module* are CLR-owned), so relaxed would suffice
+        // for the flag's own visibility, but the release/acquire pairing gives a clean, future-proof
+        // happens-before between the unload callback and the worker's clear/emit-unknown decision.
         std::atomic<bool> _nameCacheInvalidationPending{ false };
 
         //

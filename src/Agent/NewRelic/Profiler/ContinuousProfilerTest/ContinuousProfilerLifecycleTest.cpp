@@ -302,6 +302,63 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
             profiler.Shutdown();
         }
 
+        // M4b (mid-tick stale-FunctionID guard): an unload signalled AFTER this tick's tick-top clear --
+        // during setup/suspend/capture/resume -- must be caught POST-RESUME, before ResolveCapturedFrames
+        // touches metadata on FunctionIDs the unload may have freed. The tick top already consumed any
+        // invalidation pending when the tick began, so the deferred-to-next-tick clear cannot cover an
+        // unload that arrives WITHIN the tick; that is exactly the window this guard closes.
+        //
+        // Driven with the capture-window failpoint, which fires inside CaptureAllThreads' capture try
+        // (after the tick-top exchange, before ResumeRuntime / ResolveCapturedFrames): calling
+        // InvalidateNameCache there models an unload landing mid-tick. Two properties are asserted:
+        //   1. the post-resume detection clears the stale cache THIS tick (without the fix the signal
+        //      arrived too late for the tick top, so the stale entry would survive the tick); and
+        //   2. the signal is not consumed by that post-resume LOAD, so the NEXT tick's top still clears --
+        //      i.e. no missed signal.
+        TEST_METHOD(mid_tick_unload_signal_is_caught_post_resume_and_still_invalidates_next_tick)
+        {
+            StubCorProfilerInfo4 corProfilerInfo; // must outlive the profiler -- Release is a no-op
+            ContinuousProfiler profiler;
+            profiler.Init(&corProfilerInfo, false);
+
+            auto& cache = profiler.NameCacheForTesting();
+
+            const auto seed = [&cache](FunctionID fid)
+            {
+                PreallocTypeName typeName{};
+                wcscpy_s(typeName.first.data(), typeName.first.size(), L"StaleType");
+                typeName.second = static_cast<ULONG>(wcslen(L"StaleType") + 1);
+                PreallocMethodName methodName{};
+                wcscpy_s(methodName.first.data(), methodName.first.size(), L"StaleMethod");
+                methodName.second = static_cast<ULONG>(wcslen(L"StaleMethod") + 1);
+                cache.insert(1, fid, 5, typeName, methodName);
+            };
+
+            // Arm the mid-tick unload: fires inside the capture window, i.e. AFTER the tick top has already
+            // exchanged the (currently clear) pending flag to false, so only the post-resume guard can see it.
+            profiler.SetCaptureWindowFailpointForTesting([&profiler]() { profiler.InvalidateNameCache(); });
+
+            seed(100);
+            Assert::IsTrue(cache.has_fid(100), L"precondition: the seeded name must be cached");
+
+            profiler.CaptureOnceForTesting();
+            Assert::IsFalse(cache.has_fid(100),
+                L"an unload signalled mid-tick must be caught post-resume and clear the stale cache this tick");
+
+            // Disarm the mid-tick unload and seed again: no NEW unload fires this tick, but the signal from
+            // the previous tick was only LOADed (not consumed) post-resume, so the next tick's top must
+            // still clear -- proving the signal was not lost.
+            profiler.SetCaptureWindowFailpointForTesting(nullptr);
+            seed(200);
+            Assert::IsTrue(cache.has_fid(200), L"precondition: the re-seeded name must be cached");
+
+            profiler.CaptureOnceForTesting();
+            Assert::IsFalse(cache.has_fid(200),
+                L"the mid-tick signal must survive the post-resume LOAD and clear on the next tick top");
+
+            profiler.Shutdown();
+        }
+
         // Cluster B (lifecycle lock-scoping defect): Start()'s failure cleanup -- the _samplingActive reset
         // in its catch handler -- MUST run while _mtx_lifecycle is held, so it is serialized against a
         // concurrent Start() exactly like the happy path is.
