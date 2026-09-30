@@ -251,6 +251,37 @@ public class TransactionFinalizerTests
         }
     }
 
+    // DroppedSegmentSpanIds can itself carry a null entry (mirrors the null-tolerant Segments walk above);
+    // it must be skipped rather than passed through to RetireSpans or thrown on.
+    [Test]
+    public void Finish_SkipsNullEntriesInDroppedSegmentSpanIds()
+    {
+        var originalInstance = ContinuousProfilingContext.Instance;
+        var originalAnyEnabled = ContinuousProfilingContext.AnyEnabled;
+        var cpContext = Mock.Create<IContinuousProfilingContext>();
+        Mock.Arrange(() => cpContext.IsEnabled).Returns(true);
+        IReadOnlyList<string> retired = null;
+        Mock.Arrange(() => cpContext.RetireSpans(Arg.IsAny<IReadOnlyList<string>>()))
+            .DoInstead((IReadOnlyList<string> ids) => retired = ids);
+        ContinuousProfilingContext.Instance = cpContext;
+        ContinuousProfilingContext.AnyEnabled = true;
+        try
+        {
+            var transaction = Mock.Create<IInternalTransaction>();
+            Mock.Arrange(() => transaction.Segments).Returns(new List<Segment>());
+            Mock.Arrange(() => transaction.DroppedSegmentSpanIds).Returns(new[] { null, "3333333333333333", null });
+            Mock.Arrange(() => transaction.Finish()).Returns(true);
+
+            Assert.DoesNotThrow(() => _transactionFinalizer.Finish(transaction));
+            Assert.That(retired, Is.EquivalentTo(new[] { "3333333333333333" }));
+        }
+        finally
+        {
+            ContinuousProfilingContext.Instance = originalInstance;
+            ContinuousProfilingContext.AnyEnabled = originalAnyEnabled;
+        }
+    }
+
     // The second caller loses the once-only gate in Transaction.Finish, so it must not retire again.
     [Test]
     public void Finish_DoesNotRetireWhenTheTransactionWasAlreadyFinished()

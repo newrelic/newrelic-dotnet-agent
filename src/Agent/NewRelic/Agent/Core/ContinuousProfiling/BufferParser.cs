@@ -73,16 +73,6 @@ public static class BufferParser
         /// </summary>
         public int DroppedTicks { get; }
 
-        public BatchStats(long microsSuspended, int threads, int frames, int skipped)
-            : this(microsSuspended, threads, frames, skipped, deferredThreads: 0, actualSamplePeriodMs: 0)
-        {
-        }
-
-        public BatchStats(long microsSuspended, int threads, int frames, int skipped, int deferredThreads, int actualSamplePeriodMs)
-            : this(microsSuspended, threads, frames, skipped, deferredThreads, actualSamplePeriodMs, truncatedThreads: 0, droppedTicks: 0)
-        {
-        }
-
         public BatchStats(long microsSuspended, int threads, int frames, int skipped, int deferredThreads, int actualSamplePeriodMs, int truncatedThreads, int droppedTicks)
         {
             MicrosSuspended = microsSuspended;

@@ -268,6 +268,63 @@ public class ThreadProfilingSamplerTests
         Assert.That(woundDown, Is.True, "timed-out worker was revived by the subsequent Start() instead of honoring the shutdown signal");
     }
 
+    [Test]
+    public void Start_WhenThreadFactoryThrows_RethrowsAndClearsRunningState()
+    {
+        // Arrange: a thread factory that simulates Thread.Start() failing (e.g. OS thread-creation limit).
+        Func<ThreadStart, Thread> throwingFactory = _ => throw new InvalidOperationException("boom");
+        var sampler = new ThreadProfilingSampler(_nativeMethods, TimeSpan.FromSeconds(5), throwingFactory);
+
+        // Act / Assert: Start() rethrows rather than swallowing the failure.
+        Assert.That(() => sampler.Start(1000, 1000, _sampleSink, _nativeMethods),
+            Throws.InstanceOf<InvalidOperationException>());
+
+        // Assert: the failed attempt must not leave the sampler permanently locked as "running" --
+        // otherwise every future Start() would lose the CompareExchange race forever.
+        Assert.That(sampler.IsRunning, Is.False);
+    }
+
+    [Test]
+    public void Start_AfterThreadFactoryFailure_SucceedsOnSubsequentStartWithWorkingFactory()
+    {
+        // Arrange: the factory fails on its first call (simulating Thread.Start() failure), then works normally.
+        var shouldThrow = true;
+        Func<ThreadStart, Thread> factory = threadStart =>
+        {
+            if (shouldThrow)
+            {
+                shouldThrow = false;
+                throw new InvalidOperationException("boom");
+            }
+
+            var thread = new Thread(threadStart) { IsBackground = true };
+            thread.Start();
+            return thread;
+        };
+
+        var sampler = new ThreadProfilingSampler(_nativeMethods, TimeSpan.FromSeconds(5), factory);
+
+        try
+        {
+            // Act: the first Start() fails and must not permanently lock out future attempts.
+            Assert.That(() => sampler.Start(1000, 1000, _sampleSink, _nativeMethods),
+                Throws.InstanceOf<InvalidOperationException>());
+            Assert.That(sampler.IsRunning, Is.False);
+
+            // Act: a subsequent Start() with the now-working factory must succeed.
+            var result = sampler.Start(1000, 1000, _sampleSink, _nativeMethods);
+            Assert.That(result, Is.True);
+
+            var started = SpinWait.SpinUntil(() => sampler.IsRunning, TimeSpan.FromSeconds(5));
+            Assert.That(started, Is.True, "worker thread did not start running after the recovering Start()");
+        }
+        finally
+        {
+            // Clean up the started worker thread.
+            Assert.That(sampler.Stop(), Is.True);
+        }
+    }
+
     private class BlockingNativeMethods : INativeMethods
     {
         public readonly ManualResetEventSlim EnteredRequestProfile = new ManualResetEventSlim(false);

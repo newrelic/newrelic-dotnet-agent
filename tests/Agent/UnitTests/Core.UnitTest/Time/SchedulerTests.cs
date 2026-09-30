@@ -323,6 +323,34 @@ public class SchedulerTests
         _scheduler.StopExecuting(action, TimeSpan.FromSeconds(5));
     }
 
+    [Test]
+    public void CreateExecuteOnceTimer_NoDelayOverload_CreatesATimerThatRunsOnceWhenArmed()
+    {
+        // Covers the parameterless-delay overload. It reuses DisablePeriodicExecution (-1ms, Timeout.Infinite)
+        // for BOTH the due time and the period, so the returned timer does not fire on its own -- it must be
+        // armed via Timer.Change by the caller. Once armed, it must still run the action exactly once (period
+        // stays infinite).
+        var executionCount = 0;
+        var executed = new ManualResetEventSlim(false);
+
+        using (var timer = Scheduler.CreateExecuteOnceTimer(() =>
+               {
+                   Interlocked.Increment(ref executionCount);
+                   executed.Set();
+               }))
+        {
+            Assert.That(executed.Wait(200), Is.False, "the timer must not fire on its own before being armed");
+
+            timer.Change(TimeSpan.Zero, Timeout.InfiniteTimeSpan);
+
+            Assert.That(executed.Wait(TimeSpan.FromSeconds(5)), Is.True, "the action must run once armed");
+
+            // Give a would-be second tick a chance to land before asserting it never does.
+            Thread.Sleep(50);
+            Assert.That(executionCount, Is.EqualTo(1));
+        }
+    }
+
     private static void AssertEventuallyTrue(Func<bool> wasExecutedFunc)
     {
         Assertions.Eventually(wasExecutedFunc, TimeSpan.FromSeconds(5));

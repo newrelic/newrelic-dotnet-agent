@@ -28,14 +28,31 @@ public class ThreadProfilingSampler : IThreadProfilingSampler
 
     private readonly TimeSpan _shutdownJoinTimeout;
 
+    /// <summary>
+    /// Creates and starts the background sampling thread for the given <see cref="ThreadStart"/>, returning the
+    /// started <see cref="Thread"/>. Injectable so tests can simulate a Thread.Start() failure without relying on
+    /// real OS thread-creation limits.
+    /// </summary>
+    private readonly Func<ThreadStart, Thread> _threadFactory;
+
     public ThreadProfilingSampler(INativeMethods nativeMethods) : this(nativeMethods, TimeSpan.FromSeconds(5))
     {
     }
 
     public ThreadProfilingSampler(INativeMethods nativeMethods, TimeSpan shutdownJoinTimeout)
+        : this(nativeMethods, shutdownJoinTimeout, DefaultThreadFactory)
+    {
+    }
+
+    /// <summary>
+    /// Test seam: lets a test substitute how the background sampling thread is created/started. Production callers
+    /// should use one of the other constructors, which default to <see cref="DefaultThreadFactory"/>.
+    /// </summary>
+    public ThreadProfilingSampler(INativeMethods nativeMethods, TimeSpan shutdownJoinTimeout, Func<ThreadStart, Thread> threadFactory)
     {
         _nativeMethods = nativeMethods;
         _shutdownJoinTimeout = shutdownJoinTimeout;
+        _threadFactory = threadFactory;
     }
 
     public bool IsRunning => Volatile.Read(ref _workerRunning) == 1;
@@ -55,11 +72,7 @@ public class ThreadProfilingSampler : IThreadProfilingSampler
 
             try
             {
-                _samplingWorker = new Thread(() => InternalPolling_WaitCallback(frequencyInMsec, durationInMsec, sampleSink, nativeMethods))
-                {
-                    IsBackground = true
-                };
-                _samplingWorker.Start();
+                _samplingWorker = _threadFactory(() => InternalPolling_WaitCallback(frequencyInMsec, durationInMsec, sampleSink, nativeMethods));
             }
             catch
             {
@@ -235,5 +248,15 @@ public class ThreadProfilingSampler : IThreadProfilingSampler
         {
             return new ThreadSnapshot[0];
         }
+    }
+
+    private static Thread DefaultThreadFactory(ThreadStart threadStart)
+    {
+        var thread = new Thread(threadStart)
+        {
+            IsBackground = true
+        };
+        thread.Start();
+        return thread;
     }
 }

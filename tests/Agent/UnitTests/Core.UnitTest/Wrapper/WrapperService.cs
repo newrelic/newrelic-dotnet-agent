@@ -330,6 +330,39 @@ public class Class_WrapperService
     }
 
     [Test]
+    public void BeforeWrappedMethod_doesNotPush_whenAnyEnabledButContextItselfDisabled()
+    {
+        // AnyEnabled is the hot-path pre-filter checked at the call site; the helper method itself
+        // (PushContinuousProfilingContext) has its own IsEnabled guard for the window between a CP
+        // stop and the AnyEnabled flag flipping back off. This exercises that inner guard directly:
+        // AnyEnabled stays true (so the call site invokes the helper) while IsEnabled is false.
+        var wrapper = Mock.Create<IWrapper>();
+        Mock.Arrange(() => wrapper.BeforeWrappedMethod(Arg.IsAny<InstrumentedMethodCall>(), Arg.IsAny<IAgent>(), Arg.IsAny<ITransaction>())).Returns((_, __) => { });
+        Mock.Arrange(() => _wrapperMap.Get(Arg.IsAny<InstrumentedMethodInfo>())).Returns(new TrackedWrapper(wrapper));
+
+        var transaction = Mock.Create<IInternalTransaction>();
+        var segment = Mock.Create<ISegment>();
+        Mock.Arrange(() => transaction.IsValid).Returns(true);
+        Mock.Arrange(() => transaction.IsFinished).Returns(false);
+        Mock.Arrange(() => transaction.TraceId).Returns("0123456789abcdeffedcba9876543210");
+        Mock.Arrange(() => transaction.CurrentSegment).Returns(segment);
+        Mock.Arrange(() => segment.SpanId).Returns("1122334455667788");
+        Mock.Arrange(() => segment.IsLeaf).Returns(false);
+        Mock.Arrange(() => segment.IsValid).Returns(true);
+        Mock.Arrange(() => _agent.CurrentTransaction).Returns(transaction);
+
+        var context = Mock.Create<IContinuousProfilingContext>();
+        Mock.Arrange(() => context.IsEnabled).Returns(false);
+        ContinuousProfilingContext.Instance = context;
+        ContinuousProfilingContext.AnyEnabled = true; // pre-filter open; the inner IsEnabled guard must still refuse
+
+        var afterWrappedMethod = _wrapperService.BeforeWrappedMethod(typeof(Class_WrapperService), "MyMethod", string.Empty, new object(), new object[0], "MyTracer", null, EmptyTracerArgs, 0, null);
+        afterWrappedMethod(null, null);
+
+        Mock.Assert(() => context.PushTraceContext(Arg.AnyString, Arg.AnyString), Occurs.Never());
+    }
+
+    [Test]
     public void AfterWrappedMethod_repushes_current_trace_context_when_enabled()
     {
         var wrapper = Mock.Create<IWrapper>();

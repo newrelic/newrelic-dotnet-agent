@@ -468,6 +468,92 @@ public class ContinuousProfilingServiceDisposeTests
         Assert.That(ContinuousProfilingContext.Instance.IsEnabled, Is.False, "Dispose must disarm the trace-context seam even when StopLocked early-returned without unwinding");
     }
 
+    [Test]
+    public void StartFromCommand_returns_without_starting_when_a_concurrent_stop_is_wedged_past_its_bounded_wait()
+    {
+        // PR #3860 coverage gap (Task 1): RealizeCommandStartLocked's TimedOut bail-out, and the
+        // WaitOutInProgressStopLocked Warn+TimedOut return that produces it. Same interleaving shape as
+        // Dispose_hard_resets_state_when_StopLocked_returns_via_the_concurrent_stop_timeout above, but with a
+        // command-driven start as the SECOND caller instead of Dispose:
+        //   * A first stopper (a config-disable ApplyConfigChange) enters StopLocked, publishes
+        //     _stopInProgress, drops _lifecycleLock for its bounded drain wait, times out, reacquires the
+        //     lock, and then wedges in _native.Stop() (BlockingNativeProfiler) while holding _lifecycleLock.
+        //   * A command-driven StartFromCommand("cpu") acquires the lock in the first stopper's drop window,
+        //     sees _stopInProgress != null, and parks on WaitOutInProgressStopLocked's wait -- which times out
+        //     because the first stopper is still wedged in Stop(). RealizeCommandStartLocked must then bail
+        //     out without starting anything, rather than piling a start onto a stop still wedged in native.
+        var drainReachedReadBatch = new ManualResetEventSlim(false);
+        var releaseReadBatch = new ManualResetEventSlim(false);
+        var stopEntered = new ManualResetEventSlim(false);
+        var releaseStop = new ManualResetEventSlim(false);
+        var blockingSource = new BlockingSampleSource(drainReachedReadBatch, releaseReadBatch);
+        var blockingNative = new BlockingNativeProfiler(stopEntered, releaseStop);
+        var timeout = TimeSpan.FromMilliseconds(300);
+        var service = new ContinuousProfilingService(blockingSource, blockingNative, _transport, _scheduler, _health, timeout);
+
+        var connectionInfo = Mock.Create<IConnectionInfo>();
+        Mock.Arrange(() => connectionInfo.HttpProtocol).Returns("https");
+        Mock.Arrange(() => connectionInfo.Host).Returns("collector.nr-data.net");
+        Mock.Arrange(() => connectionInfo.Port).Returns(443);
+        EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent { ConnectInfo = connectionInfo });
+
+        var enabled = true;
+        Mock.Arrange(() => _config.ContinuousProfilingEnabled).Returns(() => enabled);
+        Mock.Arrange(() => _config.ContinuousProfilingSamplingIntervalMs).Returns(10000);
+        Mock.Arrange(() => _config.ApplicationNames).Returns(new[] { "MyApp" });
+        service.OverrideConfigForTesting(_config);
+
+        Action drainAction = null;
+        Mock.Arrange(() => _scheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>(), Arg.IsAny<bool>()))
+            .DoInstead((Action action, TimeSpan interval, TimeSpan? initialDelay, bool trackAsAgentWork) => drainAction = action);
+
+        var firstStopperInStopLocked = new ManualResetEventSlim(false);
+        Mock.Arrange(() => _scheduler.StopExecuting(Arg.IsAny<Action>()))
+            .DoInstead(() => firstStopperInStopLocked.Set());
+
+        service.StartIfEnabled();
+        Assert.That(drainAction, Is.Not.Null);
+
+        drainAction(); // dispatch the drain; it blocks in the stub's ReadBatch, keeping itself in-flight
+        Assert.That(drainReachedReadBatch.Wait(TimeSpan.FromSeconds(5)), Is.True, "the drain must be in-flight before the stops run");
+
+        // First stopper: a config-disable that enters StopLocked, publishes _stopInProgress, drops the lock
+        // at its bounded drain wait, times out, then wedges in _native.Stop().
+        enabled = false;
+        var firstStop = new Thread(() => service.ApplyConfigChange()) { IsBackground = true };
+        firstStop.Start();
+        Assert.That(firstStopperInStopLocked.Wait(TimeSpan.FromSeconds(5)), Is.True, "the first stopper must reach StopLocked");
+
+        // Second caller: the command-driven start. It parks on WaitOutInProgressStopLocked once the first
+        // stopper drops the lock.
+        var secondCallerParked = new ManualResetEventSlim(false);
+        service.EnteredStopInProgressWaitForTesting = () => secondCallerParked.Set();
+
+        ContinuousProfilingCommandResult result = null;
+        var secondCaller = new Thread(() => result = service.StartFromCommand(new[] { "cpu" }, null, null)) { IsBackground = true };
+        secondCaller.Start();
+        Assert.That(secondCallerParked.Wait(TimeSpan.FromSeconds(5)), Is.True, "the command-driven start must park on the first stopper's in-progress stop");
+
+        // Wait past both bounded waits (deterministic: the timeout is a known 300ms, so over-waiting is safe --
+        // unlike an under-wait, a longer wait only leaves the first stopper wedged in Stop() a bit longer). By
+        // now the first stopper has timed out its drain wait and is wedged in _native.Stop() holding the lock,
+        // and the command start has timed out its concurrent-stop wait and is blocked reacquiring the lock.
+        // Releasing Stop() lets the first stopper finish and unblocks the command start onto its bail-out.
+        Thread.Sleep(timeout + timeout);
+        releaseStop.Set();
+
+        Assert.That(firstStop.Join(TimeSpan.FromSeconds(10)) && secondCaller.Join(TimeSpan.FromSeconds(10)), Is.True,
+            "the first stopper and the command-driven start must both complete without deadlocking");
+        releaseReadBatch.Set(); // unwind the still-parked drain pool thread
+
+        Mock.Assert(() => _nrLogger.Warn(Arg.Matches<string>(m => m.Contains("concurrent stop already in progress before a command-driven start")), Arg.IsAny<object[]>()), Occurs.Once(),
+            "WaitOutInProgressStopLocked must have timed out and logged its own Warn -- distinct from StopLocked's own second-caller timeout message");
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result.Exceptions, Is.Empty, "a timed-out wait bails out silently (log-only via RealizeCommandStartLocked), not via the command's Exceptions");
+
+        service.Dispose();
+    }
+
     /// <summary>
     /// A real (non-mock) <see cref="IProfilesTransport"/> whose Send signals that the drain has reached the
     /// send step and then blocks until released, returning true (accepted). Deliberately not a JustMock mock

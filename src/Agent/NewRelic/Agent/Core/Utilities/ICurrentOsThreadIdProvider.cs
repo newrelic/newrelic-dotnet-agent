@@ -41,17 +41,17 @@ public class CurrentOsThreadIdProvider : ICurrentOsThreadIdProvider
             return GetCurrentThreadId();
         }
 
-        return (long)SysCall((IntPtr)GetSysGettidNumber());
+        return (long)SysCall((IntPtr)GetSysGettidNumber(RuntimeInformation.ProcessArchitecture));
     }
 
-    private static long GetSysGettidNumber()
+    public static long GetSysGettidNumber(Architecture architecture)
     {
-        return RuntimeInformation.ProcessArchitecture switch
+        return architecture switch
         {
             Architecture.X64 => SysGettidX64,
             Architecture.Arm => SysGettidArm,
             Architecture.Arm64 => SysGettidArm64,
-            _ => throw new PlatformNotSupportedException($"Unsupported architecture for gettid: {RuntimeInformation.ProcessArchitecture}")
+            _ => throw new PlatformNotSupportedException($"Unsupported architecture for gettid: {architecture}")
         };
     }
 }

@@ -728,5 +728,93 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
             Assert::IsFalse(registry.Contains(999));
             Assert::AreEqual(static_cast<uint64_t>(0), registry.AbortedCompactionCountForTesting());
         }
+
+        // ============================ probe budget exhausted ============================
+
+        // The exhausted-budget branch must still make one last attempt to reclaim a tombstone it passed,
+        // rather than reporting overflow. Fills the whole MaxProbes window with colliding keys, reclaims
+        // exactly one of them via compaction (tombstoning that slot while every other slot in the chain
+        // stays referenced and thus occupied), then inserts one more colliding key and asserts it lands
+        // in the tombstone -- the probe loop never sees StateEmpty in this chain, so a correct
+        // implementation can only succeed via the post-loop reclaim attempt.
+        TEST_METHOD(probe_budget_exhausted_reclaims_a_tombstone_passed_in_the_chain)
+        {
+            const size_t probes = RetiredSpanRegistry::MaxProbes;
+            const std::vector<int64_t> keys = FindKeysSharingHome(probes + 1);
+            Assert::AreEqual(probes + 1, keys.size());
+
+            TraceContextMap map;
+            PendingPushMap pending;
+            RetiredSpanRegistry registry;
+            Assert::IsTrue(registry.EnsureAllocated());
+
+            for (size_t i = 0; i < probes; ++i)
+            {
+                Assert::IsTrue(registry.TryInsert(keys[i]));
+            }
+            Assert::AreEqual(probes, registry.OccupiedCountForTesting());
+
+            // Reference every slot except keys[0], so compaction tombstones only that one.
+            for (size_t i = 1; i < probes; ++i)
+            {
+                map.Set(static_cast<ThreadID>(0x1000 + i), 1, 2, keys[i]);
+            }
+            CompactTwice(registry, map, pending);
+
+            Assert::IsFalse(registry.Contains(keys[0]));
+            Assert::AreEqual(probes - 1, registry.OccupiedCountForTesting());
+            Assert::AreEqual(static_cast<uint64_t>(0), registry.OverflowCount());
+
+            // The window is full again: probes-1 occupied slots plus one tombstone, no StateEmpty
+            // anywhere in the chain. One more colliding key must exhaust the whole probe budget and only
+            // then reclaim the tombstone it passed.
+            Assert::IsTrue(registry.TryInsert(keys[probes]));
+
+            Assert::AreEqual(static_cast<uint64_t>(0), registry.OverflowCount());
+            Assert::IsTrue(registry.Contains(keys[probes]));
+            Assert::AreEqual(probes, registry.OccupiedCountForTesting());
+            for (size_t i = 1; i < probes; ++i)
+            {
+                Assert::IsTrue(registry.Contains(keys[i]));
+            }
+        }
+
+        // ============================ aborted compaction ============================
+
+        // If the live-slot snapshot cannot complete, the pass must reclaim and mark NOTHING, and the
+        // abort must be counted distinctly from a normal pass. Forces the failure by leaving a
+        // TraceContextMap slot mid-write (odd Seq) -- exactly what a thread suspended inside WriteSlot
+        // leaves behind -- mirroring TraceContextMapTest's
+        // snapshot_live_span_ids_fails_on_a_slot_that_stays_mid_write. Requires friend access to
+        // TraceContextMap (see RetiredSpanRegistryTest's friend decl there).
+        TEST_METHOD(compaction_aborts_and_reclaims_nothing_when_the_live_snapshot_fails)
+        {
+            TraceContextMap map;
+            PendingPushMap pending;
+            RetiredSpanRegistry registry;
+            Assert::IsTrue(registry.EnsureAllocated());
+            Assert::IsTrue(registry.TryInsert(999)); // unreferenced -> would otherwise be marked/reclaimed
+
+            const ThreadID thread = static_cast<ThreadID>(0x1000);
+            map.Set(thread, 1, 2, 111); // unrelated context, just to create a slot to wedge mid-write.
+
+            TraceContextMap::Slot* slot = map.FindSlot(thread);
+            Assert::IsTrue(slot != nullptr);
+            slot->Seq.store(slot->Seq.load(std::memory_order_acquire) | 1u, std::memory_order_release);
+
+            registry.CompactAgainst(map, pending);
+
+            Assert::AreEqual(static_cast<uint64_t>(1), registry.AbortedCompactionCountForTesting());
+            Assert::AreEqual(static_cast<uint64_t>(0), registry.ReclaimedCountForTesting());
+            Assert::IsTrue(registry.Contains(999));
+            Assert::AreEqual(static_cast<size_t>(1), registry.OccupiedCountForTesting());
+
+            // A second aborted pass in a row must not behave any differently than the first.
+            registry.CompactAgainst(map, pending);
+
+            Assert::AreEqual(static_cast<uint64_t>(2), registry.AbortedCompactionCountForTesting());
+            Assert::AreEqual(static_cast<uint64_t>(0), registry.ReclaimedCountForTesting());
+            Assert::IsTrue(registry.Contains(999));
+        }
     };
 }}}
