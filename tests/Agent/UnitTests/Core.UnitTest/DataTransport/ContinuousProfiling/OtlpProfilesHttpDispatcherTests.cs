@@ -2,13 +2,16 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Net.Sockets;
 using System.Reflection;
+using System.Security.Authentication;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -170,6 +173,94 @@ public class OtlpProfilesHttpDispatcherTests
         var result = default(ProfilesSendResult);
         Assert.That(() => result = dispatcher.Post(new byte[] { 1 }, Endpoint), Throws.Nothing);
         Assert.That(result.Accepted, Is.False);
+    }
+
+    private static IEnumerable<TestCaseData> TransportExceptionClassifications()
+    {
+        yield return new TestCaseData(new TaskCanceledException("timed out"), ProfilesSendFailureReason.TransportTimeout).SetName("TaskCanceledException -> timeout");
+        yield return new TestCaseData(new OperationCanceledException(), ProfilesSendFailureReason.TransportTimeout).SetName("OperationCanceledException -> timeout");
+        yield return new TestCaseData(new WebException("t", WebExceptionStatus.Timeout), ProfilesSendFailureReason.TransportTimeout).SetName("WebException Timeout -> timeout");
+        yield return new TestCaseData(new SocketException((int)SocketError.ConnectionRefused), ProfilesSendFailureReason.TransportNetwork).SetName("SocketException -> network");
+        yield return new TestCaseData(new HttpRequestException("x", new SocketException((int)SocketError.HostNotFound)), ProfilesSendFailureReason.TransportNetwork).SetName("HttpRequestException(SocketException) -> network");
+        yield return new TestCaseData(new WebException("n", WebExceptionStatus.NameResolutionFailure), ProfilesSendFailureReason.TransportNetwork).SetName("WebException NameResolutionFailure -> network");
+        yield return new TestCaseData(new AuthenticationException("bad cert"), ProfilesSendFailureReason.TransportTls).SetName("AuthenticationException -> tls");
+        yield return new TestCaseData(new HttpRequestException("x", new AuthenticationException("bad cert")), ProfilesSendFailureReason.TransportTls).SetName("HttpRequestException(AuthenticationException) -> tls");
+        yield return new TestCaseData(new WebException("s", WebExceptionStatus.SecureChannelFailure), ProfilesSendFailureReason.TransportTls).SetName("WebException SecureChannelFailure -> tls");
+        yield return new TestCaseData(new WebException("s", WebExceptionStatus.TrustFailure), ProfilesSendFailureReason.TransportTls).SetName("WebException TrustFailure -> tls");
+        yield return new TestCaseData(new HttpRequestException("boom"), ProfilesSendFailureReason.TransportException).SetName("HttpRequestException (no known cause) -> generic");
+        yield return new TestCaseData(new InvalidOperationException("boom"), ProfilesSendFailureReason.TransportException).SetName("other exception -> generic");
+        yield return new TestCaseData(new TaskCanceledException("t", new SocketException((int)SocketError.TimedOut)), ProfilesSendFailureReason.TransportTimeout).SetName("cancellation wrapping a socket error -> timeout (outermost wins)");
+    }
+
+    [TestCaseSource(nameof(TransportExceptionClassifications))]
+    public void Post_classifies_a_transport_exception_by_type(Exception thrown, ProfilesSendFailureReason expected)
+    {
+        var dispatcher = new OtlpProfilesHttpDispatcher(_configuration, _ => throw thrown);
+
+        var result = dispatcher.Post(new byte[] { 1 }, Endpoint);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Accepted, Is.False);
+            Assert.That(result.StatusCode, Is.EqualTo(0));
+            Assert.That(result.FailureReason, Is.EqualTo(expected));
+        });
+    }
+
+    [Test]
+    public void Post_reports_a_positive_elapsed_time_for_a_completed_send()
+    {
+        using var response = new HttpResponseMessage(HttpStatusCode.OK) { Content = new ByteArrayContent(Array.Empty<byte>()) };
+        var dispatcher = new OtlpProfilesHttpDispatcher(_configuration, _ => { Thread.Sleep(5); return response; });
+
+        var result = dispatcher.Post(new byte[] { 1 }, Endpoint);
+
+        Assert.That(result.Elapsed, Is.GreaterThan(TimeSpan.Zero));
+    }
+
+    [Test]
+    public void Post_reports_a_positive_elapsed_time_for_a_non_2xx_response()
+    {
+        using var response = new HttpResponseMessage(HttpStatusCode.InternalServerError) { Content = new ByteArrayContent(Array.Empty<byte>()) };
+        var dispatcher = new OtlpProfilesHttpDispatcher(_configuration, _ => { Thread.Sleep(5); return response; });
+
+        var result = dispatcher.Post(new byte[] { 1 }, Endpoint);
+
+        Assert.That(result.Elapsed, Is.GreaterThan(TimeSpan.Zero));
+    }
+
+    [Test]
+    public void Post_reports_a_positive_elapsed_time_when_the_send_throws()
+    {
+        var dispatcher = new OtlpProfilesHttpDispatcher(_configuration, _ => { Thread.Sleep(5); throw new HttpRequestException("refused"); });
+
+        var result = dispatcher.Post(new byte[] { 1 }, Endpoint);
+
+        Assert.That(result.Elapsed, Is.GreaterThan(TimeSpan.Zero));
+    }
+
+    [Test]
+    public void Post_reports_a_positive_elapsed_time_when_the_send_returns_null()
+    {
+        var dispatcher = new OtlpProfilesHttpDispatcher(_configuration, _ => { Thread.Sleep(5); return null; });
+
+        var result = dispatcher.Post(new byte[] { 1 }, Endpoint);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.FailureReason, Is.EqualTo(ProfilesSendFailureReason.TransportException));
+            Assert.That(result.Elapsed, Is.GreaterThan(TimeSpan.Zero));
+        });
+    }
+
+    [Test]
+    public void Post_reports_zero_elapsed_time_when_nothing_was_sent_for_an_invalid_endpoint()
+    {
+        var dispatcher = new OtlpProfilesHttpDispatcher(_configuration, _ => new HttpResponseMessage(HttpStatusCode.OK));
+
+        var result = dispatcher.Post(new byte[] { 1 }, "not a uri");
+
+        Assert.That(result.Elapsed, Is.EqualTo(TimeSpan.Zero));
     }
 
     [Test]
@@ -599,6 +690,11 @@ public class OtlpProfilesHttpDispatcherTests
         public void RecordExportFailure() { }
         public void RecordPayloadDropped() => PayloadDroppedCount++;
         public void RecordFullRejection() { }
+        public void RecordTimeoutFailure() { }
+        public void RecordNetworkFailure() { }
+        public void RecordTlsFailure() { }
+        public void RecordHttpError(int statusCode) { }
+        public void RecordSendDuration(TimeSpan duration) { }
         public void CollectMetrics() { }
         public void RegisterPublishMetricHandler(PublishMetricDelegate publishMetricDelegate) { }
     }

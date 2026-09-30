@@ -1,6 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.Core.Metrics;
@@ -124,6 +125,115 @@ public class ContinuousProfilingSupportabilityMetricCountersTests
         {
             Assert.That(metric.MetricNameModel.Name, Is.EqualTo(MetricNames.SupportabilityContinuousProfilingExportFullRejection));
             Assert.That(metric.DataModel.Value0, Is.EqualTo(1));
+        });
+    }
+
+    [Test]
+    public void RecordTimeoutFailure_PublishesTheTimeoutFailureMetric()
+    {
+        _metricCounters.RecordTimeoutFailure();
+        _metricCounters.RecordTimeoutFailure();
+        _metricCounters.CollectMetrics();
+
+        var metric = _publishedMetrics.Single();
+        Assert.Multiple(() =>
+        {
+            Assert.That(metric.MetricNameModel.Name, Is.EqualTo("Supportability/DotNET/ContinuousProfiling/Export/failure_timeout"));
+            Assert.That(metric.DataModel.Value0, Is.EqualTo(2));
+        });
+    }
+
+    [Test]
+    public void RecordNetworkFailure_PublishesTheNetworkFailureMetric()
+    {
+        _metricCounters.RecordNetworkFailure();
+        _metricCounters.CollectMetrics();
+
+        var metric = _publishedMetrics.Single();
+        Assert.Multiple(() =>
+        {
+            Assert.That(metric.MetricNameModel.Name, Is.EqualTo("Supportability/DotNET/ContinuousProfiling/Export/failure_network"));
+            Assert.That(metric.DataModel.Value0, Is.EqualTo(1));
+        });
+    }
+
+    [Test]
+    public void RecordTlsFailure_PublishesTheTlsFailureMetric()
+    {
+        _metricCounters.RecordTlsFailure();
+        _metricCounters.CollectMetrics();
+
+        var metric = _publishedMetrics.Single();
+        Assert.Multiple(() =>
+        {
+            Assert.That(metric.MetricNameModel.Name, Is.EqualTo("Supportability/DotNET/ContinuousProfiling/Export/failure_tls"));
+            Assert.That(metric.DataModel.Value0, Is.EqualTo(1));
+        });
+    }
+
+    [Test]
+    public void RecordHttpError_PublishesOneMetricPerStatusCodeWithItsCount()
+    {
+        _metricCounters.RecordHttpError(401);
+        _metricCounters.RecordHttpError(401);
+        _metricCounters.RecordHttpError(503);
+        _metricCounters.CollectMetrics();
+
+        var byName = _publishedMetrics.ToDictionary(m => m.MetricNameModel.Name, m => m.DataModel.Value0);
+        Assert.That(byName, Is.EquivalentTo(new Dictionary<string, long>
+        {
+            ["Supportability/DotNET/ContinuousProfiling/HTTPError/401"] = 2,
+            ["Supportability/DotNET/ContinuousProfiling/HTTPError/503"] = 1,
+        }));
+    }
+
+    [Test]
+    public void CollectMetrics_ResetsHttpErrorCountersAfterPublishing()
+    {
+        _metricCounters.RecordHttpError(500);
+        _metricCounters.CollectMetrics();
+        _publishedMetrics.Clear();
+
+        _metricCounters.CollectMetrics();
+
+        Assert.That(_publishedMetrics, Is.Empty);
+    }
+
+    [Test]
+    public void RecordSendDuration_PublishesASummaryOfCountTotalMinAndMaxInSeconds()
+    {
+        _metricCounters.RecordSendDuration(TimeSpan.FromSeconds(2));
+        _metricCounters.RecordSendDuration(TimeSpan.FromSeconds(0.5));
+        _metricCounters.RecordSendDuration(TimeSpan.FromSeconds(1));
+        _metricCounters.CollectMetrics();
+
+        var metric = _publishedMetrics.Single();
+        Assert.Multiple(() =>
+        {
+            Assert.That(metric.MetricNameModel.Name, Is.EqualTo("Supportability/DotNET/ContinuousProfiling/Duration"));
+            Assert.That(metric.DataModel.Value0, Is.EqualTo(3), "call count");
+            Assert.That(metric.DataModel.Value1, Is.EqualTo(3.5f).Within(0.001f), "total");
+            Assert.That(metric.DataModel.Value3, Is.EqualTo(0.5f).Within(0.001f), "min");
+            Assert.That(metric.DataModel.Value4, Is.EqualTo(2f).Within(0.001f), "max");
+        });
+    }
+
+    [Test]
+    public void CollectMetrics_ResetsTheDurationSummaryAfterPublishing()
+    {
+        _metricCounters.RecordSendDuration(TimeSpan.FromSeconds(9));
+        _metricCounters.CollectMetrics();
+        _publishedMetrics.Clear();
+
+        _metricCounters.RecordSendDuration(TimeSpan.FromSeconds(1));
+        _metricCounters.CollectMetrics();
+
+        var metric = _publishedMetrics.Single();
+        Assert.Multiple(() =>
+        {
+            Assert.That(metric.DataModel.Value0, Is.EqualTo(1));
+            Assert.That(metric.DataModel.Value3, Is.EqualTo(1f).Within(0.001f), "min must not carry over the previous window's 9s");
+            Assert.That(metric.DataModel.Value4, Is.EqualTo(1f).Within(0.001f));
         });
     }
 

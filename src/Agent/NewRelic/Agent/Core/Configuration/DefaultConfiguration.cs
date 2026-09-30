@@ -3125,6 +3125,30 @@ public class DefaultConfiguration : IConfiguration
     public bool ContinuousProfilingIncludeAgentCode =>
         TryGetAppSettingAsBoolWithDefault("NewRelic.ContinuousProfilingIncludeAgentCode", false);
 
+    private const int DefaultContinuousProfilingLogPayloadMaxChars = 64 * 1024;
+    private const int MinContinuousProfilingLogPayloadMaxChars = 1024;
+
+    private bool? _continuousProfilingLogPayload;
+    // Undocumented, appSettings/env only (deliberately NOT in the XSD, and not in ReportedConfiguration --
+    // local diagnostics, never sent to the server). Env var wins over the appSetting.
+    public bool ContinuousProfilingLogPayload => _continuousProfilingLogPayload ??=
+        EnvironmentOverrides(TryGetAppSettingAsBoolWithDefault("NewRelic.ContinuousProfilingLogPayload", false), "NEW_RELIC_PROFILING_LOG_PAYLOAD");
+
+    private int? _continuousProfilingLogPayloadMaxChars;
+    public int ContinuousProfilingLogPayloadMaxChars => _continuousProfilingLogPayloadMaxChars ??= ResolveContinuousProfilingLogPayloadMaxChars();
+
+    private int ResolveContinuousProfilingLogPayloadMaxChars()
+    {
+        var configured = EnvironmentOverrides(TryGetAppSettingAsInt("NewRelic.ContinuousProfilingLogPayloadMaxChars"), "NEW_RELIC_PROFILING_LOG_PAYLOAD_MAX_CHARS")
+            .GetValueOrDefault();
+
+        // Non-positive is invalid input, not "unlimited" and not "smallest possible": fall back to the default
+        // (same reasoning as ContinuousProfilingSamplingIntervalMs).
+        return configured <= 0
+            ? DefaultContinuousProfilingLogPayloadMaxChars
+            : Math.Max(MinContinuousProfilingLogPayloadMaxChars, configured);
+    }
+
     public static bool GetLoggingEnabledValue(IEnvironment environment, configurationLog localLogConfiguration)
     {
         return EnvironmentOverrides(environment, localLogConfiguration.enabled, "NEW_RELIC_LOG_ENABLED");

@@ -838,6 +838,13 @@ public class ReportedConfiguration : IConfiguration
     [JsonProperty("profiling.include_agent_code")]
     public bool ContinuousProfilingIncludeAgentCode => _configuration.ContinuousProfilingIncludeAgentCode;
 
+    // Local diagnostics only -- required by IConfiguration but deliberately not sent to the server.
+    [JsonIgnore]
+    public bool ContinuousProfilingLogPayload => _configuration.ContinuousProfilingLogPayload;
+
+    [JsonIgnore]
+    public int ContinuousProfilingLogPayloadMaxChars => _configuration.ContinuousProfilingLogPayloadMaxChars;
+
     [JsonProperty("profiling.delay")]
     public int ContinuousProfilingDelayMs => _configuration.ContinuousProfilingDelayMs;
 

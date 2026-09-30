@@ -1,7 +1,13 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.IO.Compression;
+using System.Text;
 using Google.Protobuf;
+using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.DataTransport.ContinuousProfiling;
 using NewRelic.Agent.Core.Logging;
@@ -312,6 +318,176 @@ public class ProfilesTransportTests
     }
 
     [Test]
+    public void Send_reports_the_duration_metric_for_an_accepted_send()
+    {
+        var counters = new FakeContinuousProfilingCounters();
+        var transport = new ProfilesTransport(
+            (bytes, endpoint) => new ProfilesSendResult(true, 200, string.Empty, elapsed: TimeSpan.FromMilliseconds(120)),
+            "http://unused", null, counters);
+
+        transport.Send(BuildNonEmptyRequest());
+
+        Assert.That(counters.Durations, Is.EqualTo(new[] { TimeSpan.FromMilliseconds(120) }));
+    }
+
+    [Test]
+    public void Send_reports_the_duration_metric_for_a_failed_send_too()
+    {
+        var counters = new FakeContinuousProfilingCounters();
+        var transport = new ProfilesTransport(
+            (bytes, endpoint) => new ProfilesSendResult(false, 500, "error", elapsed: TimeSpan.FromMilliseconds(80)),
+            "http://unused", null, counters);
+
+        transport.Send(BuildNonEmptyRequest());
+
+        Assert.That(counters.Durations, Is.EqualTo(new[] { TimeSpan.FromMilliseconds(80) }));
+    }
+
+    [Test]
+    public void Send_does_not_report_a_duration_when_the_send_never_reached_the_wire()
+    {
+        var counters = new FakeContinuousProfilingCounters();
+        var transport = new ProfilesTransport(
+            (bytes, endpoint) => new ProfilesSendResult(false, 0, string.Empty, failureReason: ProfilesSendFailureReason.InvalidEndpoint),
+            "http://unused", null, counters);
+
+        transport.Send(BuildNonEmptyRequest());
+
+        Assert.That(counters.Durations, Is.Empty);
+    }
+
+    [TestCase(400)]
+    [TestCase(401)]
+    [TestCase(503)]
+    public void Send_reports_the_per_status_http_error_metric_for_a_rejected_non_zero_status(int statusCode)
+    {
+        var counters = new FakeContinuousProfilingCounters();
+        var transport = new ProfilesTransport((bytes, endpoint) => new ProfilesSendResult(false, statusCode, "error"), "http://unused", null, counters);
+
+        transport.Send(BuildNonEmptyRequest());
+
+        Assert.That(counters.HttpErrors, Is.EqualTo(new[] { statusCode }));
+    }
+
+    [Test]
+    public void Send_does_not_report_a_per_status_http_error_metric_for_status_zero_or_an_accepted_send()
+    {
+        var counters = new FakeContinuousProfilingCounters();
+        var zero = new ProfilesTransport(
+            (bytes, endpoint) => new ProfilesSendResult(false, 0, string.Empty, failureReason: ProfilesSendFailureReason.TransportException),
+            "http://unused", null, counters);
+        var accepted = new ProfilesTransport((bytes, endpoint) => new ProfilesSendResult(true, 200, string.Empty), "http://unused", null, counters);
+
+        zero.Send(BuildNonEmptyRequest());
+        accepted.Send(BuildNonEmptyRequest());
+
+        Assert.That(counters.HttpErrors, Is.Empty);
+    }
+
+    [Test]
+    public void Send_records_only_the_matching_transport_failure_counter()
+    {
+        var counters = new FakeContinuousProfilingCounters();
+        foreach (var reason in new[] { ProfilesSendFailureReason.TransportTimeout, ProfilesSendFailureReason.TransportNetwork, ProfilesSendFailureReason.TransportTls, ProfilesSendFailureReason.TransportException })
+        {
+            var failureReason = reason;
+            new ProfilesTransport((bytes, endpoint) => new ProfilesSendResult(false, 0, string.Empty, failureReason: failureReason), "http://unused", null, counters)
+                .Send(BuildNonEmptyRequest());
+        }
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(counters.TimeoutFailureCount, Is.EqualTo(1));
+            Assert.That(counters.NetworkFailureCount, Is.EqualTo(1));
+            Assert.That(counters.TlsFailureCount, Is.EqualTo(1));
+        });
+    }
+
+    [Test]
+    public void Send_names_the_timeout_cause_in_the_status_zero_warn()
+    {
+        var transport = new ProfilesTransport(
+            (bytes, endpoint) => new ProfilesSendResult(false, 0, string.Empty, failureReason: ProfilesSendFailureReason.TransportTimeout),
+            "http://unused", null);
+
+        transport.Send(BuildNonEmptyRequest());
+
+        Mock.Assert(() => _nrLogger.Warn(Arg.Matches<string>(m => m.Contains("timed out")), Arg.IsAny<object[]>()), Occurs.Once());
+    }
+
+    [Test]
+    public void Send_names_the_network_cause_in_the_status_zero_warn()
+    {
+        var transport = new ProfilesTransport(
+            (bytes, endpoint) => new ProfilesSendResult(false, 0, string.Empty, failureReason: ProfilesSendFailureReason.TransportNetwork),
+            "http://unused", null);
+
+        transport.Send(BuildNonEmptyRequest());
+
+        Mock.Assert(() => _nrLogger.Warn(Arg.Matches<string>(m => m.Contains("network layer")), Arg.IsAny<object[]>()), Occurs.Once());
+    }
+
+    [Test]
+    public void Send_names_the_tls_cause_in_the_status_zero_warn()
+    {
+        var transport = new ProfilesTransport(
+            (bytes, endpoint) => new ProfilesSendResult(false, 0, string.Empty, failureReason: ProfilesSendFailureReason.TransportTls),
+            "http://unused", null);
+
+        transport.Send(BuildNonEmptyRequest());
+
+        Mock.Assert(() => _nrLogger.Warn(Arg.Matches<string>(m => m.Contains("TLS")), Arg.IsAny<object[]>()), Occurs.Once());
+    }
+
+    [TestCase(401)]
+    [TestCase(403)]
+    public void Send_sets_the_cp_license_key_invalid_health_status_on_an_auth_rejection(int statusCode)
+    {
+        var health = Mock.Create<IAgentHealthReporter>();
+        var transport = new ProfilesTransport((bytes, endpoint) => new ProfilesSendResult(false, statusCode, "error"), "http://unused", health);
+
+        transport.Send(BuildNonEmptyRequest());
+
+        Mock.Assert(() => health.SetAgentControlStatus(HealthCodes.ContinuousProfilingLicenseKeyInvalid, statusCode.ToString()), Occurs.Once());
+    }
+
+    [Test]
+    public void Send_sets_the_health_status_on_every_auth_rejection_even_inside_the_warn_rate_limit_window()
+    {
+        var health = Mock.Create<IAgentHealthReporter>();
+        var transport = new ProfilesTransport((bytes, endpoint) => new ProfilesSendResult(false, 401, "error"), "http://unused", health);
+
+        transport.Send(BuildNonEmptyRequest());
+        transport.Send(BuildNonEmptyRequest());
+
+        Mock.Assert(() => health.SetAgentControlStatus(HealthCodes.ContinuousProfilingLicenseKeyInvalid, "401"), Occurs.Exactly(2));
+    }
+
+    [TestCase(false, 404)]
+    [TestCase(false, 500)]
+    [TestCase(false, 0)]
+    [TestCase(true, 200)]
+    public void Send_does_not_touch_the_health_status_for_anything_other_than_an_auth_rejection(bool accepted, int statusCode)
+    {
+        var health = Mock.Create<IAgentHealthReporter>();
+        var transport = new ProfilesTransport((bytes, endpoint) => new ProfilesSendResult(accepted, statusCode, "x"), "http://unused", health);
+
+        transport.Send(BuildNonEmptyRequest());
+
+        Mock.Assert(() => health.SetAgentControlStatus(Arg.IsAny<(bool IsHealthy, string Code, string Status)>(), Arg.IsAny<string[]>()), Occurs.Never());
+    }
+
+    [Test]
+    public void Send_tolerates_null_counters_and_health_reporter_for_the_new_outcome_metrics()
+    {
+        var transport = new ProfilesTransport(
+            (bytes, endpoint) => new ProfilesSendResult(false, 401, "error", failureReason: ProfilesSendFailureReason.TransportTimeout, elapsed: TimeSpan.FromSeconds(1)),
+            "http://unused", null);
+
+        Assert.That(() => transport.Send(BuildNonEmptyRequest()), Throws.Nothing);
+    }
+
+    [Test]
     public void Send_does_not_warn_when_accepted()
     {
         var transport = new ProfilesTransport((bytes, endpoint) => new ProfilesSendResult(true, 200, string.Empty), "http://unused", null);
@@ -420,46 +596,233 @@ public class ProfilesTransportTests
         Assert.That(dispatchedEndpoint, Is.EqualTo("https://otlp.nr-data.net/v1/profiles"));
     }
 
-    [Test]
-    public void Send_does_not_render_diagnostic_json_when_only_debug_is_enabled()
+    private static IConfiguration ConfigWith(bool logPayload, int maxChars)
     {
-        // L17: rendering ToDiagnosticJson (protobuf -> JsonFormatter -> JToken DOM -> truncate) must be
-        // gated behind something stricter than plain Debug -- rendering it unconditionally at Debug level
-        // would allocate several MB per drain for a log line that routine `NEWRELIC_LOG_LEVEL=debug`
-        // troubleshooting would otherwise trigger every drain.
-        Mock.Arrange(() => _nrLogger.IsDebugEnabled).Returns(true);
-        Mock.Arrange(() => _nrLogger.IsFinestEnabled).Returns(false);
+        var config = Mock.Create<IConfiguration>();
+        Mock.Arrange(() => config.ContinuousProfilingLogPayload).Returns(logPayload);
+        Mock.Arrange(() => config.ContinuousProfilingLogPayloadMaxChars).Returns(maxChars);
+        return config;
+    }
+
+    private static string Decode(string base64)
+    {
+        using var input = new MemoryStream(Convert.FromBase64String(base64));
+        using var gzip = new GZipStream(input, CompressionMode.Decompress);
+        using var reader = new StreamReader(gzip, Encoding.UTF8);
+        return reader.ReadToEnd();
+    }
+
+    private static bool IsEncodedProfilePayload(object arg)
+    {
+        if (!(arg is string s) || !s.StartsWith(ProfilesTransport.EncodedPayloadPrefix))
+            return false;
+        try
+        {
+            return Decode(s.Substring(ProfilesTransport.EncodedPayloadPrefix.Length)).Contains("resourceProfiles");
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static bool IsTooLargePlaceholder(object arg)
+        => arg is string s && s.StartsWith("{payload too large") && s.Contains("NEW_RELIC_PROFILING_LOG_PAYLOAD_MAX_CHARS");
+
+    private static ExportProfilesServiceRequest BuildHugeRequest()
+    {
+        // Varied names so gzip cannot shrink it below the 1024 floor.
+        var dictionary = new ProfilesDictionary();
+        var rng = new Random(42);
+        for (var i = 0; i < 2_000; i++)
+            dictionary.StringTable.Add(Guid.NewGuid().ToString("N") + rng.Next());
+        return new ExportProfilesServiceRequest { Dictionary = dictionary };
+    }
+
+    private static ProfilesTransport NewTransport(IConfiguration configuration)
+        => new ProfilesTransport((b, e) => new ProfilesSendResult(true, 200, string.Empty), "http://unused", null, configuration: configuration);
+
+    // ---- Send: the Finest "Invoked" line ----
+
+    [Test]
+    public void Send_logs_placeholder_at_finest_when_switch_is_off()
+    {
+        Mock.Arrange(() => _nrLogger.IsFinestEnabled).Returns(true);
         AuditLog.IsAuditLogEnabled = false;
 
-        var transport = new ProfilesTransport((bytes, endpoint) => new ProfilesSendResult(true, 200, string.Empty), "http://unused", null);
-        transport.Send(BuildNonEmptyRequest());
+        NewTransport(ConfigWith(false, 65536)).Send(BuildNonEmptyRequest());
 
-        // The payload-json arg passed to the Debug log line must be null, not a rendered JSON string --
-        // proves ToDiagnosticJson was never invoked.
-        Mock.Assert(() => _nrLogger.Debug(
+        Mock.Assert(() => _nrLogger.Finest(
                 Arg.Matches<string>(m => m.Contains("Invoked")),
-                Arg.Matches<object[]>(a => System.Linq.Enumerable.Contains(a, (object)null))),
+                Arg.Matches<object[]>(a => System.Linq.Enumerable.Contains(a, (object)ProfilesTransport.PayloadUnavailablePlaceholder))),
             Occurs.Once());
     }
 
     [Test]
-    public void Send_renders_diagnostic_json_when_finest_is_enabled()
+    public void Send_logs_placeholder_when_configuration_is_null()
+    {
+        Mock.Arrange(() => _nrLogger.IsFinestEnabled).Returns(true);
+        AuditLog.IsAuditLogEnabled = false;
+
+        NewTransport(null).Send(BuildNonEmptyRequest());
+
+        Mock.Assert(() => _nrLogger.Finest(
+                Arg.Matches<string>(m => m.Contains("Invoked")),
+                Arg.Matches<object[]>(a => System.Linq.Enumerable.Contains(a, (object)ProfilesTransport.PayloadUnavailablePlaceholder))),
+            Occurs.Once());
+    }
+
+    [Test]
+    public void Send_logs_gzip_base64_payload_at_finest_when_switch_is_on()
+    {
+        Mock.Arrange(() => _nrLogger.IsFinestEnabled).Returns(true);
+        AuditLog.IsAuditLogEnabled = false;
+
+        NewTransport(ConfigWith(true, 65536)).Send(BuildNonEmptyRequest());
+
+        Mock.Assert(() => _nrLogger.Finest(
+                Arg.Matches<string>(m => m.Contains("Invoked")),
+                Arg.Matches<object[]>(a => System.Linq.Enumerable.Any(a, x => IsEncodedProfilePayload(x)))),
+            Occurs.Once());
+    }
+
+    [Test]
+    public void Send_logs_payload_too_large_placeholder_when_encoded_size_exceeds_cap()
+    {
+        Mock.Arrange(() => _nrLogger.IsFinestEnabled).Returns(true);
+        AuditLog.IsAuditLogEnabled = false;
+
+        NewTransport(ConfigWith(true, 1024)).Send(BuildHugeRequest());
+
+        Mock.Assert(() => _nrLogger.Finest(
+                Arg.Matches<string>(m => m.Contains("Invoked")),
+                Arg.Matches<object[]>(a => System.Linq.Enumerable.Any(a, x => IsTooLargePlaceholder(x)))),
+            Occurs.Once());
+    }
+
+    [Test]
+    public void Send_treats_a_non_positive_configured_cap_as_the_default()
+    {
+        // A loose mock returns 0 for an un-arranged int; that must fall back to the 64K default, not mark everything too large.
+        Mock.Arrange(() => _nrLogger.IsFinestEnabled).Returns(true);
+        AuditLog.IsAuditLogEnabled = false;
+
+        NewTransport(ConfigWith(true, 0)).Send(BuildNonEmptyRequest());
+
+        Mock.Assert(() => _nrLogger.Finest(
+                Arg.Matches<string>(m => m.Contains("Invoked")),
+                Arg.Matches<object[]>(a => System.Linq.Enumerable.Any(a, x => IsEncodedProfilePayload(x)))),
+            Occurs.Once());
+    }
+
+    [Test]
+    public void Send_uses_placeholder_when_switch_is_on_but_nobody_is_listening()
+    {
+        // Finest off and audit off: no sink will read the payload, so it must not be rendered/encoded.
+        // Observable via the Debug-only state: nothing logs the encoded payload at all.
+        Mock.Arrange(() => _nrLogger.IsDebugEnabled).Returns(true);
+        Mock.Arrange(() => _nrLogger.IsFinestEnabled).Returns(false);
+        AuditLog.IsAuditLogEnabled = false;
+
+        NewTransport(ConfigWith(true, 65536)).Send(BuildNonEmptyRequest());
+
+        Mock.Assert(() => _nrLogger.Finest(Arg.IsAny<string>(), Arg.Matches<object[]>(a => System.Linq.Enumerable.Any(a, x => IsEncodedProfilePayload(x)))), Occurs.Never());
+    }
+
+    [Test]
+    public void Send_encodes_payload_when_switch_is_on_and_only_audit_log_is_enabled()
+    {
+        // Log.Finest passes through without checking IsFinestEnabled, and the same payloadText goes to the audit
+        // log, so the audit-only case must still encode: pins the `|| AuditLog.IsAuditLogEnabled` half of the gate.
+        Mock.Arrange(() => _nrLogger.IsFinestEnabled).Returns(false);
+        AuditLog.IsAuditLogEnabled = true;
+
+        NewTransport(ConfigWith(true, 65536)).Send(BuildNonEmptyRequest());
+
+        Mock.Assert(() => _nrLogger.Finest(
+                Arg.Matches<string>(m => m.Contains("Invoked")),
+                Arg.Matches<object[]>(a => System.Linq.Enumerable.Any(a, x => IsEncodedProfilePayload(x)))),
+            Occurs.Once());
+    }
+
+    [Test]
+    public void Send_no_longer_logs_the_payload_at_debug()
     {
         Mock.Arrange(() => _nrLogger.IsDebugEnabled).Returns(true);
         Mock.Arrange(() => _nrLogger.IsFinestEnabled).Returns(true);
         AuditLog.IsAuditLogEnabled = false;
 
-        var transport = new ProfilesTransport((bytes, endpoint) => new ProfilesSendResult(true, 200, string.Empty), "http://unused", null);
-        transport.Send(BuildNonEmptyRequest());
+        NewTransport(ConfigWith(true, 65536)).Send(BuildNonEmptyRequest());
 
         Mock.Assert(() => _nrLogger.Debug(
                 Arg.Matches<string>(m => m.Contains("Invoked")),
-                Arg.Matches<object[]>(a => System.Linq.Enumerable.Any(a, x => (x as string) != null && ((string)x).Contains("resourceProfiles")))),
-            Occurs.Once());
+                Arg.IsAny<object[]>()),
+            Occurs.Never());
     }
 
-    // The Finest diagnostic log line carries ToDiagnosticJson(request); testing the serialization directly
-    // avoids capturing the static logger while still pinning the payload's shape.
+    [Test]
+    public void Send_with_empty_request_and_switch_on_does_not_throw()
+    {
+        Mock.Arrange(() => _nrLogger.IsFinestEnabled).Returns(true);
+        AuditLog.IsAuditLogEnabled = false;
+
+        Assert.DoesNotThrow(() => NewTransport(ConfigWith(true, 65536)).Send(new ExportProfilesServiceRequest()));
+    }
+
+    // ---- BuildPayloadText / ToDiagnosticJson ----
+
+    [Test]
+    public void BuildPayloadText_returns_prefixed_base64_that_decodes_to_the_diagnostic_json()
+    {
+        var request = BuildNonEmptyRequest();
+
+        var text = ProfilesTransport.BuildPayloadText(request, 65536);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(text, Does.StartWith("gzip+base64:"));
+            Assert.That(Decode(text.Substring("gzip+base64:".Length)), Is.EqualTo(ProfilesTransport.ToDiagnosticJson(request)));
+        });
+    }
+
+    [Test]
+    public void BuildPayloadText_at_exactly_the_cap_is_still_encoded()
+    {
+        var request = BuildNonEmptyRequest();
+        var encodedLength = ProfilesTransport.BuildPayloadText(request, int.MaxValue).Length - ProfilesTransport.EncodedPayloadPrefix.Length;
+
+        Assert.That(ProfilesTransport.BuildPayloadText(request, encodedLength), Does.StartWith("gzip+base64:"));
+    }
+
+    [Test]
+    public void BuildPayloadText_one_under_the_cap_is_too_large_and_names_sizes_cap_and_setting()
+    {
+        var request = BuildNonEmptyRequest();
+        var encodedLength = ProfilesTransport.BuildPayloadText(request, int.MaxValue).Length - ProfilesTransport.EncodedPayloadPrefix.Length;
+
+        var text = ProfilesTransport.BuildPayloadText(request, encodedLength - 1);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(text, Does.StartWith("{payload too large:").And.EndWith("}"));
+            Assert.That(text, Does.Contain($"{encodedLength} gzip+base64 chars"));
+            Assert.That(text, Does.Contain($"{encodedLength - 1}-char cap"));
+            Assert.That(text, Does.Contain("NEW_RELIC_PROFILING_LOG_PAYLOAD_MAX_CHARS"));
+        });
+    }
+
+    [Test]
+    public void ToDiagnosticJson_is_not_truncated()
+    {
+        var json = ProfilesTransport.ToDiagnosticJson(BuildHugeRequest());
+
+        Assert.That(json.Length, Is.GreaterThan(ProfilesTransport.DefaultMaxDiagnosticPayloadChars));
+        Assert.That(json, Does.Not.Contain("truncated"));
+    }
+
+    // The Finest "Invoked" log line carries payloadText: the gzip+base64 of ToDiagnosticJson(request), or a
+    // placeholder. Testing the JSON serialization directly avoids capturing the static logger while still
+    // pinning the payload's shape.
 
     [Test]
     public void ToDiagnosticJson_is_compact_single_line_valid_json()
@@ -497,24 +860,6 @@ public class ProfilesTransportTests
     }
 
     [Test]
-    public void ToDiagnosticJson_truncates_output_beyond_the_configured_cap()
-    {
-        // L10: a large batch's rendered JSON must not be logged/allocated unbounded.
-        var dictionary = new ProfilesDictionary();
-        for (var i = 0; i < 10_000; i++)
-            dictionary.StringTable.Add($"NewRelic.Agent.Core.SomeClass.SomeVeryLongMethodNameForPadding_{i}()");
-        var request = new ExportProfilesServiceRequest { Dictionary = dictionary };
-
-        var json = ProfilesTransport.ToDiagnosticJson(request);
-
-        Assert.Multiple(() =>
-        {
-            Assert.That(json.Length, Is.LessThanOrEqualTo(ProfilesTransport.MaxDiagnosticJsonLength + 64), "Truncated output plus marker should stay close to the cap.");
-            Assert.That(json, Does.Contain("truncated"), "A truncation marker should be present.");
-        });
-    }
-
-    [Test]
     public void ToDiagnosticJson_renders_link_ids_as_lowercase_hex_not_base64()
     {
         // trace_id/span_id are proto `bytes` -> proto3 JSON base64. The diagnostic log rewrites them to
@@ -545,11 +890,21 @@ public class ProfilesTransportTests
     private class FakeContinuousProfilingCounters : IContinuousProfilingSupportabilityMetricCounters
     {
         public int FullRejectionCount { get; private set; }
+        public int TimeoutFailureCount { get; private set; }
+        public int NetworkFailureCount { get; private set; }
+        public int TlsFailureCount { get; private set; }
+        public List<int> HttpErrors { get; } = new List<int>();
+        public List<TimeSpan> Durations { get; } = new List<TimeSpan>();
         public void RecordExportSuccess() { }
         public void RecordExportRetry() { }
         public void RecordExportFailure() { }
         public void RecordPayloadDropped() { }
         public void RecordFullRejection() => FullRejectionCount++;
+        public void RecordTimeoutFailure() => TimeoutFailureCount++;
+        public void RecordNetworkFailure() => NetworkFailureCount++;
+        public void RecordTlsFailure() => TlsFailureCount++;
+        public void RecordHttpError(int statusCode) => HttpErrors.Add(statusCode);
+        public void RecordSendDuration(TimeSpan duration) => Durations.Add(duration);
         public void CollectMetrics() { }
         public void RegisterPublishMetricHandler(PublishMetricDelegate publishMetricDelegate) { }
     }

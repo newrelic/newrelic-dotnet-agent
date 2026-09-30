@@ -316,6 +316,21 @@ public interface IConfiguration
     bool ContinuousProfilingIncludeAgentCode { get; }
 
     /// <summary>
+    /// Undocumented, appSettings/env only (deliberately NOT in the XSD): when true, the CP "Invoked" Finest line
+    /// and the audit log carry the OTLP diagnostic JSON as gzip+base64; when false (default) they carry a
+    /// placeholder -- the payload is large and drowns the log. appSetting "NewRelic.ContinuousProfilingLogPayload",
+    /// env NEW_RELIC_PROFILING_LOG_PAYLOAD.
+    /// </summary>
+    bool ContinuousProfilingLogPayload { get; }
+
+    /// <summary>
+    /// Undocumented, appSettings/env only: cap (in chars) on the encoded gzip+base64 CP payload written to a log;
+    /// over the cap a "payload too large" placeholder is written instead. Default 65536, floor 1024. appSetting
+    /// "NewRelic.ContinuousProfilingLogPayloadMaxChars", env NEW_RELIC_PROFILING_LOG_PAYLOAD_MAX_CHARS.
+    /// </summary>
+    int ContinuousProfilingLogPayloadMaxChars { get; }
+
+    /// <summary>
     /// Gets the delay, in milliseconds, before continuous profiling auto-starts locally once enabled.
     /// Defaults to 0 (start immediately). No server-side config surface -- local/env only.
     /// </summary>
