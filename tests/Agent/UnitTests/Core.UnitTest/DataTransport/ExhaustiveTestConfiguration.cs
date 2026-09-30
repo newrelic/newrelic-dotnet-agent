@@ -236,6 +236,8 @@ public class ExhaustiveTestConfiguration : IConfiguration
 
     public string EntityGuid => "EntityGuid";
 
+    public IReadOnlyDictionary<string, string> OtlpResourceAttributes => new Dictionary<string, string> { { "OtlpResourceAttributeKey", "OtlpResourceAttributeValue" } };
+
     public bool HighSecurityModeEnabled => true;
 
     public bool CustomInstrumentationEditorEnabled => true;

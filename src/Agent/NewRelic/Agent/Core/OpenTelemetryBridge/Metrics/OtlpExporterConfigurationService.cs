@@ -33,6 +33,7 @@ public class OtlpExporterConfigurationService : DisposableService, IOtlpExporter
     // Tracking state to detect changes that require recreation
     private IConnectionInfo _lastConnectionInfo;
     private string _lastEntityGuid;
+    private Dictionary<string, string> _lastResourceAttributes;
 
     public OtlpExporterConfigurationService(
         IConfigurationService configurationService, 
@@ -48,23 +49,23 @@ public class OtlpExporterConfigurationService : DisposableService, IOtlpExporter
 
     public HttpClient HttpClient => _httpClient;
 
-    public object GetOrCreateMeterProvider() => GetOrCreateMeterProvider(_lastConnectionInfo, _lastEntityGuid);
+    public object GetOrCreateMeterProvider() => GetOrCreateMeterProvider(_lastConnectionInfo, _lastEntityGuid, _lastResourceAttributes);
 
-    public object GetOrCreateMeterProvider(IConnectionInfo connectionInfo, string entityGuid)
+    public object GetOrCreateMeterProvider(IConnectionInfo connectionInfo, string entityGuid, IReadOnlyDictionary<string, string> resourceAttributes)
     {
         if (connectionInfo == null)
         {
             return null;
         }
 
-        if (_meterProvider != null && ConnectionInfoEquals(_lastConnectionInfo, connectionInfo) && _lastEntityGuid == entityGuid)
+        if (_meterProvider != null && IsUnchanged(connectionInfo, entityGuid, resourceAttributes))
         {
             return _meterProvider;
         }
 
         lock (_meterProviderLock)
         {
-            if (_meterProvider != null && ConnectionInfoEquals(_lastConnectionInfo, connectionInfo) && _lastEntityGuid == entityGuid)
+            if (_meterProvider != null && IsUnchanged(connectionInfo, entityGuid, resourceAttributes))
             {
                 return _meterProvider;
             }
@@ -76,6 +77,7 @@ public class OtlpExporterConfigurationService : DisposableService, IOtlpExporter
 
             _lastConnectionInfo = connectionInfo;
             _lastEntityGuid = entityGuid;
+            _lastResourceAttributes = resourceAttributes?.ToDictionary(kv => kv.Key, kv => kv.Value);
 
             RecreateMeterProviderInternal();
             return _meterProvider;
@@ -107,7 +109,7 @@ public class OtlpExporterConfigurationService : DisposableService, IOtlpExporter
             .ConfigureResource(r => r
                 .AddService(config.ApplicationNames.First())
                 .AddTelemetrySdk()
-                .AddAttributes(new[] { new KeyValuePair<string, object>("entity.guid", _lastEntityGuid ?? config.EntityGuid) }))
+                .AddAttributes(BuildResourceAttributes(_lastEntityGuid ?? config.EntityGuid, _lastResourceAttributes)))
             .AddMeter("*")
             // Default histogram instruments to base-2 exponential bucket aggregation, which the NR OTLP
             // ingest endpoint prefers over explicit-bucket histograms (higher fidelity, fewer buckets).
@@ -132,6 +134,7 @@ public class OtlpExporterConfigurationService : DisposableService, IOtlpExporter
             });
 
         _meterProvider = providerBuilder.Build();
+        Log.Debug($"Created OTLP MeterProvider with {_lastResourceAttributes?.Count ?? 0} server resource attributes.");
         _supportabilityMetricCounters?.Record(OtelBridgeSupportabilityMetric.MeterProviderRecreated);
     }
 
@@ -173,6 +176,21 @@ public class OtlpExporterConfigurationService : DisposableService, IOtlpExporter
         base.Dispose();
     }
 
+    public static IEnumerable<KeyValuePair<string, object>> BuildResourceAttributes(string entityGuid, IReadOnlyDictionary<string, string> serverAttributes)
+    {
+        var attributes = new Dictionary<string, object> { { "entity.guid", entityGuid } };
+
+        if (serverAttributes != null)
+        {
+            foreach (var attribute in serverAttributes)
+            {
+                attributes[attribute.Key] = attribute.Value;
+            }
+        }
+
+        return attributes;
+    }
+
     /// <summary>
     /// Compares connection info by value instead of reference to avoid unnecessary provider recreation.
     /// </summary>
@@ -181,5 +199,30 @@ public class OtlpExporterConfigurationService : DisposableService, IOtlpExporter
         if (ReferenceEquals(a, b)) return true;
         if (a == null || b == null) return false;
         return a.Host == b.Host && a.Port == b.Port && a.HttpProtocol == b.HttpProtocol;
+    }
+
+    private bool IsUnchanged(IConnectionInfo connectionInfo, string entityGuid, IReadOnlyDictionary<string, string> resourceAttributes)
+    {
+        return ConnectionInfoEquals(_lastConnectionInfo, connectionInfo)
+            && _lastEntityGuid == entityGuid
+            && ResourceAttributesEqual(_lastResourceAttributes, resourceAttributes);
+    }
+
+    private static bool ResourceAttributesEqual(IReadOnlyDictionary<string, string> a, IReadOnlyDictionary<string, string> b)
+    {
+        var countA = a?.Count ?? 0;
+        var countB = b?.Count ?? 0;
+        if (countA != countB) return false;
+        if (countA == 0) return true;
+
+        foreach (var attribute in a)
+        {
+            if (!b.TryGetValue(attribute.Key, out var value) || value != attribute.Value)
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

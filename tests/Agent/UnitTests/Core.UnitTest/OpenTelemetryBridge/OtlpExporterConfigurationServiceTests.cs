@@ -1,12 +1,16 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System.Collections.Generic;
+using System.Linq;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.OpenTelemetryBridge.Metrics;
 using NUnit.Framework;
+using OpenTelemetry;
+using OpenTelemetry.Metrics;
 using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.UnitTest.OpenTelemetryBridge;
@@ -49,7 +53,7 @@ public class OtlpExporterConfigurationServiceTests
     public void GetOrCreateMeterProvider_WithNullConnectionInfo_ReturnsNull()
     {
         // Act
-        var result = _service.GetOrCreateMeterProvider(null, "test-guid");
+        var result = _service.GetOrCreateMeterProvider(null, "test-guid", null);
 
         // Assert
         Assert.That(result, Is.Null);
@@ -66,7 +70,7 @@ public class OtlpExporterConfigurationServiceTests
         Mock.Arrange(() => mockConnectionInfo.Proxy).Returns<System.Net.IWebProxy>(null);
 
         // Act
-        var result = _service.GetOrCreateMeterProvider(mockConnectionInfo, "test-guid");
+        var result = _service.GetOrCreateMeterProvider(mockConnectionInfo, "test-guid", null);
 
         // Assert
         Assert.That(result, Is.Not.Null);
@@ -83,11 +87,38 @@ public class OtlpExporterConfigurationServiceTests
         Mock.Arrange(() => mockConnectionInfo.Proxy).Returns<System.Net.IWebProxy>(null);
 
         // Act
-        var result1 = _service.GetOrCreateMeterProvider(mockConnectionInfo, "test-guid");
-        var result2 = _service.GetOrCreateMeterProvider(mockConnectionInfo, "test-guid");
+        var result1 = _service.GetOrCreateMeterProvider(mockConnectionInfo, "test-guid", null);
+        var result2 = _service.GetOrCreateMeterProvider(mockConnectionInfo, "test-guid", null);
 
         // Assert
         Assert.That(result1, Is.SameAs(result2));
+    }
+
+    [Test]
+    public void GetOrCreateMeterProvider_ResourceCarriesServerAttributes()
+    {
+        // Arrange
+        var mockConnectionInfo = Mock.Create<IConnectionInfo>();
+        Mock.Arrange(() => mockConnectionInfo.HttpProtocol).Returns("https");
+        Mock.Arrange(() => mockConnectionInfo.Host).Returns("collector.newrelic.com");
+        Mock.Arrange(() => mockConnectionInfo.Port).Returns(443);
+        Mock.Arrange(() => mockConnectionInfo.Proxy).Returns<System.Net.IWebProxy>(null);
+        var serverAttributes = new Dictionary<string, string>
+        {
+            { "host", "h1" },
+            { "entity.guid", "server-guid" }
+        };
+
+        // Act
+        var result = _service.GetOrCreateMeterProvider(mockConnectionInfo, "agent-guid", serverAttributes);
+
+        // Assert
+        var attributes = ((MeterProvider)result).GetResource().Attributes.ToDictionary(a => a.Key, a => a.Value);
+        Assert.Multiple(() =>
+        {
+            Assert.That(attributes["host"], Is.EqualTo("h1"));
+            Assert.That(attributes["entity.guid"], Is.EqualTo("server-guid"));
+        });
     }
 
     [Test]
@@ -101,8 +132,8 @@ public class OtlpExporterConfigurationServiceTests
         Mock.Arrange(() => mockConnectionInfo.Proxy).Returns<System.Net.IWebProxy>(null);
 
         // Act
-        var result1 = _service.GetOrCreateMeterProvider(mockConnectionInfo, "guid1");
-        var result2 = _service.GetOrCreateMeterProvider(mockConnectionInfo, "guid2");
+        var result1 = _service.GetOrCreateMeterProvider(mockConnectionInfo, "guid1", null);
+        var result2 = _service.GetOrCreateMeterProvider(mockConnectionInfo, "guid2", null);
 
         // Assert
         Assert.That(result1, Is.Not.SameAs(result2));
@@ -119,7 +150,7 @@ public class OtlpExporterConfigurationServiceTests
         Mock.Arrange(() => mockConnectionInfo.Port).Returns(443);
         Mock.Arrange(() => mockConnectionInfo.Proxy).Returns<System.Net.IWebProxy>(null);
 
-        var result1 = _service.GetOrCreateMeterProvider(mockConnectionInfo, "test-guid");
+        var result1 = _service.GetOrCreateMeterProvider(mockConnectionInfo, "test-guid", null);
 
         // Act
         _service.RecreateMeterProvider();
@@ -146,8 +177,8 @@ public class OtlpExporterConfigurationServiceTests
         Mock.Arrange(() => connectionInfo2.Proxy).Returns<System.Net.IWebProxy>(null);
             
         // Act
-        var result1 = _service.GetOrCreateMeterProvider(connectionInfo1, "test-guid");
-        var result2 = _service.GetOrCreateMeterProvider(connectionInfo2, "test-guid");
+        var result1 = _service.GetOrCreateMeterProvider(connectionInfo1, "test-guid", null);
+        var result2 = _service.GetOrCreateMeterProvider(connectionInfo2, "test-guid", null);
             
         // Assert
         Assert.That(result1, Is.SameAs(result2), "Should reuse provider for same connection values");
@@ -172,8 +203,8 @@ public class OtlpExporterConfigurationServiceTests
         Mock.Arrange(() => connectionInfo2.Proxy).Returns<System.Net.IWebProxy>(null);
             
         // Act
-        var result1 = _service.GetOrCreateMeterProvider(connectionInfo1, "test-guid");
-        var result2 = _service.GetOrCreateMeterProvider(connectionInfo2, "test-guid");
+        var result1 = _service.GetOrCreateMeterProvider(connectionInfo1, "test-guid", null);
+        var result2 = _service.GetOrCreateMeterProvider(connectionInfo2, "test-guid", null);
             
         // Assert
         Assert.That(result1, Is.Not.SameAs(result2), "Should recreate for different hosts");
@@ -193,7 +224,7 @@ public class OtlpExporterConfigurationServiceTests
         Mock.Arrange(() => mockConnectionInfo.Proxy).Returns(() => mockProxy);
 
         // Act
-        var result = _service.GetOrCreateMeterProvider(mockConnectionInfo, "test-guid");
+        var result = _service.GetOrCreateMeterProvider(mockConnectionInfo, "test-guid", null);
 
         // Assert
         Assert.That(result, Is.Not.Null);
@@ -211,7 +242,7 @@ public class OtlpExporterConfigurationServiceTests
         Mock.Arrange(() => mockConnectionInfo.Proxy).Returns<System.Net.IWebProxy>(null);
 
         // Act
-        _service.GetOrCreateMeterProvider(mockConnectionInfo, "test-guid");
+        _service.GetOrCreateMeterProvider(mockConnectionInfo, "test-guid", null);
         var httpClient = _service.HttpClient;
 
         // Assert
@@ -235,8 +266,8 @@ public class OtlpExporterConfigurationServiceTests
         Mock.Arrange(() => connectionInfo2.Proxy).Returns<System.Net.IWebProxy>(null);
 
         // Act
-        var result1 = _service.GetOrCreateMeterProvider(connectionInfo1, "test-guid");
-        var result2 = _service.GetOrCreateMeterProvider(connectionInfo2, "test-guid");
+        var result1 = _service.GetOrCreateMeterProvider(connectionInfo1, "test-guid", null);
+        var result2 = _service.GetOrCreateMeterProvider(connectionInfo2, "test-guid", null);
 
         // Assert
         Assert.That(result1, Is.Not.SameAs(result2));
@@ -259,8 +290,8 @@ public class OtlpExporterConfigurationServiceTests
         Mock.Arrange(() => connectionInfo2.Proxy).Returns<System.Net.IWebProxy>(null);
 
         // Act
-        var result1 = _service.GetOrCreateMeterProvider(connectionInfo1, "test-guid");
-        var result2 = _service.GetOrCreateMeterProvider(connectionInfo2, "test-guid");
+        var result1 = _service.GetOrCreateMeterProvider(connectionInfo1, "test-guid", null);
+        var result2 = _service.GetOrCreateMeterProvider(connectionInfo2, "test-guid", null);
 
         // Assert
         Assert.That(result1, Is.Not.SameAs(result2));
@@ -276,7 +307,7 @@ public class OtlpExporterConfigurationServiceTests
         Mock.Arrange(() => mockConnectionInfo.Port).Returns(443);
         Mock.Arrange(() => mockConnectionInfo.Proxy).Returns<System.Net.IWebProxy>(null);
 
-        _service.GetOrCreateMeterProvider(mockConnectionInfo, "test-guid");
+        _service.GetOrCreateMeterProvider(mockConnectionInfo, "test-guid", null);
 
         // Act
         var result = _service.GetOrCreateMeterProvider();
@@ -295,9 +326,164 @@ public class OtlpExporterConfigurationServiceTests
         Mock.Arrange(() => mockConnectionInfo.Port).Returns(443);
         Mock.Arrange(() => mockConnectionInfo.Proxy).Returns<System.Net.IWebProxy>(null);
 
-        _service.GetOrCreateMeterProvider(mockConnectionInfo, "test-guid");
+        _service.GetOrCreateMeterProvider(mockConnectionInfo, "test-guid", null);
 
         // Act & Assert - Should not throw
         Assert.DoesNotThrow(() => _service.Dispose());
+    }
+
+    [Test]
+    public void BuildResourceAttributes_ReturnsEachServerAttributeUnchanged()
+    {
+        var serverAttributes = new Dictionary<string, string>
+        {
+            { "tags.team", "dotnet" },
+            { "k8s.podName", "" },
+            { "licenseKey", "12345678" }
+        };
+
+        var result = OtlpExporterConfigurationService.BuildResourceAttributes("guid-1", serverAttributes).ToDictionary(kv => kv.Key, kv => kv.Value);
+
+        Assert.That(result, Is.EqualTo(new Dictionary<string, object>
+        {
+            { "entity.guid", "guid-1" },
+            { "tags.team", "dotnet" },
+            { "k8s.podName", "" },
+            { "licenseKey", "12345678" }
+        }));
+    }
+
+    [TestCase("server-guid")]
+    [TestCase("")]
+    public void BuildResourceAttributes_ServerValueWinsOverEntityGuid(string serverGuid)
+    {
+        var serverAttributes = new Dictionary<string, string> { { "entity.guid", serverGuid } };
+
+        var result = OtlpExporterConfigurationService.BuildResourceAttributes("agent-guid", serverAttributes).ToList();
+
+        Assert.That(result, Has.Count.EqualTo(1));
+        Assert.That(result[0].Key, Is.EqualTo("entity.guid"));
+        Assert.That(result[0].Value, Is.EqualTo(serverGuid));
+    }
+
+    [TestCase(true)]
+    [TestCase(false)]
+    public void BuildResourceAttributes_NullOrEmptyServerMap_ReturnsOnlyEntityGuid(bool useNull)
+    {
+        var serverAttributes = useNull ? null : new Dictionary<string, string>();
+
+        var result = OtlpExporterConfigurationService.BuildResourceAttributes("guid-1", serverAttributes).ToList();
+
+        Assert.That(result, Is.EqualTo(new[] { new KeyValuePair<string, object>("entity.guid", "guid-1") }));
+    }
+
+    [Test]
+    public void BuildResourceAttributes_NullEntityGuid_KeepsNullEntityGuidEntry()
+    {
+        var result = OtlpExporterConfigurationService.BuildResourceAttributes(null, null).ToList();
+
+        Assert.That(result, Is.EqualTo(new[] { new KeyValuePair<string, object>("entity.guid", null) }));
+    }
+
+    private static IConnectionInfo CreateConnectionInfo()
+    {
+        var connectionInfo = Mock.Create<IConnectionInfo>();
+        Mock.Arrange(() => connectionInfo.HttpProtocol).Returns("https");
+        Mock.Arrange(() => connectionInfo.Host).Returns("collector.newrelic.com");
+        Mock.Arrange(() => connectionInfo.Port).Returns(443);
+        Mock.Arrange(() => connectionInfo.Proxy).Returns<System.Net.IWebProxy>(null);
+        return connectionInfo;
+    }
+
+    [Test]
+    public void GetOrCreateMeterProvider_SameResourceAttributeValues_ReusesProvider()
+    {
+        var connectionInfo = CreateConnectionInfo();
+
+        var result1 = _service.GetOrCreateMeterProvider(connectionInfo, "test-guid", new Dictionary<string, string> { { "host", "h1" } });
+        var result2 = _service.GetOrCreateMeterProvider(connectionInfo, "test-guid", new Dictionary<string, string> { { "host", "h1" } });
+
+        Assert.That(result1, Is.SameAs(result2));
+        Mock.Assert(() => _mockMetrics.Record(OtelBridgeSupportabilityMetric.MeterProviderRecreated), Occurs.Once());
+    }
+
+    [Test]
+    public void GetOrCreateMeterProvider_ChangedResourceAttributeValue_RecreatesProvider()
+    {
+        var connectionInfo = CreateConnectionInfo();
+
+        var result1 = _service.GetOrCreateMeterProvider(connectionInfo, "test-guid", new Dictionary<string, string> { { "host", "h1" } });
+        var result2 = _service.GetOrCreateMeterProvider(connectionInfo, "test-guid", new Dictionary<string, string> { { "host", "h2" } });
+
+        Assert.That(result1, Is.Not.SameAs(result2));
+        Mock.Assert(() => _mockMetrics.Record(OtelBridgeSupportabilityMetric.EntityGuidChanged), Occurs.Once());
+    }
+
+    [Test]
+    public void GetOrCreateMeterProvider_AddedResourceAttribute_RecreatesProvider()
+    {
+        var connectionInfo = CreateConnectionInfo();
+
+        var result1 = _service.GetOrCreateMeterProvider(connectionInfo, "test-guid", new Dictionary<string, string> { { "host", "h1" } });
+        var result2 = _service.GetOrCreateMeterProvider(connectionInfo, "test-guid", new Dictionary<string, string> { { "host", "h1" }, { "tags.team", "dotnet" } });
+
+        Assert.That(result1, Is.Not.SameAs(result2));
+    }
+
+    [Test]
+    public void GetOrCreateMeterProvider_DifferentResourceAttributeKeySameCount_RecreatesProvider()
+    {
+        var connectionInfo = CreateConnectionInfo();
+
+        var result1 = _service.GetOrCreateMeterProvider(connectionInfo, "test-guid", new Dictionary<string, string> { { "host", "h1" } });
+        var result2 = _service.GetOrCreateMeterProvider(connectionInfo, "test-guid", new Dictionary<string, string> { { "hostname", "h1" } });
+
+        Assert.That(result1, Is.Not.SameAs(result2));
+    }
+
+    [Test]
+    public void GetOrCreateMeterProvider_NullAndEmptyResourceAttributes_AreEqual()
+    {
+        var connectionInfo = CreateConnectionInfo();
+
+        var result1 = _service.GetOrCreateMeterProvider(connectionInfo, "test-guid", null);
+        var result2 = _service.GetOrCreateMeterProvider(connectionInfo, "test-guid", new Dictionary<string, string>());
+
+        Assert.That(result1, Is.SameAs(result2));
+    }
+
+    [Test]
+    public void GetOrCreateMeterProvider_ResourceAttributesInDifferentKeyOrder_ReusesProvider()
+    {
+        var connectionInfo = CreateConnectionInfo();
+
+        var result1 = _service.GetOrCreateMeterProvider(connectionInfo, "test-guid", new Dictionary<string, string> { { "a", "1" }, { "b", "2" } });
+        var result2 = _service.GetOrCreateMeterProvider(connectionInfo, "test-guid", new Dictionary<string, string> { { "b", "2" }, { "a", "1" } });
+
+        Assert.That(result1, Is.SameAs(result2));
+    }
+
+    [Test]
+    public void GetOrCreateMeterProvider_CallerChangesDictionaryAfterCall_DoesNotCauseRebuild()
+    {
+        var connectionInfo = CreateConnectionInfo();
+        var callerMap = new Dictionary<string, string> { { "host", "h1" } };
+
+        var result1 = _service.GetOrCreateMeterProvider(connectionInfo, "test-guid", callerMap);
+        callerMap["host"] = "h2";
+        var result2 = _service.GetOrCreateMeterProvider(connectionInfo, "test-guid", new Dictionary<string, string> { { "host", "h1" } });
+
+        Assert.That(result1, Is.SameAs(result2));
+    }
+
+    [Test]
+    public void GetOrCreateMeterProvider_NoArgs_ReusesStoredResourceAttributes()
+    {
+        var connectionInfo = CreateConnectionInfo();
+
+        var result1 = _service.GetOrCreateMeterProvider(connectionInfo, "test-guid", new Dictionary<string, string> { { "host", "h1" } });
+        var result2 = _service.GetOrCreateMeterProvider();
+
+        Assert.That(result1, Is.SameAs(result2));
     }
 }

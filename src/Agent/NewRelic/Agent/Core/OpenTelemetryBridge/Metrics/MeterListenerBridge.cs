@@ -62,7 +62,7 @@ public class MeterListenerBridge : ConfigurationBasedService
         // Create provider if we have connection info and metrics enabled
         if (_connectionInfo != null && _configuration.OpenTelemetryMetricsEnabled)
         {
-            _otlpConfigurationService.GetOrCreateMeterProvider(_connectionInfo, _currentEntityGuid);
+            _otlpConfigurationService.GetOrCreateMeterProvider(_connectionInfo, _currentEntityGuid, serverConfigurationUpdatedEvent.Configuration.OtlpResourceAttributes);
         }
     }
 
@@ -87,7 +87,7 @@ public class MeterListenerBridge : ConfigurationBasedService
             _sdkLogger = new OpenTelemetrySDKLogger();
         }
 
-        _otlpConfigurationService.GetOrCreateMeterProvider(_connectionInfo, _currentEntityGuid);
+        _otlpConfigurationService.GetOrCreateMeterProvider(_connectionInfo, _currentEntityGuid, _configuration.OtlpResourceAttributes);
     }
 
     public void Start()

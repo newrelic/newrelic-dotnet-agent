@@ -1300,6 +1300,8 @@ public class DefaultConfiguration : IConfiguration
 
     public virtual string EntityGuid { get { return _serverConfiguration.EntityGuid; } }
 
+    public virtual IReadOnlyDictionary<string, string> OtlpResourceAttributes { get { return _serverConfiguration.OtlpResourceAttributes; } }
+
     private bool? _highSecurityModeEnabled;
     public virtual bool HighSecurityModeEnabled
     {
