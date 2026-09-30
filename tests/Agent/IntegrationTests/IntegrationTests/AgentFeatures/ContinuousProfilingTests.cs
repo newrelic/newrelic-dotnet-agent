@@ -200,6 +200,7 @@ public class ContinuousProfilingTestsCoreOldest : ContinuousProfilingTestsBase<C
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class ContinuousProfilingTestsCoreLatestX86 : ContinuousProfilingTestsBase<ConsoleDynamicMethodFixtureCoreLatestX86>
 {
     public ContinuousProfilingTestsCoreLatestX86(ConsoleDynamicMethodFixtureCoreLatestX86 fixture, ITestOutputHelper output)
