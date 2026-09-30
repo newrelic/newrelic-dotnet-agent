@@ -1,8 +1,5 @@
-This folder contains the YUM repo definition file for the .NET agent and was manually uploaded to https://download.newrelic.com/dot_net_agent/yum. 
+This folder contains the YUM repo definition files for the .NET agent.  They are optionally deployed to either the production download.newrelic.com or our test mirror by running the agent deploy workflow and enabling the "linux-deploy-yum-repo-definitions" option.
 
-If changes to this file are needed, use the AWS CLI to upload to the S3 bucket:
-```
-$env:AWS_ACCESS_KEY_ID="access_key_for_s3_bucket"
-$env:AWS_SECRET_ACCESS_KEY="secret_access_key_for_s3_bucket"
- aws s3 cp ./newrelic-dotnet-agent.repo s3://<bucket_name>/dot_net_agent/yum/newrelic-dotnet-agent.repo
- ```
+`newrelic-dotnet-agent.repo` lists only one signing keys under `gpgkey`, the newer one used to sign packages >=10.48.0.  This repo definition can be used on all supported RHEL-family repos, but will not support installing agents older than 10.48.0.
+
+`newrelic-dotnet-agent-legacy.repo` lists two signing keys under `gpgkey`: the one used to sign packages <=10.47.0, and the newer one used to sign packages >=10.48.0.  This repo definition can't be used on RHEL >10 or its derivitives due to their more restrictive crypto policy.

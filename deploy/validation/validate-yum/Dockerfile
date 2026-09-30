@@ -1,4 +1,4 @@
-FROM rockylinux:9.2.20230513@sha256:b07e21a7bbcecbae55b9153317d333d4d50808bf5dc0859db0180b6fbd7afb3d
+FROM rockylinux/rockylinux:9.8.20260525.0@sha256:8101994123cf3d0a8fee517bee7f39e555c7d92bd2d9eb3303cc988a0eeed00f
 
 RUN curl -o /etc/yum.repos.d/newrelic-dotnet-agent.repo https://download.newrelic.com/dot_net_agent/yum/newrelic-dotnet-agent.repo
 
