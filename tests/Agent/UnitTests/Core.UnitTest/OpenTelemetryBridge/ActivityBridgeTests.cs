@@ -36,7 +36,8 @@ public class ActivityBridgeTests
         Mock.Arrange(() => _mockConfig.OpenTelemetryEnabled).Returns(false);
         Mock.Arrange(() => _mockConfig.OpenTelemetryTracingEnabled).Returns(true);
 
-        var bridge = new ActivityBridge(_mockAgent, _mockErrorService);
+        // Start() registers a process-wide listener here; dispose it so it does not leak into later tests.
+        using var bridge = new ActivityBridge(_mockAgent, _mockErrorService);
         // Act
         var result = bridge.Start();
         // Assert
@@ -50,7 +51,7 @@ public class ActivityBridgeTests
         Mock.Arrange(() => _mockConfig.OpenTelemetryEnabled).Returns(true);
         Mock.Arrange(() => _mockConfig.OpenTelemetryTracingEnabled).Returns(false);
 
-        var bridge = new ActivityBridge(_mockAgent, _mockErrorService);
+        using var bridge = new ActivityBridge(_mockAgent, _mockErrorService);
 
         // Act
         var result = bridge.Start();
