@@ -156,6 +156,15 @@ public class ContinuousProfilingUbuntuArm64ContainerTest : ContinuousProfilingCo
     }
 }
 
-// No Alpine (musl) variant: the shipped native artifact bundle only carries the glibc .so for every
-// distro (see tests/CLAUDE.md "glibc vs musl"), so a glibc profiler would fail to attach under musl.
-// tests/CLAUDE.md already directs new functional coverage away from Alpine for this reason.
+// Alpine (musl) x64: the shipped glibc .so is what runs on every distro (see tests/CLAUDE.md "glibc vs
+// musl"), and on x64 it loads under musl, so this validates CP end to end on the musl runtime. No arm64
+// Alpine variant: the arm64 glibc .so imports __stack_chk_guard from ld-linux-aarch64.so.1, which musl
+// does not provide, so the profiler (and the whole agent) cannot load there.
+[Trait("Architecture", "amd64")]
+public class ContinuousProfilingAlpineX64ContainerTest : ContinuousProfilingContainerTest<ContinuousProfilingAlpineX64ContainerTestFixture>
+{
+    public ContinuousProfilingAlpineX64ContainerTest(ContinuousProfilingAlpineX64ContainerTestFixture fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
+}
