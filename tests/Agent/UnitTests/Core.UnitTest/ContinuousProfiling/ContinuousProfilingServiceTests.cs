@@ -1499,6 +1499,269 @@ public class ContinuousProfilingServiceTests
 
     #endregion
 
+    #region Native-sampling-gated-on-connect
+
+    // A connected, enabled, started service built WITHOUT SetUp's auto-connect dependency: these tests need
+    // to control the connect transition themselves, so they construct their own instance and never rely on
+    // the SetUp-connected _service.
+    private ContinuousProfilingService NewUnconnectedEnabledService(IProfilesTransport transport, int intervalMs = 10000)
+    {
+        var service = new ContinuousProfilingService(_source, _native, transport, _scheduler, _health);
+        Mock.Arrange(() => _config.ContinuousProfilingEnabled).Returns(true);
+        Mock.Arrange(() => _config.ContinuousProfilingSamplingIntervalMs).Returns(intervalMs);
+        Mock.Arrange(() => _config.ApplicationNames).Returns(new[] { "MyApp" });
+        Mock.Arrange(() => _config.ContinuousProfilingIncludeAgentCode).Returns(false);
+        service.OverrideConfigForTesting(_config);
+        return service;
+    }
+
+    private static void PublishConnect(string host = "collector.nr-data.net")
+    {
+        var connectionInfo = Mock.Create<IConnectionInfo>();
+        Mock.Arrange(() => connectionInfo.HttpProtocol).Returns("https");
+        Mock.Arrange(() => connectionInfo.Host).Returns(host);
+        Mock.Arrange(() => connectionInfo.Port).Returns(443);
+        EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent { ConnectInfo = connectionInfo });
+    }
+
+    private static void PublishDisconnect()
+    {
+        // A reconnect whose connection info yields no usable endpoint (null host -> resolver returns null).
+        var deadConnectionInfo = Mock.Create<IConnectionInfo>();
+        Mock.Arrange(() => deadConnectionInfo.HttpProtocol).Returns("https");
+        Mock.Arrange(() => deadConnectionInfo.Host).Returns((string)null);
+        Mock.Arrange(() => deadConnectionInfo.Port).Returns(443);
+        EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent { ConnectInfo = deadConnectionInfo });
+    }
+
+    [Test]
+    public void StartIfEnabled_while_not_connected_defers_native_sampling_but_arms_the_drain_schedule()
+    {
+        // The core fix: a CP-enabled process that has not connected (bad license / air-gapped) must NOT run
+        // the stop-the-world native sampler -- it would suspend the runtime every tick forever while every
+        // drain is dropped. The session is still armed (drain schedule running) so sending begins the
+        // instant we connect. IsActive reports false so the thread profiler's mutual-exclusion guard is free.
+        var transport = Mock.Create<IProfilesTransport>();
+        using var service = NewUnconnectedEnabledService(transport);
+
+        service.StartIfEnabled();
+
+        Mock.Assert(() => _native.Start(Arg.IsAny<int>()), Occurs.Never());
+        Mock.Assert(() => _scheduler.ExecuteEvery(Arg.IsAny<Action>(), TimeSpan.FromMilliseconds(10000), Arg.IsAny<TimeSpan?>(), Arg.IsAny<bool>()), Occurs.Once());
+        Assert.That(service.IsActive, Is.False);
+    }
+
+    [Test]
+    public void Connecting_after_a_deferred_start_begins_native_sampling()
+    {
+        var transport = Mock.Create<IProfilesTransport>();
+        using var service = NewUnconnectedEnabledService(transport);
+        service.StartIfEnabled();
+        Mock.Assert(() => _native.Start(Arg.IsAny<int>()), Occurs.Never());
+
+        PublishConnect();
+
+        Mock.Assert(() => _native.Start(10000), Occurs.Once());
+        Assert.That(service.IsActive, Is.True);
+    }
+
+    [Test]
+    public void A_disconnect_while_sampling_pauses_native_on_the_next_drain_tick()
+    {
+        var transport = Mock.Create<IProfilesTransport>();
+        using var service = NewUnconnectedEnabledService(transport);
+        PublishConnect();
+        service.StartIfEnabled();
+        Mock.Assert(() => _native.Start(10000), Occurs.Once());
+        Assert.That(service.IsActive, Is.True);
+
+        PublishDisconnect();
+        // Native must only be stopped from the drain thread (holds the _drainInFlight guard), so the pause
+        // happens on the next tick, not synchronously in the connect handler.
+        service.DrainOnce();
+
+        Mock.Assert(() => _native.Stop(), Occurs.Once());
+        Mock.Assert(() => _source.ReadBatch(Arg.IsAny<byte[]>()), Occurs.Never(), "a disconnected drain must pause, not read the native buffer");
+        Assert.That(service.IsActive, Is.False);
+    }
+
+    [Test]
+    public void A_reconnect_after_a_disconnect_resumes_native_sampling()
+    {
+        var transport = Mock.Create<IProfilesTransport>();
+        using var service = NewUnconnectedEnabledService(transport);
+        PublishConnect();
+        service.StartIfEnabled();
+        PublishDisconnect();
+        service.DrainOnce(); // pauses native
+        Assert.That(service.IsActive, Is.False);
+
+        PublishConnect();
+
+        // Started once initially, stopped on disconnect, started again on reconnect.
+        Mock.Assert(() => _native.Start(10000), Occurs.Exactly(2));
+        Assert.That(service.IsActive, Is.True);
+    }
+
+    [Test]
+    public void Disposing_while_awaiting_connect_never_starts_native()
+    {
+        var transport = Mock.Create<IProfilesTransport>();
+        var service = NewUnconnectedEnabledService(transport);
+        service.StartIfEnabled(); // armed but deferred (not connected)
+
+        Assert.DoesNotThrow(() => service.Dispose());
+
+        Mock.Assert(() => _native.Start(Arg.IsAny<int>()), Occurs.Never());
+    }
+
+    [Test]
+    public void Disabling_via_config_while_awaiting_connect_stops_the_session_without_ever_starting_native()
+    {
+        var transport = Mock.Create<IProfilesTransport>();
+        using var service = NewUnconnectedEnabledService(transport);
+        service.StartIfEnabled(); // armed but deferred (not connected)
+        Assert.That(service.IsActive, Is.False);
+
+        var disabled = Mock.Create<IConfiguration>();
+        Mock.Arrange(() => disabled.ContinuousProfilingEnabled).Returns(false);
+        service.OverrideConfigForTesting(disabled);
+        service.ApplyConfigChange();
+
+        Mock.Assert(() => _native.Start(Arg.IsAny<int>()), Occurs.Never());
+        Mock.Assert(() => _scheduler.StopExecuting(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan?>()), Occurs.Once());
+        Assert.That(service.IsActive, Is.False);
+
+        // After the stop cleared the awaiting-connect state, a later connect must not resurrect native.
+        PublishConnect();
+        Mock.Assert(() => _native.Start(Arg.IsAny<int>()), Occurs.Never());
+    }
+
+    [Test]
+    public void A_backoff_probe_that_fires_while_disconnected_does_not_resume_native()
+    {
+        // Backoff only trips while connected and sampling. If the agent then disconnects, the pending backoff
+        // probe must not restart the stop-the-world sampler while there is nowhere to send; it stays paused
+        // until a reconnect resumes it.
+        var transport = Mock.Create<IProfilesTransport>();
+        using var service = NewUnconnectedEnabledService(transport);
+        PublishConnect();
+        service.StartIfEnabled();
+        Mock.Assert(() => _native.Start(10000), Occurs.Once());
+
+        ArrangeReadableBatch();
+        Mock.Arrange(() => transport.Send(Arg.IsAny<ExportProfilesRequest>())).Returns(false);
+
+        Action probe = null;
+        Mock.Arrange(() => _scheduler.ExecuteOnce(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>()))
+            .DoInstead((Action action, TimeSpan delay) => probe = action);
+
+        service.DrainOnce(); // failure 1
+        service.DrainOnce(); // failure 2 -> trips backoff, pauses native, schedules the probe
+        Mock.Assert(() => _native.Stop(), Occurs.Once());
+        Assert.That(probe, Is.Not.Null);
+
+        // Disconnect, THEN fire the probe: it must not resume native while disconnected.
+        PublishDisconnect();
+        probe.Invoke();
+
+        Mock.Assert(() => _native.Start(Arg.IsAny<int>()), Occurs.Once(), "the backoff probe must not restart native sampling while the agent is disconnected");
+    }
+
+    [Test]
+    public void DrainOnce_self_heals_a_missed_connect_wakeup_by_starting_native_when_connected_but_still_awaiting()
+    {
+        // Reproduce the connected-but-still-awaiting state (what a lost-wakeup leaves behind) deterministically:
+        // a thread-profiling session is active when connect lands, so ResumeAfterConnect defers and leaves
+        // _awaitingConnect set with native not started -- same observable state as a missed wakeup. Then clear
+        // thread profiling and prove the next drain tick self-heals: it starts native and skips the drain.
+        // Backed by a captured flag (not repeated Arrange calls -- re-arranging the same mock member does not
+        // take precedence in JustMock Lite; the first registration wins). Thread profiling must be INACTIVE
+        // at start time (so StartLocked arms the deferred session rather than deferring on thread-profiling
+        // grounds) and ACTIVE only at connect time (so ResumeAfterConnect defers, leaving the session parked
+        // connected-but-awaiting -- the same observable state a lost wakeup produces).
+        var threadProfilingActive = false;
+        var tpStatus = Mock.Create<IThreadProfilingStatus>();
+        Mock.Arrange(() => tpStatus.IsThreadProfilingActive).Returns(() => threadProfilingActive);
+        var transport = Mock.Create<IProfilesTransport>();
+        using var service = NewUnconnectedEnabledService(transport);
+        service.ThreadProfilingStatus = tpStatus;
+
+        service.StartIfEnabled(); // not connected, TP inactive -> arms deferred session, native not started
+        Mock.Assert(() => _native.Start(Arg.IsAny<int>()), Occurs.Never());
+
+        threadProfilingActive = true;
+        PublishConnect();         // connects, but ResumeAfterConnect defers because thread profiling is active
+        Mock.Assert(() => _native.Start(Arg.IsAny<int>()), Occurs.Never());
+        Assert.That(service.IsActive, Is.False);
+
+        threadProfilingActive = false; // thread profiling ends
+        ArrangeReadableBatch();
+
+        service.DrainOnce(); // self-heal: connected && awaiting -> start native, skip this tick
+
+        Mock.Assert(() => _native.Start(10000), Occurs.Once());
+        Mock.Assert(() => _source.ReadBatch(Arg.IsAny<byte[]>()), Occurs.Never(), "the self-healing tick starts native and returns rather than draining");
+        Assert.That(service.IsActive, Is.True);
+    }
+
+    [Test]
+    public void Connecting_when_no_session_is_awaiting_is_a_harmless_no_op()
+    {
+        // OnAgentConnected now calls ResumeAfterConnect unconditionally (to close the lost-wakeup race). It
+        // must be a no-op when nothing is awaiting connect: a reconnect to an already-running session must
+        // not start native a second time.
+        var transport = Mock.Create<IProfilesTransport>();
+        using var service = NewUnconnectedEnabledService(transport);
+        PublishConnect();
+        service.StartIfEnabled();
+        Mock.Assert(() => _native.Start(10000), Occurs.Once());
+
+        PublishConnect(); // reconnect while already running and not awaiting
+
+        Mock.Assert(() => _native.Start(Arg.IsAny<int>()), Occurs.Once(), "an unconditional ResumeAfterConnect must not restart an already-running session");
+        Assert.That(service.IsActive, Is.True);
+    }
+
+    [Test]
+    public void Repeated_drain_ticks_while_thread_profiling_defers_the_resume_keep_only_one_retry_pending()
+    {
+        // While thread profiling blocks the connect-resume, every self-healing drain tick (and the connect
+        // itself) calls ResumeAfterConnect and gets DeferredThreadProfilingActive. Each deferral must NOT
+        // schedule its own retry timer, or retry chains stack for the length of the TP session. At most one
+        // retry stays pending; once TP ends, native starts.
+        var threadProfilingActive = false;
+        var tpStatus = Mock.Create<IThreadProfilingStatus>();
+        Mock.Arrange(() => tpStatus.IsThreadProfilingActive).Returns(() => threadProfilingActive);
+        var transport = Mock.Create<IProfilesTransport>();
+        using var service = NewUnconnectedEnabledService(transport);
+        service.ThreadProfilingStatus = tpStatus;
+
+        var retryCount = 0;
+        // The connect-resume retry is scheduled at DeferredStartRetryInterval (15s); no other ExecuteOnce
+        // fires in this test (no delay/duration/backoff configured).
+        Mock.Arrange(() => _scheduler.ExecuteOnce(Arg.IsAny<Action>(), TimeSpan.FromSeconds(15)))
+            .DoInstead(() => retryCount++);
+
+        service.StartIfEnabled(); // not connected, TP inactive -> arms the deferred session
+        threadProfilingActive = true;
+        PublishConnect();         // connected, but resume defers (TP active) -> schedules one retry
+
+        ArrangeReadableBatch();
+        for (var i = 0; i < 5; i++)
+            service.DrainOnce();  // each self-heal defers again, but must not schedule another retry
+
+        Assert.That(retryCount, Is.EqualTo(1), "only one connect-resume retry may be pending regardless of how many ticks defer");
+
+        threadProfilingActive = false;
+        service.DrainOnce();      // self-heal now succeeds
+
+        Mock.Assert(() => _native.Start(10000), Occurs.Once());
+        Assert.That(service.IsActive, Is.True);
+    }
+
+    #endregion
+
     #region Send-failure backoff
 
     // A dedicated (service, transport) pair per test, already connected: SetUp's blanket

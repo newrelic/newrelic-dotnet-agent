@@ -277,15 +277,15 @@ public class ThreadProfilingService : ConfigurationBasedService, IThreadProfilin
         }
     }
 
-    public bool StopThreadProfilingSession(int profileId, bool reportData = true)
+    public StopThreadProfilingSessionResult StopThreadProfilingSession(int profileId, bool reportData = true)
     {
         if (_sampler == null)
-            return false;
+            return StopThreadProfilingSessionResult.NotRunning;
 
         if (_profileSessionId != InvalidSessionId && _profileSessionId != profileId)
         {
             Log.Warn("A request to stop a thread profiling session was made. Requesting profile Id = {0}. In process profile Id = {1}", profileId, _profileSessionId);
-            return false;
+            return StopThreadProfilingSessionResult.NotRunning;
         }
 
         _reportData = reportData;
@@ -304,13 +304,11 @@ public class ThreadProfilingService : ConfigurationBasedService, IThreadProfilin
         {
             _profileSessionId = InvalidSessionId;
             ResetCache();
-        }
-        else
-        {
-            Log.Warn("Thread profiling session {0} stop timed out waiting for the sampling worker to wind down; leaving profile state intact so the still-running worker's aggregation is not corrupted.", profileId);
+            return StopThreadProfilingSessionResult.Stopped;
         }
 
-        return workerStopped;
+        Log.Warn("Thread profiling session {0} stop timed out waiting for the sampling worker to wind down; leaving profile state intact so the still-running worker's aggregation is not corrupted.", profileId);
+        return StopThreadProfilingSessionResult.StopRequestedWorkerStillFinishing;
     }
     public void SampleAcquired(ThreadSnapshot[] threadSnapshots)
     {

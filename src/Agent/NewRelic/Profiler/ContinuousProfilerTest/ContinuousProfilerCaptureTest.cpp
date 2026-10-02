@@ -5,9 +5,12 @@
 #include "stdafx.h"
 #include "CppUnitTest.h"
 
+#include <algorithm>
 #include <chrono>
 #include <cstdint>
+#include <functional>
 #include <stdexcept>
+#include <string>
 #include <thread>
 #include <vector>
 
@@ -584,6 +587,158 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
             profiler.RetireSpansForTesting({ 1 });
             const auto rejected = profiler.DriveStackFrameCallbackForTesting(thread, { 1 });
             Assert::AreEqual(static_cast<int64_t>(0), rejected.StampedContext.SpanId);
+        }
+    };
+
+    // M4b -- stale-FunctionID guard during post-resume resolution. ResolveCapturedFrames resolves this
+    // tick's captured FunctionIDs AFTER ResumeRuntime; a collectible-ALC / module unload (ModuleUnloadStarted
+    // -> InvalidateNameCache) landing during that loop frees the MethodDesc*/Module* those FunctionIDs point
+    // at, so a subsequent ResolveIntoCache (GetTokenAndMetaDataFromFunction / GetFunctionInfo /
+    // GetMethodProps) would dereference freed memory -- an uncatchable AV/SIGSEGV. The guard re-checks
+    // _nameCacheInvalidationPending (acquire) before EVERY resolve; the first observation clears the cache
+    // once and resolves nothing further this tick (every remaining frame emits as unknown). The flag is left
+    // set for the next tick's top to absorb. These tests drive the real ResolveCapturedFrames via the
+    // ResolveCapturedFramesForTesting seam, with no live CLR.
+
+    // Counts GetTokenAndMetaDataFromFunction calls -- the first metadata call ResolveIntoCache makes for an
+    // uncached FunctionID -- and, on a configurable call number, invokes a hook. The test uses the hook to
+    // flip the invalidation flag, modelling a ModuleUnloadStarted landing mid-resolution. Always returns
+    // E_NOTIMPL so the resolve bails (the frame stays unknown); the test asserts on the call count and the
+    // resolved frame names, not on produced names from this stub.
+    class CountingMetadataStub : public StubCorProfilerInfo4
+    {
+    public:
+        int MetadataCallCount{ 0 };
+        int InvokeHookOnCall{ 0 }; // 1-based call number on which to fire Hook; 0 == never.
+        std::function<void()> Hook;
+
+        virtual HRESULT STDMETHODCALLTYPE GetTokenAndMetaDataFromFunction(FunctionID, REFIID, IUnknown**, mdToken*) override
+        {
+            ++MetadataCallCount;
+            if (Hook && MetadataCallCount == InvokeHookOnCall)
+            {
+                Hook();
+            }
+            return E_NOTIMPL;
+        }
+    };
+
+    TEST_CLASS(ContinuousProfilerResolveUnloadTest)
+    {
+    private:
+        static NewRelic::Profiler::ContinuousProfiler::PreallocTypeName MakeTypeName(const std::wstring& s)
+        {
+            NewRelic::Profiler::ContinuousProfiler::PreallocTypeName p{};
+            const size_t n = std::min<size_t>(s.size(), p.first.size() - 1);
+            std::copy_n(s.c_str(), n, p.first.data());
+            p.first[n] = 0;
+            p.second = static_cast<ULONG>(n + 1);
+            return p;
+        }
+
+        static NewRelic::Profiler::ContinuousProfiler::PreallocMethodName MakeMethodName(const std::wstring& s)
+        {
+            NewRelic::Profiler::ContinuousProfiler::PreallocMethodName p{};
+            const size_t n = std::min<size_t>(s.size(), p.first.size() - 1);
+            std::copy_n(s.c_str(), n, p.first.data());
+            p.first[n] = 0;
+            p.second = static_cast<ULONG>(n + 1);
+            return p;
+        }
+
+        static std::wstring Unknown(FunctionID fid)
+        {
+            return L"UnknownClass.UnknownMethod(" + std::to_wstring(static_cast<unsigned long>(fid)) + L")";
+        }
+
+    public:
+        // An unload signalled on the Nth metadata call (mid-loop): frames resolved before it keep their
+        // names; the triggering frame and every frame after it are unknown; a cached frame AFTER the trigger
+        // is unknown too (the cache was cleared); and no metadata resolution happens past the first frame
+        // following the signal. Without the per-frame re-check, the trailing uncached frame would resolve too
+        // (MetadataCallCount == 2) and the trailing cached frame would still report its stale name.
+        TEST_METHOD(unload_signalled_mid_resolve_stops_resolution_and_clears_the_cache)
+        {
+            CountingMetadataStub stub;
+            ContinuousProfiler profiler;
+            profiler.Init(&stub, /*isCoreClr*/ false);
+
+            // Two frames pre-resolved into the cache, as a prior tick's resolution would have left them.
+            profiler.NameCacheForTesting().insert(1, 10, 100, MakeTypeName(L"Alpha"), MakeMethodName(L"One")); // fid 10 -> Alpha.One
+            profiler.NameCacheForTesting().insert(2, 20, 200, MakeTypeName(L"Beta"), MakeMethodName(L"Two"));  // fid 20 -> Beta.Two
+
+            // Fire the unload signal the first time ResolveIntoCache reaches a metadata call (for fid 99).
+            stub.InvokeHookOnCall = 1;
+            stub.Hook = [&profiler]() { profiler.InvalidateNameCache(); };
+
+            // One thread: cached(10), uncached(99) -> trips the unload, uncached(100), cached(20).
+            const auto names = profiler.ResolveCapturedFramesForTesting({ { 10, 99, 100, 20 } });
+
+            Assert::AreEqual(static_cast<size_t>(1), names.size(), L"one captured thread");
+            const auto& frames = names[0];
+            Assert::AreEqual(static_cast<size_t>(4), frames.size(), L"all four frames are emitted");
+
+            Assert::IsTrue(frames[0] == L"Alpha.One", L"a frame resolved before the unload keeps its name");
+            Assert::IsTrue(frames[1] == Unknown(99), L"the triggering frame is unknown -- its metadata call bailed");
+            Assert::IsTrue(frames[2] == Unknown(100), L"a frame after the unload is not resolved");
+            Assert::IsTrue(frames[3] == Unknown(20), L"a cached frame after the unload is unknown too -- the cache was cleared");
+
+            Assert::AreEqual(1, stub.MetadataCallCount, L"resolution stops at the first frame after the unload is observed");
+            Assert::IsFalse(profiler.NameCacheForTesting().has_fid(10), L"the cache was cleared on detection");
+            Assert::IsFalse(profiler.NameCacheForTesting().has_fid(20), L"the cache was cleared on detection");
+
+            profiler.Shutdown();
+        }
+
+        // The pre-loop case: an unload already signalled before resolution begins clears the cache and
+        // resolves nothing -- every frame, including cached ones, emits as unknown, and zero metadata calls
+        // are made.
+        TEST_METHOD(unload_signalled_before_the_loop_skips_all_resolution)
+        {
+            CountingMetadataStub stub;
+            ContinuousProfiler profiler;
+            profiler.Init(&stub, /*isCoreClr*/ false);
+
+            profiler.NameCacheForTesting().insert(1, 10, 100, MakeTypeName(L"Alpha"), MakeMethodName(L"One"));
+
+            profiler.InvalidateNameCache(); // unload signalled before any resolve
+
+            const auto names = profiler.ResolveCapturedFramesForTesting({ { 10, 99 } });
+
+            const auto& frames = names[0];
+            Assert::IsTrue(frames[0] == Unknown(10), L"the pre-loop clear wipes even the cached name");
+            Assert::IsTrue(frames[1] == Unknown(99), L"the uncached frame is unknown");
+            Assert::AreEqual(0, stub.MetadataCallCount, L"no metadata resolution happens when the flag is already set");
+            Assert::IsFalse(profiler.NameCacheForTesting().has_fid(10), L"the cache was cleared");
+
+            profiler.Shutdown();
+        }
+
+        // A capture tick AFTER the unload resolves normally again: the tick top (CaptureAllThreads) consumes
+        // the flag via its exchange and clears the cache, so the next resolution sees a clean flag -- the
+        // pre-loop clear does NOT fire, a freshly cached frame resolves, and an uncached frame is resolved
+        // (one metadata call, not skipped).
+        TEST_METHOD(a_tick_after_the_unload_resolves_normally_again)
+        {
+            CountingMetadataStub stub;
+            ContinuousProfiler profiler;
+            profiler.Init(&stub, /*isCoreClr*/ false);
+
+            profiler.InvalidateNameCache();   // unload signalled
+            profiler.CaptureOnceForTesting(); // a capture tick: the tick-top exchange consumes the flag + clears the cache
+
+            // Seed AFTER the intervening tick, as that tick's own resolution would have.
+            profiler.NameCacheForTesting().insert(1, 10, 100, MakeTypeName(L"Alpha"), MakeMethodName(L"One"));
+            stub.MetadataCallCount = 0;
+
+            const auto names = profiler.ResolveCapturedFramesForTesting({ { 10, 99 } });
+
+            const auto& frames = names[0];
+            Assert::IsTrue(frames[0] == L"Alpha.One", L"the cached frame resolves -- the prior tick cleared the flag");
+            Assert::IsTrue(frames[1] == Unknown(99), L"the uncached frame resolves to unknown via a real metadata call");
+            Assert::AreEqual(1, stub.MetadataCallCount, L"resolution proceeds normally on a tick after the unload");
+
+            profiler.Shutdown();
         }
     };
 }}}

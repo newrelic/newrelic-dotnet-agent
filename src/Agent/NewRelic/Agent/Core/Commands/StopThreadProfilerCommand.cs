@@ -40,10 +40,16 @@ public class StopThreadProfilerCommand : AbstractCommand
 
         try
         {
-            var stoppedSession = ThreadProfilingService.StopThreadProfilingSession(stopArgs.ProfileId, stopArgs.ReportData);
-            if (!stoppedSession)
+            var stopResult = ThreadProfilingService.StopThreadProfilingSession(stopArgs.ProfileId, stopArgs.ReportData);
+            switch (stopResult)
             {
-                return "A thread profiling session is not running.";
+                case StopThreadProfilingSessionResult.NotRunning:
+                    return "A thread profiling session is not running.";
+                case StopThreadProfilingSessionResult.StopRequestedWorkerStillFinishing:
+                    // The session WAS running and its already-collected data is still being sent; the
+                    // bounded join just outran the worker. Report that distinctly rather than claiming
+                    // nothing was running (which would misrepresent a session that is still finishing).
+                    return "A thread profiling session stop was requested; the session is still finishing and its collected data is being sent.";
             }
         }
         catch (InvalidProfileIdException e)

@@ -174,6 +174,26 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
     // under _lifecycleLock on the scheduler thread.
     private volatile bool _isActive;
 
+    // Set under _lifecycleLock when a session is armed (_isActive true, drain schedule running) but native
+    // sampling is NOT running because the agent is not connected (no profiles endpoint resolved yet).
+    // Mirrors _sendBackoffActive: native is stopped, IsActive reports false (so the thread profiler's
+    // mutual-exclusion guard lets it run and CP isn't charged for a suspend resource it isn't using), the
+    // drain timer keeps ticking as a no-op, and OnAgentConnected resumes native the same way the backoff
+    // probe/reconnect path does. This exists because native sampling's stop-the-world SuspendRuntime must
+    // not run every tick on an air-gapped or bad-license host that never connects -- the drain already
+    // dropped every batch there, so the sampling was pure waste. volatile: read lock-free by IsActive on
+    // another thread; written under _lifecycleLock.
+    private volatile bool _awaitingConnect;
+
+    // At-most-one latch for the connect-resume retry timer. ResumeAfterConnect is invoked from several
+    // places that can fire repeatedly while a thread-profiling session keeps the resume deferred -- every
+    // DrainOnce self-heal tick and each OnAgentConnected -- and each deferral would otherwise schedule its
+    // own ExecuteOnce(ResumeAfterConnect) retry, stacking a new retry chain per tick for the length of the
+    // TP session. This latch keeps exactly one retry outstanding: set when a retry is scheduled, cleared
+    // when that scheduled retry actually runs (ConnectResumeRetry). Only ever read/written under
+    // _lifecycleLock.
+    private bool _connectResumeRetryPending;
+
     // volatile: set under _lifecycleLock by Dispose; every lock-holding entry point checks it right
     // after acquiring the lock, so a deferred callback landing after Dispose (the retry timer, a
     // queued OnConfigurationUpdated) becomes a no-op instead of restarting a sampler Dispose already
@@ -218,12 +238,12 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
     // EndBackoffProbeIfCurrent/ResumeAfterReconnect, so a plain read/write could tear on 32-bit.
     private long _lastDrainTimestamp;
 
-    // While backing off from repeated send failures, native sampling is stopped (see
-    // TripBackoffAndScheduleProbeLocked) so CP is not really consuming the suspend-mutex resource --
-    // report false here so the thread-profiler's mutual-exclusion guard doesn't refuse a
-    // start_profiler command for the full backoff window (up to SendBackoffSequence's max) while CP
-    // produces nothing. Internal logic that needs "session is armed" reads the raw _isActive field.
-    public bool IsActive => _isActive && !_sendBackoffActive;
+    // While backing off from repeated send failures (TripBackoffAndScheduleProbeLocked) OR while a session
+    // is armed but waiting to connect (_awaitingConnect), native sampling is stopped, so CP is not really
+    // consuming the suspend-mutex resource -- report false here so the thread-profiler's mutual-exclusion
+    // guard doesn't refuse a start_profiler command while CP produces nothing. Internal logic that needs
+    // "session is armed" reads the raw _isActive field.
+    public bool IsActive => _isActive && !_sendBackoffActive && !_awaitingConnect;
 
     /// <summary>
     /// Thread profiler's session state, wired post-construction by <c>AgentManager</c> (settable to
@@ -320,7 +340,10 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
             // A (re)connect that yields no usable endpoint means any previously-resolved endpoint is no
             // longer known-good. Clear _isConnected so DrainOnce pauses instead of POSTing to the stale
             // endpoint _transport still holds, until a later connect resolves a fresh one. On a first
-            // connect this is a no-op (already false). Native sampling is unaffected (decoupled from send).
+            // connect this is a no-op (already false). Native sampling, if running, is paused by the next
+            // drain tick (DrainOnce -> PauseNativeForDisconnect) rather than here: native must only be
+            // stopped from the drain thread, which holds the _drainInFlight guard so no ReadBatch can be
+            // concurrently touching native (the same safety TripBackoffAndScheduleProbeLocked relies on).
             _isConnected = false;
             Log.Debug("[ContinuousProfiling] AgentConnectedEvent had no usable connection info; profiles will not be sent.");
             return;
@@ -334,6 +357,18 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
         // unrelated backoff window.
         if (_sendBackoffActive)
             ResumeAfterReconnect();
+
+        // Resume a session that was armed but is waiting for this connect (native start deferred in
+        // StartLocked, or paused on an earlier disconnect). Called UNCONDITIONALLY, not gated on an unlocked
+        // _awaitingConnect read: this method runs without _lifecycleLock, so a gated read here would be a
+        // Dekker-style store-then-load race against StartLocked -- StartLocked (under the lock) reads
+        // _isConnected == false, this thread sets _isConnected = true and reads _awaitingConnect == false
+        // (not set yet), skips the resume, then StartLocked sets _awaitingConnect = true. Native would then
+        // never start for the process lifetime. ResumeAfterConnect re-reads _awaitingConnect under
+        // _lifecycleLock, so calling it unconditionally lets the lock serialize the gate-set against the
+        // re-check; it is a cheap no-op when nothing is awaiting connect. DrainOnce also self-heals any
+        // residual missed wakeup within one report interval (see its connected-but-awaiting check).
+        ResumeAfterConnect();
     }
 
     /// <summary>
@@ -888,6 +923,9 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
             // resuming sampling this fresh session didn't schedule.
             _backoffGeneration++;
             _sendBackoffActive = false;
+            // Cleared here and set below only if this start finds the agent not yet connected; the connect
+            // resume (OnAgentConnected -> ResumeAfterConnect) clears it again when native actually starts.
+            _awaitingConnect = false;
             _stopSignaled = false;
 
             // Arm the reverse-guard flag before starting native sampling, while still holding the Gate,
@@ -906,11 +944,27 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
                 if (_drainBuffer == null)
                     _drainBuffer = new byte[DrainBufferSize];
 
-                // A non-zero result is a native failure that doesn't throw: the profiler singleton not yet
-                // initialized, a null ICorProfilerInfo, or a worker-thread creation failure caught inside
-                // native Start. Native sampling is NOT running in any of those cases, so capture it here and
-                // treat it exactly like a thrown exception below rather than arming a dead drain schedule.
-                nativeStartResult = _native.Start(sampleIntervalMs);
+                // Native sampling is decoupled from the drain schedule, but it must NOT run while the agent
+                // is not connected: the drain drops every batch until an endpoint resolves (DrainOnce's
+                // !_isConnected gate), so running the stop-the-world sampler meanwhile is pure overhead --
+                // and on an air-gapped or bad-license host that never connects it would suspend the runtime
+                // every tick forever. Defer the native start to OnAgentConnected (ResumeAfterConnect) in
+                // that case; _awaitingConnect makes IsActive report false so the thread profiler isn't
+                // blocked while CP samples nothing. The drain schedule is still armed below so sending
+                // starts the instant we connect and resume.
+                if (!_isConnected)
+                {
+                    _awaitingConnect = true;
+                    Log.Info("[ContinuousProfiling] Session armed; native sampling deferred until the agent connects.");
+                }
+                else
+                {
+                    // A non-zero result is a native failure that doesn't throw: the profiler singleton not yet
+                    // initialized, a null ICorProfilerInfo, or a worker-thread creation failure caught inside
+                    // native Start. Native sampling is NOT running in any of those cases, so capture it here and
+                    // treat it exactly like a thrown exception below rather than arming a dead drain schedule.
+                    nativeStartResult = _native.Start(sampleIntervalMs);
+                }
             }
             catch (Exception ex)
             {
@@ -961,7 +1015,10 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
             _continuousProfilingContext.Enable(_native);
             ContinuousProfilingContext.Instance = _continuousProfilingContext;
 
-            Log.Info("[ContinuousProfiling] Session started; sampling every {0} ms, draining every {1} ms.", sampleIntervalMs, reportIntervalMs);
+            if (_awaitingConnect)
+                Log.Info("[ContinuousProfiling] Session armed; drain scheduled every {0} ms, native sampling will begin once connected (sample interval {1} ms).", reportIntervalMs, sampleIntervalMs);
+            else
+                Log.Info("[ContinuousProfiling] Session started; sampling every {0} ms, draining every {1} ms.", sampleIntervalMs, reportIntervalMs);
         }
         catch (Exception ex)
         {
@@ -1092,6 +1149,10 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
             _isActive = false;
             _activeIntervalMs = 0;
             _activeReportIntervalMs = 0;
+            // Clear the connect-pause gate too so a stopped session leaves no stale "awaiting connect" state
+            // for a later reconnect or a fresh start to trip over (StartLocked re-clears it regardless).
+            _awaitingConnect = false;
+            _connectResumeRetryPending = false;
             // Release the LOH drain buffer: freeing it on stop is what keeps a disabled/stopped process at
             // zero cost. Safe even though a drain may have outrun this stop's bounded wait -- that drain
             // snapshotted the field into a local (see DrainOnce), which keeps the array alive for its own
@@ -1150,11 +1211,34 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
                 if (_disposed || _stopSignaled)
                     return;
 
-                // Nowhere to send yet: skip read/parse/build rather than doing the work and dropping the
-                // result. Native sampling still runs (decoupled from connect); only the managed drain is
-                // deferred. _sendBackoffActive: sampling itself is paused while backing off, so this is
-                // mostly a cheap guard against the recurring timer's own ticks meanwhile.
-                if (!_isConnected || _sendBackoffActive)
+                // Not connected: nowhere to send. If native sampling is running (a session was armed and
+                // connected, then lost its endpoint), pause it from here -- this drain thread holds the
+                // _drainInFlight guard, so no ReadBatch can race _native.Stop (the same safety the backoff
+                // pause relies on). The resume happens on reconnect (OnAgentConnected -> ResumeAfterConnect).
+                // PauseNativeForDisconnectLocked no-ops if native isn't actually running (never connected --
+                // start was deferred -- or already paused for backoff/connect), so a never-connected session
+                // just skips here with native still unstarted.
+                if (!_isConnected)
+                {
+                    PauseNativeForDisconnect();
+                    return;
+                }
+
+                // Self-heal a missed connect wakeup: we are connected, yet a session is still parked awaiting
+                // connect (its native start was deferred). OnAgentConnected normally resumes it, but if that
+                // wakeup were ever missed (e.g. a lost-wakeup race on startup), native would stay stopped for
+                // the process lifetime. Resuming here bounds any such miss to one report interval. Cheap: a
+                // volatile read that is false on every steady-state tick. ResumeAfterConnect re-checks under
+                // the lock; skip this tick and let the next one drain once native is running again.
+                if (_awaitingConnect)
+                {
+                    ResumeAfterConnect();
+                    return;
+                }
+
+                // _sendBackoffActive: sampling itself is paused while backing off, so this is mostly a cheap
+                // guard against the recurring timer's own ticks meanwhile.
+                if (_sendBackoffActive)
                     return;
 
                 // Read once into a local: StopLocked can null the field while this drain is still running (it
@@ -1406,6 +1490,9 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
     {
         SessionInactive,
         DeferredThreadProfilingActive,
+        // The agent is not connected, so native sampling must not resume (nowhere to send). The caller
+        // leaves native paused and relies on OnAgentConnected to resume once an endpoint resolves.
+        DeferredNotConnected,
         Resumed
     }
 
@@ -1428,6 +1515,13 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
         if (!_isActive)
             return ResumeOutcome.SessionInactive;
 
+        // Never resume the stop-the-world native sampler while disconnected -- there is nowhere to send, so
+        // running it is the exact air-gapped waste this guards. This matters when a backoff probe fires
+        // after a disconnect (the agent connected, failed sends tripped backoff, then a reconnect yielded no
+        // usable endpoint): leave native paused and let OnAgentConnected resume once an endpoint resolves.
+        if (!_isConnected)
+            return ResumeOutcome.DeferredNotConnected;
+
         using (ProfilingMutualExclusionGate.Acquire())
         {
             if (ThreadProfilingStatus?.IsThreadProfilingActive == true)
@@ -1449,6 +1543,9 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
             // profiler concurrently with live CP sampling. Callers do their remaining backoff bookkeeping
             // (counter/generation resets) after this returns; only this flag gates cross-subsystem IsActive.
             _sendBackoffActive = false;
+            // Native sampling is confirmed running, so clear the connect-pause gate too -- a resume driven by
+            // OnAgentConnected (ResumeAfterConnect) ends the awaiting-connect state the same instant.
+            _awaitingConnect = false;
         }
 
         Interlocked.Exchange(ref _lastDrainTimestamp, Stopwatch.GetTimestamp());
@@ -1499,6 +1596,16 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
             {
                 Log.Info("[ContinuousProfiling] Backoff-probe resume deferred: a thread-profiling session is active; retrying in {0} ms.", (int)DeferredStartRetryInterval.TotalMilliseconds);
                 _scheduler.ExecuteOnce(() => EndBackoffProbeIfCurrent(generation), DeferredStartRetryInterval);
+                return;
+            }
+
+            // Not connected: don't resume the stop-the-world sampler (nowhere to send). Leave the backoff
+            // gate armed with native paused; OnAgentConnected -> ResumeAfterReconnect resumes once an
+            // endpoint resolves (it runs because _sendBackoffActive is still set). The trigger is a
+            // reconnect, not a timer, so no reschedule here -- sampling must stay paused until then.
+            if (outcome == ResumeOutcome.DeferredNotConnected)
+            {
+                Log.Debug("[ContinuousProfiling] Backoff-probe resume deferred: agent not connected; sampling stays paused until reconnect.");
                 return;
             }
 
@@ -1561,6 +1668,15 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
                 return;
             }
 
+            // Raced a disconnect between OnAgentConnected setting _isConnected and this read: leave the
+            // backoff state intact (still backing off, the trip's pending probe still scheduled as a safety
+            // net) and let the next connect retrigger this. No reschedule -- a reconnect is the trigger.
+            if (outcome == ResumeOutcome.DeferredNotConnected)
+            {
+                Log.Debug("[ContinuousProfiling] Reconnect resume deferred: agent not connected; leaving backoff armed.");
+                return;
+            }
+
             if (outcome == ResumeOutcome.Resumed)
             {
                 // _sendBackoffActive was already cleared inside TryResumeSamplingLocked's Gate; here we only
@@ -1575,6 +1691,152 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
 
         if (outcome == ResumeOutcome.Resumed)
             Log.Info("[ContinuousProfiling] Reconnected while backing off; resuming sampling immediately.");
+    }
+
+    /// <summary>
+    /// Resumes native sampling for a session that was armed while the agent was not yet connected (its
+    /// native start was deferred in <see cref="StartLocked(int, int, System.Action, out string)"/>) or was
+    /// paused on an earlier disconnect (<see cref="PauseNativeForDisconnect"/>). Invoked by
+    /// <see cref="OnAgentConnected"/> once an endpoint resolves. Resumes through the mutual-exclusion Gate
+    /// (inside <see cref="TryResumeSamplingLocked"/>) exactly like the backoff resume paths, so a resume can
+    /// never race a thread-profiling start.
+    /// </summary>
+    private void ResumeAfterConnect()
+    {
+        ResumeOutcome outcome;
+        lock (_lifecycleLock)
+        {
+            if (_disposed)
+                return;
+
+            // Re-check under the lock: a deferred retry (scheduled below) runs later, and the session may
+            // have stopped or already resumed meanwhile. _awaitingConnect is the authoritative "armed but
+            // native paused waiting for connect" signal (_isActive stays true throughout).
+            if (!_awaitingConnect)
+                return;
+
+            try
+            {
+                outcome = TryResumeSamplingLocked();
+            }
+            catch (Exception ex)
+            {
+                // Symmetric with the backoff resume guards: the _native.Start() inside
+                // TryResumeSamplingLocked is a P/Invoke that can throw. It clears _awaitingConnect only
+                // after a successful start, so a throw leaves the gate armed; retry later.
+                Log.Warn(ex, "[ContinuousProfiling] Connect resume threw; retrying in {0} ms.", (int)DeferredStartRetryInterval.TotalMilliseconds);
+                ScheduleConnectResumeRetryLocked();
+                return;
+            }
+
+            // A thread-profiling session is in-flight; leave native paused (awaiting-connect gate armed) and
+            // retry later instead of walking through the mutual-exclusion guard (same as the backoff paths).
+            if (outcome == ResumeOutcome.DeferredThreadProfilingActive)
+            {
+                Log.Info("[ContinuousProfiling] Connect resume deferred: a thread-profiling session is active; retrying in {0} ms.", (int)DeferredStartRetryInterval.TotalMilliseconds);
+                ScheduleConnectResumeRetryLocked();
+                return;
+            }
+
+            // Raced a disconnect between OnAgentConnected setting _isConnected and this read: leave the
+            // awaiting-connect gate armed and let the next connect retrigger this.
+            if (outcome == ResumeOutcome.DeferredNotConnected)
+            {
+                Log.Debug("[ContinuousProfiling] Connect resume deferred: agent not connected; leaving native paused.");
+                return;
+            }
+
+            // Resumed: _awaitingConnect is already cleared inside TryResumeSamplingLocked's Gate. Clear the
+            // retry latch too so a still-pending (not-yet-fired) retry timer can't suppress a legitimate new
+            // retry if a later disconnect re-arms the awaiting-connect state.
+            _connectResumeRetryPending = false;
+        }
+
+        if (outcome == ResumeOutcome.Resumed)
+            Log.Info("[ContinuousProfiling] Agent connected; native sampling started.");
+    }
+
+    /// <summary>
+    /// Schedules a single connect-resume retry if one is not already pending. Caller holds
+    /// <see cref="_lifecycleLock"/>. Dedups so repeated deferrals (every drain tick and each connect while a
+    /// thread-profiling session keeps the resume blocked) don't stack a new retry chain each time -- see
+    /// <see cref="_connectResumeRetryPending"/>.
+    /// </summary>
+    private void ScheduleConnectResumeRetryLocked()
+    {
+        if (_connectResumeRetryPending)
+            return;
+
+        _connectResumeRetryPending = true;
+        _scheduler.ExecuteOnce(ConnectResumeRetry, DeferredStartRetryInterval);
+    }
+
+    /// <summary>
+    /// The scheduled connect-resume retry callback. Clears the pending latch (this retry has now fired) and
+    /// re-attempts the resume; if that defers again it re-arms exactly one new retry via
+    /// <see cref="ScheduleConnectResumeRetryLocked"/>, so at most one retry is ever outstanding.
+    /// </summary>
+    private void ConnectResumeRetry()
+    {
+        lock (_lifecycleLock)
+        {
+            _connectResumeRetryPending = false;
+        }
+
+        ResumeAfterConnect();
+    }
+
+    /// <summary>
+    /// Pauses native sampling when the agent has lost its profiles endpoint while a session is actively
+    /// sampling. Invoked only from <see cref="DrainOnce"/> (never the connect event thread), so it runs on
+    /// the drain thread holding the <see cref="_drainInFlight"/> guard -- no concurrent ReadBatch can be
+    /// touching native while <c>_native.Stop()</c> runs, the same safety
+    /// <see cref="TripBackoffAndScheduleProbeLocked"/> relies on. Mirrors that backoff pause: stop native,
+    /// then set <see cref="_awaitingConnect"/> (which flips <see cref="IsActive"/> false), in that order, so
+    /// the invariant "native sampling running =&gt; IsActive true" holds throughout. No-op if native is not
+    /// actually running (never connected so the start was deferred, already paused for backoff/connect, a
+    /// stop is in progress, or a reconnect raced in). Resumes via <see cref="ResumeAfterConnect"/>.
+    /// </summary>
+    private void PauseNativeForDisconnect()
+    {
+        lock (_lifecycleLock)
+        {
+            // A stop/retune is tearing the session down, or already did; don't fight it. _stopSignaled is
+            // set at the top of StopLocked before its native stop.
+            if (_disposed || _stopSignaled)
+                return;
+
+            // Reconnected between the lock-free gate check in DrainOnce and acquiring the lock here -- the
+            // endpoint is back, so leave native running.
+            if (_isConnected)
+                return;
+
+            // Only pause if native sampling is actually running. IsActive is exactly that -- _isActive and
+            // not already paused for backoff or connect -- so an already-paused or never-started session
+            // (its native start was deferred) is a no-op here.
+            if (!IsActive)
+                return;
+
+            // Stop native BEFORE setting _awaitingConnect (which flips IsActive false), matching
+            // TripBackoffAndScheduleProbeLocked's ordering: the visible-activity flag must not go false while
+            // native is still sampling, or a start_profiler command could acquire the freed mutual-exclusion
+            // gate and run the thread profiler concurrently with live CP sampling. Guarded like every native
+            // call -- a throw must not skip the gate set below; the eventual resume's _native.Start
+            // re-establishes a known state (a double Stop/Start is idempotent).
+            try
+            {
+                var stopResult = _native.Stop();
+                if (stopResult != 0)
+                    Log.Warn("[ContinuousProfiling] Native stop reported failure (0x{0:X8}) while pausing sampling for disconnect; will resume on reconnect anyway.", stopResult);
+            }
+            catch (Exception ex)
+            {
+                Log.Warn(ex, "[ContinuousProfiling] Pausing native sampling for disconnect threw; will resume on reconnect anyway.");
+            }
+
+            _awaitingConnect = true;
+            Log.Info("[ContinuousProfiling] Agent disconnected; pausing native sampling until reconnect.");
+        }
     }
 
     private void SafeReportError()
@@ -1634,6 +1896,8 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
             _isActive = false;
             _activeIntervalMs = 0;
             _activeReportIntervalMs = 0;
+            _awaitingConnect = false;
+            _connectResumeRetryPending = false;
 
             // StopLocked already nulls the buffer when it runs; do it here too so a service that was
             // constructed but never started, or disposed while inactive, also drops the LOH reference.

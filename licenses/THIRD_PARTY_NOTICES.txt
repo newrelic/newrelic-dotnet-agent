@@ -1176,6 +1176,11 @@ into NewRelic.Agent.Core.dll via Google.Protobuf/Grpc.Tools codegen.
 
 Copyright 2019-2023, OpenTelemetry Authors
 
+profiles.proto also includes work covered by the following copyright notice,
+released under the same Apache License, Version 2.0:
+
+Copyright 2016 Google Inc. All Rights Reserved.
+
                                 Apache License
                            Version 2.0, January 2004
                         https://www.apache.org/licenses/

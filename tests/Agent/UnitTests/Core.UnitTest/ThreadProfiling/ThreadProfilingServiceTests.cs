@@ -230,20 +230,20 @@ public class ThreadProfilingServiceTests
         _threadProfilingService.StartThreadProfilingSession(profileSessionId, frequencyInMsec, durationInMsec);
         var result = _threadProfilingService.StopThreadProfilingSession(profileSessionId);
 
-        Assert.That(result, Is.True);
+        Assert.That(result, Is.EqualTo(StopThreadProfilingSessionResult.Stopped));
     }
 
     [Test]
-    public void StopThreadProfilingSession_WhenNotStarted_ReturnsFalse()
+    public void StopThreadProfilingSession_WhenNotStarted_ReturnsNotRunning()
     {
         var result = _threadProfilingService.StopThreadProfilingSession(9999);
 
-        Assert.That(result, Is.False);
+        Assert.That(result, Is.EqualTo(StopThreadProfilingSessionResult.NotRunning));
     }
 
 
     [Test]
-    public void StopThreadProfilingSession_AfterStarted_InvalidSessionId_ReturnsFalse()
+    public void StopThreadProfilingSession_AfterStarted_InvalidSessionId_ReturnsNotRunning()
     {
         var profileSessionId = 1;
         uint frequencyInMsec = 100;
@@ -254,7 +254,7 @@ public class ThreadProfilingServiceTests
         var bogusProfileSessionId = 9999;
         var result = _threadProfilingService.StopThreadProfilingSession(bogusProfileSessionId);
 
-        Assert.That(result, Is.False);
+        Assert.That(result, Is.EqualTo(StopThreadProfilingSessionResult.NotRunning));
     }
 
     [Test]
@@ -385,12 +385,12 @@ public class ThreadProfilingServiceTests
 
         Assert.Multiple(() =>
         {
-            Assert.That(stopResult, Is.False, "the join timed out; the worker may still be running");
+            Assert.That(stopResult, Is.EqualTo(StopThreadProfilingSessionResult.StopRequestedWorkerStillFinishing), "the join timed out; the worker may still be running");
             // ResetCache must NOT have run -- the worker is still reading the pruning list.
             Assert.That(service.PruningList, Has.Count.EqualTo(1), "pruning list was cleared out from under the still-running worker");
             // _profileSessionId must still be 1 (not reset to InvalidSessionId): a stop for a different id
             // is refused only while the in-process id is still set, which proves it was not reset.
-            Assert.That(service.StopThreadProfilingSession(9999), Is.False, "_profileSessionId was reset while the worker was still running");
+            Assert.That(service.StopThreadProfilingSession(9999), Is.EqualTo(StopThreadProfilingSessionResult.NotRunning), "_profileSessionId was reset while the worker was still running");
         });
 
         service.Dispose();
@@ -414,11 +414,11 @@ public class ThreadProfilingServiceTests
 
         Assert.Multiple(() =>
         {
-            Assert.That(stopResult, Is.True);
+            Assert.That(stopResult, Is.EqualTo(StopThreadProfilingSessionResult.Stopped));
             Assert.That(service.PruningList, Is.Empty, "cache should be reset once the worker is confirmed stopped");
             // _profileSessionId was reset to InvalidSessionId: a stop for any id now proceeds instead of
             // being refused for an id mismatch.
-            Assert.That(service.StopThreadProfilingSession(9999), Is.True, "_profileSessionId should have been reset once the worker was confirmed stopped");
+            Assert.That(service.StopThreadProfilingSession(9999), Is.EqualTo(StopThreadProfilingSessionResult.Stopped), "_profileSessionId should have been reset once the worker was confirmed stopped");
         });
 
         service.Dispose();

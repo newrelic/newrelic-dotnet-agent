@@ -814,6 +814,52 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
             return result;
         }
 
+        // Test seam: drive the real post-resume ResolveCapturedFrames over a scripted set of per-thread
+        // FunctionID sequences and return the resolved frame-name strings, so the M4b stale-FunctionID guard
+        // (re-check _nameCacheInvalidationPending before every ResolveIntoCache, clear + stop on the first
+        // observation) can be exercised with no live CLR. The caller seeds any pre-resolved names via
+        // NameCacheForTesting() and may flip the invalidation flag mid-resolve from a stub metadata call
+        // (modelling a ModuleUnloadStarted landing during the loop). Mirrors CaptureAllThreads' _capture /
+        // _resolved sizing, then populates FunctionIds directly (no suspend, no walk). Test-thread only.
+        std::vector<std::vector<xstring_t>> ResolveCapturedFramesForTesting(const std::vector<std::vector<FunctionID>>& threadFrames)
+        {
+            if (_capture.size() != ThreadCountForReservation)
+            {
+                std::vector<CapturedThread> newCapture(ThreadCountForReservation);
+                for (auto& slot : newCapture)
+                {
+                    slot.FunctionIds.reserve(MaxStackFramesSupported);
+                }
+                _capture.swap(newCapture);
+            }
+            if (_resolved.size() != ThreadCountForReservation)
+            {
+                std::vector<ResolvedThread> newResolved(ThreadCountForReservation);
+                for (auto& slot : newResolved)
+                {
+                    slot.Frames.reserve(MaxStackFramesSupported);
+                }
+                _resolved.swap(newResolved);
+            }
+
+            _capturedCount = 0;
+            for (const auto& frames : threadFrames)
+            {
+                auto& slot = _capture[_capturedCount];
+                slot.FunctionIds.assign(frames.begin(), frames.end());
+                ++_capturedCount;
+            }
+
+            ResolveCapturedFrames();
+
+            std::vector<std::vector<xstring_t>> result;
+            for (size_t i = 0; i < _capturedCount; ++i)
+            {
+                result.push_back(_resolved[i].Frames);
+            }
+            return result;
+        }
+
         // Round-robin capture window for a single tick -- see PlanCaptureWindow.
         struct CaptureWindow
         {
@@ -2044,14 +2090,37 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
         // cache stale on the following tick. Leaving it set means the next tick's top re-clears (cheap --
         // the cache is already empty from below) and re-resolves fresh under the reissued addresses.
         //
-        // Residual window: an unload landing AFTER this load but during the resolution loop is not caught
-        // this tick -- its frame carries the pre-unload name for one tick and it sets the flag, which the
-        // next tick's top absorbs. That is the same one-tick staleness the deferred-clear design already
-        // accepts, not a permanent wrong-name.
+        // The hazard is NOT merely a one-tick-stale name. Once ModuleUnloadStarted has fired, CoreCLR will
+        // free the MethodDesc*/Module* loader-heap memory the surviving FunctionIDs point at; calling the
+        // metadata APIs (ResolveIntoCache -> GetTokenAndMetaDataFromFunction / GetFunctionInfo /
+        // GetMethodProps) on such a FunctionID dereferences freed memory -- an access violation on Windows
+        // (SEH, NOT caught by the post-resume catch(...) under /EHsc) and a SIGSEGV on Linux (also
+        // uncatchable). The capture itself is safe (taken under SuspendRuntime, where the CLR cannot run the
+        // GC that drives a collectible unload); the window opens only here, after ResumeRuntime.
+        //
+        // So the flag is re-checked (acquire) before EVERY ResolveIntoCache below, not just once at the top:
+        // the first observation clears the cache once and resolves nothing further this tick. This leans on a
+        // CoreCLR ordering invariant -- InvalidateNameCache is raised from ModuleUnloadStarted, which fires at
+        // the very START of the collectible-LoaderAllocator teardown (vm/loaderallocator.cpp GCLoaderAllocators),
+        // whereas the actual loader-heap free (LoaderAllocator::Terminate, reached via the deletion queue)
+        // trails it by a full SuspendEE/RestartEE cycle plus a deferred Terminate. The free therefore cannot
+        // lap the flag inside the sub-call gap between one per-frame acquire-load and the GetFunctionInfo it
+        // guards.
+        //
+        // Remaining theoretical gap, stated honestly: this is NOT a mutual-exclusion proof. The one frame
+        // whose own ResolveIntoCache races the store (flag set DURING its metadata call, after that frame's
+        // re-check already passed) still makes that single call. Closing that fully would require serializing
+        // resolution against the unload callback (a lock ModuleUnloadStarted takes), which would block the
+        // GC/finalizer thread for the whole resolve and tax even CP-disabled processes -- rejected as far
+        // heavier than the residual warrants. The per-frame re-check reduces the exposure from the entire
+        // resolution loop to that one in-flight call racing a free that is a stop-the-world away.
         void ResolveCapturedFrames()
         {
-            const bool unloadSignalledThisTick = _nameCacheInvalidationPending.load(std::memory_order_acquire);
-            if (unloadSignalledThisTick)
+            // An unload signalled between the tick-top clear (CaptureAllThreads) and here means the surviving
+            // cache entries AND this tick's captured FunctionIDs may already name freed metadata: clear and
+            // resolve nothing. See the header comment for why this is a load, not an exchange.
+            bool unloadSignalled = _nameCacheInvalidationPending.load(std::memory_order_acquire);
+            if (unloadSignalled)
             {
                 _nameCache.clear();
             }
@@ -2066,9 +2135,19 @@ namespace NewRelic { namespace Profiler { namespace ContinuousProfiler
                 resolved.Frames.clear();
                 for (const auto functionId : raw.FunctionIds)
                 {
-                    // Skip metadata resolution entirely when an unload was signalled this tick (see above);
+                    // Re-check before EACH resolve (see header comment): a ModuleUnloadStarted landing
+                    // mid-loop must stop metadata resolution before it dereferences freed loader-heap memory.
+                    // The first observation clears the (possibly-stale) cache once; the flag is left set for
+                    // the next tick's top to absorb.
+                    if (!unloadSignalled && _nameCacheInvalidationPending.load(std::memory_order_acquire))
+                    {
+                        unloadSignalled = true;
+                        _nameCache.clear();
+                    }
+
+                    // Skip metadata resolution entirely once an unload was signalled this tick (see above);
                     // AssembleFrameName then emits the frame as unknown from the just-cleared cache.
-                    if (!unloadSignalledThisTick)
+                    if (!unloadSignalled)
                     {
                         ResolveIntoCache(functionId);
                     }

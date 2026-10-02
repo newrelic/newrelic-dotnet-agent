@@ -13,7 +13,9 @@ using System.Threading.Tasks;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.SharedInterfaces;
+using NewRelic.Agent.Extensions.Logging;
 using NUnit.Framework;
+using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.UnitTest.DataTransport;
 
@@ -77,6 +79,9 @@ public class CustomRetryHandlerTests
         _httpClient?.Dispose();
         _retryHandler?.Dispose();
         _innerHandler?.Dispose();
+        // Log is a process-wide static facade; the rate-limit tests below install a mock logger, so reset
+        // to the inert default so it can't leak into a later test.
+        Log.Initialize(new NoOpLogger());
     }
 
     #region Success Scenarios
@@ -1119,6 +1124,126 @@ public class CustomRetryHandlerTests
         Assert.That(counters.Recorded.FindAll(m => m == OtelBridgeSupportabilityMetric.ExportRetry), Has.Count.EqualTo(2));
         Assert.That(counters.Recorded, Does.Contain(OtelBridgeSupportabilityMetric.ExportSuccess));
     }
+
+    #endregion
+
+    #region Failure Log Rate-Limiting
+
+    private sealed class MutableClock
+    {
+        public DateTimeOffset Now;
+        public MutableClock(DateTimeOffset start) => Now = start;
+        public DateTimeOffset Get() => Now;
+    }
+
+    private CustomRetryHandler CreateHandlerWithClock(FakeMetricCounters counters, Func<DateTimeOffset> clock, TimeSpan window)
+    {
+        return new CustomRetryHandler(
+            counters,
+            TimeSpan.FromSeconds(DefaultCeilingSeconds),
+            RecordDelay,
+            clock,
+            recordTerminalOutcomes: true,
+            failureLogSuppressionWindow: window)
+        {
+            InnerHandler = _innerHandler
+        };
+    }
+
+    [Test]
+    public async Task PersistentNonTransientFailure_LogsFirstAtError_ThenSuppressesWithinWindow()
+    {
+        // A misconfigured endpoint returns the same non-transient status every export interval. The first
+        // failure must log at Error; a second failure inside the suppression window must drop to Debug so
+        // the agent doesn't spam one Error per interval forever. The supportability failure counter still
+        // fires on every failure -- only the logging is rate-limited.
+        var logger = Mock.Create<ILogger>();
+        Log.Initialize(logger);
+        var counters = new FakeMetricCounters();
+        var clock = new MutableClock(new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero));
+        using var handler = CreateHandlerWithClock(counters, clock.Get, TimeSpan.FromMinutes(5));
+        using var client = new HttpClient(handler);
+        _innerHandler.SetResponse(new HttpResponseMessage(HttpStatusCode.Unauthorized));
+
+        await client.GetAsync("http://test.com");         // first failure -> Error
+        clock.Now = clock.Now.AddSeconds(30);             // still inside the 5-minute window
+        await client.GetAsync("http://test.com");         // suppressed -> Debug
+
+        Mock.Assert(() => logger.Error(Arg.Matches<string>(m => m.Contains("failed with status")), Arg.IsAny<object[]>()), Occurs.Once());
+        Mock.Assert(() => logger.Debug(Arg.Matches<string>(m => m.Contains("failed with status")), Arg.IsAny<object[]>()), Occurs.Once());
+        Assert.That(counters.Recorded.FindAll(m => m == OtelBridgeSupportabilityMetric.ExportFailure), Has.Count.EqualTo(2));
+    }
+
+    [Test]
+    public async Task SuppressedFailures_AreFoldedIntoTheNextErrorAfterTheWindowElapses()
+    {
+        var logger = Mock.Create<ILogger>();
+        Log.Initialize(logger);
+        var counters = new FakeMetricCounters();
+        var clock = new MutableClock(new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero));
+        using var handler = CreateHandlerWithClock(counters, clock.Get, TimeSpan.FromMinutes(5));
+        using var client = new HttpClient(handler);
+        _innerHandler.SetResponse(new HttpResponseMessage(HttpStatusCode.Unauthorized));
+
+        await client.GetAsync("http://test.com");         // first failure -> Error
+        clock.Now = clock.Now.AddSeconds(30);
+        await client.GetAsync("http://test.com");         // suppressed -> Debug (count now 1)
+        clock.Now = clock.Now.AddMinutes(6);              // past the window
+        await client.GetAsync("http://test.com");         // Error again, folding in the suppressed count
+
+        Mock.Assert(() => logger.Error(Arg.Matches<string>(m => m.Contains("failed with status")), Arg.IsAny<object[]>()), Occurs.Exactly(2));
+        Mock.Assert(() => logger.Error(Arg.Matches<string>(m => m.Contains("1 further export failure(s) suppressed")), Arg.IsAny<object[]>()), Occurs.Once());
+    }
+
+    [Test]
+    public async Task SuccessfulExport_ResetsTheThrottle_SoTheNextFailureLogsAtErrorAgain()
+    {
+        var logger = Mock.Create<ILogger>();
+        Log.Initialize(logger);
+        var counters = new FakeMetricCounters();
+        var clock = new MutableClock(new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero));
+        using var handler = CreateHandlerWithClock(counters, clock.Get, TimeSpan.FromMinutes(5));
+        using var client = new HttpClient(handler);
+        // failure, then a success (resets the throttle), then another failure -- all within the window, so
+        // without the success-reset the third send would be suppressed to Debug.
+        _innerHandler.SetSequence(
+            new HttpResponseMessage(HttpStatusCode.Unauthorized),
+            new HttpResponseMessage(HttpStatusCode.OK),
+            new HttpResponseMessage(HttpStatusCode.Unauthorized));
+
+        await client.GetAsync("http://test.com");         // failure -> Error
+        await client.GetAsync("http://test.com");         // success -> throttle reset
+        await client.GetAsync("http://test.com");         // failure -> Error again (not suppressed)
+
+        Mock.Assert(() => logger.Error(Arg.Matches<string>(m => m.Contains("failed with status")), Arg.IsAny<object[]>()), Occurs.Exactly(2));
+        Mock.Assert(() => logger.Error(Arg.Matches<string>(m => m.Contains("suppressed")), Arg.IsAny<object[]>()), Occurs.Never());
+    }
+
+    [Test]
+    public void RetryableExhaustionFailureLog_IsAlsoRateLimited()
+    {
+        // The exhausted-retryable-exception path (network error on every attempt) is the air-gapped/
+        // unreachable-host case; its Error log is rate-limited the same way. The exception overload is used
+        // here since a thrown exception carries through.
+        var logger = Mock.Create<ILogger>();
+        Log.Initialize(logger);
+        var counters = new FakeMetricCounters();
+        var clock = new MutableClock(new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero));
+        using var handler = CreateHandlerWithClock(counters, clock.Get, TimeSpan.FromMinutes(5));
+        using var client = new HttpClient(handler);
+        _innerHandler.SetException(new HttpRequestException("Network unreachable"));
+
+        Assert.ThrowsAsync<HttpRequestException>(async () => await client.GetAsync("http://test.com"));
+        clock.Now = clock.Now.AddSeconds(30);
+        Assert.ThrowsAsync<HttpRequestException>(async () => await client.GetAsync("http://test.com"));
+
+        Mock.Assert(() => logger.Error(Arg.IsAny<Exception>(), Arg.Matches<string>(m => m.Contains("failed after")), Arg.IsAny<object[]>()), Occurs.Once());
+        Mock.Assert(() => logger.Debug(Arg.IsAny<Exception>(), Arg.Matches<string>(m => m.Contains("failed after")), Arg.IsAny<object[]>()), Occurs.Once());
+    }
+
+    #endregion
+
+    #region Supportability Metric Tests (fake counters)
 
     private class FakeMetricCounters : IOtelBridgeSupportabilityMetricCounters
     {

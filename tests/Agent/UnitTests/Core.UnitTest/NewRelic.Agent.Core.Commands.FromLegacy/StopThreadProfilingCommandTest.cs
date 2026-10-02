@@ -4,6 +4,7 @@
 using System.Collections.Generic;
 using NewRelic.Agent.Core.ThreadProfiling;
 using NUnit.Framework;
+using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.Commands;
 
@@ -127,6 +128,55 @@ public class StopThreadProfilingCommandTest
         object response = command.Process(arguments);
         Dictionary<string, object> respDict = response as Dictionary<string, object>;
         Assert.That(service.ReportData, Is.False);
+    }
+
+    #endregion
+
+    #region Stop Result Mapping Tests
+
+    private static StopThreadProfilerCommand CommandReturning(StopThreadProfilingSessionResult result)
+    {
+        var service = Mock.Create<IThreadProfilingSessionControl>();
+        Mock.Arrange(() => service.StopThreadProfilingSession(Arg.AnyInt, Arg.IsAny<bool>())).Returns(result);
+        return new StopThreadProfilerCommand(service);
+    }
+
+    [Test]
+    public void verify_stopped_result_produces_no_error()
+    {
+        var arguments = new Dictionary<string, object> { { "profile_id", 1234 } };
+
+        var command = CommandReturning(StopThreadProfilingSessionResult.Stopped);
+        var respDict = command.Process(arguments) as Dictionary<string, object>;
+
+        Assert.That(respDict.ContainsKey("error"), Is.False);
+    }
+
+    [Test]
+    public void verify_not_running_result_produces_the_not_running_error()
+    {
+        var arguments = new Dictionary<string, object> { { "profile_id", 1234 } };
+
+        var command = CommandReturning(StopThreadProfilingSessionResult.NotRunning);
+        var respDict = command.Process(arguments) as Dictionary<string, object>;
+
+        Assert.That(respDict["error"], Is.EqualTo("A thread profiling session is not running."));
+    }
+
+    [Test]
+    public void verify_still_finishing_result_produces_a_distinct_message_not_the_not_running_one()
+    {
+        var arguments = new Dictionary<string, object> { { "profile_id", 1234 } };
+
+        var command = CommandReturning(StopThreadProfilingSessionResult.StopRequestedWorkerStillFinishing);
+        var respDict = command.Process(arguments) as Dictionary<string, object>;
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(respDict.ContainsKey("error"), Is.True);
+            Assert.That(respDict["error"], Is.Not.EqualTo("A thread profiling session is not running."));
+            Assert.That((string)respDict["error"], Does.Contain("still finishing"));
+        });
     }
 
     #endregion
