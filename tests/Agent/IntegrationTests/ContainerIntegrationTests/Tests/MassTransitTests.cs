@@ -91,7 +91,19 @@ public abstract class MassTransitTestBase<T> : NewRelicIntegrationTest<T> where 
             // --- Distributed tracing across all transports ---
             new() { metricName = "Supportability/TraceContext/Create/Success" },
             new() { metricName = "Supportability/TraceContext/Accept/Success" },
+
+            // --- Transport type passed to AcceptDistributedTraceHeaders (App + allOther isolates consumers) ---
+            new() { metricName = @"^DurationByCaller/App/[^/]+/[^/]+/Kafka/allOther$", IsRegexName = true, CallCountAllHarvests = 2 },
+            new() { metricName = @"^DurationByCaller/App/[^/]+/[^/]+/AMQP/allOther$", IsRegexName = true, CallCountAllHarvests = 2 },
+            new() { metricName = @"^DurationByCaller/App/[^/]+/[^/]+/Unknown/allOther$", IsRegexName = true, CallCountAllHarvests = 1 },
         };
+
+        var unexpectedMetrics = new List<Assertions.ExpectedMetric>
+        {
+            new() { metricName = "Supportability/DistributedTrace/AcceptPayload/Ignored/CreateBeforeAccept" },
+        };
+
+        var kafkaConsumeEvent = _fixture.AgentLog.TryGetTransactionEvent(kafkaConsumeTransaction);
 
         // Verify no "Unknown" queue names appear in any MassTransit metrics
         var unknownMetrics = metrics
@@ -100,7 +112,10 @@ public abstract class MassTransitTestBase<T> : NewRelicIntegrationTest<T> where 
 
         NrAssert.Multiple(
             () => Assertions.MetricsExist(expectedMetrics, metrics),
-            () => Assert.Empty(unknownMetrics)
+            () => Assert.Empty(unknownMetrics),
+            () => Assertions.MetricsDoNotExist(unexpectedMetrics, metrics),
+            () => Assert.NotNull(kafkaConsumeEvent),
+            () => Assert.Equal("Kafka", kafkaConsumeEvent?.IntrinsicAttributes["parent.transportType"].ToString())
         );
     }
 
