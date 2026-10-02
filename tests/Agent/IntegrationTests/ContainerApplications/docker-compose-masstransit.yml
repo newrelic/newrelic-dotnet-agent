@@ -4,6 +4,7 @@
 # CONTAINER_NAME  The name for the container
 # MASSTRANSIT_KAFKA_TOPIC
 # MASSTRANSIT_RABBITMQ_QUEUE
+# MASSTRANSIT_SQS_QUEUE
 #
 # To build and run, execute `docker compose -f <path to docker-compose.yml> up`
 # Alternatively, set COMPOSE_FILE environment variable to the path and omit the -f parameter
@@ -17,13 +18,19 @@ services:
         image: ${CONTAINER_NAME}
         platform: ${PLATFORM}
         depends_on:
-            - kafka-broker
-            - rabbitmq
+            kafka-broker:
+                condition: service_started
+            rabbitmq:
+                condition: service_started
+            floci:
+                condition: service_healthy
         environment:
             - MASSTRANSIT_KAFKA_TOPIC=${MASSTRANSIT_KAFKA_TOPIC}
             - MASSTRANSIT_KAFKA_BROKER=kafka-broker
             - MASSTRANSIT_RABBITMQ_HOST=rabbitmq
             - MASSTRANSIT_RABBITMQ_QUEUE=${MASSTRANSIT_RABBITMQ_QUEUE}
+            - MASSTRANSIT_SQS_QUEUE=${MASSTRANSIT_SQS_QUEUE}
+            - MASSTRANSIT_SQS_SERVICE_URL=http://floci:4566
 
     kafka-broker:
         image: confluentinc/cp-kafka:7.5.0
@@ -49,6 +56,20 @@ services:
         environment:
           RABBITMQ_DEFAULT_USER: guest
           RABBITMQ_DEFAULT_PASS: guest
+
+    floci:
+        # AWS emulator (SQS, SNS) served on port 4566. FLOCI_HOSTNAME makes returned queue URLs resolvable from other containers.
+        image: floci/floci:1.7.0@sha256:bec9b9f749322444a57fb0f00d3e007ffd49015162361aab84ccecd9b4f5f8ed
+        expose:
+            - "4566"
+        environment:
+            - FLOCI_HOSTNAME=floci
+        healthcheck:
+            test: ["CMD", "curl", "-f", "http://localhost:4566/_floci/health"]
+            interval: 5s
+            timeout: 5s
+            retries: 10
+            start_period: 10s
 
 networks:
     default:

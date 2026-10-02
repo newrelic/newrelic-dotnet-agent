@@ -15,6 +15,12 @@ public class RabbitMqMessage
     public string Text { get; set; }
 }
 
+/// <summary>Message type for Amazon SQS bus transport.</summary>
+public class SqsMessage
+{
+    public string Text { get; set; }
+}
+
 /// <summary>Message type for InMemory bus transport.</summary>
 public class InMemoryMessage
 {

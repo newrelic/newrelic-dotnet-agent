@@ -17,6 +17,7 @@ public abstract class MassTransitTestBase<T> : NewRelicIntegrationTest<T> where 
 {
     private readonly string _kafkaTopicName;
     private readonly string _rabbitMqQueueName;
+    private readonly string _sqsQueueName;
     private readonly T _fixture;
 
     protected MassTransitTestBase(T fixture, ITestOutputHelper output) : base(fixture)
@@ -26,6 +27,7 @@ public abstract class MassTransitTestBase<T> : NewRelicIntegrationTest<T> where 
 
         _kafkaTopicName = GenerateRandomName();
         _rabbitMqQueueName = "mt-test-" + GenerateRandomName().ToLowerInvariant();
+        _sqsQueueName = "mt-sqs-" + GenerateRandomName().ToLowerInvariant();
 
         _fixture.Actions(setupConfiguration: () =>
             {
@@ -35,6 +37,7 @@ public abstract class MassTransitTestBase<T> : NewRelicIntegrationTest<T> where 
 
                 _fixture.RemoteApplication.SetAdditionalEnvironmentVariable("MASSTRANSIT_KAFKA_TOPIC", _kafkaTopicName);
                 _fixture.RemoteApplication.SetAdditionalEnvironmentVariable("MASSTRANSIT_RABBITMQ_QUEUE", _rabbitMqQueueName);
+                _fixture.RemoteApplication.SetAdditionalEnvironmentVariable("MASSTRANSIT_SQS_QUEUE", _sqsQueueName);
             },
             exerciseApplication: () =>
             {
@@ -83,10 +86,10 @@ public abstract class MassTransitTestBase<T> : NewRelicIntegrationTest<T> where 
             new() { metricName = kafkaConsume, metricScope = kafkaConsumeTransaction, CallCountAllHarvests = 2 },
             new() { metricName = kafkaProduce, CallCountAllHarvests = 2 },
 
-            // --- RabbitMQ + InMemory (both produce Queue metrics) ---
-            // RabbitMQ: 2 produce (publish + send), 2 consume. InMemory: 1 produce, 1 consume.
-            new() { metricName = rabbitMqConsumeRegex, IsRegexName = true, CallCountAllHarvests = 3 },
-            new() { metricName = rabbitMqProduceRegex, IsRegexName = true, CallCountAllHarvests = 3 },
+            // --- RabbitMQ + InMemory + SQS (all produce Queue metrics) ---
+            // RabbitMQ: 2 produce (publish + send), 2 consume. InMemory: 1 produce, 1 consume. SQS: 2 send, 2 consume.
+            new() { metricName = rabbitMqConsumeRegex, IsRegexName = true, CallCountAllHarvests = 5 },
+            new() { metricName = rabbitMqProduceRegex, IsRegexName = true, CallCountAllHarvests = 5 },
 
             // --- Distributed tracing across all transports ---
             new() { metricName = "Supportability/TraceContext/Create/Success" },
@@ -96,6 +99,7 @@ public abstract class MassTransitTestBase<T> : NewRelicIntegrationTest<T> where 
             new() { metricName = @"^DurationByCaller/App/[^/]+/[^/]+/Kafka/allOther$", IsRegexName = true, CallCountAllHarvests = 2 },
             new() { metricName = @"^DurationByCaller/App/[^/]+/[^/]+/AMQP/allOther$", IsRegexName = true, CallCountAllHarvests = 2 },
             new() { metricName = @"^DurationByCaller/App/[^/]+/[^/]+/Unknown/allOther$", IsRegexName = true, CallCountAllHarvests = 1 },
+            new() { metricName = @"^DurationByCaller/App/[^/]+/[^/]+/Queue/allOther$", IsRegexName = true, CallCountAllHarvests = 2 },
         };
 
         var unexpectedMetrics = new List<Assertions.ExpectedMetric>
@@ -104,6 +108,11 @@ public abstract class MassTransitTestBase<T> : NewRelicIntegrationTest<T> where 
         };
 
         var kafkaConsumeEvent = _fixture.AgentLog.TryGetTransactionEvent(kafkaConsumeTransaction);
+
+        // The SQS consume transaction name comes from the sender's endpoint, so select by transport type instead.
+        var sqsConsumeEvents = _fixture.AgentLog.GetTransactionEvents()
+            .Where(e => e.IntrinsicAttributes.TryGetValue("parent.transportType", out var transport) && transport?.ToString() == "Queue")
+            .ToList();
 
         // Verify no "Unknown" queue names appear in any MassTransit metrics
         var unknownMetrics = metrics
@@ -115,7 +124,8 @@ public abstract class MassTransitTestBase<T> : NewRelicIntegrationTest<T> where 
             () => Assert.Empty(unknownMetrics),
             () => Assertions.MetricsDoNotExist(unexpectedMetrics, metrics),
             () => Assert.NotNull(kafkaConsumeEvent),
-            () => Assert.Equal("Kafka", kafkaConsumeEvent?.IntrinsicAttributes["parent.transportType"].ToString())
+            () => Assert.Equal("Kafka", kafkaConsumeEvent?.IntrinsicAttributes["parent.transportType"].ToString()),
+            () => Assert.Equal(2, sqsConsumeEvents.Count)
         );
     }
 
