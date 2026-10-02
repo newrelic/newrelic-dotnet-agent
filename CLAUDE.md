@@ -211,7 +211,8 @@ later turn. Instead:
   wrapper. That keeps the interesting logic unit-testable while the
   wrapper itself stays thin (match, create segment, delegate, finish).
 - Integration tests: `tests/Agent/IntegrationTests/` — see
-  [tests/CLAUDE.md](tests/CLAUDE.md).
+  [tests/CLAUDE.md](tests/CLAUDE.md). Adding or moving an integration
+  test? Run its **CI selection check** (CI passes with zero tests selected).
 - **Never use `InternalsVisibleTo`** in any production or test assembly.
   If a test needs to reach non-public code, refactor the production type to
   expose what's needed through a proper surface (interface, public helper,

@@ -99,6 +99,15 @@ public class BasicMvcTests : NewRelicIntegrationTest<AspNetFrameworkBasicMvcAppl
 
 **Where new test apps go** (three parallel dirs under `IntegrationTests/`): `Applications/` (host-run FW/Core), `ContainerApplications/` (Docker), `UnboundedApplications/` (external infra, paired with `UnboundedServices/` compose). **Prefer the MFA pattern below over a new app.** Add a new `*Applications/` project only for a specific hosting model (IIS/OWIN, ASP.NET Core startup, WCF, Azure Functions, Lambda).
 
+### CI selection check
+
+A test that no CI job selects stays green: an unlisted namespace gets no job, and Windows host and container jobs pass with zero tests (only Linux host jobs fail on zero tests, `build/Scripts/check-test-run.sh`). For each layer you touched, confirm:
+
+- **Host-run and unbounded:** the exact namespace is in `integration_all` or `unbounded_all` (`.github/workflows/test_selection.yml`), and the `WindowsOnly` trait follows the rules in "Target platforms".
+- **Setup keyed on the namespace:** workflow steps key on `matrix.namespace`. A new namespace that needs IIS/HostableWebCore goes into the install list in `integration_tests.yml`. A new unbounded service gets its setup step in `unbounded_tests.yml` (see the `MsSql` and `Msmq` steps).
+- **Container:** the class's traits match an `include:` filter in `linux_container_tests.yml`. `TestArea` filters exist for `amd64` only, so a functional class needs `Architecture=amd64`. See "Container tests: Distro vs TestArea traits".
+- **Proof:** ask the built assembly, not the source. Host-run: the `-list Classes` recipe in "Target platforms" (add `-namespace <FQN>` for one namespace) must list the class. Container: `dotnet test <ContainerIntegrationTests.csproj> --framework net10.0 --no-build --list-tests --filter "<matrix filter>"` must list it.
+
 ### Target platforms
 
 `IntegrationTests.sln` and `UnboundedIntegrationTests.sln` build the Windows
@@ -263,7 +272,7 @@ GitHub Actions runs unit + integration tests on every PR via [`all_solutions.yml
 
 ### Targeted CI runs (`targeted_tests.yml`)
 
-`all_solutions.yml` runs all 93 test legs plus the MSI, both Linux packages, and
+`all_solutions.yml` runs every test leg plus the MSI, both Linux packages, and
 ArtifactBuilder. To run a few namespaces in CI, dispatch
 [`targeted_tests.yml`](../.github/workflows/targeted_tests.yml) instead. It builds
 the agent fresh from the branch and runs only what you name; no MSI, no packages,
@@ -271,9 +280,9 @@ no ArtifactBuilder.
 
 Three inputs, each a comma-separated list, each defaulting to empty:
 
-- `integration_namespaces` - e.g. `Errors, Api`. Validated against the 66
+- `integration_namespaces` - e.g. `Errors, Api`. Validated against the 68
   canonical integration namespaces.
-- `unbounded_namespaces` - e.g. `MsSql`. Validated against the 15 canonical
+- `unbounded_namespaces` - e.g. `MsSql`. Validated against the 16 canonical
   unbounded namespaces. These still contend for the shared AKS
   `UnboundedServices` deployment, so two runs at once can interfere.
 - `container_groups` - `name/arch` pairs, e.g. `Ubuntu/amd64, Core/amd64`. The 12

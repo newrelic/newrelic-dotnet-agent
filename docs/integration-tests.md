@@ -2,7 +2,7 @@
 
 Tests the integration of the New Relic .NET agent with various .NET applications.
 
-This test suite can be run on both [Windows](#testing-on-windows-with-visual-studio) and [Linux](#testing-on-linux-with-dotnet-test).
+This test suite can be run on both [Windows](#testing-on-windows-with-visual-studio) and [Linux](#testing-on-linux).
 
 These tests execute against valid New Relic accounts and test a variety of features.
 
@@ -310,11 +310,11 @@ See the "Set up test secrets" section for how to set and for template examples.
 4. The main `IntegrationTests` test project is multi-targeted to both a .NET Framework and a .NET Core version to support both Windows/.NET Framework and Linux testing.  If you are running tests from Visual Studio on Windows, it is only necessary to run the .NET Framework version of the tests.  (Note: this is the runtime of the **test code**, not the test target applications.  The variant of the New Relic .NET agent (Framework/Core) being tested depends on the latter.)
 5. Run all tests or selected tests.
 
-## Testing on Linux with dotnet test
+## Testing on Linux
 
 First, a few caveats:
 
-* Only tests with the `[NetCoreTest]` attribute (which sets an XUnit trait named `RuntimeFramework` to `NetCore`) can run on Linux.
+* Tests with the `[Trait("Platform", "WindowsOnly")]` attribute cannot run on Linux. Exclude them with `-trait- Platform=WindowsOnly`.
 * The agent solution still needs to be built on Windows in Visual Studio, or from the command line using the [build.ps1](../build/build.ps1) script (which uses Visual Studio tooling).
 
 We recommend using [WSL](https://docs.microsoft.com/en-us/windows/wsl/about) to install an Ubuntu 20.04+ VM on your Windows 10+ development system.
@@ -340,8 +340,8 @@ As previously mentioned, the agent solution needs to be built on Windows.  If yo
 3. In the VM, from the shell:
 
 ```
-cd {DOTNET_AGENT_REPO_PATH}/tests/Agent/IntegrationTests/IntegrationTests
-sudo dotnet test -f net10.0 -c Release --filter RuntimeFramework=NetCore
+cd {DOTNET_AGENT_REPO_PATH}/tests/Agent/IntegrationTests/IntegrationTests/bin/{CONFIGURATION}/net10.0
+sudo dotnet NewRelic.Agent.IntegrationTests.dll -trait- Platform=WindowsOnly
 ```
 
-For more details on how to use dotnet test, see https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-test.
+Replace `{CONFIGURATION}` with `Debug` or `Release`. The assembly is a self-executing xUnit v3 runner. To run one namespace, as CI does, add `-namespace NewRelic.Agent.IntegrationTests.<Namespace>`.
