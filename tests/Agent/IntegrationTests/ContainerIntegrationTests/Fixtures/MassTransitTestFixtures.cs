@@ -34,6 +34,10 @@ public abstract class MassTransitTestFixtureBase : RemoteApplicationFixture
         GetAndAssertStatusCode(address + "rabbitmq/publish", System.Net.HttpStatusCode.OK);
         GetAndAssertStatusCode(address + "rabbitmq/send", System.Net.HttpStatusCode.OK);
 
+        // Amazon SQS: send via MultiBus (consumed by the configured receive endpoint)
+        GetAndAssertStatusCode(address + "sqs/send", System.Net.HttpStatusCode.OK);
+        GetAndAssertStatusCode(address + "sqs/send", System.Net.HttpStatusCode.OK);
+
         // InMemory: publish via MultiBus (consumed by auto-configured endpoint)
         GetAndAssertStatusCode(address + "inmemory/publish", System.Net.HttpStatusCode.OK);
     }
