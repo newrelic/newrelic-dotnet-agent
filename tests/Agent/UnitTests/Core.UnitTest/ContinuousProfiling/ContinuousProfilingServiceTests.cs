@@ -1760,6 +1760,33 @@ public class ContinuousProfilingServiceTests
         Assert.That(service.IsActive, Is.True);
     }
 
+    [Test]
+    public void Deferred_session_logs_the_canonical_Session_started_line_on_first_connect_and_a_distinct_line_on_reconnect()
+    {
+        // The "Session started; sampling every N ms, draining every M ms." line is an integration/container
+        // test contract. In the deferred-start flow (not connected at startup) it must fire at the first
+        // native start -- i.e. on connect -- not at session-arm; and a later resume after a disconnect-pause
+        // must log a DISTINCT line so tests counting session starts don't double-count. (Mock logger sees the
+        // unformatted template; the real file logger formats {0}/{1} into the regex the tests match.)
+        var logger = Mock.Create<ILogger>();
+        Log.Initialize(logger);
+        var transport = Mock.Create<IProfilesTransport>();
+        using var service = NewUnconnectedEnabledService(transport);
+
+        service.StartIfEnabled(); // deferred: logs "Session armed", NOT the canonical line
+        Mock.Assert(() => logger.Info(Arg.Matches<string>(m => m.Contains("Session started; sampling every")), Arg.IsAny<object[]>()), Occurs.Never());
+
+        PublishConnect();         // first native start -> canonical "Session started"
+        Mock.Assert(() => logger.Info(Arg.Matches<string>(m => m.Contains("Session started; sampling every")), Arg.IsAny<object[]>()), Occurs.Once());
+
+        PublishDisconnect();
+        service.DrainOnce();      // pause native
+        PublishConnect();         // reconnect -> distinct "Resumed" line, NOT a second "Session started"
+
+        Mock.Assert(() => logger.Info(Arg.Matches<string>(m => m.Contains("Session started; sampling every")), Arg.IsAny<object[]>()), Occurs.Once());
+        Mock.Assert(() => logger.Info(Arg.Matches<string>(m => m.Contains("Resumed native sampling after reconnect")), Arg.IsAny<object[]>()), Occurs.Once());
+    }
+
     #endregion
 
     #region Send-failure backoff

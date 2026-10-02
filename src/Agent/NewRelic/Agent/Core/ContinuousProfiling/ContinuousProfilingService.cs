@@ -194,6 +194,15 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
     // _lifecycleLock.
     private bool _connectResumeRetryPending;
 
+    // Whether this session has already logged its canonical "Session started; sampling every ... draining
+    // every ..." line (an integration-test contract matched by every CP integration/container test). The
+    // line must fire exactly once per session, at the FIRST native start -- which, when the start was
+    // deferred until connect, happens in ResumeAfterConnect rather than StartLocked. A later resume after a
+    // disconnect-pause in the SAME session logs a distinct "resumed" line instead, so tests counting session
+    // starts don't double-count. StartLocked resets this per session; only ever read/written under
+    // _lifecycleLock.
+    private bool _sessionNativeStartLogged;
+
     // volatile: set under _lifecycleLock by Dispose; every lock-holding entry point checks it right
     // after acquiring the lock, so a deferred callback landing after Dispose (the retry timer, a
     // queued OnConfigurationUpdated) becomes a no-op instead of restarting a sampler Dispose already
@@ -926,6 +935,9 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
             // Cleared here and set below only if this start finds the agent not yet connected; the connect
             // resume (OnAgentConnected -> ResumeAfterConnect) clears it again when native actually starts.
             _awaitingConnect = false;
+            // Fresh session: the canonical "Session started" line has not been logged yet. Logged at the
+            // first native start -- here if connected, else in ResumeAfterConnect once connected.
+            _sessionNativeStartLogged = false;
             _stopSignaled = false;
 
             // Arm the reverse-guard flag before starting native sampling, while still holding the Gate,
@@ -955,7 +967,6 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
                 if (!_isConnected)
                 {
                     _awaitingConnect = true;
-                    Log.Info("[ContinuousProfiling] Session armed; native sampling deferred until the agent connects.");
                 }
                 else
                 {
@@ -1016,9 +1027,18 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
             ContinuousProfilingContext.Instance = _continuousProfilingContext;
 
             if (_awaitingConnect)
-                Log.Info("[ContinuousProfiling] Session armed; drain scheduled every {0} ms, native sampling will begin once connected (sample interval {1} ms).", reportIntervalMs, sampleIntervalMs);
+            {
+                // Must NOT match the "Session started; sampling every N ms, draining every M ms." contract --
+                // the canonical line is logged later, at the first native start, by ResumeAfterConnect.
+                Log.Info("[ContinuousProfiling] Session armed; native sampling deferred until the agent connects (sample interval {0} ms, report interval {1} ms).", sampleIntervalMs, reportIntervalMs);
+            }
             else
+            {
+                // Connected at start: native sampling is running now, so emit the canonical session-started
+                // line here and mark it logged so a later reconnect-resume doesn't repeat it.
+                _sessionNativeStartLogged = true;
                 Log.Info("[ContinuousProfiling] Session started; sampling every {0} ms, draining every {1} ms.", sampleIntervalMs, reportIntervalMs);
+            }
         }
         catch (Exception ex)
         {
@@ -1704,6 +1724,12 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
     private void ResumeAfterConnect()
     {
         ResumeOutcome outcome;
+        // Whether this resume is the session's FIRST native start (a deferred start finally connecting) vs a
+        // resume after a disconnect-pause in an already-started session. Captured under the lock, logged
+        // outside it. Drives which Info line fires -- see the per-session _sessionNativeStartLogged contract.
+        var firstNativeStart = false;
+        var sampleIntervalMs = 0;
+        var reportIntervalMs = 0;
         lock (_lifecycleLock)
         {
             if (_disposed)
@@ -1750,10 +1776,22 @@ public class ContinuousProfilingService : ConfigurationBasedService, IContinuous
             // retry latch too so a still-pending (not-yet-fired) retry timer can't suppress a legitimate new
             // retry if a later disconnect re-arms the awaiting-connect state.
             _connectResumeRetryPending = false;
+
+            // The first native start of a deferred session emits the canonical "Session started" line (the
+            // integration-test contract); a later resume after a disconnect-pause logs a distinct line.
+            firstNativeStart = !_sessionNativeStartLogged;
+            _sessionNativeStartLogged = true;
+            sampleIntervalMs = _activeIntervalMs;
+            reportIntervalMs = _activeReportIntervalMs;
         }
 
         if (outcome == ResumeOutcome.Resumed)
-            Log.Info("[ContinuousProfiling] Agent connected; native sampling started.");
+        {
+            if (firstNativeStart)
+                Log.Info("[ContinuousProfiling] Session started; sampling every {0} ms, draining every {1} ms.", sampleIntervalMs, reportIntervalMs);
+            else
+                Log.Info("[ContinuousProfiling] Resumed native sampling after reconnect.");
+        }
     }
 
     /// <summary>
