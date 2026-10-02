@@ -51,7 +51,7 @@ public class NewRelicFilter : IFilter<ConsumeContext>, IFilter<PublishContext>, 
         transaction.AttachToAsync();
         transaction.DetachFromPrimary();
 
-        transaction.AcceptDistributedTraceHeaders(context.Headers, GetHeaderValue, queueData.TransportType);
+        transaction.AcceptDistributedTraceHeaders(context.Headers, GetHeaderValue, MassTransitHelpers.GetTransportType(context.ReceiveContext?.InputAddress));
 
         var segment = transaction.StartMessageBrokerSegment(mc, queueData.DestinationType, MessageBrokerAction.Consume, MessageBrokerVendorName, queueData.QueueName);
 

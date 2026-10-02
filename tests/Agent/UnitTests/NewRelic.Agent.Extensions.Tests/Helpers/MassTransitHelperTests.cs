@@ -133,6 +133,30 @@ public class MassTransitHelperTests
     }
 
     [Test]
+    [TestCase("rabbitmq://host/vhost/queue", TransportType.AMQP)]
+    [TestCase("rabbitmqs://host/vhost/queue", TransportType.AMQP)]
+    [TestCase("amqp://broker/vhost/queue", TransportType.AMQP)]
+    [TestCase("amqps://broker/vhost/queue", TransportType.AMQP)]
+    [TestCase("amazonsqs://us-east-1/queue", TransportType.Queue)]
+    [TestCase("sb://ns.servicebus.windows.net/queue", TransportType.Queue)]
+    [TestCase("activemq://broker/queue", TransportType.Queue)]
+    [TestCase("kafka://broker:9092/topic", TransportType.Kafka)]
+    [TestCase("rabbitmq://host/kafka/topic", TransportType.Kafka)]
+    [TestCase("loopback://localhost/kafka/topic", TransportType.Kafka)]
+    [TestCase("sb://ns/event-hub/x", TransportType.Queue)]
+    [TestCase("loopback://localhost/event-hub/x", TransportType.Queue)]
+    [TestCase("loopback://localhost/queue", TransportType.Unknown)]
+    [TestCase("queue:x", TransportType.Unknown)]
+    [TestCase("custom://host/x", TransportType.Unknown)]
+    [TestCase(null, TransportType.Unknown)]
+    public void GetTransportType_FromInputAddress(Uri inputAddress, TransportType expectedTransportType)
+    {
+        var transportType = MassTransitHelpers.GetTransportType(inputAddress);
+
+        Assert.That(transportType, Is.EqualTo(expectedTransportType));
+    }
+
+    [Test]
     public void GetTransportType_UsesFallbackAddress_WhenPrimaryHasNoQueueName()
     {
         var data = MassTransitHelpers.GetQueueData(new Uri("loopback://localhost/"), new Uri("amazonsqs://us-east-1/my-queue"));

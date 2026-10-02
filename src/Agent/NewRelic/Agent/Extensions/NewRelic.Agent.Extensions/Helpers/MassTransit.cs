@@ -31,6 +31,11 @@ public static class MassTransitHelpers
         return data;
     }
 
+    public static TransportType GetTransportType(Uri inputAddress)
+    {
+        return GetQueueDataFromUri(inputAddress).TransportType;
+    }
+
     private static MassTransitQueueData GetQueueDataFromUri(Uri sourceAddress)
     {
         var data = new MassTransitQueueData();
