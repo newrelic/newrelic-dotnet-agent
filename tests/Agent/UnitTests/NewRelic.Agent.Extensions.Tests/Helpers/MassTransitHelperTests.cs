@@ -108,6 +108,39 @@ public class MassTransitHelperTests
     }
 
     [Test]
+    [TestCase("rabbitmq://localhost/SomeHostname_MassTransitTest_bus_myqueuename", TransportType.AMQP)]
+    [TestCase("rabbitmqs://host/my-queue", TransportType.AMQP)]
+    [TestCase("amqp://broker/vhost/my-queue", TransportType.AMQP)]
+    [TestCase("amqps://broker/vhost/my-queue", TransportType.AMQP)]
+    [TestCase("amazonsqs://us-east-1/my-queue", TransportType.Queue)]
+    [TestCase("amazonsqs://us-east-1/my-topic?type=topic", TransportType.Queue)]
+    [TestCase("sb://myns.servicebus.windows.net/my-queue", TransportType.Queue)]
+    [TestCase("sb://myns.servicebus.windows.net/event-hub/telemetry", TransportType.Queue)]
+    [TestCase("activemq://broker/my-queue", TransportType.Queue)]
+    [TestCase("kafka://broker:9092/kafka/my-topic", TransportType.Kafka)]
+    [TestCase("loopback://localhost/kafka/my-topic", TransportType.Kafka)]
+    [TestCase("rabbitmq://rabbitmq/kafka/my-topic", TransportType.Kafka)]
+    [TestCase("loopback://localhost/event-hub/my-hub", TransportType.Queue)]
+    [TestCase("loopback://localhost/my-queue", TransportType.Unknown)]
+    [TestCase("queue:my-queue", TransportType.Unknown)]
+    [TestCase("custom://host/my-queue", TransportType.Unknown)]
+    [TestCase(null, TransportType.Unknown)]
+    public void GetTransportType(Uri uri, TransportType expectedTransportType)
+    {
+        var transportType = MassTransitHelpers.GetQueueData(uri).TransportType;
+
+        Assert.That(transportType, Is.EqualTo(expectedTransportType));
+    }
+
+    [Test]
+    public void GetTransportType_UsesFallbackAddress_WhenPrimaryHasNoQueueName()
+    {
+        var data = MassTransitHelpers.GetQueueData(new Uri("loopback://localhost/"), new Uri("amazonsqs://us-east-1/my-queue"));
+
+        Assert.That(data.TransportType, Is.EqualTo(TransportType.Queue));
+    }
+
+    [Test]
     // Primary yields Unknown, fallback has the real destination
     [TestCase(null, "loopback://localhost/kafka/my-topic", "my-topic", MessageBrokerDestinationType.Topic)]
     [TestCase("loopback://localhost/", "loopback://localhost/kafka/my-topic", "my-topic", MessageBrokerDestinationType.Topic)]

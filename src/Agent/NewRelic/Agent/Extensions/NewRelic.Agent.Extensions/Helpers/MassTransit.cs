@@ -12,6 +12,7 @@ public class MassTransitQueueData
 {
     public string QueueName { get; set; } = "Unknown";
     public MessageBrokerDestinationType DestinationType { get; set; } = MessageBrokerDestinationType.Queue;
+    public TransportType TransportType { get; set; } = TransportType.Unknown;
 }
 
 public static class MassTransitHelpers
@@ -69,13 +70,16 @@ public static class MassTransitHelpers
                 case "kafka":
                     data.QueueName = GetLastPathSegment(sourceAddress);
                     data.DestinationType = MessageBrokerDestinationType.Topic;
+                    data.TransportType = TransportType.Kafka;
                     break;
 
                 case "sb":
                     ParseServiceBusUri(sourceAddress, data);
+                    data.TransportType = TransportType.Queue;
                     break;
 
                 case "amazonsqs":
+                    data.TransportType = TransportType.Queue;
                     data.QueueName = GetLastPathSegment(sourceAddress);
                     data.DestinationType = GetDestinationTypeFromQueryParam(sourceAddress);
                     if (data.DestinationType == MessageBrokerDestinationType.Queue && HasQueryParam(sourceAddress, "temporary", "true"))
@@ -85,6 +89,7 @@ public static class MassTransitHelpers
                 case "activemq":
                 case "amqp":
                 case "amqps":
+                    data.TransportType = scheme == "activemq" ? TransportType.Queue : TransportType.AMQP;
                     data.QueueName = GetLastPathSegment(sourceAddress);
                     data.DestinationType = GetDestinationTypeFromQueryParam(sourceAddress);
                     if (data.DestinationType == MessageBrokerDestinationType.Queue && HasQueryParam(sourceAddress, "temporary", "true"))
@@ -94,6 +99,7 @@ public static class MassTransitHelpers
                 case "rabbitmq":
                 case "rabbitmqs":
                     ParseRabbitMqUri(sourceAddress, data);
+                    data.TransportType = TransportType.AMQP;
                     break;
 
                 case "loopback":
@@ -127,6 +133,7 @@ public static class MassTransitHelpers
         {
             data.QueueName = path.Substring("kafka/".Length).TrimEnd('/');
             data.DestinationType = MessageBrokerDestinationType.Topic;
+            data.TransportType = TransportType.Kafka;
             return true;
         }
 
@@ -134,6 +141,7 @@ public static class MassTransitHelpers
         {
             data.QueueName = path.Substring("event-hub/".Length).TrimEnd('/');
             data.DestinationType = MessageBrokerDestinationType.Topic;
+            data.TransportType = TransportType.Queue;
             return true;
         }
 
