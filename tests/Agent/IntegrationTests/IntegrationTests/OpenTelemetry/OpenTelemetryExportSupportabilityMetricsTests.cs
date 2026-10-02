@@ -115,8 +115,11 @@ public abstract class OtlpExportRetryMetricsTestsBase<TFixture> : NewRelicIntegr
                 var configModifier = new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath);
                 configModifier.SetLogLevel("finest");
                 configModifier.ConfigureFasterMetricsHarvestCycle(10);
-                configModifier.SetOpenTelemetryMetricsExportInterval(5000);
-                configModifier.SetOpenTelemetryMetricsExportTimeout(4000);
+                // The timeout must cover the handler's whole retry budget: two backoffs (~1s and ~2s, each plus
+                // up to 500ms jitter) and three requests. A shorter timeout cancels the export mid-backoff, which
+                // is correctly counted as export/failure. The timeout must also stay below the interval.
+                configModifier.SetOpenTelemetryMetricsExportInterval(15000);
+                configModifier.SetOpenTelemetryMetricsExportTimeout(12000);
             },
             exerciseApplication: () =>
             {

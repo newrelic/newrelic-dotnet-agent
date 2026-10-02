@@ -98,6 +98,28 @@ public class MockNewRelicFixture : RemoteApplicationFixture
         GetStringAndIgnoreResult(address);
     }
 
+    public void TriggerStartContinuousProfiler(string include = "cpu", int? sampleIntervalMs = null, int? cpuReportIntervalMs = null)
+    {
+        var query = new List<string> { $"include={include}" };
+        if (sampleIntervalMs.HasValue) query.Add($"sampleInterval={sampleIntervalMs.Value}");
+        if (cpuReportIntervalMs.HasValue) query.Add($"cpuReportInterval={cpuReportIntervalMs.Value}");
+
+        var address = $"https://localhost:{MockNewRelicApplication.Port}/agent_listener/TriggerStartContinuousProfiler?{string.Join("&", query)}";
+
+        TestLogger?.WriteLine($"[MockNewRelicFixture] Trigger start_continuous_profiling via: {address}");
+
+        GetStringAndIgnoreResult(address);
+    }
+
+    public void TriggerStopContinuousProfiler(string include = "cpu")
+    {
+        var address = $"https://localhost:{MockNewRelicApplication.Port}/agent_listener/TriggerStopContinuousProfiler?include={include}";
+
+        TestLogger?.WriteLine($"[MockNewRelicFixture] Trigger stop_continuous_profiling via: {address}");
+
+        GetStringAndIgnoreResult(address);
+    }
+
     public void SetCustomInstrumentationEditorOnConnect()
     {
         var address = $"https://localhost:{MockNewRelicApplication.Port}/agent_listener/SetCustomInstrumentationEditorOnConnect";
@@ -119,6 +141,36 @@ public class MockNewRelicFixture : RemoteApplicationFixture
         var address = $"https://localhost:{MockNewRelicApplication.Port}/agent_listener/SetAiMonitoringServerConfigOnConnect{queryString}";
 
         TestLogger?.WriteLine($"[MockNewRelicFixture] Set AI Monitoring server config on connect via: {address}");
+
+        GetStringAndIgnoreResult(address);
+    }
+
+    public IEnumerable<ProfilesSummaryDto> GetCollectedOtlpProfiles(int count = 10)
+    {
+        var address = $"https://localhost:{MockNewRelicApplication.Port}/v1/profiles/collected?n={count}";
+
+        TestLogger?.WriteLine($"[MockNewRelicFixture] Get collected OTLP profiles via: {address}");
+
+        return GetJson<List<ProfilesSummaryDto>>(address) ?? new List<ProfilesSummaryDto>();
+    }
+
+    public int GetCollectedOtlpProfilesCount()
+    {
+        var address = $"https://localhost:{MockNewRelicApplication.Port}/v1/profiles/count";
+
+        TestLogger?.WriteLine($"[MockNewRelicFixture] Get collected OTLP profiles count via: {address}");
+
+        return Convert.ToInt32(GetString(address));
+    }
+
+    // Force the mock's /v1/profiles endpoint to return the given HTTP status (e.g. 500) for every subsequent
+    // POST, so a test can drive the agent's send-failure / backoff-retry path against a failing ingest
+    // endpoint. Pass 0 to resume normal 200 responses.
+    public void SetOtlpProfilesResponseStatus(int status)
+    {
+        var address = $"https://localhost:{MockNewRelicApplication.Port}/v1/profiles/response-status?status={status}";
+
+        TestLogger?.WriteLine($"[MockNewRelicFixture] Set OTLP profiles response status {status} via: {address}");
 
         GetStringAndIgnoreResult(address);
     }
