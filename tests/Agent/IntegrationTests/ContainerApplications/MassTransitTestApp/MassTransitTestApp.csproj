@@ -11,6 +11,6 @@
     <PackageReference Include="MassTransit.Kafka" Version="8.5.8" Condition="'$(TargetFramework)' == 'net10.0'" />
     <PackageReference Include="MassTransit.RabbitMQ" Version="8.5.8" Condition="'$(TargetFramework)' == 'net10.0'" />
     <PackageReference Include="MassTransit.AmazonSQS" Version="8.5.8" Condition="'$(TargetFramework)' == 'net10.0'" />
-    <PackageReference Include="NewRelic.Agent.Api" Version="10.54.0" />
+    <PackageReference Include="NewRelic.Agent.Api" Version="10.55.0" />
   </ItemGroup>
 </Project>
