@@ -111,7 +111,6 @@ services:
 
     mysql:
         build: ./mysql
-        command: mysqld --mysql_native_password=FORCE
         ports:
             - "3306:3306"
         environment:

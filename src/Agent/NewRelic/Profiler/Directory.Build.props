@@ -17,4 +17,15 @@
          analyzers explicitly here to keep IDE0073 copyright-header enforcement active at build. -->
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
   </PropertyGroup>
+  <!-- Pin the C++ language standard explicitly so Windows doesn't silently
+       drift from the toolset default. This matches the Linux musl build
+       (CMakeLists.txt) but NOT the Linux glibc build, which is intentionally
+       held at C++11 for a libc++/xplat.h shim conflict. See the comment
+       above the glibc CMAKE_CXX_FLAGS in CMakeLists.txt before changing
+       either side. -->
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <LanguageStandard>stdcpp14</LanguageStandard>
+    </ClCompile>
+  </ItemDefinitionGroup>
 </Project>

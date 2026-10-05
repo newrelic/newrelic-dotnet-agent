@@ -27,6 +27,19 @@
     <Protobuf Include="Protos\opentelemetry\proto\resource\v1\resource.proto" ProtoRoot="Protos" GrpcServices="None" />
   </ItemGroup>
 
+  <!-- Reuse the agent's vendored OTLP profiles protos directly (no second copy) so the mock collector
+       parses the exact ExportProfilesServiceRequest the production OtlpProfileBuilder emits. These carry
+       csharp_namespace OpenTelemetry.Proto.* (capital T), distinct from the mock's metrics protos above. -->
+  <PropertyGroup>
+    <ProfilesProtoRoot>..\..\..\..\..\src\Agent\NewRelic\Agent\Core\ContinuousProfiling\Otlp</ProfilesProtoRoot>
+  </PropertyGroup>
+  <ItemGroup>
+    <Protobuf Include="$(ProfilesProtoRoot)\common.proto" ProtoRoot="$(ProfilesProtoRoot)" GrpcServices="None" />
+    <Protobuf Include="$(ProfilesProtoRoot)\resource.proto" ProtoRoot="$(ProfilesProtoRoot)" GrpcServices="None" />
+    <Protobuf Include="$(ProfilesProtoRoot)\profiles.proto" ProtoRoot="$(ProfilesProtoRoot)" GrpcServices="None" />
+    <Protobuf Include="$(ProfilesProtoRoot)\profiles_service.proto" ProtoRoot="$(ProfilesProtoRoot)" GrpcServices="None" />
+  </ItemGroup>
+
   <ItemGroup>
     <DotNetCliToolReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Tools" Version="2.0.1" />
   </ItemGroup>

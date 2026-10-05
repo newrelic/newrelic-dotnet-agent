@@ -1,6 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using NewRelic.Agent.Configuration;
@@ -94,7 +95,23 @@ public class CommandService : DisposableService
             }
             else
             {
-                returnValue = command.Process(arguments);
+                try
+                {
+                    returnValue = command.Process(arguments);
+                }
+                catch (Exception ex)
+                {
+                    // An uncaught throw here must not abort the whole batch -- that would silently drop
+                    // every other command's response too (see H5), leaving the collector with nothing for
+                    // this cycle rather than a reported failure.
+                    var msg = $"Command '{name}' threw while executing: {ex.Message}";
+                    Log.Error(ex, msg);
+                    returnValue = new Dictionary<string, object>
+                    {
+                        { "errors", msg },
+                        { "error", msg }
+                    };
+                }
             }
 
             results.Add(id.ToString(CultureInfo.InvariantCulture), returnValue);
