@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.56.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.55.0...v10.56.0) (2026-10-05)
+
+
+### New features
+
+* Add connect response OTLP resource attributes to hybrid agent metrics ([#3857](https://github.com/newrelic/newrelic-dotnet-agent/issues/3857)) ([80cb2d1](https://github.com/newrelic/newrelic-dotnet-agent/commit/80cb2d1b92862c8aeba8b6dad09fc7989972b4b2))
+* Add continuous profiling for .NET applications. Continuous Profiling is a new feature which is not yet generally available for use. The agent-side component code is now present in the agent but to actually use it ahead of the General Availability release, you will need to contact your New Relic sales representative to join the preview early. ([1f06aef](https://github.com/newrelic/newrelic-dotnet-agent/commit/1f06aef816a072bcacbc92675f833bf2643689b4))
+
+
+### Fixes
+
+* Add empty-rule fast path to MetricNameService regex renaming. ([#3853](https://github.com/newrelic/newrelic-dotnet-agent/issues/3853)) ([778af98](https://github.com/newrelic/newrelic-dotnet-agent/commit/778af9853de79bfc775c019df9f187bc23b15acb))
+* Convert integral OpenTelemetry bridge tag values to the requested type ([#3863](https://github.com/newrelic/newrelic-dotnet-agent/issues/3863)) ([b5aef25](https://github.com/newrelic/newrelic-dotnet-agent/commit/b5aef25ad50301f6fd16aa4b9128d8f57da27a4b))
+* Exclude the MongoDB.Driver ActivitySource from the OpenTelemetry bridge by default ([#3854](https://github.com/newrelic/newrelic-dotnet-agent/issues/3854)) ([79a39fa](https://github.com/newrelic/newrelic-dotnet-agent/commit/79a39fa2508f55d42800f81662dea68fc11d4320))
+* Report the actual transport type for MassTransit consumers ([#3865](https://github.com/newrelic/newrelic-dotnet-agent/issues/3865)) ([92d75b5](https://github.com/newrelic/newrelic-dotnet-agent/commit/92d75b52fd11248332d1684afec3f2fc5486f89a))
+
 ## [10.55.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.54.0...v10.55.0) (2026-09-15)
 
 
