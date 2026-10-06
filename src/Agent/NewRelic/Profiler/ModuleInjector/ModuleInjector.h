@@ -31,6 +31,12 @@ namespace NewRelic { namespace Profiler { namespace ModuleInjector
         };
 
     public:
+        // On Core the JIT-time tokenizer defines helper refs lazily, so only CoreLib needs load-time injection.
+        static bool ShouldInjectAtModuleLoad(const bool isCoreClr, const xstring_t& assemblyName)
+        {
+            return !isCoreClr || assemblyName == _X("System.Private.CoreLib");
+        }
+
         // Returns true if it is safe to keep the AppDomainFallbackCache calling strategy.
         // For non-corelib modules this is always true (a failed reference injection only
         // means that one module will not be instrumented, which is not a reason to downgrade
