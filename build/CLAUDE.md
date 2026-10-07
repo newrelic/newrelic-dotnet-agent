@@ -101,10 +101,62 @@ PR. Releases are driven by **release-please**: conventional commits bump
 the version, regenerate `CHANGELOG.md`, open a release PR; merging tags
 and publishes artifacts.
 
+## Building the profiler locally
+
+Script: `src/Agent/NewRelic/Profiler/build/build.ps1 -Platform <x64|x86|windows|linux|all> -Configuration <Debug|Release>`
+(not `build/scripts/`). Run it via `powershell.exe`. `linux` builds in Docker.
+
+Output:
+- Windows: `src/Agent/_profilerBuild/<x64|x86>-<config>/NewRelic.Profiler.dll`
+- Linux: `src/Agent/_profilerBuild/linux-x64-release/libNewRelicProfiler.so`
+
+**ATL trap:** `build.ps1` picks the highest-version VS install
+(`vswhere -products '*' -latest`). If that is a Build Tools install without
+ATL, the build fails with `C1083: Cannot open include file: 'atlcomcli.h'`.
+Call the full VS `MSBuild.exe` directly instead. From Git Bash, use `-` switches.
+Git Bash rewrites `/restore` to `C:/Program Files/Git/restore`:
+
+```
+"<VS>/MSBuild/Current/Bin/MSBuild.exe" -restore -p:Platform=x64 -p:Configuration=Debug src/Agent/NewRelic/Profiler/NewRelic.Profiler.sln > /c/tmp/profiler-build.log 2>&1
+```
+
+**Test a local profiler build with the managed agent:** the `newrelichome_*`
+dirs from `FullAgent.sln` hold the profiler from the NuGet package, not
+your build. Copy your build over the profiler file in each home under test,
+after the `FullAgent.sln` build:
+- `libNewRelicProfiler.so` to `src/Agent/newrelichome_x64_coreclr_linux/`
+  (container tests copy this home into the container).
+- `NewRelic.Profiler.dll` to `src/Agent/newrelichome_x64_coreclr/` (.NET) or
+  `src/Agent/newrelichome_x64/` (.NET Framework).
+
+## Verifying a profiler change
+
+The managed agent consumes the profiler through the
+`NewRelic.Agent.Internal.Profiler` NuGet package, not from the repo. CI on a
+profiler PR does not exercise the new profiler until `Home.csproj` references
+a package built from that branch. "Profiler CI green" is not "PR ready".
+
+1. `gh workflow run build_profiler.yml --ref <work-branch> -f deploy=true`.
+   Use the work branch, never `main`. This is a routine step and needs no
+   release coordination.
+2. The `update-nuget-reference` job opens a PR from
+   `profiler-nuget-updates/<work-branch>` that bumps
+   `src/Agent/NewRelic/Home/Home.csproj`. Check that it targets the work
+   branch, then merge it into the work branch.
+3. Wait until nuget.org lists the new version (indexing takes several
+   minutes), or CI restore fails with "package not found".
+4. Run full CI on the work branch.
+
+The deployed package holds Release-built native binaries, whatever
+configuration `FullAgent.sln` uses. A local `build.ps1 -Configuration Release`
+is redundant after step 2. If the work branch rebases onto a newer `main`,
+re-run step 1.
+
 ## Troubleshooting
 
 **Profiler build fails:**
-- C++ ATL for the current VS build tools installed (x86 *and* x64)?
+- C++ ATL for the current VS build tools installed (x86 *and* x64)? See
+  the ATL trap under "Building the profiler locally".
 - Docker Desktop running (required for the Linux profiler build)?
 - Did you open `Profiler.sln` with the latest Visual Studio?
 
