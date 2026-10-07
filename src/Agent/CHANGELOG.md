@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.56.1](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.56.0...v10.56.1) (2026-10-07)
+
+
+### Fixes
+
+* Inject agent helper references lazily on .NET Core ([#3873](https://github.com/newrelic/newrelic-dotnet-agent/issues/3873)) ([e8572b5](https://github.com/newrelic/newrelic-dotnet-agent/commit/e8572b5b2828f19cfc9ad84beea4783db7977132))
+
 ## [10.56.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.55.0...v10.56.0) (2026-10-05)
 
 
