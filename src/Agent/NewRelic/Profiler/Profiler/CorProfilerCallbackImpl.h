@@ -312,11 +312,14 @@ namespace NewRelic { namespace Profiler {
             }
 
             // Core retains its ReJIT enumeration of app methods, in ADDITION to injection below.
+            xstring_t assemblyName;
+            bool isAssemblyNameKnown = false;
             if (_isCoreClr)
             {
                 try
                 {
-                    auto assemblyName = GetAssemblyName(moduleId);
+                    assemblyName = GetAssemblyName(moduleId);
+                    isAssemblyNameKnown = true;
                     if (GetMethodRewriter()->ShouldInstrumentAssembly(assemblyName))
                     {
                         LogTrace("Assembly module loaded: ", assemblyName);
@@ -336,6 +339,12 @@ namespace NewRelic { namespace Profiler {
             // Injection is only needed for the AppDomainFallbackCache strategy; Reflection IL is
             // self-contained and needs no injected corelib helpers.
             if (_agentCallStrategy == MethodRewriter::AgentCallStyle::Strategy::Reflection)
+            {
+                return S_OK;
+            }
+
+            // On Core, only CoreLib needs load-time injection. If the name lookup failed, inject as before.
+            if (isAssemblyNameKnown && !ModuleInjector::ModuleInjector::ShouldInjectAtModuleLoad(_isCoreClr, assemblyName))
             {
                 return S_OK;
             }

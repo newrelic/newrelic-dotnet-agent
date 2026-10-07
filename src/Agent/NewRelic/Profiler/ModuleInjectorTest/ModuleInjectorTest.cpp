@@ -22,6 +22,25 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
     TEST_CLASS(ModuleInjectorTest)
     {
     public:
+        TEST_METHOD(ShouldInjectAtModuleLoad_CoreClr_CoreLib_ReturnsTrue)
+        {
+            Assert::IsTrue(ModuleInjector::ModuleInjector::ShouldInjectAtModuleLoad(true, _X("System.Private.CoreLib")));
+        }
+
+        TEST_METHOD(ShouldInjectAtModuleLoad_CoreClr_OtherAssembly_ReturnsFalse)
+        {
+            Assert::IsFalse(ModuleInjector::ModuleInjector::ShouldInjectAtModuleLoad(true, _X("System.Runtime")));
+            Assert::IsFalse(ModuleInjector::ModuleInjector::ShouldInjectAtModuleLoad(true, _X("MyApp")));
+            Assert::IsFalse(ModuleInjector::ModuleInjector::ShouldInjectAtModuleLoad(true, _X("")));
+        }
+
+        TEST_METHOD(ShouldInjectAtModuleLoad_NetFramework_AnyAssembly_ReturnsTrue)
+        {
+            Assert::IsTrue(ModuleInjector::ModuleInjector::ShouldInjectAtModuleLoad(false, _X("mscorlib")));
+            Assert::IsTrue(ModuleInjector::ModuleInjector::ShouldInjectAtModuleLoad(false, _X("MyApp")));
+            Assert::IsTrue(ModuleInjector::ModuleInjector::ShouldInjectAtModuleLoad(false, _X("")));
+        }
+
         TEST_METHOD(ModuleInjector_CoreClr_DoesNotCrash_CannotEnsureReferenceToCoreLib)
         {
             auto modulePtr = std::make_shared<MockModule>();
