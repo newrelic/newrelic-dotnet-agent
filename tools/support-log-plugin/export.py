@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Export the .NET agent log triage plugin into a checkout of the GHE
-marketplace repository agents/claude-skills.
+"""Export the dotnet-agent-support plugin into a checkout of the nr-agents
+marketplace repository (agents/claude-skills).
 
 Run from the repository root:
     python tools/support-log-plugin/export.py --target /path/to/claude-skills
@@ -159,12 +159,8 @@ def plugin_version(root, fallback):
 def plan_copies(root, target, verified, field):
     plugin, skill = plugin_paths(target)
     pairs = [
-        (os.path.join(SCAFFOLD, 'bootstrap.sh'),
-         os.path.join(plugin, 'bootstrap.sh')),
-        (os.path.join(SCAFFOLD, 'bootstrap.ps1'),
-         os.path.join(plugin, 'bootstrap.ps1')),
         (os.path.join(SCAFFOLD, 'lint_playbooks.py'),
-         os.path.join(plugin, 'lint_playbooks.py')),
+         os.path.join(target, *FIELD_REL[:-1], 'lint_playbooks.py')),
         (os.path.join(PLUGIN_SRC, 'README.md'),
          os.path.join(plugin, 'README.md')),
         (os.path.join(PLUGIN_SRC, 'SKILL.md'),
@@ -353,7 +349,7 @@ def run_export(target, dry_run, days):
 def main(argv):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--target', required=True,
-                        help='path to a checkout of agents/claude-skills')
+                        help='path to a checkout of the nr-agents marketplace repository')
     parser.add_argument('--dry-run', action='store_true')
     parser.add_argument('--unpromoted-days', type=int, default=UNPROMOTED_DAYS)
     args = parser.parse_args(argv)

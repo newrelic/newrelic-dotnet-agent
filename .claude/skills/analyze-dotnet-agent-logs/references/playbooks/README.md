@@ -65,7 +65,7 @@ Links to a sibling reference file go up one directory, for example
 
 Ids 1 to 99 are verified playbooks, which live in this directory. Ids 100 and up
 are field playbooks, which live in `teams/dotnet-agent/playbooks/field/` in the
-marketplace repository. `export.py` refuses to publish a set that breaks either
+`nr-agents` marketplace repository (`agents/claude-skills`). `export.py` refuses to publish a set that breaks either
 range, or that reuses an id across the two tiers.
 
 Promotion renumbers the file: an agent engineer confirms the signatures against

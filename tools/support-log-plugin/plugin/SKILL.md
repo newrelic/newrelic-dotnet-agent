@@ -74,7 +74,7 @@ are beside it, under
 6. **Capture, when the ticket resolves unmatched.** `nrlog.py draft-playbook
    <path>` writes a filled skeleton. Fill the two headings and open a pull
    request adding it under `teams/dotnet-agent/playbooks/field/` in the
-   marketplace repository. A ticket
+   `nr-agents` marketplace repository (`agents/claude-skills`). A ticket
    closes at the moment of highest knowledge, and that is the moment to write it
    down.
 

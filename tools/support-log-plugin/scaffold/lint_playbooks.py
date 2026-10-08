@@ -3,11 +3,11 @@
 # newrelic-dotnet-agent repository; an edit here is lost at the next export.
 """Lint playbook markdown files.
 
-    python lint_playbooks.py teams/dotnet-agent/playbooks/field
+    python teams/dotnet-agent/playbooks/lint_playbooks.py teams/dotnet-agent/playbooks/field
 
 Exits 0 when every file is well formed, 1 otherwise. Standard library only, and
-standalone on purpose: it runs in the marketplace repository, where nrlog.py is
-a generated copy.
+standalone on purpose: it runs in the nr-agents marketplace repository, where
+nrlog.py is a generated copy.
 """
 
 import os

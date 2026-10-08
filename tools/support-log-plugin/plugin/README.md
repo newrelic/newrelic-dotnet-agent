@@ -19,23 +19,11 @@ Two lines in Claude Code:
 /plugin install dotnet-agent-support@nr-agents
 ```
 
-To check your machine first, run the preflight script from the root of a checkout
-of this repository. It probes Python, git, and your git credentials, then prints
-the lines above. It changes nothing:
-
-```
-bash plugins/dotnet-agent-support/bootstrap.sh
-```
-
-On Windows PowerShell, run `plugins/dotnet-agent-support/bootstrap.ps1` the same way.
-Do not pipe it from the network; PowerShell execution policy makes that fail in
-ways that are hard to read.
-
-Read [the repository README](../../README.md) once before you install. It carries
-the git credential prerequisite for `source.datanerd.us`, the two settings this
-internal marketplace needs to keep working, and the raw fetch URL for the preflight
-scripts when you have no checkout. Those apply to every plugin here, not only to
-this one.
+Read [the `nr-agents` marketplace README](../../README.md) once before you install.
+It carries the git credential prerequisite for `source.datanerd.us`, the two
+settings the `nr-agents` marketplace needs to keep working, and the marketplace
+preflight script that checks your machine first. Those apply to every plugin in
+the marketplace, not only to this one.
 
 ## Use it
 
@@ -67,7 +55,7 @@ wrote a log. The report states its own limits; trust them.
 ## Contribute a field playbook
 
 Support owns `teams/dotnet-agent/playbooks/field/`. That is the one directory in
-this repository a human edits for this plugin, and
+the `nr-agents` marketplace repository a human edits for this plugin, and
 [its README](../../teams/dotnet-agent/playbooks/field/README.md) holds the id
 ranges, the frontmatter schema, the review norm, and the promotion rule.
 
@@ -78,8 +66,8 @@ remove after you have read it.
 
 ## This directory is generated
 
-Every file under `plugins/dotnet-agent-support/`, this README and
-`lint_playbooks.py` included, is written by
+Every file under `plugins/dotnet-agent-support/`, this README included, and
+`teams/dotnet-agent/playbooks/lint_playbooks.py` are written by
 `tools/support-log-plugin/export.py` in the `newrelic-dotnet-agent` repository and
 rebuilt on every release, so an edit here is lost at the next export. Send a change
 to `tools/support-log-plugin/` in that repository instead.
