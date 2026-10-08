@@ -360,7 +360,7 @@ class TreeTests(unittest.TestCase):
         export.run_export(self.target, False, 90)
         owned = set(self.owned_paths())
         under = set(p for p in self.actual_tree()
-                    if p.startswith('plugins/dotnet-log-triage/'))
+                    if p.startswith('plugins/dotnet-agent-support/'))
         self.assertEqual(sorted(under - owned), [])
 
     def test_the_export_changes_no_file_it_does_not_own(self):
@@ -383,7 +383,7 @@ class TreeTests(unittest.TestCase):
         data = self.marketplace()
         self.assertEqual(data['name'], 'nr-agents')
         self.assertEqual([p['name'] for p in data['plugins']],
-                         ['dotnet-log-triage'])
+                         ['dotnet-agent-support'])
         self.assertNotIn('pluginRoot', json.dumps(data))
 
     def test_an_unrelated_marketplace_entry_survives_a_round_trip(self):
@@ -394,17 +394,17 @@ class TreeTests(unittest.TestCase):
             'plugins': [
                 {'name': 'browser-log-triage',
                  'source': './plugins/browser-log-triage'},
-                {'name': 'dotnet-log-triage', 'source': './stale'},
+                {'name': 'dotnet-agent-support', 'source': './stale'},
             ],
         })
         self.assertEqual(export.run_export(self.target, False, 90), 0)
         data = self.marketplace()
         self.assertEqual([p['name'] for p in data['plugins']],
-                         ['browser-log-triage', 'dotnet-log-triage'])
+                         ['browser-log-triage', 'dotnet-agent-support'])
         self.assertEqual(data['metadata']['theirKey'], 'keep me')
         ours = [p for p in data['plugins']
-                if p['name'] == 'dotnet-log-triage'][0]
-        self.assertEqual(ours['source'], './plugins/dotnet-log-triage')
+                if p['name'] == 'dotnet-agent-support'][0]
+        self.assertEqual(ours['source'], './plugins/dotnet-agent-support')
 
     def test_another_teams_broken_entry_does_not_fail_the_export(self):
         self.write_marketplace({
@@ -414,13 +414,13 @@ class TreeTests(unittest.TestCase):
         })
         self.assertEqual(export.run_export(self.target, False, 90), 0)
         self.assertEqual([p['name'] for p in self.marketplace()['plugins']],
-                         ['browser-log-triage', 'dotnet-log-triage'])
+                         ['browser-log-triage', 'dotnet-agent-support'])
 
     def test_a_field_playbook_reaches_the_exported_tree(self):
         write_playbook(self.field_dir(), '100-stub.md',
                        FIELD_STUB % (100, 'Stub', 'a literal log fragment'))
         export.run_export(self.target, False, 90)
-        self.assertIn('plugins/dotnet-log-triage/skills/'
+        self.assertIn('plugins/dotnet-agent-support/skills/'
                       'triage-dotnet-agent-logs/references/playbooks/'
                       '100-stub.md', self.actual_tree())
 
@@ -450,7 +450,7 @@ class TreeTests(unittest.TestCase):
         export.run_export(self.target, False, 90)
         os.remove(os.path.join(field, '100-stub.md'))
         export.run_export(self.target, False, 90)
-        self.assertNotIn('plugins/dotnet-log-triage/skills/'
+        self.assertNotIn('plugins/dotnet-agent-support/skills/'
                          'triage-dotnet-agent-logs/references/playbooks/'
                          '100-stub.md', self.actual_tree())
 
@@ -473,16 +473,16 @@ class TreeTests(unittest.TestCase):
 
     def test_the_exported_manifest_carries_a_bumped_version(self):
         export.run_export(self.target, False, 90)
-        path = os.path.join(self.target, 'plugins', 'dotnet-log-triage',
+        path = os.path.join(self.target, 'plugins', 'dotnet-agent-support',
                             '.claude-plugin', 'plugin.json')
         with open(path, 'r', encoding='ascii') as handle:
             data = json.load(handle)
-        self.assertEqual(data['name'], 'dotnet-log-triage')
+        self.assertEqual(data['name'], 'dotnet-agent-support')
         self.assertRegex(data['version'], r'^\d+\.\d+\.\d+$')
 
     def test_the_exported_skill_declares_its_own_name(self):
         export.run_export(self.target, False, 90)
-        path = os.path.join(self.target, 'plugins', 'dotnet-log-triage',
+        path = os.path.join(self.target, 'plugins', 'dotnet-agent-support',
                             'skills', 'triage-dotnet-agent-logs', 'SKILL.md')
         with open(path, 'r', encoding='ascii') as handle:
             head = handle.read(400)
@@ -491,7 +491,7 @@ class TreeTests(unittest.TestCase):
     def test_the_exported_script_is_the_part_one_script(self):
         export.run_export(self.target, False, 90)
         source = os.path.join(export.skill_dir(), 'scripts', 'nrlog.py')
-        copied = os.path.join(self.target, 'plugins', 'dotnet-log-triage',
+        copied = os.path.join(self.target, 'plugins', 'dotnet-agent-support',
                               'skills', 'triage-dotnet-agent-logs', 'scripts',
                               'nrlog.py')
         with open(source, 'rb') as handle:

@@ -36,7 +36,7 @@ cat <<'ADVICE'
 This machine is ready. Run these two lines in Claude Code:
 
   /plugin marketplace add https://source.datanerd.us/agents/claude-skills.git
-  /plugin install dotnet-log-triage@nr-agents
+  /plugin install dotnet-agent-support@nr-agents
 
 Then set this in ~/.claude/settings.json under "env", so a failed background
 refresh keeps your working copy instead of deleting it:

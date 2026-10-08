@@ -1,6 +1,8 @@
-# .NET agent log triage
+# .NET agent support
 
-Diagnoses a New Relic .NET agent log from a support ticket in one command.
+Skills that New Relic support engineers use to diagnose issues with the .NET
+agent. Its first skill, `triage-dotnet-agent-logs`, diagnoses a .NET agent log
+from a support ticket in one command.
 
 ## Requirements
 
@@ -14,7 +16,7 @@ Two lines in Claude Code:
 
 ```
 /plugin marketplace add https://source.datanerd.us/agents/claude-skills.git
-/plugin install dotnet-log-triage@nr-agents
+/plugin install dotnet-agent-support@nr-agents
 ```
 
 To check your machine first, run the preflight script from the root of a checkout
@@ -22,10 +24,10 @@ of this repository. It probes Python, git, and your git credentials, then prints
 the lines above. It changes nothing:
 
 ```
-bash plugins/dotnet-log-triage/bootstrap.sh
+bash plugins/dotnet-agent-support/bootstrap.sh
 ```
 
-On Windows PowerShell, run `plugins/dotnet-log-triage/bootstrap.ps1` the same way.
+On Windows PowerShell, run `plugins/dotnet-agent-support/bootstrap.ps1` the same way.
 Do not pipe it from the network; PowerShell execution policy makes that fail in
 ways that are hard to read.
 
@@ -76,7 +78,7 @@ remove after you have read it.
 
 ## This directory is generated
 
-Every file under `plugins/dotnet-log-triage/`, this README and
+Every file under `plugins/dotnet-agent-support/`, this README and
 `lint_playbooks.py` included, is written by
 `tools/support-log-plugin/export.py` in the `newrelic-dotnet-agent` repository and
 rebuilt on every release, so an edit here is lost at the next export. Send a change

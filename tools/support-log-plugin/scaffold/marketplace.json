@@ -7,9 +7,9 @@
   "description": "Claude Code plugins from the New Relic agent teams.",
   "plugins": [
     {
-      "name": "dotnet-log-triage",
-      "source": "./plugins/dotnet-log-triage",
-      "description": "Diagnose a New Relic .NET agent log from a support ticket in one command.",
+      "name": "dotnet-agent-support",
+      "source": "./plugins/dotnet-agent-support",
+      "description": "Skills that New Relic support engineers use to diagnose issues with the .NET agent, starting with log triage.",
       "category": "support",
       "tags": ["dotnet", "logs", "triage"]
     }

@@ -1,7 +1,7 @@
 {
-  "name": "dotnet-log-triage",
-  "displayName": "NET Agent Log Triage",
-  "description": "Diagnose a New Relic .NET agent log from a support ticket in one command. Routes to a playbook with the customer fix and the next ask attached.",
+  "name": "dotnet-agent-support",
+  "displayName": ".NET Agent Support",
+  "description": "Skills that New Relic support engineers use to diagnose issues with the .NET agent. Includes log triage: diagnose a .NET agent log from a support ticket in one command, routed to a playbook with the customer fix and the next ask attached.",
   "version": "1.0.0",
   "author": {
     "name": "New Relic .NET Agent Team"

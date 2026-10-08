@@ -20,7 +20,7 @@ import tempfile
 
 TOOL_DIR = os.path.dirname(os.path.abspath(__file__))
 SKILL_REL = os.path.join('.claude', 'skills', 'analyze-dotnet-agent-logs')
-PLUGIN_NAME = 'dotnet-log-triage'
+PLUGIN_NAME = 'dotnet-agent-support'
 SKILL_NAME = 'triage-dotnet-agent-logs'
 FIELD_REL = ('teams', 'dotnet-agent', 'playbooks', 'field')
 UNPROMOTED_DAYS = 90
