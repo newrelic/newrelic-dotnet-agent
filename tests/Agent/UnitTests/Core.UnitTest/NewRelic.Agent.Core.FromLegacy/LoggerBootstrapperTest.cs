@@ -3,6 +3,7 @@
 
 using System;
 using System.IO;
+using System.Text.RegularExpressions;
 using NewRelic.Agent.Core.Config;
 using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.SharedInterfaces;
@@ -112,6 +113,31 @@ public class LoggerBootstrapperTest
         LoggerBootstrapper.ConfigureLogger(config);
         Assert.That(Log.IsFinestEnabled, Is.False);
 
+    }
+
+    [Test]
+    public static void Messages_logged_before_and_after_ConfigureLogger_are_written_to_the_log_file_once()
+    {
+        var logDirectory = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+        ILogConfig config = LogConfigFixtureWithDirectory(logDirectory);
+        try
+        {
+            LoggerBootstrapper.Initialize();
+            Log.Error("logged while the config loads");
+            LoggerBootstrapper.ConfigureLogger(config);
+            Log.Info("logged after the logger is configured");
+            Serilog.Log.CloseAndFlush();
+
+            var logFile = File.ReadAllText(Path.Combine(logDirectory, "test.log"));
+            NrAssert.Multiple(
+                () => Assert.That(Regex.Matches(logFile, "logged while the config loads").Count, Is.EqualTo(1)),
+                () => Assert.That(Regex.Matches(logFile, "logged after the logger is configured").Count, Is.EqualTo(1))
+            );
+        }
+        finally
+        {
+            Directory.Delete(logDirectory, true);
+        }
     }
 
     [Test]
@@ -233,6 +259,26 @@ public class LoggerBootstrapperTest
 
         return new BootstrapConfiguration(configuration, "testfilename").LogConfig;
     }
+    private static ILogConfig LogConfigFixtureWithDirectory(string directory)
+    {
+        var xml = string.Format(
+            "<configuration xmlns=\"urn:newrelic-config\">" +
+            "   <service licenseKey=\"dude\"/>" +
+            "   <application>" +
+            "       <name>Test</name>" +
+            "   </application>" +
+            "   <log level=\"info\" directory=\"{0}\" fileName=\"test.log\" />" +
+            "</configuration>",
+            directory);
+
+        var xsdFile = Path.Combine(TestContext.CurrentContext.TestDirectory, "Configuration.xsd");
+        Func<string> configSchemaSource = () => File.ReadAllText(xsdFile);
+
+        var configuration = ConfigurationLoader.InitializeFromXml(xml, configSchemaSource);
+
+        return new BootstrapConfiguration(configuration, "testfilename").LogConfig;
+    }
+
     private static ILogConfig LogConfigFixtureWithLogEnabled(bool enabled)
     {
         var xml = string.Format(
