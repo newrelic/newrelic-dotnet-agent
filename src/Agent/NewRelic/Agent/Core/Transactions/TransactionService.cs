@@ -264,6 +264,18 @@ public class TransactionService : ConfigurationBasedService, ITransactionService
             transaction = TryGetInternalTransaction(context);
             if (transaction != null)
             {
+                // An attached thread-local transaction reads its parent from the async context, so the
+                // transaction must come from there too when the async context holds a different live one.
+                if (context is ThreadLocalStorage<IInternalTransaction> && transaction.IsAttachedToAsync)
+                {
+                    var asyncTransaction = TryGetInternalTransaction(_asyncContext);
+                    if (asyncTransaction != null && asyncTransaction != transaction && !asyncTransaction.IsFinished)
+                    {
+                        if (Log.IsFinestEnabled) asyncTransaction.LogFinest($"Retrieved from {_asyncContext} in place of a thread-local transaction");
+                        return asyncTransaction;
+                    }
+                }
+
                 if (Log.IsFinestEnabled) transaction.LogFinest($"Retrieved from {context.ToString()}");
                 return transaction;
             }

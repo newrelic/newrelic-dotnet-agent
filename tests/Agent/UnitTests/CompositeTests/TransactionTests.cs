@@ -9,6 +9,7 @@ using System.Threading;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Core;
 using NewRelic.Agent.Core.Attributes;
+using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.TestUtilities;
 using NewRelic.Testing.Assertions;
@@ -741,5 +742,23 @@ public class TransactionTests
             () => Assert.That(transactionAfterCallToEnd.IsValid, Is.True, "The current transaction should not be the NoOpTransaction."),
             () => Assert.That(timingMetric.DataModel.Value0, Is.EqualTo(1.0), "The transaction should be harvested.")
         );
+    }
+
+    [Test]
+    public void IsAttachedToAsync_IsFalseBeforeAttach_AndTrueAfterAttach()
+    {
+        _agent.CreateTransaction(
+            isWeb: true,
+            category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+            transactionDisplayName: "name",
+            doNotTrackAsUnitOfWork: true);
+        var transaction = (IInternalTransaction)_agent.CurrentTransaction;
+
+        Assert.That(transaction.IsAttachedToAsync, Is.False);
+
+        transaction.AttachToAsync();
+
+        Assert.That(transaction.IsAttachedToAsync, Is.True);
+        transaction.End();
     }
 }
