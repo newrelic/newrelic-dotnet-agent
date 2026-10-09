@@ -14,11 +14,9 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus;
 
 public class PageActionInvokeHandlerAsyncWrapper6Plus : IWrapper
 {
-    private static Func<object, PageContext> _getPageContext;
-
-    static PageActionInvokeHandlerAsyncWrapper6Plus()
+    private static class LazyAccessors
     {
-        _getPageContext = VisibilityBypasser.Instance.GenerateFieldReadAccessor<PageContext>("Microsoft.AspNetCore.Mvc.RazorPages",
+        public static readonly Func<object, PageContext> GetPageContext = VisibilityBypasser.Instance.GenerateFieldReadAccessor<PageContext>("Microsoft.AspNetCore.Mvc.RazorPages",
             "Microsoft.AspNetCore.Mvc.RazorPages.Infrastructure.PageActionInvoker", "_pageContext");
     }
 
@@ -36,7 +34,7 @@ public class PageActionInvokeHandlerAsyncWrapper6Plus : IWrapper
             transaction.AttachToAsync();
         }
 
-        var pageContext = _getPageContext(instrumentedMethodCall.MethodCall.InvocationTarget);
+        var pageContext = LazyAccessors.GetPageContext(instrumentedMethodCall.MethodCall.InvocationTarget);
 
         var actionDescriptor = pageContext.ActionDescriptor;
 
