@@ -34,6 +34,10 @@ public interface IInternalTransaction : ITransaction, ITransactionExperimental
     void RollupTransactionNameByStatusCodeIfNeeded();
     ITransactionMetadata TransactionMetadata { get; }
     ICallStackManager CallStackManager { get; }
+    /// <summary>
+    /// True after AttachToAsync, when the call stack reads its parent from async storage.
+    /// </summary>
+    bool IsAttachedToAsync { get; }
     int UnitOfWorkCount { get; }
     int NestedTransactionAttempts { get; }
     ImmutableTransaction ConvertToImmutableTransaction();
