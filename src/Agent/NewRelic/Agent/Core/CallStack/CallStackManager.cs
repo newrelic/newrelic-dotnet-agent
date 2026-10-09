@@ -17,7 +17,7 @@ public interface ICallStackManager
     void Push(int uniqueId);
 
     /// <summary>
-    /// Removes the given object from top of the callstack. Does nothing if the stack is callstack empty. Will throw if the callstack is not empty and the given object is not on top.
+    /// Removes the given object from top of the callstack. Does nothing if the stack is callstack empty or the given object is not on top.
     /// </summary>
     void TryPop(int uniqueId, int? parentId);
 
@@ -28,7 +28,7 @@ public interface ICallStackManager
     int? TryPeek();
 
     /// <summary>
-    /// Clears the callstack.
+    /// Removes this manager's own entry from the callstack and restores any entry it displaced.
     /// </summary>
     void Clear();
 
@@ -37,6 +37,35 @@ public interface ICallStackManager
     /// </summary>
     /// <returns>Returns true if the storage mechanism was switched.</returns>
     bool AttachToAsync();
+}
+
+/// <summary>
+/// A parent segment id tagged with the call stack manager (one per transaction) that wrote it.
+/// </summary>
+[NeedSerializableContainer]
+public sealed class CallStackEntry
+{
+    public CallStackEntry(ICallStackManager owner, int id, CallStackEntry displaced)
+    {
+        Owner = owner;
+        Id = id;
+        Displaced = displaced;
+        DisplacedDepth = displaced == null ? 0 : displaced.DisplacedDepth + 1;
+    }
+
+    public ICallStackManager Owner { get; }
+
+    public int Id { get; }
+
+    /// <summary>
+    /// The other manager's entry that this manager's push covered. It is restored when this manager's root entry is popped.
+    /// </summary>
+    public CallStackEntry Displaced { get; }
+
+    /// <summary>
+    /// The number of entries in the Displaced chain under this entry.
+    /// </summary>
+    public int DisplacedDepth { get; }
 }
 
 public delegate void CallStackPop(object uniqueObject, object uniqueParent);
@@ -111,7 +140,7 @@ public class CallStackManagerFactory : ICallStackManagerFactory
         // we don't know yet which of these CanProvide, but we know which can load their assemblies.
         // defer final decision on which one to use to the CallStackTracker
         var parentTrackers = _storageFactories
-            .Select(factory => factory.CreateContext<int?>("NewRelic.ParentObject"))
+            .Select(factory => factory.CreateContext<CallStackEntry>("NewRelic.ParentObject"))
             .Where(tracker => tracker != null)
             .OrderByDescending(context => context.Priority)
             .ToList();
@@ -124,18 +153,15 @@ public class CallStackManagerFactory : ICallStackManagerFactory
 
 public class AsyncCallStackManagerFactory : ICallStackManagerFactory
 {
-    private readonly IContextStorage<int?> _storageContext;
+    private readonly IContextStorage<CallStackEntry> _storageContext;
 
     public AsyncCallStackManagerFactory(IContextStorageFactory factory)
     {
-        this._storageContext = factory.CreateContext<int?>("NewRelic.ParentObject");
+        this._storageContext = factory.CreateContext<CallStackEntry>("NewRelic.ParentObject");
     }
 
     public ICallStackManager CreateCallStackManager()
     {
-        // our async contexts can exhibit undesirable sticky behavior if they're first accessed in
-        // a synchronous context.  This clears out anything stuck on the context.
-        _storageContext.Clear();
         return new SyncToAsyncCallStackManager(_storageContext);
     }
 }
@@ -146,58 +172,70 @@ public class AsyncCallStackManagerFactory : ICallStackManagerFactory
 /// </summary>
 public class SyncToAsyncCallStackManager : BaseCallStackManager
 {
-    private readonly IContextStorage<int?> _asyncContextStorage;
-    private volatile IContextStorage<int?> _currentContextStorage;
+    private readonly IContextStorage<CallStackEntry> _asyncContextStorage;
+    private volatile bool _isAttached;
+    private int? _synchronousId;
 
-    public SyncToAsyncCallStackManager(IContextStorage<int?> asyncContextStorage)
+    public SyncToAsyncCallStackManager(IContextStorage<CallStackEntry> asyncContextStorage)
     {
         _asyncContextStorage = asyncContextStorage;
-        _currentContextStorage = new SynchronousContextStorage();
     }
+
+    protected override IContextStorage<CallStackEntry> CurrentStorage => _asyncContextStorage;
+
     public override bool AttachToAsync()
     {
-        var currentValue = _currentContextStorage.GetData();
-        _currentContextStorage = _asyncContextStorage;
-        _currentContextStorage.SetData(currentValue);
+        if (_isAttached)
+            return true;
+
+        // Do not write null: another transaction's entry in this flow must stay in place.
+        if (_synchronousId.HasValue)
+            base.Push(_synchronousId.Value);
+
+        _isAttached = true;
         return true;
     }
 
-    protected override IContextStorage<int?> CurrentStorage => _currentContextStorage;
-
-    private sealed class SynchronousContextStorage : IContextStorage<int?>
+    public override void Push(int id)
     {
-        private int? _id;
-        public byte Priority => 0;
+        if (_isAttached)
+            base.Push(id);
+        else
+            _synchronousId = id;
+    }
 
-        public bool CanProvide => true;
+    public override void TryPop(int uniqueId, int? parentId)
+    {
+        if (_isAttached)
+            base.TryPop(uniqueId, parentId);
+        else if (_synchronousId == uniqueId)
+            _synchronousId = parentId;
+    }
 
-        public void Clear()
-        {
-            _id = null;
-        }
+    public override int? TryPeek()
+    {
+        return _isAttached ? base.TryPeek() : _synchronousId;
+    }
 
-        public int? GetData()
-        {
-            return _id;
-        }
-
-        public void SetData(int? id)
-        {
-            _id = id;
-        }
+    public override void Clear()
+    {
+        if (_isAttached)
+            base.Clear();
+        else
+            _synchronousId = null;
     }
 }
 
 public class CallStackManager : BaseCallStackManager
 {
-    private readonly IEnumerable<IContextStorage<int?>> _parentTrackers;
+    private readonly IEnumerable<IContextStorage<CallStackEntry>> _parentTrackers;
 
-    public CallStackManager(List<IContextStorage<int?>> parentTrackers)
+    public CallStackManager(List<IContextStorage<CallStackEntry>> parentTrackers)
     {
         this._parentTrackers = parentTrackers;
     }
 
-    protected override IContextStorage<int?> CurrentStorage
+    protected override IContextStorage<CallStackEntry> CurrentStorage
     {
         get
         {
@@ -213,33 +251,53 @@ public class CallStackManager : BaseCallStackManager
     }
 }
 
+/// <summary>
+/// Reads and writes a shared parent slot, ignoring entries that another manager wrote.
+/// </summary>
 public abstract class BaseCallStackManager : ICallStackManager
 {
-    protected abstract IContextStorage<int?> CurrentStorage { get; }
+    private const int MaxDisplacedDepth = 8;
 
-    public void Push(int id)
-    {
-        CurrentStorage?.SetData(id);
-    }
+    protected abstract IContextStorage<CallStackEntry> CurrentStorage { get; }
 
-    public void TryPop(int uniqueId, int? parentId)
+    public virtual void Push(int id)
     {
         var storage = CurrentStorage;
-        // It is OK to ignore pops when the intended object is not on top of call stack. There are several non-exceptional scenarios where this occurs, particularly for async code.
-        if (storage?.GetData() != uniqueId)
+        if (storage == null)
             return;
 
-        storage?.SetData(parentId);
+        // Keep the other manager's entry under this one; an own entry passes on what it already covers.
+        var current = storage.GetData();
+        var displaced = current != null && current.Owner == this ? current.Displaced : current;
+        // Cap the chain so entries leaked in a long-lived flow cannot grow it without bound.
+        if (displaced != null && displaced.DisplacedDepth >= MaxDisplacedDepth)
+            displaced = null;
+        storage.SetData(new CallStackEntry(this, id, displaced));
     }
 
-    public int? TryPeek()
+    public virtual void TryPop(int uniqueId, int? parentId)
     {
-        return CurrentStorage?.GetData();
+        var storage = CurrentStorage;
+        var entry = storage?.GetData();
+        // It is OK to ignore pops when the intended object is not on top of call stack. There are several non-exceptional scenarios where this occurs, particularly for async code.
+        if (entry == null || entry.Owner != this || entry.Id != uniqueId)
+            return;
+
+        storage.SetData(parentId.HasValue ? new CallStackEntry(this, parentId.Value, entry.Displaced) : entry.Displaced);
     }
 
-    public void Clear()
+    public virtual int? TryPeek()
     {
-        CurrentStorage?.SetData(null);
+        var entry = CurrentStorage?.GetData();
+        return entry != null && entry.Owner == this ? entry.Id : null;
+    }
+
+    public virtual void Clear()
+    {
+        var storage = CurrentStorage;
+        var entry = storage?.GetData();
+        if (entry != null && entry.Owner == this)
+            storage.SetData(entry.Displaced);
     }
 
     public virtual bool AttachToAsync()

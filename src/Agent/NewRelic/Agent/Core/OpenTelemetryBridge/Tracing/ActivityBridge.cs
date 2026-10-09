@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Configuration;
@@ -32,6 +33,10 @@ public class ActivityBridge : IDisposable
     private dynamic _activityListener;
 
     private static Action<object, bool> _activityTraceFlagsSetter = null;
+
+    private static int _loggedActivityStartedError;
+    private static int _loggedActivityStoppedError;
+    private static int _loggedShouldSampleActivityError;
 
     // Static Method and MethodCall for ActivityStarted
     private static readonly Method ActivityStartedMethod = new Method(typeof(ActivityBridge), nameof(ActivityStarted), "object,IAgent");
@@ -417,24 +422,65 @@ public class ActivityBridge : IDisposable
 
     private bool ShouldSampleActivity(int kind, object activityContext)
     {
-        // If there is a transaction already in progress, we should sample the activity.
-        var transaction = _agent.CurrentTransaction;
-        if (transaction.IsValid && !transaction.IsFinished)
+        try
         {
-            return true;
-        }
+            // If there is a transaction already in progress, we should sample the activity.
+            var transaction = _agent.CurrentTransaction;
+            if (transaction.IsValid && !transaction.IsFinished)
+            {
+                return true;
+            }
 
-        var activityKind = (ActivityKind)kind;
-        dynamic dynamicActivityContext = activityContext;
-        if ((activityContext != null && (bool)dynamicActivityContext.IsRemote) || activityKind == ActivityKind.Server || activityKind == ActivityKind.Consumer)
+            var activityKind = (ActivityKind)kind;
+            dynamic dynamicActivityContext = activityContext;
+            if ((activityContext != null && (bool)dynamicActivityContext.IsRemote) || activityKind == ActivityKind.Server || activityKind == ActivityKind.Consumer)
+            {
+                return true;
+            }
+
+            return false;
+        }
+        catch (Exception exception)
         {
-            return true;
+            LogCallbackErrorOnce(ref _loggedShouldSampleActivityError, exception, nameof(ShouldSampleActivity));
+            return false;
         }
-
-        return false;
     }
 
     private static void ActivityStarted(object originalActivity, IAgent agent)
+    {
+        try
+        {
+            OnActivityStarted(originalActivity, agent);
+        }
+        catch (Exception exception)
+        {
+            LogCallbackErrorOnce(ref _loggedActivityStartedError, exception, nameof(ActivityStarted));
+        }
+    }
+
+    private static void ActivityStopped(object originalActivity, IAgent agent, IErrorService errorService)
+    {
+        try
+        {
+            OnActivityStopped(originalActivity, agent, errorService);
+        }
+        catch (Exception exception)
+        {
+            LogCallbackErrorOnce(ref _loggedActivityStoppedError, exception, nameof(ActivityStopped));
+        }
+    }
+
+    // Logged once per callback: a repeating fault would otherwise flood the log on every activity.
+    private static void LogCallbackErrorOnce(ref int loggedFlag, Exception exception, string callbackName)
+    {
+        if (Interlocked.Exchange(ref loggedFlag, 1) != 0)
+            return;
+
+        Log.Error(exception, $"OpenTelemetry bridge {callbackName} callback failed. Later {callbackName} failures will not be logged.");
+    }
+
+    private static void OnActivityStarted(object originalActivity, IAgent agent)
     {
         // TODO: Much of this code was copied from the WrapperService, can we share this code between the two classes?
 
@@ -515,7 +561,7 @@ public class ActivityBridge : IDisposable
     }
 
 
-    private static void ActivityStopped(object originalActivity, IAgent agent, IErrorService errorService)
+    private static void OnActivityStopped(object originalActivity, IAgent agent, IErrorService errorService)
     {
         // This method will be called when an activity is stopped. This is where we would end a segment or transaction.
         var segment = RuntimeNewRelicActivity.GetSegmentFromActivity(originalActivity);
