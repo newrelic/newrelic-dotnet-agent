@@ -35,7 +35,7 @@ public class NRHttpClient : HttpClientBase
     }
 
     [NrExcludeFromCodeCoverage]
-    private dynamic GetHttpHandler(IWebProxy proxy)
+    private HttpMessageHandler GetHttpHandler(IWebProxy proxy)
     {
         // check whether the application is running .NET 6 or later
         if (System.Environment.Version.Major >= 6)
@@ -50,15 +50,16 @@ public class NRHttpClient : HttpClientBase
                 // use reflection to create a SocketsHttpHandler instance and set the timeout values
                 var assembly = Assembly.Load("System.Net.Http");
                 var handlerType = assembly.GetType("System.Net.Http.SocketsHttpHandler");
-                dynamic handler = Activator.CreateInstance(handlerType);
+                var handler = (HttpMessageHandler)Activator.CreateInstance(handlerType);
 
-                handler.PooledConnectionLifetime = pooledConnectionLifetime;
-                handler.PooledConnectionIdleTimeout = pooledConnectionIdleTimeout;
-                handler.ConnectTimeout = _timeout;
+                handlerType.GetProperty("PooledConnectionLifetime").SetValue(handler, pooledConnectionLifetime);
+                handlerType.GetProperty("PooledConnectionIdleTimeout").SetValue(handler, pooledConnectionIdleTimeout);
+                handlerType.GetProperty("ConnectTimeout").SetValue(handler, _timeout);
 
-                handler.Proxy = proxy;
+                handlerType.GetProperty("Proxy").SetValue(handler, proxy);
 
-                Log.Info("Current SocketsHttpHandler TLS Configuration (SocketsHttpHandler.SslOptions): {SslOptions}", handler.SslOptions.EnabledSslProtocols);
+                var sslOptions = handlerType.GetProperty("SslOptions").GetValue(handler);
+                Log.Info("Current SocketsHttpHandler TLS Configuration (SocketsHttpHandler.SslOptions): {SslOptions}", sslOptions.GetType().GetProperty("EnabledSslProtocols").GetValue(sslOptions));
                 return handler;
             }
             catch (Exception e)
