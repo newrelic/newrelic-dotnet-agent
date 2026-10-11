@@ -45,6 +45,7 @@ public static class LoggerBootstrapper
 
         // set the global Serilog logger to our startup logger instance, this gets replaced when ConfigureLogger() is called
         Log.Logger = startupLoggerConfig.CreateLogger();
+        Extensions.Logging.Log.Initialize(new Logger());
     }
 
     /// <summary>
@@ -58,6 +59,7 @@ public static class LoggerBootstrapper
         {
             SetLoggingLevel("off"); // to short-circuit logging calls
             Log.Logger = Serilog.Core.Logger.None; // a logger that does nothing
+            Extensions.Logging.Log.Initialize(new Logger());
             return;
         }
 

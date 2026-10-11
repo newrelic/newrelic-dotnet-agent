@@ -180,7 +180,7 @@ public static class CommonUtils
             throw new InvalidOperationException($"Invalid configuration file. Missing <configuration> element. File: {filePath}");
         }
 
-        var appSettingsNode = configurationNode.SelectSingleNode("appSettings");
+        var appSettingsNode = configurationNode["appSettings", @namespace ?? string.Empty];
 
         if (appSettingsNode == null)
         {
