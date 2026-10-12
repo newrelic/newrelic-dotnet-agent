@@ -472,6 +472,7 @@ public class DefaultConfiguration : IConfiguration
     public virtual string BrowserMonitoringJavaScriptAgentFile { get { return _serverConfiguration.RumSettingsJavaScriptAgentFile ?? string.Empty; } }
     public virtual string BrowserMonitoringJavaScriptAgentLoaderType { get { return ServerOverrides(_serverConfiguration.RumSettingsBrowserMonitoringLoader, _localConfiguration.browserMonitoring.loader); } }
     public virtual string BrowserMonitoringKey { get { return _serverConfiguration.RumSettingsBrowserKey ?? string.Empty; } }
+    public virtual string BrowserMonitoringVersion => EnvironmentOverrides(_localConfiguration.browserMonitoring.version ?? string.Empty, "NEW_RELIC_BROWSER_MONITORING_VERSION").Trim();
     public virtual bool BrowserMonitoringUseSsl { get { return HighSecurityModeOverrides(true, _localConfiguration.browserMonitoring.sslForHttp); } }
 
     #endregion

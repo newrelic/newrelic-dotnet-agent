@@ -108,6 +108,7 @@ public class ConnectModelTests
                                                     "browser_monitoring.javascript_agent.populated": true,
                                                     "browser_monitoring.javascript_agent_file": "BrowserMonitoringJavaScriptAgentFile",
                                                     "browser_monitoring.loader": "BrowserMonitoringJavaScriptAgentLoaderType",
+                                                    "browser_monitoring.version": "BrowserMonitoringVersion",
                                                     "browser_monitoring.loader_debug": false,
                                                     "browser_monitoring.monitoring_key.populated": true,
                                                     "browser_monitoring.use_ssl": true,

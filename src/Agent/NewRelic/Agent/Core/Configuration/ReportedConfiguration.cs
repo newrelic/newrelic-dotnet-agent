@@ -85,6 +85,9 @@ public class ReportedConfiguration : IConfiguration
     [JsonProperty("browser_monitoring.loader")]
     public string BrowserMonitoringJavaScriptAgentLoaderType => _configuration.BrowserMonitoringJavaScriptAgentLoaderType;
 
+    [JsonProperty("browser_monitoring.version")]
+    public string BrowserMonitoringVersion => _configuration.BrowserMonitoringVersion;
+
     // Not an IConfiguration member, but this is here to replicate the behavior of the old 'connect' payload
     [JsonProperty("browser_monitoring.loader_debug")]
     public bool LoaderDebug => false;
