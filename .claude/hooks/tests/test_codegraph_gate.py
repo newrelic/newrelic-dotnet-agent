@@ -82,6 +82,32 @@ class GateTests(unittest.TestCase):
     def test_relative_grep_path_resolves_against_cwd(self):
         self.assertDenied(gate.pre(self.event('Grep', {'pattern': 'Foo', 'path': 'src'})))
 
+    # Bash strips unquoted backslashes, so command strings carry forward-slash paths.
+    def bash_path(self, *parts):
+        return os.path.join(*parts).replace('\\', '/')
+
+    def test_bash_search_after_cd_out_of_index_is_allowed(self):
+        command = 'cd %s && grep -n Foo notes.md' % self.bash_path(self.plain)
+        self.assertIsNone(gate.pre(self.event('Bash', {'command': command})))
+
+    def test_bash_absolute_path_outside_index_is_allowed(self):
+        target = self.bash_path(self.plain, 'not-yet-written.md')
+        self.assertIsNone(gate.pre(self.event('Bash', {'command': 'echo a > x && grep -n Foo %s | cut -c1-9' % target})))
+
+    def test_bash_path_inside_index_is_denied(self):
+        plain, src = self.bash_path(self.plain), self.bash_path(self.repo, 'src')
+        self.assertDenied(gate.pre(self.event('Bash', {'command': 'grep Foo %s %s' % (plain, src)})))
+        self.assertDenied(gate.pre(self.event('Bash', {'command': 'grep Foo %s' % src}, cwd=self.plain)))
+
+    def test_bash_redirect_target_is_not_a_search_path(self):
+        out = self.bash_path(self.plain, 'out.txt')
+        self.assertDenied(gate.pre(self.event('Bash', {'command': 'grep -rn Foo > %s 2>&1' % out})))
+
+    @unittest.skipUnless(os.name == 'nt', 'Git Bash drive paths exist only on Windows')
+    def test_git_bash_drive_path_is_converted(self):
+        self.assertEqual(gate._native_path('/c/tmp/x.md'), 'C:/tmp/x.md')
+        self.assertEqual(gate._native_path('/c'), 'C:/')
+
     def test_unindexed_directory_is_allowed(self):
         self.assertIsNone(gate.pre(self.event('Grep', {'pattern': 'Foo'}, cwd=self.plain)))
 

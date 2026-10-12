@@ -71,6 +71,32 @@ def is_search_command(command):
     return any(program in SEARCH_HEADS for program, _ in command_heads(command))
 
 
+def _native_path(token):
+    if os.name == 'nt' and re.match(r'^/[A-Za-z](/|$)', token):
+        return token[1].upper() + ':/' + token[3:]
+    return os.path.expanduser(token)
+
+
+def search_targets(command, cwd):
+    """Yield each path a search statement reads (its cwd if none); `cd` statements move cwd."""
+    for program, args in command_heads(command):
+        if program == 'cd' and args:
+            cwd = os.path.join(cwd, _native_path(args[0]))
+        elif program in SEARCH_HEADS:
+            paths, skip_next = [], False
+            for arg in args:
+                if skip_next or arg.startswith('-'):
+                    skip_next = False
+                    continue
+                if re.match(r'^\d*[<>]', arg):
+                    skip_next = re.fullmatch(r'\d*[<>]+&?', arg) is not None
+                    continue
+                path = os.path.join(cwd, _native_path(arg))
+                if os.path.isabs(_native_path(arg)) or os.path.exists(path):
+                    paths.append(path)
+            yield from paths or [cwd]
+
+
 def is_codegraph_command(command):
     return any(program == 'codegraph' and args and args[0] in CODEGRAPH_SUBCOMMANDS
                for program, args in command_heads(command))
@@ -88,14 +114,15 @@ def pre(data):
     tool_input = data.get('tool_input') or {}
     cwd = data.get('cwd') or os.getcwd()
     if tool == 'Bash':
-        if not is_search_command(tool_input.get('command', '')):
+        command = tool_input.get('command', '')
+        if not is_search_command(command):
             return None
-        start = cwd
+        starts = list(search_targets(command, cwd))
     elif tool in ('Grep', 'Glob'):
-        start = os.path.join(cwd, tool_input['path']) if tool_input.get('path') else cwd
+        starts = [os.path.join(cwd, tool_input['path']) if tool_input.get('path') else cwd]
     else:
         return None
-    if find_index_root(start) is None or os.path.exists(marker_path(data)):
+    if not any(find_index_root(s) for s in starts) or os.path.exists(marker_path(data)):
         return None
     return {'hookSpecificOutput': {
         'hookEventName': 'PreToolUse',
