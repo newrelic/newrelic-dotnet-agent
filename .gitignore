@@ -84,6 +84,8 @@ build/Linux/keys
 # Claude AI settings (keep skills/ and project settings tracked for team sharing)
 .claude/*
 !.claude/skills/
+!.claude/hooks/
+**/__pycache__/
 !.claude/settings.json
 **/.claude/settings.local.json
 
@@ -92,3 +94,5 @@ build/Linux/keys
 
 # Codegraph database (local only)
 .codegraph
+# CodeGraph skips any dir named build by default; opt the root build/ tool source back in.
+!/build/
