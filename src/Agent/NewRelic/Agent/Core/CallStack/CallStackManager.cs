@@ -256,7 +256,8 @@ public class CallStackManager : BaseCallStackManager
 /// </summary>
 public abstract class BaseCallStackManager : ICallStackManager
 {
-    private const int MaxDisplacedDepth = 8;
+    // Limits how many other transactions' entries one flow keeps, not segment nesting depth.
+    private const int MaxDisplacedTransactions = 8;
 
     protected abstract IContextStorage<CallStackEntry> CurrentStorage { get; }
 
@@ -269,8 +270,9 @@ public abstract class BaseCallStackManager : ICallStackManager
         // Keep the other manager's entry under this one; an own entry passes on what it already covers.
         var current = storage.GetData();
         var displaced = current != null && current.Owner == this ? current.Displaced : current;
-        // Cap the chain so entries leaked in a long-lived flow cannot grow it without bound.
-        if (displaced != null && displaced.DisplacedDepth >= MaxDisplacedDepth)
+        // Own pushes never lengthen the chain; only other transactions do. Cap it so a
+        // long-lived flow that leaks other transactions' entries cannot grow it without bound.
+        if (displaced != null && displaced.DisplacedDepth >= MaxDisplacedTransactions)
             displaced = null;
         storage.SetData(new CallStackEntry(this, id, displaced));
     }
