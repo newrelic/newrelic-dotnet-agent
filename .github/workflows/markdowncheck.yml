@@ -56,8 +56,11 @@ jobs:
             --exclude-path src/Agent/CHANGELOG.md
             './**/*.md'
 
+      # Save only clean results, so a transient failure is re-checked the next
+      # night rather than replayed from the cache. --cache-exclude-status cannot
+      # cover network errors, which have no status code.
       - name: Save lychee cache
-        if: always()
+        if: steps.lychee.outputs.exit_code == '0'
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .lycheecache
