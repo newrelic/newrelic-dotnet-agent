@@ -34,7 +34,9 @@ jobs:
         id: cache-restore
         with:
           path: .lycheecache
-          key: cache-lychee-${{ github.sha }}
+          # Cache entries are immutable, so the key must be unique per run. A
+          # sha-based key collides on nights with no new commits and the save fails.
+          key: cache-lychee-${{ github.run_id }}
           restore-keys: cache-lychee-
 
       - name: Run markdown link check
@@ -106,7 +108,12 @@ jobs:
               return comments.length > 0 && comments[0].body.startsWith(CLEAN_MARKER);
             }
 
+            // Search both labels before choosing: an open issue under either label
+            // wins over any closed one, else the most recently closed. Returning the
+            // first match per label let an old closed 'linkcheck' issue shadow an
+            // open 'linkcheck-pending' one, creating a duplicate every failing night.
             async function findTrackingIssue() {
+              const candidates = [];
               for (const label of [LABEL_CONFIRMED, LABEL_PENDING]) {
                 const { data: issues } = await github.rest.issues.listForRepo({
                   owner: context.repo.owner,
@@ -118,12 +125,18 @@ jobs:
                   per_page: 5
                 });
                 // listForRepo returns pull requests too; they share the issues API.
-                const found = issues.find(issue => !issue.pull_request && issue.title === TITLE);
-                if (found) {
-                  return found;
-                }
+                candidates.push(...issues.filter(issue => !issue.pull_request && issue.title === TITLE));
               }
-              return null;
+
+              const open = candidates
+                .filter(issue => issue.state === 'open')
+                .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+              if (open.length > 0) {
+                return open[0];
+              }
+
+              const closed = candidates.sort((a, b) => new Date(b.closed_at) - new Date(a.closed_at));
+              return closed.length > 0 ? closed[0] : null;
             }
 
             if (exitCode !== '0') {
