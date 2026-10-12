@@ -3864,6 +3864,34 @@ public class DefaultConfigurationTests
         return defaultConfig.BrowserMonitoringAutoInstrument;
     }
 
+    [TestCase(null, null, ExpectedResult = "")]
+    [TestCase(null, "", ExpectedResult = "")]
+    [TestCase(null, "1.317.0", ExpectedResult = "1.317.0")]
+    [TestCase(null, "  1.317.0  ", ExpectedResult = "1.317.0")]
+    [TestCase("1.400.0", "1.317.0", ExpectedResult = "1.400.0")]
+    [TestCase("  1.400.0  ", null, ExpectedResult = "1.400.0")]
+    [TestCase("   ", "1.317.0", ExpectedResult = "1.317.0")]
+    [TestCase("   ", "   ", ExpectedResult = "")]
+    public string BrowserMonitoringVersionWithEnvironmentVariableTests(string environmentSetting, string localConfigValue)
+    {
+        Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_BROWSER_MONITORING_VERSION")).Returns(environmentSetting);
+
+        _localConfig.browserMonitoring.version = localConfigValue;
+
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+        return defaultConfig.BrowserMonitoringVersion;
+    }
+
+    [Test]
+    public void BrowserMonitoringVersionIsNotOverriddenByServerConfiguration()
+    {
+        _localConfig.browserMonitoring.version = "1.317.0";
+        _serverConfig.RumSettingsJavaScriptAgentLoaderVersion = "9.9.9";
+
+        Assert.That(_defaultConfig.BrowserMonitoringVersion, Is.EqualTo("1.317.0"));
+    }
+
     [TestCase("true", true, ExpectedResult = true)]
     [TestCase("true", false, ExpectedResult = true)]
     [TestCase("true", null, ExpectedResult = true)]

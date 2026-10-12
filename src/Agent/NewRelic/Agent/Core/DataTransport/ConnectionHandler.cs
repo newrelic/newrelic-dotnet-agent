@@ -90,6 +90,8 @@ public class ConnectionHandler : ConfigurationBasedService, IConnectionHandler
             var serverConfiguration = SendConnectRequest();
             EventBus<ServerConfigurationUpdatedEvent>.Publish(new ServerConfigurationUpdatedEvent(serverConfiguration));
 
+            WarnIfRequestedBrowserAgentVersionUnavailable(serverConfiguration);
+
             GenerateFasterEventHarvestConfigMetrics(serverConfiguration.EventHarvestConfig);
 
             GenerateSpanEventsHarvestLimitMetrics(serverConfiguration.SpanEventHarvestConfig);
@@ -108,6 +110,23 @@ public class ConnectionHandler : ConfigurationBasedService, IConnectionHandler
             Log.Error(e, $"Unable to connect to the New Relic service at {_connectionInfo}");
             throw;
         }
+    }
+
+    private void WarnIfRequestedBrowserAgentVersionUnavailable(ServerConfiguration serverConfiguration)
+    {
+        var version = _configuration.BrowserMonitoringVersion;
+        if (string.IsNullOrEmpty(version) || !_configuration.BrowserMonitoringAutoInstrument)
+        {
+            return;
+        }
+
+        var loaderType = serverConfiguration.RumSettingsBrowserMonitoringLoader ?? _configuration.BrowserMonitoringJavaScriptAgentLoaderType;
+        if (string.Equals(loaderType, "none", StringComparison.OrdinalIgnoreCase) || !string.IsNullOrEmpty(serverConfiguration.RumSettingsJavaScriptAgentLoader))
+        {
+            return;
+        }
+
+        Log.Warn("browser_monitoring.version is set to '{0}' but the collector did not return a browser agent loader for that version. Browser monitoring will not be injected. Check that the version is available and supported.", version);
     }
 
     private void LogTlsConfiguration()

@@ -1803,6 +1803,15 @@
                             </xs:annotation>
                         </xs:attribute>
 
+                        <xs:attribute name="version" type="xs:string" use="optional">
+                            <xs:annotation>
+                                <xs:documentation>
+                                    Optional browser agent loader version to request from the collector, for example "1.317.0".
+                                    When omitted, the collector chooses the version. This setting is local only and cannot be overridden by the server.
+                                </xs:documentation>
+                            </xs:annotation>
+                        </xs:attribute>
+
                         <xs:attribute name="sslForHttp" type="xs:boolean" default="false">
                             <xs:annotation>
                                 <xs:documentation>

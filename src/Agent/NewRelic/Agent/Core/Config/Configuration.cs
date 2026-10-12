@@ -5345,6 +5345,8 @@ namespace NewRelic.Agent.Core.Config
         
         private string loaderField;
         
+        private string versionField;
+        
         private bool sslForHttpField;
         
         private System.Nullable<bool> captureAttributesField;
@@ -5411,6 +5413,19 @@ namespace NewRelic.Agent.Core.Config
             set
             {
                 this.loaderField = value;
+            }
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string version
+        {
+            get
+            {
+                return this.versionField;
+            }
+            set
+            {
+                this.versionField = value;
             }
         }
         
