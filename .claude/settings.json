@@ -41,7 +41,7 @@
       {
         "matcher": "Grep|Glob|Bash",
         "hooks": [
-          { "type": "command", "command": "python3 \"${CLAUDE_PROJECT_DIR}/.claude/hooks/codegraph-gate.py\" pre" }
+          { "type": "command", "command": "[ -f \"${CLAUDE_PROJECT_DIR}/.codegraph/codegraph.db\" ] && command -v python3 >/dev/null || exit 0; python3 \"${CLAUDE_PROJECT_DIR}/.claude/hooks/codegraph-gate.py\" pre" }
         ]
       }
     ],
@@ -49,7 +49,7 @@
       {
         "matcher": "mcp__.*codegraph.*|Bash",
         "hooks": [
-          { "type": "command", "command": "python3 \"${CLAUDE_PROJECT_DIR}/.claude/hooks/codegraph-gate.py\" post" }
+          { "type": "command", "command": "[ -f \"${CLAUDE_PROJECT_DIR}/.codegraph/codegraph.db\" ] && command -v python3 >/dev/null || exit 0; python3 \"${CLAUDE_PROJECT_DIR}/.claude/hooks/codegraph-gate.py\" post" }
         ]
       }
     ],
@@ -57,7 +57,7 @@
       {
         "matcher": "mcp__.*codegraph.*|Bash",
         "hooks": [
-          { "type": "command", "command": "python3 \"${CLAUDE_PROJECT_DIR}/.claude/hooks/codegraph-gate.py\" post" }
+          { "type": "command", "command": "[ -f \"${CLAUDE_PROJECT_DIR}/.codegraph/codegraph.db\" ] && command -v python3 >/dev/null || exit 0; python3 \"${CLAUDE_PROJECT_DIR}/.claude/hooks/codegraph-gate.py\" post" }
         ]
       }
     ]
