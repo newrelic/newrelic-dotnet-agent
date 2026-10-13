@@ -13,6 +13,7 @@ using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.OpenTelemetryBridge.Common;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Transactions;
+using NewRelic.Agent.Extensions.AwsSdk;
 using NewRelic.Agent.Extensions.Llm;
 using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Agent.Extensions.Parsing;
@@ -448,8 +449,14 @@ public static class ActivityBridgeSegmentHelpers
         {
             if (tags.TryGetAndRemoveTag<string>(["faas.invoked_name"], out var awsName))
                 segment.AddCloudSdkAttribute("cloud.platform", "aws_lambda");
-            if (tags.TryGetAndRemoveTag<string>(["faas.invoked_provider"], out var awsProvider) && tags.TryGetAndRemoveTag<string>(["aws.region"], out var awsRegion))
-                segment.AddCloudSdkAttribute("cloud.resource_id", $"arn:aws:lambda:{awsRegion}:{agent.Configuration.AwsAccountId}:function:{awsName}");
+            if (tags.TryGetAndRemoveTag<string>(["faas.invoked_provider"], out var awsProvider) && tags.TryGetAndRemoveTag<string>(["aws.region"], out var awsRegion)
+                && !string.IsNullOrEmpty(awsName))
+            {
+                var arnBuilder = new ArnBuilder(null, awsRegion, agent.Configuration.AwsAccountId);
+                var resourceId = arnBuilder.BuildFromPartialLambdaArn(awsName);
+                if (!string.IsNullOrEmpty(resourceId))
+                    segment.AddCloudSdkAttribute("cloud.resource_id", resourceId);
+            }
         }
         Log.Finest($"Created ExternalSegmentData for {activityLogPrefix}.");
 

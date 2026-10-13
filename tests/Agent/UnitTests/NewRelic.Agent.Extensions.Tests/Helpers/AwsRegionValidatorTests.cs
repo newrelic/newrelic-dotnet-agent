@@ -18,6 +18,9 @@ public class AwsRegionValidatorTests
     [TestCase("us-gov-west-1")]
     [TestCase("us-iso-east-1")]
     [TestCase("us-isob-east-1")]
+    [TestCase("eu-isoe-west-1")]
+    [TestCase("us-isof-south-1")]
+    [TestCase("eusc-de-east-1")]
     public void LooksLikeARegion_ReturnsTrue_ForRegionShapedValues(string candidate)
     {
         Assert.That(AwsRegionValidator.LooksLikeARegion(candidate), Is.True);
@@ -34,6 +37,9 @@ public class AwsRegionValidatorTests
     [TestCase("us-east-22")]
     [TestCase("US-EAST-2")]
     [TestCase("my-emulator:4566")]
+    [TestCase("eusc-east-1")]
+    [TestCase("abcd-de-east-1")]
+    [TestCase("eusc-de-east")]
     [TestCase("")]
     [TestCase(null)]
     public void LooksLikeARegion_ReturnsFalse_ForValuesThatAreNotRegionShaped(string candidate)
