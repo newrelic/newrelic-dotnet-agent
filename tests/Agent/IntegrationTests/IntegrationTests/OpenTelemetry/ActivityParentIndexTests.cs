@@ -69,21 +69,6 @@ public abstract class ActivityParentIndexTestsBase<TFixture> : NewRelicIntegrati
         }
     }
 
-    [Fact]
-    public void OrphanUnderRunningTransactionA_GoesToTransactionA_WithDeepSegmentAsParent()
-    {
-        var spans = _fixture.AgentLog.GetSpanEvents().ToList();
-
-        for (var i = 1; i <= Iterations; i++)
-        {
-            var orphan = FindSpan(spans, $"Running-B-orphan-{i}");
-            var deep = FindSpan(spans, $"Running-A-deep-{i}");
-
-            Assert.Equal(deep.IntrinsicAttributes["traceId"], orphan.IntrinsicAttributes["traceId"]);
-            Assert.Equal(deep.IntrinsicAttributes["guid"], orphan.IntrinsicAttributes["parentId"]);
-        }
-    }
-
     // Exact match: a Consumer activity also yields a root span whose name is the transaction name and contains the activity name.
     private static SpanEvent FindSpan(IEnumerable<SpanEvent> spans, string activityName)
     {

@@ -28,7 +28,7 @@ public interface ICallStackManager
     int? TryPeek();
 
     /// <summary>
-    /// Removes this manager's own entry from the callstack and restores any entry it displaced.
+    /// Clears this manager's own entry from the callstack. An entry another manager wrote is left in place.
     /// </summary>
     void Clear();
 
@@ -45,27 +45,15 @@ public interface ICallStackManager
 [NeedSerializableContainer]
 public sealed class CallStackEntry
 {
-    public CallStackEntry(ICallStackManager owner, int id, CallStackEntry displaced)
+    public CallStackEntry(ICallStackManager owner, int id)
     {
         Owner = owner;
         Id = id;
-        Displaced = displaced;
-        DisplacedDepth = displaced == null ? 0 : displaced.DisplacedDepth + 1;
     }
 
     public ICallStackManager Owner { get; }
 
     public int Id { get; }
-
-    /// <summary>
-    /// The other manager's entry that this manager's push covered. It is restored when this manager's root entry is popped.
-    /// </summary>
-    public CallStackEntry Displaced { get; }
-
-    /// <summary>
-    /// The number of entries in the Displaced chain under this entry.
-    /// </summary>
-    public int DisplacedDepth { get; }
 }
 
 public delegate void CallStackPop(object uniqueObject, object uniqueParent);
@@ -256,25 +244,11 @@ public class CallStackManager : BaseCallStackManager
 /// </summary>
 public abstract class BaseCallStackManager : ICallStackManager
 {
-    // Limits how many other transactions' entries one flow keeps, not segment nesting depth.
-    private const int MaxDisplacedTransactions = 8;
-
     protected abstract IContextStorage<CallStackEntry> CurrentStorage { get; }
 
     public virtual void Push(int id)
     {
-        var storage = CurrentStorage;
-        if (storage == null)
-            return;
-
-        // Keep the other manager's entry under this one; an own entry passes on what it already covers.
-        var current = storage.GetData();
-        var displaced = current != null && current.Owner == this ? current.Displaced : current;
-        // Own pushes never lengthen the chain; only other transactions do. Cap it so a
-        // long-lived flow that leaks other transactions' entries cannot grow it without bound.
-        if (displaced != null && displaced.DisplacedDepth >= MaxDisplacedTransactions)
-            displaced = null;
-        storage.SetData(new CallStackEntry(this, id, displaced));
+        CurrentStorage?.SetData(new CallStackEntry(this, id));
     }
 
     public virtual void TryPop(int uniqueId, int? parentId)
@@ -285,7 +259,7 @@ public abstract class BaseCallStackManager : ICallStackManager
         if (entry == null || entry.Owner != this || entry.Id != uniqueId)
             return;
 
-        storage.SetData(parentId.HasValue ? new CallStackEntry(this, parentId.Value, entry.Displaced) : entry.Displaced);
+        storage.SetData(parentId.HasValue ? new CallStackEntry(this, parentId.Value) : null);
     }
 
     public virtual int? TryPeek()
@@ -299,7 +273,7 @@ public abstract class BaseCallStackManager : ICallStackManager
         var storage = CurrentStorage;
         var entry = storage?.GetData();
         if (entry != null && entry.Owner == this)
-            storage.SetData(entry.Displaced);
+            storage.SetData(null);
     }
 
     public virtual bool AttachToAsync()

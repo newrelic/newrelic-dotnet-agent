@@ -126,7 +126,6 @@ public class CallStackDisplacementScenarioTests
         Assert.Multiple(() =>
         {
             Assert.That(b, Is.Not.SameAs(a));
-            Assert.That(((IInternalTransaction)b).IsAttachedToAsync, Is.True);
             Assert.That(entryBefore, Is.EqualTo(Describe(a, ((Segment)aOuter).UniqueId)));
             Assert.That(((Segment)bRoot).ParentUniqueId, Is.Null);
             Assert.That(currentAfter.IsValid, Is.False, "the replacement released A from this flow");
@@ -139,7 +138,7 @@ public class CallStackDisplacementScenarioTests
         // B runs synchronously on thread X (thread-local, not attached) and runs a continuation of live A inline
         // (TaskCompletionSource.SetResult without RunContinuationsAsynchronously, or Task.Wait inlining).
         var aFlow = StartTransactionInOwnFlow("A");
-        ITransaction b = null, cur1 = null, cur2 = null, curNext = null;
+        ITransaction b = null;
         ISegment bOuter = null;
         ExecutionContext aNextFlow = null;
         Exception thrown = null;
@@ -154,9 +153,7 @@ public class CallStackDisplacementScenarioTests
             {
                 try
                 {
-                    cur1 = _agent.CurrentTransaction;
-                    cur1.AttachToAsync();
-                    cur2 = _agent.CurrentTransaction;
+                    _agent.CurrentTransaction.AttachToAsync();
                     var inner = _agent.StartTransactionSegmentOrThrow("inner");
                     _agent.StartTransactionSegmentOrThrow("inner-2").End();
                     inner.End();
@@ -174,7 +171,6 @@ public class CallStackDisplacementScenarioTests
         // A's next continuation resumes on another thread with the flow captured at its next await.
         RunOnNewThread(() => ExecutionContext.Run(aNextFlow.CreateCopy(), _ =>
         {
-            curNext = _agent.CurrentTransaction;
             var aNext = _agent.StartTransactionSegmentOrThrow("A-next");
             // Without owner checks, A-next takes B's segment id as its parent and End() throws ArgumentOutOfRangeException.
             aNext.End();
@@ -182,13 +178,7 @@ public class CallStackDisplacementScenarioTests
         aFlow.Outer.End();
         aFlow.Transaction.End();
 
-        Assert.Multiple(() =>
-        {
-            Assert.That(thrown, Is.Null);
-            Assert.That(cur1, Is.SameAs(b), "an unattached thread-local transaction is not deferred");
-            Assert.That(cur2, Is.SameAs(aFlow.Transaction), "after attach, the lookup defers to live A");
-            Assert.That(curNext, Is.SameAs(aFlow.Transaction));
-        });
+        Assert.That(thrown, Is.Null);
     }
 
     private WrapperRun RunWrapperInFlow(ExecutionContext flow, string wrapperName, ulong functionId)

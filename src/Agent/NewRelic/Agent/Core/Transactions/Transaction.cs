@@ -812,7 +812,6 @@ public class Transaction : IInternalTransaction, ITransactionSegmentState, IHybr
         }
 
         CallStackManager.AttachToAsync();
-        _isAttachedToAsync = true;
     }
 
     public void Detach()
@@ -1074,7 +1073,6 @@ public class Transaction : IInternalTransaction, ITransactionSegmentState, IHybr
     private volatile object _responseTime;
 
     private volatile bool _ignored;
-    private volatile bool _isAttachedToAsync;
     private int _unitOfWorkCount;
     private int _totalNestedTransactionAttempts;
     private readonly int _transactionTracerMaxSegments;
@@ -1092,7 +1090,6 @@ public class Transaction : IInternalTransaction, ITransactionSegmentState, IHybr
     public int NestedTransactionAttempts => _totalNestedTransactionAttempts;
 
     public ICallStackManager CallStackManager { get; }
-    public bool IsAttachedToAsync => _isAttachedToAsync;
 
     private readonly IDatabaseService _databaseService;
     private readonly IDatabaseStatementParser _databaseStatementParser;
