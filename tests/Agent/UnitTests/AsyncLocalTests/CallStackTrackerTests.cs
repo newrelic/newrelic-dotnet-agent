@@ -17,7 +17,7 @@ public class CallStackTrackerTests
     [SetUp]
     public void SetUp()
     {
-        _tracker = new SyncToAsyncCallStackManager(new CallContextStorage<int?>("mykey"));
+        _tracker = new SyncToAsyncCallStackManager(new CallContextStorage<CallStackEntry>("mykey"));
         _tracker.AttachToAsync();
     }
 
@@ -40,13 +40,21 @@ public class CallStackTrackerTests
     [Test]
     public void SwitchToAsync()
     {
-        var tracker = new SyncToAsyncCallStackManager(new CallContextStorage<int?>("mykey"));
+        var tracker = new SyncToAsyncCallStackManager(new CallContextStorage<CallStackEntry>("mykey"));
         tracker.Push(666);
         Assert.That(tracker.TryPeek().HasValue, Is.True);
 
         tracker.AttachToAsync();
 
         Assert.That(tracker.TryPeek(), Is.EqualTo(666));
+    }
+
+    [Test]
+    public void CallStackEntry_UsesSerializableContainer_InCallContextStorage()
+    {
+        var storage = new CallContextStorageFactory().CreateContext<CallStackEntry>("NewRelic.ParentObject");
+
+        Assert.That(storage, Is.InstanceOf<CallContextWrappedStorage<CallStackEntry>>());
     }
 
     [Test]
