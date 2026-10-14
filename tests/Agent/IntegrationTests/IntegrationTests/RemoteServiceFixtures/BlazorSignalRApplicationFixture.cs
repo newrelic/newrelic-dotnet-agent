@@ -98,9 +98,9 @@ public class BlazorSignalRApplicationFixture : RemoteApplicationFixture
         }
     }
 
-    public override string DestinationServerName { get; } = "localhost";
-
-    public override void Dispose()
+    // Close the browser before the app shuts down; otherwise the Blazor client
+    // reconnects over long polling, which creates WebTransaction/ASP/_blazor.
+    public void CloseBrowser()
     {
         if (_driver != null)
         {
@@ -108,7 +108,13 @@ public class BlazorSignalRApplicationFixture : RemoteApplicationFixture
             _driver.Dispose();
             _driver = null;
         }
+    }
 
+    public override string DestinationServerName { get; } = "localhost";
+
+    public override void Dispose()
+    {
+        CloseBrowser();
         base.Dispose();
     }
 }

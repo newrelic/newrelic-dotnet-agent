@@ -33,6 +33,7 @@ public class BlazorServerInteractivityTests : NewRelicIntegrationTest<RemoteServ
             exerciseApplication: () =>
             {
                 _fixture.InvokeBlazorHub("Hello SignalR");
+                _fixture.CloseBrowser();
                 _fixture.AgentLog.WaitForLogLine(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromMinutes(1));
             }
         );
