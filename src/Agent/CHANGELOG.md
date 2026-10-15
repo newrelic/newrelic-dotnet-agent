@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.57.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.56.0...v10.57.0) (2026-10-15)
+
+
+### New features
+
+* Add browser_monitoring.version config to pin the Browser Agent version ([#3890](https://github.com/newrelic/newrelic-dotnet-agent/issues/3890)) ([99fcbc8](https://github.com/newrelic/newrelic-dotnet-agent/commit/99fcbc8b2f40bd722bd37c232497d47af5d113d1))
+
+
+### Fixes
+
+* Inject agent helper references lazily on .NET Core ([#3873](https://github.com/newrelic/newrelic-dotnet-agent/issues/3873)) ([e8572b5](https://github.com/newrelic/newrelic-dotnet-agent/commit/e8572b5b2828f19cfc9ad84beea4783db7977132))
+* Prevent cross-transaction parent ids in the async call stack ([#3881](https://github.com/newrelic/newrelic-dotnet-agent/issues/3881)) ([fb0b523](https://github.com/newrelic/newrelic-dotnet-agent/commit/fb0b523e3d205d1680e351a5cc482932baa23f84))
+* Use the correct AWS partition in Lambda ARNs from the OpenTelemetry bridge and support the EU Sovereign Cloud partition. ([#3893](https://github.com/newrelic/newrelic-dotnet-agent/issues/3893)) ([6bb77b1](https://github.com/newrelic/newrelic-dotnet-agent/commit/6bb77b1a7d7ef93d62f7a2ce41e79dfae266a7ec))
+
 ## [10.56.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.55.0...v10.56.0) (2026-10-05)
 
 
