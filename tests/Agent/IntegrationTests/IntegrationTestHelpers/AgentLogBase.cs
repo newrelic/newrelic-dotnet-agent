@@ -56,6 +56,8 @@ public abstract class AgentLogBase
     public const string ShutdownLogLineRegex = InfoLogLinePrefixRegex + @"The New Relic .NET Agent v.* has shutdown";
     public const string TransactionTransformCompletedLogLineRegex = FinestLogLinePrefixRegex + @"Transaction (.*) \((.*)\) transform completed.";
     public const string WebSocketHandshakeDetectedLogLineRegex = DebugLogLinePrefixRegex + @"WebSocket handshake request detected; not instrumenting this long-running request.";
+    public const string SignalRServerSentEventsDetectedLogLineRegex = DebugLogLinePrefixRegex + @"SignalR Server-Sent Events request detected; not instrumenting this long-running request.";
+    public const string SignalRTransportRequestIgnoredLogLineRegex = DebugLogLinePrefixRegex + @"SignalR transport request detected; not reporting a transaction for this long-running request.";
 
     // Problems
     public const string TransactionEndedByGCFinalizerLogLineRegEx = DebugLogLinePrefixRegex + @"Transaction was garbage collected without ever ending(.*)";

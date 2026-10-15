@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using Microsoft.AspNetCore.Http.Connections;
 using Microsoft.AspNetCore.SignalR.Client;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
@@ -80,10 +81,15 @@ public class BlazorSignalRApplicationFixture : RemoteApplicationFixture
 
     public void InvokeSignalRHub(string phrase)
     {
+        InvokeSignalRHub(phrase, HttpTransports.All);
+    }
+
+    public void InvokeSignalRHub(string phrase, HttpTransportType transport)
+    {
         var hubUrl = $"http://{DestinationServerName}:{Port}/echohub";
 
         var hubConnection = new HubConnectionBuilder()
-            .WithUrl(hubUrl)
+            .WithUrl(hubUrl, transport)
             .Build();
 
         try

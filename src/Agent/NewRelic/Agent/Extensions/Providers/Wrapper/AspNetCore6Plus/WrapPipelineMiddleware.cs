@@ -59,6 +59,15 @@ internal class WrapPipelineMiddleware
                 await _next(context);
                 return;
             }
+
+            // SignalR runs hub methods inside the SSE GET's async context, so skip it before a transaction exists.
+            if (SignalRHelpers.IsServerSentEventsTransportRequest(context.Request.Method, context.Request.Headers["Accept"], context.Request.Query["id"]))
+            {
+                _agent.Logger.Debug(
+                    "SignalR Server-Sent Events request detected; not instrumenting this long-running request.");
+                await _next(context);
+                return;
+            }
         }
 
         ITransaction transaction = null;
@@ -103,10 +112,12 @@ internal class WrapPipelineMiddleware
         try
         {
             await _next(context);
+            IgnoreIfSignalRTransport(transaction, context);
             EndTransaction(segment, transaction, context, null);
         }
         catch (Exception ex)
         {
+            IgnoreIfSignalRTransport(transaction, context);
             EndTransaction(segment, transaction, context, ex);
             throw; //throw here to maintain call stack. 
         }
@@ -115,6 +126,29 @@ internal class WrapPipelineMiddleware
         {
             TryWriteResponseHeaders(context, transaction);
             return Task.CompletedTask;
+        }
+    }
+
+    // The endpoint is only known after routing, so long polling, send, and close requests are identified after _next runs.
+    // Ignore() makes the later End() call produce no metrics, events, or traces.
+    private void IgnoreIfSignalRTransport(ITransaction transaction, HttpContext context)
+    {
+        if (transaction == null || _agent.Configuration.InstrumentAspNetCore6PlusWebsockets)
+        {
+            return;
+        }
+
+        try
+        {
+            if (SignalRHelpers.IsHubTransportEndpoint(context.GetEndpoint()?.Metadata))
+            {
+                _agent.Logger.Debug("SignalR transport request detected; not reporting a transaction for this long-running request.");
+                transaction.Ignore();
+            }
+        }
+        catch (Exception ex)
+        {
+            _agent.SafeHandleException(ex);
         }
     }
 
