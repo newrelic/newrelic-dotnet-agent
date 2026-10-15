@@ -13,6 +13,7 @@ internal class ReleaseNotesModel
     private const string FrontMatterVersion = "version";
     private const string FrontMatterDownloadLink = "downloadLink";
     private const string FrontMatterFeatures = "features";
+    private const string FrontMatterEnhancements = "enhancements";
     private const string FrontMatterBugs = "bugs";
     private const string FrontMatterSecurity = "security";
 
@@ -60,9 +61,11 @@ internal class ReleaseNotesModel
         builder.AppendLine($"{FrontMatterReleaseDate}: '{_releaseDate}'");
         builder.AppendLine($"{FrontMatterVersion}: {_releaseVersion}");
         builder.AppendLine($"{FrontMatterDownloadLink}: '{_downloadLink}'");
-        builder.AppendLine($"{FrontMatterFeatures}: [{string.Join(',', _frontFeatures)}]");
-        builder.AppendLine($"{FrontMatterBugs}: [{string.Join(',', _frontBugs)}]");
-        builder.AppendLine($"{FrontMatterSecurity}: [{string.Join(',', _frontSecurity)}]");
+        AppendFrontMatterList(builder, FrontMatterFeatures, _frontFeatures);
+        // Conventional commits cannot tell an enhancement from a feature, so this list is always empty.
+        AppendFrontMatterList(builder, FrontMatterEnhancements, new List<string>());
+        AppendFrontMatterList(builder, FrontMatterBugs, _frontBugs);
+        AppendFrontMatterList(builder, FrontMatterSecurity, _frontSecurity);
         builder.AppendLine(FrontMatterWrapper);
         builder.AppendLine();
 
@@ -86,6 +89,21 @@ internal class ReleaseNotesModel
         }
 
         return builder.ToString();
+    }
+
+    private static void AppendFrontMatterList(StringBuilder builder, string key, List<string> entries)
+    {
+        if (!entries.Any())
+        {
+            builder.AppendLine($"{key}: []");
+            return;
+        }
+
+        builder.AppendLine($"{key}:");
+        foreach (var entry in entries)
+        {
+            builder.AppendLine($"  - {entry}");
+        }
     }
 
     private static void AppendSection(StringBuilder builder, string header, List<string> entries)

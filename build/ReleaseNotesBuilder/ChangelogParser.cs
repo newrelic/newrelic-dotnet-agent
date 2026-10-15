@@ -1,6 +1,8 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System.Text.RegularExpressions;
+
 namespace ReleaseNotesBuilder;
 
 internal static class ChangelogParser
@@ -8,6 +10,8 @@ internal static class ChangelogParser
     private const string ChangeLogHeader = "# Changelog";
     private const string EndSquareBracket = "]";
     private const string ReleaseVersionPrefix = "## [";
+
+    private static readonly Regex MarkdownLink = new(@"\[([^\]]*)\]\([^)]*\)", RegexOptions.Compiled);
 
     /// <summary>
     /// Parses the changelog.md file, update the ReleaseNotesModel and return the extracted release version.
@@ -104,7 +108,7 @@ internal static class ChangelogParser
     private static string GetFrontEntry(string line)
     {
         var descEndIndex = line.IndexOf("([");
-        var bodyEntry = line[2..descEndIndex].Trim(); // drop the "* "
+        var bodyEntry = StripMarkdown(line[2..descEndIndex].Trim()); // drop the "* "
 
         var sentenceEndIndex = bodyEntry.IndexOf(". ", 0) + 1;
         if (sentenceEndIndex <= 0) // account for padding above.
@@ -119,6 +123,12 @@ internal static class ChangelogParser
         }
 
         return CleanFrontEntry(frontEntry);
+    }
+
+    // The spec says front matter entries SHOULD be plain text: keep link text, drop code and bold markers.
+    private static string StripMarkdown(string entry)
+    {
+        return MarkdownLink.Replace(entry, "$1").Replace("`", "").Replace("**", "");
     }
 
     private static string CleanFrontEntry(string frontEntry)
