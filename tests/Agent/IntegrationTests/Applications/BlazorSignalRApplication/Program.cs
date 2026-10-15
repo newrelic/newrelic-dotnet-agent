@@ -4,6 +4,7 @@
 using ApplicationLifecycle;
 using BlazorSignalRApplication.Components;
 using BlazorSignalRApplication.Hubs;
+using Microsoft.AspNetCore.Http.Connections;
 
 namespace BlazorSignalRApplication;
 
@@ -32,8 +33,20 @@ public class Program
         app.UseStaticFiles();
         app.UseAntiforgery();
 
-        app.MapRazorComponents<App>()
+        var razorComponents = app.MapRazorComponents<App>()
             .AddInteractiveServerRenderMode();
+
+        // The Blazor circuit hub offers every transport unless the test fixture restricts it.
+        if (Enum.TryParse<HttpTransportType>(Environment.GetEnvironmentVariable("BLAZOR_SIGNALR_TRANSPORT"), out var blazorTransport))
+        {
+            razorComponents.Add(endpointBuilder =>
+            {
+                foreach (var options in endpointBuilder.Metadata.OfType<HttpConnectionDispatcherOptions>())
+                {
+                    options.Transports = blazorTransport;
+                }
+            });
+        }
 
         app.MapHub<EchoHub>("/echohub");
 
