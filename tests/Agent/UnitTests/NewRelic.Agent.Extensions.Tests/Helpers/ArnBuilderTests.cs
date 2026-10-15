@@ -20,6 +20,7 @@ public class ArnBuilderTests
     [TestCase("us-isob-east-1", "aws-iso-b")]
     [TestCase("eu-isoe-west-1", "aws-iso-e")]
     [TestCase("us-isof-south-1", "aws-iso-f")]
+    [TestCase("eusc-de-east-1", "aws-eusc")]
     [TestCase(null, "aws")]
     [TestCase("", "aws")]
     [TestCase("(unknown)", "aws")]
@@ -60,5 +61,25 @@ public class ArnBuilderTests
         var builder = new ArnBuilder(null, "us-east-1", "123456789012");
 
         Assert.That(builder.Build("kinesis", "stream/MyStream"), Is.EqualTo("arn:aws:kinesis:us-east-1:123456789012:stream/MyStream"));
+    }
+
+    [Test]
+    public void Build_EmitsDerivedPartition_ForEuropeanSovereignCloudRegion()
+    {
+        var builder = new ArnBuilder(null, "eusc-de-east-1", "123456789012");
+
+        Assert.That(builder.Build("kinesis", "stream/MyStream"), Is.EqualTo("arn:aws-eusc:kinesis:eusc-de-east-1:123456789012:stream/MyStream"));
+    }
+
+    [Test]
+    public void BuildFromPartialLambdaArn_ParsesEuropeanSovereignCloudRegion()
+    {
+        // Partition is supplied up front, as it is from RegionEndpoint.PartitionName in the real wrapper;
+        // the region segment is only discovered while parsing the partial invocation name.
+        var builder = new ArnBuilder("aws-eusc", null, "123456789012");
+
+        var arn = builder.BuildFromPartialLambdaArn("eusc-de-east-1:123456789012:function:myfn");
+
+        Assert.That(arn, Is.EqualTo("arn:aws-eusc:lambda:eusc-de-east-1:123456789012:function:myfn"));
     }
 }

@@ -32,6 +32,7 @@ public interface IConfiguration
     string BrowserMonitoringJavaScriptAgentFile { get; }
     string BrowserMonitoringJavaScriptAgentLoaderType { get; }
     string BrowserMonitoringKey { get; }
+    string BrowserMonitoringVersion { get; }
     bool BrowserMonitoringUseSsl { get; }
     string SecurityPoliciesToken { get; }
     bool SecurityPoliciesTokenExists { get; }

@@ -51,6 +51,8 @@ public class ExhaustiveTestConfiguration : IConfiguration
 
     public string BrowserMonitoringKey => "BrowserMonitoringKey";
 
+    public string BrowserMonitoringVersion => "BrowserMonitoringVersion";
+
     public bool BrowserMonitoringUseSsl => true;
 
     public string SecurityPoliciesToken => "SecurityPoliciesToken";

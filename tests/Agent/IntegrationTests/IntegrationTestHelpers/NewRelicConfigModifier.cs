@@ -149,6 +149,12 @@ public class NewRelicConfigModifier
             new[] { "configuration", "browserMonitoring" }, "loader", loaderType);
     }
 
+    public void BrowserMonitoringVersion(string version)
+    {
+        CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath,
+            new[] { "configuration", "browserMonitoring" }, "version", version);
+    }
+
     public void PutForDataSend()
     {
         CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "dataTransmission" },
