@@ -179,14 +179,18 @@ SPDX-License-Identifier: Apache-2.0
     <CustomAction Id="RestartIis" DllEntry="RestartIis" Impersonate="yes" BinaryRef="CustomActionsDll" />
     <CustomAction Id="CloseStatusMonitor" DllEntry="CloseStatusMonitor" Impersonate="yes" BinaryRef="CustomActionsDll" />
     <CustomAction Id="CheckBitness" DllEntry="CheckBitness" Execute="immediate" Return="check" BinaryRef="CustomActionsDll" />
+    <!-- firstSequence: runs in the UI sequence when there is one (so the warning shows before install), otherwise in the execute sequence (silent installs log it). Never blocks the install. -->
+    <CustomAction Id="CheckStrongCrypto" DllEntry="CheckStrongCrypto" Execute="firstSequence" Return="ignore" BinaryRef="CustomActionsDll" />
 
     <!-- Run the custom actions at the beginning of the install. -->
     <InstallUISequence>
       <Custom Action="CheckBitness" Before="CostInitialize" />
+      <Custom Action="CheckStrongCrypto" After="CheckBitness" Condition="NOT Installed" />
     </InstallUISequence>
 
     <!-- Run the custom actions at the end of the install. -->
     <InstallExecuteSequence>
+      <Custom Action="CheckStrongCrypto" After="CostFinalize" Condition="NOT Installed" />
       <Custom Action="FindPreviousLicenseKey" After="CostFinalize" Condition="NOT Installed" />
       <Custom Action="SaveDeferredCustomActionData" After="InstallFiles" Condition="NOT Installed" />
       <Custom Action="CloseStatusMonitor" After="CostFinalize" />
