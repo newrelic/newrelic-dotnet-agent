@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Code coverage settings for the native profiler unit tests (vstest.console.exe /Collect:"Code Coverage").
+     Static native instrumentation needs the test DLLs to be linked with /PROFILE (see Directory.Build.props).
+     Dynamic native instrumentation produces an empty report for these DLLs, so it stays off. -->
+<RunSettings>
+  <DataCollectionRunSettings>
+    <DataCollectors>
+      <DataCollector friendlyName="Code Coverage">
+        <Configuration>
+          <Format>Cobertura</Format>
+          <CodeCoverage>
+            <EnableStaticNativeInstrumentation>True</EnableStaticNativeInstrumentation>
+            <EnableDynamicNativeInstrumentation>False</EnableDynamicNativeInstrumentation>
+            <Sources>
+              <Include>
+                <Source>.*\\Profiler\\.*</Source>
+              </Include>
+              <Exclude>
+                <Source>.*\\rapidxml\\.*</Source>
+                <Source>.*\\Profiler\\SystemCalls\.h</Source>
+                <Source>.*\\Profiler\\([^\\]+\\)*[^\\]*Test\\.*</Source>
+              </Exclude>
+            </Sources>
+          </CodeCoverage>
+        </Configuration>
+      </DataCollector>
+    </DataCollectors>
+  </DataCollectionRunSettings>
+</RunSettings>
