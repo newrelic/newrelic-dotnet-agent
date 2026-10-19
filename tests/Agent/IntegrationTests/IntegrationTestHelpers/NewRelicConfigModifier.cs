@@ -494,10 +494,7 @@ public class NewRelicConfigModifier
 
     public NewRelicConfigModifier EnableAspNetCore6PlusBrowserInjection(bool enableBrowserInjection)
     {
-        CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration" }, "appSettings", string.Empty);
-        CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration", "appSettings" }, "add", string.Empty);
-        CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "appSettings", "add" }, "key", "EnableAspNetCore6PlusBrowserInjection");
-        CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "appSettings", "add" }, "value", $"{enableBrowserInjection}");
+        CommonUtils.SetConfigAppSetting(_configFilePath, "EnableAspNetCore6PlusBrowserInjection", enableBrowserInjection.ToString(), "urn:newrelic-config");
         return this;
     }
 
@@ -612,10 +609,7 @@ public class NewRelicConfigModifier
 
     public NewRelicConfigModifier EnableGCSamplerV2(bool enabled)
     {
-        CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration" }, "appSettings", string.Empty);
-        CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration", "appSettings" }, "add", string.Empty);
-        CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "appSettings", "add"}, "key", "GCSamplerV2Enabled");
-        CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "appSettings", "add"}, "value", $"{enabled}");
+        CommonUtils.SetConfigAppSetting(_configFilePath, "GCSamplerV2Enabled", enabled.ToString(), "urn:newrelic-config");
         return this;
     }
     public NewRelicConfigModifier EnableAwsLambdaAPMMode(bool awsLambdaApmModeEnabled)
