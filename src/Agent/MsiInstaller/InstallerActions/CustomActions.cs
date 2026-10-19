@@ -15,6 +15,8 @@ namespace InstallerActions;
 
 public class CustomActions
 {
+    private const string StrongCryptoDocsUrl = "https://docs.newrelic.com/docs/apm/agents/net-agent/troubleshooting/no-data-appears-net-framework-tls-12/#strongcrypto";
+
     [CustomAction]
     public static ActionResult FindPreviousLicenseKey(Session session)
     {
@@ -323,13 +325,10 @@ public class CustomActions
             }
 
             var warning = BuildStrongCryptoWarning(keysWithoutStrongCrypto);
-            session.Log("WARNING: " + warning);
+            session.Log("WARNING: " + warning + Environment.NewLine + Environment.NewLine + "See " + StrongCryptoDocsUrl + Environment.NewLine + Environment.NewLine + "Installation will continue.");
 
-            // Only interrupt a full UI install; basic UI (/qb) and silent (/qn) installs just log.
-            if (session["UILevel"] == "5")
-            {
-                session.Message(InstallMessage.Warning | (InstallMessage)MessageButtons.OK | (InstallMessage)MessageIcon.Warning, new Record { FormatString = warning });
-            }
+            // Shown by StrongCryptoWarningDialog in full UI installs only; the stock message box truncates long text.
+            session["NR_STRONGCRYPTO_WARNING"] = warning;
         }
         catch (Exception exception)
         {
@@ -384,18 +383,16 @@ public class CustomActions
     private static string BuildStrongCryptoWarning(List<string> keysWithoutStrongCrypto)
     {
         var builder = new StringBuilder();
-        builder.AppendLine("Strong cryptography (TLS 1.2) is not enabled machine-wide for .NET Framework applications. Some .NET Framework applications may fail to connect to New Relic, and no data may appear for them. This depends on each application's target framework and configuration.");
+        builder.AppendLine("TLS 1.2 is not enabled machine-wide for .NET Framework applications. Applications may fail to connect to New Relic, and no data may appear for them. This depends on each application's target framework and configuration.");
         builder.AppendLine();
-        builder.AppendLine("To enable it for all applications, set the DWORD value SchUseStrongCrypto to 1 under:");
+        builder.AppendLine("To enable it for all applications, set the DWORD values SystemDefaultTlsVersions and SchUseStrongCrypto to 1 under:");
         foreach (var key in keysWithoutStrongCrypto)
         {
             builder.AppendLine(key);
         }
 
         builder.AppendLine();
-        builder.AppendLine("Then restart the affected applications. See https://docs.newrelic.com/docs/apm/agents/net-agent/troubleshooting/no-data-appears-after-disabling-tls-10/#windows-registry");
-        builder.AppendLine();
-        builder.Append("Installation will continue.");
+        builder.Append("Then restart the affected applications.");
         return builder.ToString();
     }
 

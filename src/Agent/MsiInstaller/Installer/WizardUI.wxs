@@ -9,6 +9,7 @@ SPDX-License-Identifier: Apache-2.0
       <UIRef Id="WixUI_ErrorProgressText" />
 
       <DialogRef Id="LicenseKeyDialog" />
+      <DialogRef Id="StrongCryptoWarningDialog" />
 
       <!-- Try to get the license key from a previous install. -->
       <Publish Dialog="LicenseAgreementDlg" Control="Next" Event="DoAction" Value="FindPreviousLicenseKey" Order="1" />
