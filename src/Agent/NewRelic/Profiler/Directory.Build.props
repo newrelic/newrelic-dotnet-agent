@@ -28,4 +28,11 @@
       <LanguageStandard>stdcpp14</LanguageStandard>
     </ClCompile>
   </ItemDefinitionGroup>
+  <!-- /PROFILE lets the VS code coverage collector statically instrument the unit test
+       binaries. Test projects only; it must not apply to the shipped profiler. -->
+  <ItemDefinitionGroup Condition="$(MSBuildProjectName.EndsWith('Test'))">
+    <Link>
+      <Profile>true</Profile>
+    </Link>
+  </ItemDefinitionGroup>
 </Project>
