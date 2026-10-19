@@ -86,7 +86,6 @@ jobs:
       enhanced_logging: false
       NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY: 1
       NR_DOTNET_TEST_PREBUILT_APPS: 1 # use pre-published test app output instead of dotnet publish at runtime
-      azure_func_exe_path: C:\ProgramData\chocolatey\lib\azure-functions-core-tools\tools\func.exe
       NEW_RELIC_AZURE_FUNCTION_LOG_LEVEL_OVERRIDE: 1 # enables profiler debug logs when testing an azure function
       # Set an environment variable that the tests will use to set the application name.
       CI_NEW_RELIC_APP_NAME: ${{ github.event_name == 'schedule' && 'DotNetIngestTracking' || '' }}
@@ -167,9 +166,26 @@ jobs:
 
       - name: Install Azure Functions Core Tools
         if: matrix.namespace == 'AzureFunction'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          choco install azure-functions-core-tools -y --params "'/x64'"
-        shell: powershell
+          $dl = "$env:RUNNER_TEMP\func-dl"
+          gh release download --repo Azure/azure-functions-core-tools --pattern 'Azure.Functions.Cli.win-x64.*.zip*' --dir $dl
+          if ($LASTEXITCODE -ne 0) { throw "gh release download failed with exit code $LASTEXITCODE" }
+          $zip = @(Get-ChildItem $dl -Filter '*.zip')
+          if ($zip.Count -ne 1) { throw "Expected one Azure Functions Core Tools zip, found $($zip.Count)" }
+          $expected = (Get-Content "$($zip[0].FullName).sha2" -Raw).Trim()
+          if ((Get-FileHash $zip[0].FullName -Algorithm SHA256).Hash -ne $expected) { throw "$($zip[0].Name) failed its SHA-256 check" }
+          $dir = "$env:RUNNER_TEMP\func"
+          New-Item -ItemType Directory -Path $dir | Out-Null
+          # The Windows bsdtar reads zips; a Git for Windows GNU tar earlier on PATH does not.
+          & "$env:SystemRoot\System32\tar.exe" -xf $zip[0].FullName -C $dir
+          if ($LASTEXITCODE -ne 0) { throw "Extracting $($zip[0].Name) failed with exit code $LASTEXITCODE" }
+          $func = "$dir\func.exe"
+          if (-not (Test-Path $func)) { throw "Azure Functions Core Tools did not install; $func not found" }
+          "azure_func_exe_path=$func" >> $env:GITHUB_ENV
+          & $func --version
 
       - name: Install latest .NET 10 SDK
         uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
@@ -453,14 +469,18 @@ jobs:
           # The native binary, not the npm package. The npm package installs a
           # node shim that spawns the real host, so killing the process the
           # fixture started leaves the host alive holding its output pipe.
-          FUNC_VERSION: 4.14.0
+          GH_TOKEN: ${{ github.token }}
         run: |
-          base=https://github.com/Azure/azure-functions-core-tools/releases/download/$FUNC_VERSION
-          zip=Azure.Functions.Cli.linux-x64.$FUNC_VERSION.zip
-          curl -fsSL -o "$RUNNER_TEMP/$zip" "$base/$zip"
-          curl -fsSL -o "$RUNNER_TEMP/$zip.sha2" "$base/$zip.sha2"
-          echo "$(tr -d '\r\n ' < "$RUNNER_TEMP/$zip.sha2")  $RUNNER_TEMP/$zip" | sha256sum -c -
-          unzip -q "$RUNNER_TEMP/$zip" -d "$RUNNER_TEMP/func"
+          dl="$RUNNER_TEMP/func-dl"
+          gh release download --repo Azure/azure-functions-core-tools --pattern 'Azure.Functions.Cli.linux-x64.*.zip*' --dir "$dl"
+          zips=("$dl"/*.zip)
+          if [ "${#zips[@]}" -ne 1 ] || [ ! -f "${zips[0]}" ]; then
+            echo "::error::Expected one Azure Functions Core Tools zip in $dl."
+            exit 1
+          fi
+          zip="${zips[0]}"
+          echo "$(tr -d '\r\n ' < "$zip.sha2")  $zip" | sha256sum -c -
+          unzip -q "$zip" -d "$RUNNER_TEMP/func"
           find "$RUNNER_TEMP/func" -name func -exec chmod +x {} +
           func_path="$RUNNER_TEMP/func/func"
           if [ ! -x "$func_path" ]; then
