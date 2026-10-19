@@ -112,23 +112,22 @@ jobs:
           Write-Host "Adding $vstestDir to PATH"
           Add-Content -Path $env:GITHUB_PATH -Value $vstestDir
 
-      - name: Setup OpenCppCoverage and add to PATH
-        id: setup_opencppcoverage
-        run: |
-          choco install OpenCppCoverage -y
-          echo "C:\Program Files\OpenCppCoverage" >> $env:GITHUB_PATH
-
       - name: Generate Report
         id: generate_test_report
-        shell: cmd
+        shell: pwsh
         run: |
-            cd ${{ env.tests_base_path }}
-            OpenCppCoverage.exe --sources Profiler --excluded_sources rapidxml --excluded_sources Profiler\SystemCalls.h --excluded_sources test --modules NewRelic\Profiler --export_type cobertura:${{ env.test_results_path }}\profilerx86.xml -- "vstest.console.exe" /Platform:x86 "Profiler\CommonTest\bin\x86\Release\CommonTest.dll" "Profiler\ConfigurationTest\bin\x86\Release\ConfigurationTest.dll" "Profiler\LoggingTest\bin\x86\Release\LoggingTest.dll" "Profiler\MethodRewriterTest\bin\x86\Release\MethodRewriterTest.dll" "Profiler\ModuleInjectorTest\bin\x86\Release\ModuleInjectorTest.dll" "Profiler\SignatureParserTest\bin\x86\Release\SignatureParserTest.dll" "Profiler\Sicily\SicilyTest\bin\x86\Release\SicilyTest.dll" "Profiler\ContinuousProfilerTest\bin\x86\Release\ContinuousProfilerTest.dll"
-            if %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
-            mv ${{ env.tests_base_path}}\LastCoverageResults.log ${{ env.tests_base_path}}\LastCoverageResults_x86.log
-            OpenCppCoverage.exe --sources Profiler --cover_children --excluded_sources rapidxml --excluded_sources Profiler\SystemCalls.h --excluded_sources test --modules NewRelic\Profiler --export_type cobertura:${{ env.test_results_path }}\profilerx64.xml -- "vstest.console.exe" /Platform:x64 "Profiler\CommonTest\bin\x64\Release\CommonTest.dll" "Profiler\ConfigurationTest\bin\x64\Release\ConfigurationTest.dll" "Profiler\LoggingTest\bin\x64\Release\LoggingTest.dll" "Profiler\MethodRewriterTest\bin\x64\Release\MethodRewriterTest.dll" "Profiler\ModuleInjectorTest\bin\x64\Release\ModuleInjectorTest.dll" "Profiler\SignatureParserTest\bin\x64\Release\SignatureParserTest.dll" "Profiler\Sicily\SicilyTest\bin\x64\Release\SicilyTest.dll" "Profiler\ContinuousProfilerTest\bin\x64\Release\ContinuousProfilerTest.dll"
-            if %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
-            mv ${{ env.tests_base_path}}\LastCoverageResults.log ${{ env.tests_base_path}}\LastCoverageResults_x64.log
+          $testDlls = 'CommonTest', 'ConfigurationTest', 'LoggingTest', 'MethodRewriterTest', 'ModuleInjectorTest', 'SignatureParserTest', 'Sicily\SicilyTest', 'ContinuousProfilerTest'
+          foreach ($plat in 'x86', 'x64') {
+            $dlls = $testDlls | ForEach-Object { "${{ env.tests_base_path }}\Profiler\$_\bin\$plat\Release\$(Split-Path $_ -Leaf).dll" }
+            $resultsDir = "${{ env.test_results_path }}\coverage_$plat"
+            vstest.console.exe /Platform:$plat $dlls /Collect:"Code Coverage" "/Settings:${{ env.tests_base_path }}\Profiler\CodeCoverage.runsettings" "/ResultsDirectory:$resultsDir" 2>&1 | Tee-Object -FilePath "${{ env.tests_base_path }}\ProfilerTests_$plat.log"
+            if ($LASTEXITCODE -ne 0) { throw "vstest.console.exe failed for $plat with exit code $LASTEXITCODE" }
+
+            $report = @(Get-ChildItem -Path $resultsDir -Recurse -Filter '*.cobertura.xml')
+            if ($report.Count -ne 1) { throw "Expected one Cobertura report for $plat, found $($report.Count)" }
+            if (([xml](Get-Content $report[0].FullName)).SelectNodes('//package').Count -eq 0) { throw "The $plat coverage report has no packages; native instrumentation failed" }
+            Copy-Item $report[0].FullName "${{ env.test_results_path }}\profiler$plat.xml"
+          }
 
       - name: Upload coverage reports to Codecov.io
         uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
