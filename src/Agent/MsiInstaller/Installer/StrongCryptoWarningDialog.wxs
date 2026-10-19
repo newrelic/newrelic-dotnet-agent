@@ -1,0 +1,32 @@
+<!--
+Copyright 2020 New Relic Corporation. All rights reserved.
+SPDX-License-Identifier: Apache-2.0
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Fragment>
+    <UI>
+      <!-- Shown before the welcome dialog when the CheckStrongCrypto custom action sets NR_STRONGCRYPTO_WARNING. -->
+      <Dialog Id="StrongCryptoWarningDialog" Width="370" Height="270" Title="[ProductName] Setup">
+        <Control Id="BannerBitmap" Type="Bitmap" X="0" Y="0" Width="370" Height="44" TabSkip="no" Text="WixUI_Bmp_Banner" />
+        <Control Id="BannerLine" Type="Line" X="0" Y="44" Width="370" Height="0" />
+        <Control Id="Title" Type="Text" X="15" Y="6" Width="280" Height="15" Transparent="yes" NoPrefix="yes" Text="{\WixUI_Font_Title}TLS 1.2 may not be enabled" />
+        <Control Id="Description" Type="Text" X="25" Y="23" Width="280" Height="15" Transparent="yes" NoPrefix="yes" Text="Review this warning before continuing." />
+        <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" />
+
+        <Control Id="Message" Type="Text" X="20" Y="55" Width="330" Height="150" NoPrefix="yes" Text="[NR_STRONGCRYPTO_WARNING]" />
+        <Control Id="DocsLink" Type="Hyperlink" X="20" Y="210" Width="330" Height="15" Text="&lt;a href=&quot;https://docs.newrelic.com/docs/apm/agents/net-agent/troubleshooting/no-data-appears-net-framework-tls-12/#strongcrypto&quot;&gt;How to enable TLS 1.2 for .NET Framework applications&lt;/a&gt;" />
+
+        <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="&amp;Continue">
+          <Publish Event="EndDialog" Value="Return" />
+        </Control>
+        <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="Cancel">
+          <Publish Event="SpawnDialog" Value="CancelDlg" />
+        </Control>
+      </Dialog>
+
+      <InstallUISequence>
+        <Show Dialog="StrongCryptoWarningDialog" After="MigrateFeatureStates" Condition="NOT Installed AND NR_STRONGCRYPTO_WARNING" />
+      </InstallUISequence>
+    </UI>
+  </Fragment>
+</Wix>
