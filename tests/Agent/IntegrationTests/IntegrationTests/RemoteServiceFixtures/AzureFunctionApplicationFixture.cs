@@ -13,9 +13,6 @@ public abstract class AzureFunctionApplicationFixture : RemoteApplicationFixture
     private const string ApplicationDirectoryName = "AzureFunctionApplication";
     private const string ExecutableName = "AzureFunctionApplication.exe";
 
-    private const string InProcApplicationDirectoryName = "AzureFunctionInProcApplication";
-    private const string InProcExecutableName = "AzureFunctionInProcApplication.dll";
-
     private const string TestTraceId = "12345678901234567890123456789012";
     private const string TestTraceParent = "1234567890123456";
     private const string TestTracingVendors = "rojo,congo";
@@ -29,8 +26,6 @@ public abstract class AzureFunctionApplicationFixture : RemoteApplicationFixture
     private const string Sampled = "1";
     private const string Priority = "1.23456";
     private const string Timestamp = "1518469636025";
-
-    private readonly bool _inProc;
 
     // func is instrumented as well as the worker, and it keeps logging after the
     // worker goes quiet. Choosing the most recently written agent log therefore
@@ -46,18 +41,16 @@ public abstract class AzureFunctionApplicationFixture : RemoteApplicationFixture
                 return configuredName;
             }
 
-            return _inProc ? "newrelic_agent_func.log" : "newrelic_agent_AzureFunctionApplication.log";
+            return "newrelic_agent_AzureFunctionApplication.log";
         }
     }
 
-    protected AzureFunctionApplicationFixture(string functionNames, string targetFramework, bool enableAzureFunctionMode, bool isCoreApp = true, bool inProc = false)
-        : base(new AzureFuncTool(inProc ? InProcApplicationDirectoryName : ApplicationDirectoryName, inProc ? InProcExecutableName : ExecutableName, targetFramework, ApplicationType.Bounded, true, isCoreApp, true, enableAzureFunctionMode, inProc))
+    protected AzureFunctionApplicationFixture(string functionNames, string targetFramework, bool enableAzureFunctionMode, bool isCoreApp = true)
+        : base(new AzureFuncTool(ApplicationDirectoryName, ExecutableName, targetFramework, ApplicationType.Bounded, true, isCoreApp, true, enableAzureFunctionMode))
     {
-        _inProc = inProc;
-
         CommandLineArguments = $"start --no-build --functions {functionNames} --language-worker ";
 
-        CommandLineArguments += inProc ? "dotnet --dotnet " : "dotnet-isolated --dotnet-isolated ";
+        CommandLineArguments += "dotnet-isolated --dotnet-isolated ";
 
 #if DEBUG
         // set a long timeout if you're going to debug into the function
@@ -163,20 +156,4 @@ public class AzureFunctionApplicationFixtureQueueTriggerCoreLatest : AzureFuncti
     }
 }
 
-#endregion
-
-#region InProc model fixtures
-public class AzureFunctionApplicationFixtureHttpTriggerInProcCoreOldest : AzureFunctionApplicationFixture
-{
-    public AzureFunctionApplicationFixtureHttpTriggerInProcCoreOldest() : base("HttpTriggerFunction", Tfm.Net8, true, inProc: true)
-    {
-    }
-}
-
-public class AzureFunctionApplicationFixtureServiceBusTriggerInProcCoreOldest : AzureFunctionApplicationFixture
-{
-    public AzureFunctionApplicationFixtureServiceBusTriggerInProcCoreOldest() : base("ServiceBusTriggerFunction HttpTrigger_SendServiceBusMessage", Tfm.Net8, true, inProc: true)
-    {
-    }
-}
 #endregion

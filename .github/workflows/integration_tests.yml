@@ -44,7 +44,7 @@ jobs:
         with:
           solution-path: ${{ github.workspace }}\tests\Agent\IntegrationTests\IntegrationTests.sln
           search-paths: Applications SharedApplications
-          skip-projects: AzureFunctionApplication AzureFunctionInProcApplication
+          skip-projects: AzureFunctionApplication
           x86-projects: ConsoleMultiFunctionApplicationCore
           artifact-name: integrationtests
 
