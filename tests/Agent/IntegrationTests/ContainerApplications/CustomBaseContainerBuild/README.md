@@ -30,12 +30,14 @@ docker buildx create --use
 3. Build the base images. The images will be pushed to the container registry with tags per .NET version
 
 ```
-docker buildx  build --build-arg BASE_IMAGE="amazonlinux:latest" --build-arg DOTNET_VERSION="8.0" --build-arg DOTNET_QUALITY="GA" -f Dockerfile.CustomBaseImage --tag $acrName/amazonlinux-aspnet:8.0 --platform linux/amd64,linux/arm64/v8 --push .
 docker buildx  build --build-arg BASE_IMAGE="amazonlinux:latest" --build-arg DOTNET_VERSION="10.0" --build-arg DOTNET_QUALITY="GA" -f Dockerfile.CustomBaseImage --tag $acrName/amazonlinux-aspnet:10.0 --platform linux/amd64,linux/arm64/v8 --push .
+docker buildx  build --build-arg BASE_IMAGE="amazonlinux:latest" --build-arg DOTNET_VERSION="11.0" --build-arg DOTNET_QUALITY="preview" -f Dockerfile.CustomBaseImage --tag $acrName/amazonlinux-aspnet:11.0 --platform linux/amd64,linux/arm64/v8 --push .
 
-docker buildx  build --build-arg BASE_IMAGE="fedora:latest" --build-arg DOTNET_VERSION="8.0" --build-arg DOTNET_QUALITY="GA" -f Dockerfile.CustomBaseImage --tag $acrName/fedora-aspnet:8.0 --platform linux/amd64,linux/arm64/v8 --push .
 docker buildx  build --build-arg BASE_IMAGE="fedora:latest" --build-arg DOTNET_VERSION="10.0" --build-arg DOTNET_QUALITY="GA" -f Dockerfile.CustomBaseImage --tag $acrName/fedora-aspnet:10.0 --platform linux/amd64,linux/arm64/v8 --push .
+docker buildx  build --build-arg BASE_IMAGE="fedora:latest" --build-arg DOTNET_VERSION="11.0" --build-arg DOTNET_QUALITY="preview" -f Dockerfile.CustomBaseImage --tag $acrName/fedora-aspnet:11.0 --platform linux/amd64,linux/arm64/v8 --push .
 ```
+
+`DOTNET_QUALITY` is `GA`, `preview`, or `daily`. Use `preview` for a version that is not released yet: `GA` does not find a preview or RC build. Tag the image with the plain version (for example `11.0`, not `11.0-preview`), because the tests use the same value for the image tag and the TFM. After the GA release, build the image again with `GA` and the same tag.
 
 4. Disable buildx in Docker Desktop
 `docker buildx rm`
