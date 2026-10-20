@@ -112,7 +112,6 @@ public class AzureFunctionApplicationFixtureHttpTriggerCoreOldest : AzureFunctio
     }
 }
 
-// TODO: will need to update this for net11.0
 public class AzureFunctionApplicationFixtureHttpTriggerCoreLatest : AzureFunctionApplicationFixture
 {
     public AzureFunctionApplicationFixtureHttpTriggerCoreLatest() : base("httpTriggerFunctionUsingAspNetCorePipeline httpTriggerFunctionUsingSimpleInvocation", Tfm.NetLatest, true)
@@ -130,7 +129,7 @@ public class AzureFunctionApplicationFixtureHttpTriggerFWLatest : AzureFunctionA
 public class AzureFunctionApplicationFixtureHttpTriggerThrowsCoreLatest : AzureFunctionApplicationFixture
 {
     public AzureFunctionApplicationFixtureHttpTriggerThrowsCoreLatest()
-        : base("httpTriggerFunctionThatThrows httpTriggerFunctionUsingSimpleInvocation", "net10.0", true)
+        : base("httpTriggerFunctionThatThrows httpTriggerFunctionUsingSimpleInvocation", Tfm.NetLatest, true)
     {
     }
 }

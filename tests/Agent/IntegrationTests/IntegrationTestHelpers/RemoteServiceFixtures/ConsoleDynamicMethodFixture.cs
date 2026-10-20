@@ -154,7 +154,7 @@ public abstract class ConsoleDynamicMethodFixtureCoreSpecificVersion : ConsoleDy
 /// </summary>
 public class ConsoleDynamicMethodFixtureCoreLatestX86 : ConsoleDynamicMethodFixtureCoreSpecificVersion
 {
-    public ConsoleDynamicMethodFixtureCoreLatestX86() : base("net10.0", "x86")
+    public ConsoleDynamicMethodFixtureCoreLatestX86() : base(Tfm.NetLatest, "x86")
     {
     }
 }

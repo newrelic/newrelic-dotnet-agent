@@ -16,8 +16,8 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures;
 /// forward guard that refuses to start a thread-profiling session while continuous profiling is active.
 ///
 /// Unlike the console-app-based <c>ContinuousProfilingTests</c>, this test uses the
-/// <see cref="AspNetCoreWebApiWithCollectorFixture"/> (a MockNewRelic-backed fixture, same runtime family
-/// -- net10.0 -- as the other CP coverage) so it can actually deliver a collector-driven
+/// <see cref="AspNetCoreWebApiWithCollectorFixture"/> (a MockNewRelic-backed fixture on
+/// <see cref="Tfm.NetLatest"/>) so it can actually deliver a collector-driven
 /// <c>start_profiler</c> command (<c>MockNewRelicFixture.TriggerThreadProfile</c>) while continuous
 /// profiling is running. A console app talking to the real staging collector has no way to trigger that
 /// command at all, which is what made the previous version of this assertion vacuously true regardless of

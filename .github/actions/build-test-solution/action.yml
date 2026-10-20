@@ -16,7 +16,7 @@ inputs:
     required: false
     default: ''
   x86-projects:
-    description: 'Space-separated project base names to additionally pre-publish self-contained for win-x86 (net10.0), forcing a genuinely 32-bit host process. Empty means none.'
+    description: 'Space-separated project base names to additionally pre-publish self-contained for win-x86 (every net TFM they declare), forcing a genuinely 32-bit host process. Empty means none.'
     required: false
     default: ''
   artifact-name:
@@ -106,7 +106,7 @@ runs:
         }
         Write-Host "Pre-publish complete: $published succeeded, $skipped skipped (libraries), $failed failed"
 
-        # Additionally pre-publish the named projects self-contained for win-x86 (net10.0),
+        # Additionally pre-publish the named projects self-contained for win-x86 (each net TFM),
         # forcing a genuinely 32-bit host process regardless of the runner's architecture.
         # RemoteService.TryCopyPrebuiltPublishOutput falls back to a live `dotnet publish` at
         # test time if this isn't staged, which works but forgoes the parallel-execution
