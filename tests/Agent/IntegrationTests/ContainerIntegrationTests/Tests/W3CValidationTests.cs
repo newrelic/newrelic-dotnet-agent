@@ -56,9 +56,18 @@ public abstract class LinuxW3CValidationTest<T> : NewRelicIntegrationTest<T> whe
 
 [Trait("Architecture", "amd64")]
 [Trait("TestArea", "Core")]
-public class W3CValidationDotNet10Test : LinuxW3CValidationTest<W3CValidationDotNet10TestFixture>
+public class W3CValidationTestCoreOldest : LinuxW3CValidationTest<W3CValidationTestFixtureCoreOldest>
 {
-    public W3CValidationDotNet10Test(W3CValidationDotNet10TestFixture fixture, ITestOutputHelper output) : base(fixture, output)
+    public W3CValidationTestCoreOldest(W3CValidationTestFixtureCoreOldest fixture, ITestOutputHelper output) : base(fixture, output)
+    {
+    }
+}
+
+[Trait("Architecture", "amd64")]
+[Trait("TestArea", "Core")]
+public class W3CValidationTestCoreLatest : LinuxW3CValidationTest<W3CValidationTestFixtureCoreLatest>
+{
+    public W3CValidationTestCoreLatest(W3CValidationTestFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)
     {
     }
 }

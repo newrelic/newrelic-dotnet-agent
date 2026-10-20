@@ -2,10 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using NewRelic.Agent.ContainerIntegrationTests.Applications;
+using NewRelic.Agent.IntegrationTestHelpers;
 
 namespace NewRelic.Agent.ContainerIntegrationTests.Fixtures;
 
-public class AwsSdkContainerKinesisTestFixture : AwsSdkContainerTestFixtureBase
+public abstract class AwsSdkContainerKinesisTestFixture : AwsSdkContainerTestFixtureBase
 {
     private const string Dockerfile = "AwsSdkTestApp/Dockerfile";
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
@@ -13,7 +14,7 @@ public class AwsSdkContainerKinesisTestFixture : AwsSdkContainerTestFixtureBase
 
     private readonly string BaseUrl;
 
-    public AwsSdkContainerKinesisTestFixture() : base(DistroTag, Architecture, Dockerfile)
+    protected AwsSdkContainerKinesisTestFixture(string dotnetVersion) : base(DistroTag, Architecture, dotnetVersion, Dockerfile)
     {
         BaseUrl = $"http://localhost:{Port}/awssdkkinesis";
     }
@@ -61,4 +62,14 @@ public class AwsSdkContainerKinesisTestFixture : AwsSdkContainerTestFixtureBase
     {
         GetAndAssertStatusCode($"{BaseUrl}/GetRecordsAsync?streamName={streamName}", System.Net.HttpStatusCode.OK);
     }
+}
+
+public class AwsSdkContainerKinesisTestFixtureCoreOldest : AwsSdkContainerKinesisTestFixture
+{
+    public AwsSdkContainerKinesisTestFixtureCoreOldest() : base(Tfm.NetOldestVersion) { }
+}
+
+public class AwsSdkContainerKinesisTestFixtureCoreLatest : AwsSdkContainerKinesisTestFixture
+{
+    public AwsSdkContainerKinesisTestFixtureCoreLatest() : base(Tfm.NetLatestVersion) { }
 }

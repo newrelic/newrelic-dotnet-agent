@@ -9,16 +9,19 @@ EXPOSE 80
 # build arch may be different from target arch (i.e., when running locally with QEMU)
 FROM --platform=${BUILD_ARCH} mcr.microsoft.com/dotnet/sdk:${DOTNET_VERSION}-${DISTRO_TAG} AS build
 ARG TARGET_ARCH
+ARG APP_DOTNET_VERSION
 WORKDIR /src
 COPY ["W3CTestApp/W3CTestApp.csproj", "W3CTestApp/"]
-RUN dotnet restore "W3CTestApp/W3CTestApp.csproj"  -a ${TARGET_ARCH}
+RUN dotnet restore "W3CTestApp/W3CTestApp.csproj" -p:TargetFramework=net${APP_DOTNET_VERSION} -p:TargetFrameworks=net${APP_DOTNET_VERSION} -a ${TARGET_ARCH}
 
 COPY . .
 WORKDIR "/src/W3CTestApp"
-RUN dotnet build "W3CTestApp.csproj" -c Release -o /app/build --os linux -a ${TARGET_ARCH}
+RUN dotnet build "W3CTestApp.csproj" -c Release -o /app/build --framework net${APP_DOTNET_VERSION} -p:TargetFramework=net${APP_DOTNET_VERSION} -p:TargetFrameworks=net${APP_DOTNET_VERSION} --os linux -a ${TARGET_ARCH}
 
 FROM build AS publish
-RUN dotnet publish "W3CTestApp.csproj" -c Release -o /app/publish /p:UseAppHost=false --os linux -a ${TARGET_ARCH}
+ARG TARGET_ARCH
+ARG APP_DOTNET_VERSION
+RUN dotnet publish "W3CTestApp.csproj" -c Release -o /app/publish /p:UseAppHost=false --framework net${APP_DOTNET_VERSION} -p:TargetFramework=net${APP_DOTNET_VERSION} -p:TargetFrameworks=net${APP_DOTNET_VERSION} --os linux -a ${TARGET_ARCH}
 
 FROM base AS final
 

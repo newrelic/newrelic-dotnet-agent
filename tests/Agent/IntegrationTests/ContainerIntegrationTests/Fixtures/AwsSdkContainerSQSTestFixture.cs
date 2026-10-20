@@ -2,10 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using NewRelic.Agent.ContainerIntegrationTests.Applications;
+using NewRelic.Agent.IntegrationTestHelpers;
 
 namespace NewRelic.Agent.ContainerIntegrationTests.Fixtures;
 
-public class AwsSdkContainerSQSTestFixture : AwsSdkContainerTestFixtureBase
+public abstract class AwsSdkContainerSQSTestFixture : AwsSdkContainerTestFixtureBase
 {
     private const string Dockerfile = "AwsSdkTestApp/Dockerfile";
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
@@ -13,7 +14,7 @@ public class AwsSdkContainerSQSTestFixture : AwsSdkContainerTestFixtureBase
 
     private readonly string BaseUrl;
 
-    public AwsSdkContainerSQSTestFixture() : base(DistroTag, Architecture, Dockerfile)
+    protected AwsSdkContainerSQSTestFixture(string dotnetVersion) : base(DistroTag, Architecture, dotnetVersion, Dockerfile)
     {
         BaseUrl = $"http://localhost:{Port}/awssdksqs";
     }
@@ -62,4 +63,14 @@ public class AwsSdkContainerSQSTestFixture : AwsSdkContainerTestFixtureBase
         return messagesJson;
     }
 
+}
+
+public class AwsSdkContainerSQSTestFixtureCoreOldest : AwsSdkContainerSQSTestFixture
+{
+    public AwsSdkContainerSQSTestFixtureCoreOldest() : base(Tfm.NetOldestVersion) { }
+}
+
+public class AwsSdkContainerSQSTestFixtureCoreLatest : AwsSdkContainerSQSTestFixture
+{
+    public AwsSdkContainerSQSTestFixtureCoreLatest() : base(Tfm.NetLatestVersion) { }
 }

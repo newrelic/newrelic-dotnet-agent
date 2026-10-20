@@ -425,16 +425,13 @@ public class KafkaDotNetLatestTest : LinuxKafkaTest<KafkaDotNetLatestTestFixture
     }
 }
 
-[Collection("KafkaTests")]
-[Trait("Architecture", "amd64")]
-[Trait("TestArea", "Messaging")]
-public class KafkaClusterMetricsEnabledTest : NewRelicIntegrationTest<KafkaClusterMetricsEnabledTestFixture>
+public abstract class KafkaClusterMetricsEnabledTestBase<TFixture> : NewRelicIntegrationTest<TFixture> where TFixture : KafkaClusterMetricsEnabledTestFixture
 {
     private const string ExpectedClusterId = "MkU3OEVBNTcwNTJENDM2Qg";
 
-    private readonly KafkaClusterMetricsEnabledTestFixture _fixture;
+    private readonly TFixture _fixture;
 
-    public KafkaClusterMetricsEnabledTest(KafkaClusterMetricsEnabledTestFixture fixture, ITestOutputHelper output) : base(fixture)
+    protected KafkaClusterMetricsEnabledTestBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
     {
         _fixture = fixture;
         _fixture.TestLogger = output;
@@ -524,5 +521,25 @@ public class KafkaClusterMetricsEnabledTest : NewRelicIntegrationTest<KafkaClust
     {
         var match = Regex.Match(metricName, @"^MessageBroker/Kafka/Cluster/([^/]+)/");
         return match.Success ? match.Groups[1].Value : null;
+    }
+}
+
+[Collection("KafkaTests")]
+[Trait("Architecture", "amd64")]
+[Trait("TestArea", "Messaging")]
+public class KafkaClusterMetricsEnabledTestCoreOldest : KafkaClusterMetricsEnabledTestBase<KafkaClusterMetricsEnabledTestFixtureCoreOldest>
+{
+    public KafkaClusterMetricsEnabledTestCoreOldest(KafkaClusterMetricsEnabledTestFixtureCoreOldest fixture, ITestOutputHelper output) : base(fixture, output)
+    {
+    }
+}
+
+[Collection("KafkaTests")]
+[Trait("Architecture", "amd64")]
+[Trait("TestArea", "Messaging")]
+public class KafkaClusterMetricsEnabledTestCoreLatest : KafkaClusterMetricsEnabledTestBase<KafkaClusterMetricsEnabledTestFixtureCoreLatest>
+{
+    public KafkaClusterMetricsEnabledTestCoreLatest(KafkaClusterMetricsEnabledTestFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)
+    {
     }
 }

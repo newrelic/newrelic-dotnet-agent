@@ -9,16 +9,19 @@ EXPOSE 80
 # build arch may be different from target arch (i.e., when running locally with QEMU)
 FROM --platform=${BUILD_ARCH} mcr.microsoft.com/dotnet/sdk:${DOTNET_VERSION}-${DISTRO_TAG} AS build 
 ARG TARGET_ARCH
+ARG APP_DOTNET_VERSION
 WORKDIR /src
 COPY ["AwsSdkTestApp/AwsSdkTestApp.csproj", "AwsSdkTestApp/"]
-RUN dotnet restore "AwsSdkTestApp/AwsSdkTestApp.csproj" -a ${TARGET_ARCH}
+RUN dotnet restore "AwsSdkTestApp/AwsSdkTestApp.csproj" -p:TargetFramework=net${APP_DOTNET_VERSION} -p:TargetFrameworks=net${APP_DOTNET_VERSION} -a ${TARGET_ARCH}
 
 COPY . .
 WORKDIR "/src/AwsSdkTestApp"
-RUN dotnet build "AwsSdkTestApp.csproj" -c Release -o /app/build --os linux -a ${TARGET_ARCH} --no-restore
+RUN dotnet build "AwsSdkTestApp.csproj" -c Release -o /app/build --framework net${APP_DOTNET_VERSION} -p:TargetFramework=net${APP_DOTNET_VERSION} -p:TargetFrameworks=net${APP_DOTNET_VERSION} --os linux -a ${TARGET_ARCH} --no-restore
 
 FROM build AS publish
-RUN dotnet publish "AwsSdkTestApp.csproj" -c Release -o /app/publish /p:UseAppHost=false --os linux -a ${TARGET_ARCH} --no-restore
+ARG TARGET_ARCH
+ARG APP_DOTNET_VERSION
+RUN dotnet publish "AwsSdkTestApp.csproj" -c Release -o /app/publish /p:UseAppHost=false --framework net${APP_DOTNET_VERSION} -p:TargetFramework=net${APP_DOTNET_VERSION} -p:TargetFrameworks=net${APP_DOTNET_VERSION} --os linux -a ${TARGET_ARCH} --no-restore
 
 FROM base AS final
 

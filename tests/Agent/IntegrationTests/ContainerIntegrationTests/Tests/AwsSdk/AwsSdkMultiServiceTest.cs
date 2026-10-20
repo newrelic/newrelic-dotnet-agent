@@ -9,12 +9,12 @@ using Xunit;
 
 namespace NewRelic.Agent.ContainerIntegrationTests.Tests.AwsSdk;
 
-[Collection("AwsSdkTests")]
 [Trait("Architecture", "amd64")]
 [Trait("TestArea", "Aws")]
-public class AwsSdkMultiServiceTest : NewRelicIntegrationTest<AwsSdkContainerMultiServiceTestFixture>
+public abstract class AwsSdkMultiServiceTestBase<TFixture> : NewRelicIntegrationTest<TFixture>
+    where TFixture : AwsSdkContainerMultiServiceTestFixture
 {
-    private readonly AwsSdkContainerMultiServiceTestFixture _fixture;
+    private readonly TFixture _fixture;
 
     private readonly string _tableName = $"TableName_{Guid.NewGuid()}";
     private readonly string _queueName = $"QueueName_{Guid.NewGuid()}";
@@ -25,7 +25,7 @@ public class AwsSdkMultiServiceTest : NewRelicIntegrationTest<AwsSdkContainerMul
     private const string _region = "us-east-2"; // matches AuthenticationRegion in AwsSdkDynamoDBExerciser
 
 
-    public AwsSdkMultiServiceTest(AwsSdkContainerMultiServiceTestFixture fixture, ITestOutputHelper output) : base(fixture)
+    protected AwsSdkMultiServiceTestBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
     {
         _fixture = fixture;
         _fixture.TestLogger = output;
@@ -71,5 +71,21 @@ public class AwsSdkMultiServiceTest : NewRelicIntegrationTest<AwsSdkContainerMul
             () => Assert.All(cloudResourceIdSpanEvents, se => Assert.NotEqual(_unxpectedAccountId, se.AgentAttributes["cloud.resource_id"])),
             () => Assert.All(cloudResourceIdSpanEvents, se => Assert.Equal("datastore", se.IntrinsicAttributes["category"]))
         );
+    }
+}
+
+[Collection("AwsSdkTests")]
+public class AwsSdkMultiServiceTestCoreOldest : AwsSdkMultiServiceTestBase<AwsSdkContainerMultiServiceTestFixtureCoreOldest>
+{
+    public AwsSdkMultiServiceTestCoreOldest(AwsSdkContainerMultiServiceTestFixtureCoreOldest fixture, ITestOutputHelper output) : base(fixture, output)
+    {
+    }
+}
+
+[Collection("AwsSdkTests")]
+public class AwsSdkMultiServiceTestCoreLatest : AwsSdkMultiServiceTestBase<AwsSdkContainerMultiServiceTestFixtureCoreLatest>
+{
+    public AwsSdkMultiServiceTestCoreLatest(AwsSdkContainerMultiServiceTestFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)
+    {
     }
 }

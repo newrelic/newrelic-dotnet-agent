@@ -2,10 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using NewRelic.Agent.ContainerIntegrationTests.Applications;
+using NewRelic.Agent.IntegrationTestHelpers;
 
 namespace NewRelic.Agent.ContainerIntegrationTests.Fixtures;
 
-public class AwsSdkContainerFirehoseTestFixture : AwsSdkContainerTestFixtureBase
+public abstract class AwsSdkContainerFirehoseTestFixture : AwsSdkContainerTestFixtureBase
 {
     private const string Dockerfile = "AwsSdkTestApp/Dockerfile";
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
@@ -13,7 +14,7 @@ public class AwsSdkContainerFirehoseTestFixture : AwsSdkContainerTestFixtureBase
 
     private readonly string BaseUrl;
 
-    public AwsSdkContainerFirehoseTestFixture() : base(DistroTag, Architecture, Dockerfile)
+    protected AwsSdkContainerFirehoseTestFixture(string dotnetVersion) : base(DistroTag, Architecture, dotnetVersion, Dockerfile)
     {
         BaseUrl = $"http://localhost:{Port}/awssdkfirehose";
     }
@@ -42,4 +43,14 @@ public class AwsSdkContainerFirehoseTestFixture : AwsSdkContainerTestFixtureBase
         GetAndAssertStatusCode($"{BaseUrl}/PutRecordBatchAsync?streamName={streamName}&data={data}", System.Net.HttpStatusCode.OK);
     }
 
+}
+
+public class AwsSdkContainerFirehoseTestFixtureCoreOldest : AwsSdkContainerFirehoseTestFixture
+{
+    public AwsSdkContainerFirehoseTestFixtureCoreOldest() : base(Tfm.NetOldestVersion) { }
+}
+
+public class AwsSdkContainerFirehoseTestFixtureCoreLatest : AwsSdkContainerFirehoseTestFixture
+{
+    public AwsSdkContainerFirehoseTestFixtureCoreLatest() : base(Tfm.NetLatestVersion) { }
 }
