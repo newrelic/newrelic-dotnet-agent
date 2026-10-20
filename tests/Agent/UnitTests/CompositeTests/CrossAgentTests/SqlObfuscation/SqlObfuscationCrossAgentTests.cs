@@ -28,52 +28,7 @@ public class SqlObfuscationCrossAgentTests
     private static readonly HashSet<string> DialectsWithoutVendor = new HashSet<string> { "sqlite", "cassandra" };
 
     // Cases the agent does not pass yet, as "<dialect>:<case name>". A listed case that starts passing fails the run, so the list cannot go stale.
-    private static readonly HashSet<string> KnownGaps = new HashSet<string>
-    {
-        "mysql:back_quoted_identifiers.mysql",
-        "mysql:end_of_query_comment_cstyle",
-        "mysql:end_of_query_comment_doubledash",
-        "mysql:end_of_query_comment_hash",
-        "mysql:multiple_literal_types.mysql",
-        "mysql:string_with_backslash_and_twin_single_quotes",
-        "mysql:string_with_escaped_quotes.mysql",
-        "mysql:string_with_trailing_backslash",
-        "mysql:string_with_twin_single_quotes",
-        "mysql:pathological/end_of_line_comments_with_quotes",
-        "mysql:pathological/mixed_comments_and_quotes",
-        "mysql:pathological/mixed_quotes_comments_and_newlines",
-        "mysql:pathological/mixed_quotes_end_of_line_comments",
-        "mysql:pathological/quote_delimiters_in_comments",
-        "mysql:malformed/unterminated_double_quoted_string.mysql",
-        "mysql:malformed/unterminated_single_quoted_string",
-        "mysql:end_of_string_backslash_and_line_comment_with_quite",
-        "mysql:hex_literals",
-        "mysql:exponential_literals",
-        "mysql:negative_integer_literals",
-        "mysql:booleans",
-        "mysql:prepended_comments_with_quotes.mysql",
-        "mysql:prepended_multiline_comments_with_quotes.mysql",
-        "oracle:double_quoted_identifiers.postgres",
-        "oracle:end_of_query_comment_cstyle",
-        "oracle:end_of_query_comment_doubledash",
-        "oracle:end_of_query_comment_hash",
-        "oracle:string_with_backslash_and_twin_single_quotes",
-        "oracle:string_with_trailing_backslash",
-        "oracle:string_with_twin_single_quotes",
-        "oracle:pathological/end_of_line_comments_with_quotes",
-        "oracle:pathological/mixed_comments_and_quotes",
-        "oracle:pathological/mixed_quotes_comments_and_newlines",
-        "oracle:pathological/mixed_quotes_end_of_line_comments",
-        "oracle:pathological/quote_delimiters_in_comments",
-        "oracle:malformed/unterminated_single_quoted_string",
-        "oracle:end_of_string_backslash_and_line_comment_with_quite",
-        "oracle:oracle_bracket_quote",
-        "oracle:oracle_brace_quote",
-        "oracle:oracle_angle_quote",
-        "oracle:oracle_paren_quote",
-        "oracle:exponential_literals",
-        "oracle:negative_integer_literals",
-    };
+    private static readonly HashSet<string> KnownGaps = new HashSet<string>();
 
     public static IEnumerable<TestCaseData> TestCases => LoadTestCases();
 

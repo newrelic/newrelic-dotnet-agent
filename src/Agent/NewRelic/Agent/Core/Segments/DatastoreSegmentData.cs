@@ -163,7 +163,7 @@ public class DatastoreSegmentData : AbstractSegmentData, IDatastoreSegmentData
                     {
                         foreach (var index in explainPlan.ObfuscatedHeaders)
                         {
-                            data[index] = obfuscator.GetObfuscatedSql(data[index].ToString(), DatastoreVendorName);
+                            data[index] = obfuscator.GetObfuscatedExplainPlanValue(data[index].ToString(), DatastoreVendorName);
                         }
                     }
 

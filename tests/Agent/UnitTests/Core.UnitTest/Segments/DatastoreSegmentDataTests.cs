@@ -216,7 +216,7 @@ public class DatastoreSegmentDataTests
         segmentData.DoExplainPlanCondition = () => true;
         segmentData.GenerateExplainPlan = _ => new ExplainPlan(new List<string>(), new List<List<object>>(), new List<int>());
 
-        Mock.Arrange(() => obfuscator.GetObfuscatedSql(Arg.IsAny<string>(), Arg.IsAny<DatastoreVendor>()))
+        Mock.Arrange(() => obfuscator.GetObfuscatedExplainPlanValue(Arg.IsAny<string>(), Arg.IsAny<DatastoreVendor>()))
             .Returns("obfuscated_sql");
 
         // First call to ExecuteExplainPlan should generate the explain plan
@@ -233,5 +233,28 @@ public class DatastoreSegmentDataTests
 
         // Verify that the explain plan is still not null
         Assert.That(segmentData.ExplainPlan, Is.Not.Null);
+    }
+
+    [Test]
+    public void ExecuteExplainPlan_ObfuscatesOnlyObfuscatedHeaderCells_WithExplainPlanValueObfuscation()
+    {
+        var segmentData = new DatastoreSegmentData(_databaseService, _parsedSqlStatement, "SELECT * FROM table");
+        var obfuscator = Mock.Create<SqlObfuscator>();
+
+        segmentData.DoExplainPlanCondition = () => true;
+        segmentData.GenerateExplainPlan = _ => new ExplainPlan(
+            new List<string> { "StmtText", "EstimateRows" },
+            new List<List<object>> { new List<object> { "  |--Clustered Index Scan(WHERE:([a]=N'x'))", 1.0 } },
+            new List<int> { 0 });
+
+        Mock.Arrange(() => obfuscator.GetObfuscatedExplainPlanValue("  |--Clustered Index Scan(WHERE:([a]=N'x'))", _datastoreVendor))
+            .Returns("obfuscated_explain_plan_value");
+
+        Assert.That(segmentData.ExecuteExplainPlan(obfuscator), Is.True);
+        Assert.Multiple(() =>
+        {
+            Assert.That(segmentData.ExplainPlan.ExplainPlanDatas[0][0], Is.EqualTo("obfuscated_explain_plan_value"));
+            Assert.That(segmentData.ExplainPlan.ExplainPlanDatas[0][1], Is.EqualTo(1.0));
+        });
     }
 }

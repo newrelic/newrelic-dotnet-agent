@@ -73,6 +73,28 @@ public class MicrosoftDataSqlClientExerciser : MsSqlExerciserBase
     [LibraryMethod]
     [Transaction]
     [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+    public void DialectQuery()
+    {
+        var teamMembers = new List<string>();
+        using (var connection = new SqlConnection(_connectionString))
+        using (var command = new SqlCommand("/* dialect */ SELECT [FirstName] FROM NewRelic.dbo.TeamMembers WHERE FirstName = 'John' -- tail", connection))
+        {
+            connection.Open();
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    teamMembers.Add(reader.GetString(reader.GetOrdinal("FirstName")));
+                }
+            }
+        }
+
+        ConsoleMFLogger.Info(string.Join(",", teamMembers));
+    }
+
+    [LibraryMethod]
+    [Transaction]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
     public async Task<string> MsSqlAsync(string tableName)
     {
         var teamMembers = new List<string>();

@@ -11,6 +11,7 @@ using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using NewRelic.Testing.Assertions;
+using Newtonsoft.Json.Linq;
 using Xunit;
 
 
@@ -263,6 +264,40 @@ public abstract class MsSqlTestsBase<TFixture> : NewRelicIntegrationTest<TFixtur
             () => Assertions.TransactionEventHasAttributes(expectedTransactionEventIntrinsicAttributes, TransactionEventAttributeType.Intrinsic, asyncTransactionEvent),
             () => Assertions.SqlTraceExists(expectedSqlTraces, sqlTraces)
         );
+
+        if (sqlTracesShouldHaveExplainPlans)
+        {
+            // SHOWPLAN_ALL child rows start with a "  |--" tree prefix. Its -- is not a comment, so the operator text after it must survive obfuscation.
+            var stmtTexts = GetExplainPlanStmtTexts(sqlTraces);
+            Assert.True(stmtTexts.Any(IsShowPlanOperatorRow), "No explain plan StmtText row kept its operator text after the |-- prefix: " + string.Join(" | ", stmtTexts));
+        }
+    }
+
+    private static List<string> GetExplainPlanStmtTexts(IEnumerable<SqlTrace> sqlTraces)
+    {
+        var stmtTexts = new List<string>();
+        foreach (var sqlTrace in sqlTraces)
+        {
+            if (!sqlTrace.ParameterData.TryGetValue("explain_plan", out var value) || value is not JArray explainPlan)
+            {
+                continue;
+            }
+
+            var stmtTextIndex = explainPlan[0].ToObject<List<string>>().IndexOf("StmtText");
+            foreach (var row in explainPlan[1])
+            {
+                stmtTexts.Add(row[stmtTextIndex]?.ToString());
+            }
+        }
+
+        return stmtTexts;
+    }
+
+    // "  |--Clustered Index Scan(...)" passes; "  |?" (the prefix read as a -- comment) does not.
+    private static bool IsShowPlanOperatorRow(string stmtText)
+    {
+        var prefixIndex = stmtText?.IndexOf("|--", StringComparison.Ordinal) ?? -1;
+        return prefixIndex >= 0 && prefixIndex + 3 < stmtText.Length && char.IsLetter(stmtText[prefixIndex + 3]);
     }
 }
 
