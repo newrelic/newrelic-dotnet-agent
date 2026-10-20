@@ -21,7 +21,7 @@ public class ArnBuilder
     public string Build(string service, string resource) => ConstructArn(Partition, service, Region, AccountId, resource);
 
     // This is the full regex pattern for a Lambda ARN:
-    // (arn:(aws[a-zA-Z-]*)?:lambda:)?([a-z]{2}((-gov)|(-iso([a-z]?)))?-[a-z]+-\d{1}:)?(\d{12}:)?(function:)?([a-zA-Z0-9-_\.]+)(:(\$LATEST|[a-zA-Z0-9-_]+))?
+    // (arn:(aws[a-zA-Z-]*)?:lambda:)?(((eusc-de)|([a-z]{2}((-gov)|(-iso([a-z]?)))?))-[a-z]+-\d{1}:)?(\d{12}:)?(function:)?([a-zA-Z0-9-_\.]+)(:(\$LATEST|[a-zA-Z0-9-_]+))?
 
     // If it's a full ARN, it has to start with 'arn:'
     // A partial ARN can contain up to 5 segments separated by ':'
@@ -149,6 +149,10 @@ public class ArnBuilder
         if (labels[0] == "cn")
         {
             return "aws-cn";
+        }
+        if (labels[0] == "eusc")
+        {
+            return "aws-eusc";
         }
         if (labels.Length > 1 && labels[1] == "gov")
         {

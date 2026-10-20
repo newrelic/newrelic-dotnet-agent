@@ -11,6 +11,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation;
 
+[Trait("Platform", "WindowsOnly")]
 public class BasicOpenRastaApplication : NewRelicIntegrationTest<RemoteServiceFixtures.BasicOpenRastaApplication>
 {
 

@@ -13,6 +13,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.CatOutbound;
 
+[Trait("Platform", "WindowsOnly")]
 public class CatEnabledChainedRequestsWebRequest : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
 {
 

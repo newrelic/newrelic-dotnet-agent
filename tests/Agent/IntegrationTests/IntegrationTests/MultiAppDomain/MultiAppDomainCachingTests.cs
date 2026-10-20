@@ -284,6 +284,7 @@ public abstract class MultiAppDomainCachingTestsBase : NewRelicIntegrationTest<M
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class MultiAppDomainCachingEnabledTests : MultiAppDomainCachingTestsBase
 {
     public MultiAppDomainCachingEnabledTests(MultiAppDomainWebApplicationFixture fixture, ITestOutputHelper output)
@@ -292,6 +293,7 @@ public class MultiAppDomainCachingEnabledTests : MultiAppDomainCachingTestsBase
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class MultiAppDomainCachingDisabledTests : MultiAppDomainCachingTestsBase
 {
     public MultiAppDomainCachingDisabledTests(MultiAppDomainWebApplicationFixture fixture, ITestOutputHelper output)

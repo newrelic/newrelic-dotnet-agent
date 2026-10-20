@@ -76,6 +76,9 @@ public class ServerConfiguration
     [JsonProperty("request_headers_map")]
     public Dictionary<string, string> RequestHeadersMap { get; set; }
 
+    [JsonProperty("otlp_resource_attributes")]
+    public Dictionary<string, string> OtlpResourceAttributes { get; set; }
+
 
     // Server Side Config
 
@@ -254,6 +257,9 @@ public class ServerConfiguration
 
         [JsonProperty("ai_monitoring.record_content.enabled")]
         public bool? AiMonitoringRecordContentEnabled { get; set; }
+
+        [JsonProperty("profiling.enabled")]
+        public bool? ContinuousProfilingEnabled { get; set; }
     }
 
     public class InstrumentationConfig

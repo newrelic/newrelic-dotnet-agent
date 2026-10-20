@@ -122,6 +122,7 @@ public abstract class PostgresSqlSimpleQueryAsyncTestsBase<TFixture> : NewRelicI
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class PostgresSqlSimpleQueryAsyncTestsFW462 : PostgresSqlSimpleQueryAsyncTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public PostgresSqlSimpleQueryAsyncTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -130,6 +131,7 @@ public class PostgresSqlSimpleQueryAsyncTestsFW462 : PostgresSqlSimpleQueryAsync
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class PostgresSqlSimpleQueryAsyncTestsFWLatest : PostgresSqlSimpleQueryAsyncTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public PostgresSqlSimpleQueryAsyncTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)

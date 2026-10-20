@@ -13,6 +13,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.CodeLevelMetrics;
 
+[Trait("Platform", "WindowsOnly")]
 public class WebApi2CodeAttributeTests : NewRelicIntegrationTest<WebApiAsyncFixture>
 {
     private readonly WebApiAsyncFixture _fixture;

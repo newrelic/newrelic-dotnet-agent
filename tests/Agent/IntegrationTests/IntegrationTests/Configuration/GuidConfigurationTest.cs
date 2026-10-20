@@ -53,6 +53,7 @@ public abstract class GuidConfigurationTest<TFixture> : NewRelicIntegrationTest<
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class GuidConfigurationTest_FW : GuidConfigurationTest<ConsoleDynamicMethodFixtureFWLatest>
 {
     public GuidConfigurationTest_FW(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)

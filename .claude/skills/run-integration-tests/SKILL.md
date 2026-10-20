@@ -17,7 +17,8 @@ Use full VS `MSBuild.exe` (not `dotnet build` -- legacy non-SDK web projects hav
 
 ```bash
 MSBUILD=$(build/Tools/vswhere.exe -latest -prerelease -products '*' \
-  -requires Microsoft.Component.MSBuild -find 'MSBuild\**\Bin\MSBuild.exe' | tr -d '\r' | head -1)
+  -requires Microsoft.Component.MSBuild Microsoft.NetCore.Component.SDK \
+  -find 'MSBuild\**\Bin\MSBuild.exe' | tr -d '\r' | head -1)
 "$MSBUILD" tests/Agent/IntegrationTests/IntegrationTests.sln \
   -restore -m -p:Configuration=Debug -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy
 ```

@@ -29,9 +29,9 @@ public class MockThreadProfilingService : IThreadProfilingSessionControl, IThrea
         return true;
     }
 
-    public bool StopThreadProfilingSession(int profileId, bool reportData)
+    public StopThreadProfilingSessionResult StopThreadProfilingSession(int profileId, bool reportData)
     {
-        bool result = true;
+        var result = StopThreadProfilingSessionResult.Stopped;
 
         ProfileId = profileId;
         ReportData = reportData;
@@ -39,7 +39,7 @@ public class MockThreadProfilingService : IThreadProfilingSessionControl, IThrea
         if (ProfileSessionIsActive)
         {
             ProfileSessionIsActive = false;
-            result = false;
+            result = StopThreadProfilingSessionResult.NotRunning;
         }
         return result;
     }

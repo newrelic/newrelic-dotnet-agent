@@ -56,6 +56,8 @@ public abstract class AgentLogBase
     public const string ShutdownLogLineRegex = InfoLogLinePrefixRegex + @"The New Relic .NET Agent v.* has shutdown";
     public const string TransactionTransformCompletedLogLineRegex = FinestLogLinePrefixRegex + @"Transaction (.*) \((.*)\) transform completed.";
     public const string WebSocketHandshakeDetectedLogLineRegex = DebugLogLinePrefixRegex + @"WebSocket handshake request detected; not instrumenting this long-running request.";
+    public const string SignalRServerSentEventsDetectedLogLineRegex = DebugLogLinePrefixRegex + @"SignalR Server-Sent Events request detected; not instrumenting this long-running request.";
+    public const string SignalRTransportRequestIgnoredLogLineRegex = DebugLogLinePrefixRegex + @"SignalR transport request detected; not reporting a transaction for this long-running request.";
 
     // Problems
     public const string TransactionEndedByGCFinalizerLogLineRegEx = DebugLogLinePrefixRegex + @"Transaction was garbage collected without ever ending(.*)";
@@ -234,6 +236,22 @@ public abstract class AgentLogBase
     public Match WaitForLogLine(string regularExpression, TimeSpan? timeoutOrZero = null)
     {
         return WaitForLogLines(regularExpression, timeoutOrZero).First();
+    }
+
+    // Non-throwing variant of WaitForLogLine for tests that need to assert a line's ABSENCE within the
+    // timeout is a valid outcome, not a failure -- e.g. probing whether a rejection was logged without
+    // failing the test when it wasn't.
+    public bool TryWaitForLogLine(string regularExpression, TimeSpan? timeoutOrZero = null)
+    {
+        try
+        {
+            WaitForLogLine(regularExpression, timeoutOrZero);
+            return true;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
     }
 
     public IEnumerable<Match> TryGetLogLines(string regularExpression)

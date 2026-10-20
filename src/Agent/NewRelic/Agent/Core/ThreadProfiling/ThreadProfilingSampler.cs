@@ -26,45 +26,104 @@ public class ThreadProfilingSampler : IThreadProfilingSampler
     private Thread _samplingWorker = null;
     private readonly INativeMethods _nativeMethods;
 
-    public ThreadProfilingSampler(INativeMethods nativeMethods)
+    private readonly TimeSpan _shutdownJoinTimeout;
+
+    /// <summary>
+    /// Creates and starts the background sampling thread for the given <see cref="ThreadStart"/>, returning the
+    /// started <see cref="Thread"/>. Injectable so tests can simulate a Thread.Start() failure without relying on
+    /// real OS thread-creation limits.
+    /// </summary>
+    private readonly Func<ThreadStart, Thread> _threadFactory;
+
+    public ThreadProfilingSampler(INativeMethods nativeMethods) : this(nativeMethods, TimeSpan.FromSeconds(5))
+    {
+    }
+
+    public ThreadProfilingSampler(INativeMethods nativeMethods, TimeSpan shutdownJoinTimeout)
+        : this(nativeMethods, shutdownJoinTimeout, DefaultThreadFactory)
+    {
+    }
+
+    /// <summary>
+    /// Test seam: lets a test substitute how the background sampling thread is created/started. Production callers
+    /// should use one of the other constructors, which default to <see cref="DefaultThreadFactory"/>.
+    /// </summary>
+    public ThreadProfilingSampler(INativeMethods nativeMethods, TimeSpan shutdownJoinTimeout, Func<ThreadStart, Thread> threadFactory)
     {
         _nativeMethods = nativeMethods;
+        _shutdownJoinTimeout = shutdownJoinTimeout;
+        _threadFactory = threadFactory;
     }
+
+    public bool IsRunning => Volatile.Read(ref _workerRunning) == 1;
 
     public bool Start(uint frequencyInMsec, uint durationInMsec, ISampleSink sampleSink, INativeMethods nativeMethods)
     {
-        _shutdownEvent.Reset();
-
         //atomic compare and set - if _workerRunning was a zero, it's now a 1 and create worker will be true
         bool createWorker = 0 == Interlocked.CompareExchange(ref _workerRunning, 1, 0);
         if (createWorker)
         {
-            _samplingWorker = new Thread(() => InternalPolling_WaitCallback(frequencyInMsec, durationInMsec, sampleSink, nativeMethods))
+            //only clear the shutdown signal once we've actually won the right to arm a new session.
+            //resetting before the guard would let a Start() that loses the race (because a prior
+            //Stop() timed out its Join while the old worker was still running) clear the shutdown
+            //signal out from under that lingering worker, reviving its wait loop instead of letting
+            //it exit at the next tick.
+            _shutdownEvent.Reset();
+
+            try
             {
-                IsBackground = true
-            };
-            _samplingWorker.Start();
+                _samplingWorker = _threadFactory(() => InternalPolling_WaitCallback(frequencyInMsec, durationInMsec, sampleSink, nativeMethods));
+            }
+            catch
+            {
+                // The worker never ran, so nothing will clear _workerRunning via its normal finally
+                // block. Left at 1, IsRunning would report true forever, which permanently blocks both
+                // this sampler (CompareExchange above always loses the race) and continuous profiling
+                // (mutual-exclusion gate keyed on IsRunning) for the life of the process.
+                _samplingWorker = null;
+                Volatile.Write(ref _workerRunning, 0);
+                throw;
+            }
         }
 
         //return whether or not we created a session
         return createWorker;
     }
 
-    public void Stop()
+    public bool Stop()
     {
-        //if we have already asked for termination or the background thread is not operational, we are done here.
-        if (_shutdownEvent.Wait(0) || 1 == _workerRunning)
-            return;
+        //if we have already asked for termination or the background thread is not operational, there is
+        //nothing to signal/join here. Report whether the worker is actually stopped so the caller knows
+        //if it is safe to mutate the shared state the worker reads during its aggregation. In particular
+        //a worker that Set the shutdown signal itself (duration elapsed) can still be mid-aggregation with
+        //_workerRunning == 1, in which case the caller must not reset that state yet.
+        if (_shutdownEvent.Wait(0) || 0 == Volatile.Read(ref _workerRunning))
+            return 0 == Volatile.Read(ref _workerRunning);
 
         //signal sampling worker to terminate
         _shutdownEvent.Set();
 
-        //wait for the sampling worker to terminate
+        //wait (bounded) for the sampling worker to terminate -- an unbounded join here can outlast the
+        //OS's process-exit budget and truncate agent shutdown; the worker is a background thread, so a
+        //timeout just means we stop waiting, not that the thread is leaked.
         if (_samplingWorker != null)
         {
-            _samplingWorker.Join();
+            if (!_samplingWorker.Join(_shutdownJoinTimeout))
+            {
+                Log.Warn($"ThreadProfilingSampler.Stop(): sampling worker did not terminate within {_shutdownJoinTimeout}; continuing shutdown without waiting further.");
+                _samplingWorker = null;
+
+                //Join timed out: the worker may still be mid-aggregation, reading the tree/name cache and
+                //_profileSessionId. Tell the caller it is NOT safe to reset that shared state.
+                return false;
+            }
             _samplingWorker = null;
         }
+
+        //the worker has terminated; its finally block (aggregation + native teardown) has fully
+        //completed and cleared _workerRunning, so the shared state it read is now quiescent and safe
+        //for the caller to reset.
+        return true;
     }
 
     /// <summary>
@@ -116,7 +175,12 @@ public class ThreadProfilingSampler : IThreadProfilingSampler
             sampleSink.SamplingComplete();
 
             nativeMethods.ShutdownNativeThreadProfiler();
-            _workerRunning = 0;
+
+            // Release write, paired with IsRunning's Volatile.Read: a reader that sees 0 is then also
+            // guaranteed to see the ShutdownNativeThreadProfiler above it. A plain store carries no such
+            // ordering, so the mutual-exclusion guard could observe "not running" while the native
+            // profiler was still being torn down.
+            Volatile.Write(ref _workerRunning, 0);
         }
     }
 
@@ -184,5 +248,15 @@ public class ThreadProfilingSampler : IThreadProfilingSampler
         {
             return new ThreadSnapshot[0];
         }
+    }
+
+    private static Thread DefaultThreadFactory(ThreadStart threadStart)
+    {
+        var thread = new Thread(threadStart)
+        {
+            IsBackground = true
+        };
+        thread.Start();
+        return thread;
     }
 }

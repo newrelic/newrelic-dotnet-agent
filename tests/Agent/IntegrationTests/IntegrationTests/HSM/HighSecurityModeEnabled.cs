@@ -11,6 +11,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.HSM;
 
+[Trait("Platform", "WindowsOnly")]
 public class HighSecurityModeEnabled : NewRelicIntegrationTest<RemoteServiceFixtures.HSMBasicMvcApplicationTestFixture>
 {
     private const string QueryStringParameterValue = @"my thing";

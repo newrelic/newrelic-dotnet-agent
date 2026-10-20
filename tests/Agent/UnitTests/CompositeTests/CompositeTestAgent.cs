@@ -131,7 +131,7 @@ public class CompositeTestAgent : IDisposable
     {
     }
 
-    public CompositeTestAgent(bool shouldAllowThreads, bool includeAsyncLocalStorage, bool enableServerlessMode = false, bool enableGCSamplerV2 = false, SamplerType rootSamplerType = SamplerType.Adaptive, SamplerType remoteParentSampledSamplerType = SamplerType.Adaptive, SamplerType remoteParentNotSampledSamplerType = SamplerType.Adaptive, ISamplerFactory samplerFactory = null)
+    public CompositeTestAgent(bool shouldAllowThreads, bool includeAsyncLocalStorage, bool enableServerlessMode = false, bool enableGCSamplerV2 = false, SamplerType rootSamplerType = SamplerType.Adaptive, SamplerType remoteParentSampledSamplerType = SamplerType.Adaptive, SamplerType remoteParentNotSampledSamplerType = SamplerType.Adaptive, ISamplerFactory samplerFactory = null, bool useRealContextStorage = false)
     {
         Log.Initialize(new Logger());
 
@@ -139,10 +139,15 @@ public class CompositeTestAgent : IDisposable
 
         // Create the fake classes necessary to construct services
 
-        var mockFactory = Mock.Create<IContextStorageFactory>();
-        Mock.Arrange(() => mockFactory.CreateContext<IInternalTransaction>(Arg.AnyString)).Returns(_primaryTransactionContextStorage);
-        var transactionContextFactories = new List<IContextStorageFactory> { mockFactory };
-        if (includeAsyncLocalStorage)
+        // Real storage: thread-local primary, AsyncLocal async storage and the production call stack managers.
+        var transactionContextFactories = new List<IContextStorageFactory>();
+        if (!useRealContextStorage)
+        {
+            var mockFactory = Mock.Create<IContextStorageFactory>();
+            Mock.Arrange(() => mockFactory.CreateContext<IInternalTransaction>(Arg.AnyString)).Returns(_primaryTransactionContextStorage);
+            transactionContextFactories.Add(mockFactory);
+        }
+        if (includeAsyncLocalStorage || useRealContextStorage)
         {
             transactionContextFactories.Add(new AsyncLocalStorageFactory());
         }
@@ -182,8 +187,11 @@ public class CompositeTestAgent : IDisposable
         // Replace existing registrations with mocks before resolving any services
         _container.ReplaceInstanceRegistration(mockEnvironment);
         _container.ReplaceInstanceRegistration<IEnumerable<IContextStorageFactory>>(transactionContextFactories);
-        _container.ReplaceInstanceRegistration<ICallStackManagerFactory>(
-            new TestCallStackManagerFactory());
+        if (!useRealContextStorage)
+        {
+            _container.ReplaceInstanceRegistration<ICallStackManagerFactory>(
+                new TestCallStackManagerFactory());
+        }
         _container.ReplaceInstanceRegistration(wrappers);
 
         if (!enableServerlessMode)

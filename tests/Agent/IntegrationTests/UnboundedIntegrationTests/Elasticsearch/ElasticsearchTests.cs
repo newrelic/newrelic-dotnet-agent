@@ -266,6 +266,7 @@ public abstract class ElasticsearchTestsBase<TFixture> : NewRelicIntegrationTest
 }
 
 #region NEST
+[Trait("Platform", "WindowsOnly")]
 public class ElasticsearchNestTestsFWLatest : ElasticsearchTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public ElasticsearchNestTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -274,6 +275,7 @@ public class ElasticsearchNestTestsFWLatest : ElasticsearchTestsBase<ConsoleDyna
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class ElasticsearchNestTestsFW462 : ElasticsearchTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public ElasticsearchNestTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -301,6 +303,7 @@ public class ElasticsearchNestTestsCoreOldest : ElasticsearchTestsBase<ConsoleDy
 #endregion NEST
 
 #region ElasticsearchNet
+[Trait("Platform", "WindowsOnly")]
 public class ElasticsearchNetTestsFWLatest : ElasticsearchTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public ElasticsearchNetTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -309,6 +312,7 @@ public class ElasticsearchNetTestsFWLatest : ElasticsearchTestsBase<ConsoleDynam
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class ElasticsearchNetTestsFW462 : ElasticsearchTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public ElasticsearchNetTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -336,6 +340,7 @@ public class ElasticsearchNetTestsCoreOldest : ElasticsearchTestsBase<ConsoleDyn
 #endregion ElasticsearchNet
 
 #region ElasticClients
+[Trait("Platform", "WindowsOnly")]
 public class ElasticsearchElasticClientTestsFWLatest : ElasticsearchTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public ElasticsearchElasticClientTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -344,6 +349,7 @@ public class ElasticsearchElasticClientTestsFWLatest : ElasticsearchTestsBase<Co
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class ElasticsearchElasticClientTestsFW462 : ElasticsearchTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public ElasticsearchElasticClientTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)

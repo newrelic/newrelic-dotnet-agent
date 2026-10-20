@@ -30,7 +30,10 @@ Get started by reviewing our instructions for how to [build and test](docs/devel
 
 Should you need assistance with New Relic products, you are in good hands with several support diagnostic tools and support channels.
 
-This [troubleshooting framework](https://discuss.newrelic.com/t/troubleshooting-frameworks/108787) steps you through common troubleshooting questions. 
+The following documents step you through common troubleshooting scenarios:
+[.NET on Windows](https://knowledge.newrelic.com/s/article/Net-on-Windows-Troubleshooting-Framework)
+[.NET on Linux](https://knowledge.newrelic.com/s/article/Net-Core-on-Linux-Troubleshooting-Framework)
+[.NET Agent Configuration](https://knowledge.newrelic.com/s/article/Net-Troubleshooting-Framework) 
 Additional troubleshooting scenarios can be found on the New Relic [Docs](https://docs.newrelic.com/docs/agents/net-agent/troubleshooting) site.
 
 New Relic offers NRDiag, [a client-side diagnostic utility](https://docs.newrelic.com/docs/using-new-relic/cross-product-functions/diagnostics-cli-nrdiag/diagnostics-cli-nrdiag/) that automatically detects common problems with New Relic agents. If NRDiag detects a problem, it suggests troubleshooting steps. NRDiag can also automatically attach troubleshooting data to a New Relic Support ticket.

@@ -91,6 +91,7 @@ public abstract class RestSharpInstrumentationAsyncAwaitCATBase<TFixture> : NewR
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class RestSharpInstrumentationAsyncAwaitCATFWLatest : RestSharpInstrumentationAsyncAwaitCATBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public RestSharpInstrumentationAsyncAwaitCATFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -99,6 +100,7 @@ public class RestSharpInstrumentationAsyncAwaitCATFWLatest : RestSharpInstrument
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class RestSharpInstrumentationAsyncAwaitCATFW48 : RestSharpInstrumentationAsyncAwaitCATBase<ConsoleDynamicMethodFixtureFW48>
 {
     public RestSharpInstrumentationAsyncAwaitCATFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
@@ -107,6 +109,7 @@ public class RestSharpInstrumentationAsyncAwaitCATFW48 : RestSharpInstrumentatio
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class RestSharpInstrumentationAsyncAwaitCATFW471 : RestSharpInstrumentationAsyncAwaitCATBase<ConsoleDynamicMethodFixtureFW471>
 {
     public RestSharpInstrumentationAsyncAwaitCATFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -115,6 +118,7 @@ public class RestSharpInstrumentationAsyncAwaitCATFW471 : RestSharpInstrumentati
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class RestSharpInstrumentationAsyncAwaitCATFW462 : RestSharpInstrumentationAsyncAwaitCATBase<ConsoleDynamicMethodFixtureFW462>
 {
     public RestSharpInstrumentationAsyncAwaitCATFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)

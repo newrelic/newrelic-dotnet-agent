@@ -12,6 +12,7 @@ using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Commands;
 using NewRelic.Agent.Core.Config;
 using NewRelic.Agent.Core.Configuration;
+using NewRelic.Agent.Core.ContinuousProfiling;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.DependencyInjection;
 using NewRelic.Agent.Core.Events;
@@ -88,6 +89,7 @@ public sealed class AgentManager : IAgentManager, IDisposable
 
     private IConfiguration Configuration { get { return _configurationSubscription.Configuration; } }
     private ThreadProfilingService _threadProfilingService;
+    private ContinuousProfilingService _continuousProfilingService;
     private readonly IWrapperService _wrapperService;
     private readonly IAgentHealthReporter _agentHealthReporter;
 
@@ -188,24 +190,58 @@ public sealed class AgentManager : IAgentManager, IDisposable
             }
         }
 
-        // Attempt to auto start the agent once all services have resolved, except in serverless mode
-        if (!bootstrapConfig.ServerlessModeEnabled)
+        // AgentSingleton.CreateInstance's catch swaps in the DisabledAgentManager but never gets a
+        // reference to this half-built manager, so it can't stop CP's native sampler if a later startup
+        // step throws after CP has already been created/started. Guard only from CP creation onward --
+        // everything before this point cannot have started CP, so it stays on the original plain-throw
+        // path (propagates straight to AgentSingleton.CreateInstance's catch, same as before CP existed).
+        try
         {
-            _container.Resolve<IConnectionManager>().AttemptAutoStart();
+            // Must be constructed -- and therefore subscribed to AgentConnectedEvent -- BEFORE
+            // AttemptAutoStart() below: ConnectionManager.Start() schedules the actual connect
+            // asynchronously, so a fast connect can publish AgentConnectedEvent before a later-constructed
+            // subscriber ever attaches, and EventBus does not replay missed events.
+            //
+            // Never construct in serverless mode: AttemptAutoStart() never runs there, so a constructed CP
+            // would run full stop-the-world sampling sweeps every tick with every drain permanently
+            // no-op'ing on !_isConnected -- pure overhead, no data ever shipped. This also forecloses CP's
+            // agent commands in serverless (registered only when _continuousProfilingService != null).
+            if (!bootstrapConfig.ServerlessModeEnabled)
+            {
+                _continuousProfilingService = ContinuousProfilingServiceFactory.TryCreate(_container, Configuration, _agentHealthReporter);
+                _continuousProfilingService?.StartIfEnabled();
+            }
+
+            // Attempt to auto start the agent once all services have resolved, except in serverless mode
+            if (!bootstrapConfig.ServerlessModeEnabled)
+            {
+                _container.Resolve<IConnectionManager>().AttemptAutoStart();
+            }
+            else
+            {
+                Log.Info("The New Relic agent is operating in serverless mode.");
+            }
+
+            AgentServices.StartServices(_container, bootstrapConfig.ServerlessModeEnabled, bootstrapConfig.GCSamplerV2Enabled);
+
+            // Setup the internal API first so that AgentApi can use it.
+            InternalApi.SetAgentApiImplementation(agentApi);
+            AgentApi.SetSupportabilityMetricCounters(_container.Resolve<IApiSupportabilityMetricCounters>());
+
+            Initialize(bootstrapConfig.ServerlessModeEnabled);
+            _isInitialized = true;
         }
-        else
+        catch
         {
-            Log.Info("The New Relic agent is operating in serverless mode.");
+            // Only tear down CP here -- nothing else started by this try has state that outlives the
+            // exception (Initialize()'s own partial work is either idempotent-safe or immaterial once we
+            // never become the live instance). CP's native sampler thread is the one piece that would
+            // otherwise leak for the life of the process, since AgentSingleton.CreateInstance's catch never
+            // gets a reference to this half-built manager.
+            StopProfilerServices(null, () => _continuousProfilingService?.Dispose());
+
+            throw;
         }
-
-        AgentServices.StartServices(_container, bootstrapConfig.ServerlessModeEnabled, bootstrapConfig.GCSamplerV2Enabled);
-
-        // Setup the internal API first so that AgentApi can use it.
-        InternalApi.SetAgentApiImplementation(agentApi);
-        AgentApi.SetSupportabilityMetricCounters(_container.Resolve<IApiSupportabilityMetricCounters>());
-
-        Initialize(bootstrapConfig.ServerlessModeEnabled);
-        _isInitialized = true;
     }
 
     private void Initialize(bool serverlessModeEnabled)
@@ -215,7 +251,16 @@ public sealed class AgentManager : IAgentManager, IDisposable
         var nativeMethods = _container.Resolve<INativeMethods>();
         var instrumentationService = _container.Resolve<IInstrumentationService>();
 
-        _threadProfilingService = new ThreadProfilingService(_container.Resolve<IDataTransportService>(), nativeMethods);
+        _threadProfilingService = new ThreadProfilingService(_container.Resolve<IDataTransportService>(), nativeMethods, agentHealthReporter: _container.Resolve<IAgentHealthReporter>());
+
+        // Mutually exclude the two profilers: the thread profiler refuses to start while continuous
+        // profiling is active, and continuous profiling defers its start while a thread-profiling session
+        // is in-flight. Wired here, post-construction (both were already constructed earlier in Start()),
+        // rather than through constructors, since mutual constructor injection would be a cycle. A failed
+        // CP construction leaves the field null, which both sides' guards already treat as "not running."
+        _threadProfilingService.SetContinuousProfilingSessionControl(_continuousProfilingService);
+        if (_continuousProfilingService != null)
+            _continuousProfilingService.ThreadProfilingStatus = _threadProfilingService;
 
         if (!serverlessModeEnabled)
         {
@@ -227,6 +272,17 @@ public sealed class AgentManager : IAgentManager, IDisposable
                 new StopThreadProfilerCommand(_threadProfilingService),
                 new InstrumentationUpdateCommand(instrumentationService)
             );
+
+            // Null only if construction itself threw; the commands are simply not registered in that
+            // case (CommandService.ProcessCommands handles an unknown command name gracefully).
+            if (_continuousProfilingService != null)
+            {
+                var continuousProfilerResponseFormatter = new AckOnlyContinuousProfilerResponseFormatter();
+                commandService.AddCommands(
+                    new StartContinuousProfilerCommand(_continuousProfilingService, continuousProfilerResponseFormatter),
+                    new StopContinuousProfilerCommand(_continuousProfilingService, continuousProfilerResponseFormatter)
+                );
+            }
         }
 
         StartServices();
@@ -349,7 +405,29 @@ public sealed class AgentManager : IAgentManager, IDisposable
 
     private void StopServices()
     {
-        _threadProfilingService?.Stop();
+        StopProfilerServices(
+            () => _threadProfilingService?.Stop(),
+            () => _continuousProfilingService?.Dispose());
+    }
+
+    // Best-effort two-step profiler teardown. The continuous-profiling dispose MUST run even when stopping
+    // thread profiling throws: ThreadProfilingService.Stop() joins a sampling worker and can throw, and the
+    // original unguarded `Stop(); Dispose();` would then skip Dispose() and orphan the continuous-profiling
+    // native sampler thread for the rest of the process (Shutdown()'s outer catch never compensates -- its
+    // finally only disposes the container, not the CP service). The finally guarantees the CP dispose runs
+    // while still letting a Stop() failure propagate so the shutdown path's error/health reporting is
+    // preserved. Public static so the ordering/null-safety/isolation is unit-testable without constructing
+    // AgentManager (whose ctor drives the full static startup path).
+    public static void StopProfilerServices(Action stopThreadProfiler, Action disposeContinuousProfiler)
+    {
+        try
+        {
+            stopThreadProfiler?.Invoke();
+        }
+        finally
+        {
+            disposeContinuousProfiler?.Invoke();
+        }
     }
 
     /// <summary>
@@ -398,7 +476,7 @@ public sealed class AgentManager : IAgentManager, IDisposable
         Shutdown(true);
     }
 
-    private void Shutdown(bool cleanShutdown)
+    private void Shutdown(bool cleanShutdown, bool closeLogging = true)
     {
         Agent.IsAgentShuttingDown = true;
 
@@ -436,7 +514,9 @@ public sealed class AgentManager : IAgentManager, IDisposable
             Dispose();
 
             Log.Info("The New Relic .NET Agent v{Version} has shutdown (pid {pid}) on app domain '{appDomain}'", AgentInstallConfiguration.AgentVersion, AgentInstallConfiguration.ProcessId, AgentInstallConfiguration.AppDomainAppVirtualPath ?? AgentInstallConfiguration.AppDomainName);
-            Serilog.Log.CloseAndFlush();
+
+            if (closeLogging)
+                Serilog.Log.CloseAndFlush();
         }
     }
 

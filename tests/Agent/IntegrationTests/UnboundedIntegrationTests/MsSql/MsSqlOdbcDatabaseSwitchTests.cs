@@ -11,6 +11,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql;
 
 #region ChangeDatabase
 
+[Trait("Platform", "WindowsOnly")]
 public class MsSqlOdbcDatabaseSwitchTests_FWLatest : MsSqlDatabaseSwitchTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public MsSqlOdbcDatabaseSwitchTests_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -31,6 +32,7 @@ public class MsSqlOdbcDatabaseSwitchTests_CoreLatest : MsSqlDatabaseSwitchTestsB
 
 #region USE statement
 
+[Trait("Platform", "WindowsOnly")]
 public class MsSqlOdbcDatabaseSwitchViaUseStatementTests_FWLatest : MsSqlDatabaseSwitchTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public MsSqlOdbcDatabaseSwitchViaUseStatementTests_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)

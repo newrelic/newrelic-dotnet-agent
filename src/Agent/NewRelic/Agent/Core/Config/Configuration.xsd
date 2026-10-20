@@ -1803,6 +1803,15 @@
                             </xs:annotation>
                         </xs:attribute>
 
+                        <xs:attribute name="version" type="xs:string" use="optional">
+                            <xs:annotation>
+                                <xs:documentation>
+                                    Optional browser agent loader version to request from the collector, for example "1.317.0".
+                                    When omitted, the collector chooses the version. This setting is local only and cannot be overridden by the server.
+                                </xs:documentation>
+                            </xs:annotation>
+                        </xs:attribute>
+
                         <xs:attribute name="sslForHttp" type="xs:boolean" default="false">
                             <xs:annotation>
                                 <xs:documentation>
@@ -2085,6 +2094,49 @@ e, so remove that element to use this mapping.
                         <xs:sequence>
                             <xs:element name="ignoreMethod" minOccurs="0" maxOccurs="unbounded" type="xs:string"/>
                         </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+
+                <xs:element name="profiling" minOccurs="0" maxOccurs="1">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Configures continuous profiling. See the cross-agent Profiling spec
+                            (agents/agent-specs/Profiling.md) for the shared semantics these attributes implement.
+                        </xs:documentation>
+                    </xs:annotation>
+                    <xs:complexType>
+                        <xs:attribute name="enabled" type="xs:boolean" default="false">
+                            <xs:annotation>
+                                <xs:documentation>
+                                    Enables continuous profiling. Maps to NEW_RELIC_PROFILING_ENABLED. Defaults to false.
+                                    Always disabled when High Security Mode is enabled.
+                                </xs:documentation>
+                            </xs:annotation>
+                        </xs:attribute>
+                        <xs:attribute name="include" type="xs:string" default="all">
+                            <xs:annotation>
+                                <xs:documentation>
+                                    Comma-separated list of profile type names to enable (e.g. "cpu"). "all" enables
+                                    every profile type the agent supports. Maps to NEW_RELIC_PROFILING_INCLUDE. Defaults to "all".
+                                </xs:documentation>
+                            </xs:annotation>
+                        </xs:attribute>
+                        <xs:attribute name="delay" type="xs:int" default="0">
+                            <xs:annotation>
+                                <xs:documentation>
+                                    Delay in milliseconds before starting the profiler after it is enabled locally.
+                                    Maps to NEW_RELIC_PROFILING_DELAY. Defaults to 0 (start immediately).
+                                </xs:documentation>
+                            </xs:annotation>
+                        </xs:attribute>
+                        <xs:attribute name="duration" type="xs:int" default="0">
+                            <xs:annotation>
+                                <xs:documentation>
+                                    If greater than 0, stop the profiler after this many milliseconds of operation.
+                                    Maps to NEW_RELIC_PROFILING_DURATION. Defaults to 0 (run until explicitly stopped).
+                                </xs:documentation>
+                            </xs:annotation>
+                        </xs:attribute>
                     </xs:complexType>
                 </xs:element>
 

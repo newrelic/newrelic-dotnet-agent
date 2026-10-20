@@ -137,6 +137,7 @@
   <ItemGroup>
     <ClInclude Include="namecache.h" />
     <ClInclude Include="ThreadProfiler.h" />
+    <ClInclude Include="..\ContinuousProfiler\SuspendMutex.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

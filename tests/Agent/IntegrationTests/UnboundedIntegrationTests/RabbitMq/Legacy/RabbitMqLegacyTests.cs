@@ -183,6 +183,7 @@ public abstract class RabbitMqLegacyTestsBase<TFixture> : NewRelicIntegrationTes
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class RabbitMqLegacyTestsFWLatest : RabbitMqLegacyTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public RabbitMqLegacyTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -191,6 +192,7 @@ public class RabbitMqLegacyTestsFWLatest : RabbitMqLegacyTestsBase<ConsoleDynami
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class RabbitMqLegacyTestsFW48 : RabbitMqLegacyTestsBase<ConsoleDynamicMethodFixtureFW48>
 {
     public RabbitMqLegacyTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
@@ -199,6 +201,7 @@ public class RabbitMqLegacyTestsFW48 : RabbitMqLegacyTestsBase<ConsoleDynamicMet
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class RabbitMqLegacyTestsFW471 : RabbitMqLegacyTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     public RabbitMqLegacyTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -207,6 +210,7 @@ public class RabbitMqLegacyTestsFW471 : RabbitMqLegacyTestsBase<ConsoleDynamicMe
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class RabbitMqLegacyTestsFW462 : RabbitMqLegacyTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public RabbitMqLegacyTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)

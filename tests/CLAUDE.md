@@ -55,9 +55,12 @@ tests/Agent/
 
 MSBuild is not on PATH outside a Developer Command Prompt. Resolve it with the `vswhere.exe` the repo ships -- the same one `build/build.ps1` uses. Never glob `Program Files\Microsoft Visual Studio\*`.
 
+Keep `Microsoft.NetCore.Component.SDK` in `-requires`. Without it, `-latest` can pick a newer VS Build Tools install (for example one installed for the profiler build) that has no .NET SDK workload, and every SDK-style project fails to load.
+
 ```
 MSBUILD=$(build/Tools/vswhere.exe -latest -prerelease -products '*' \
-  -requires Microsoft.Component.MSBuild -find 'MSBuild\**\Bin\MSBuild.exe' | tr -d '\r' | head -1)
+  -requires Microsoft.Component.MSBuild Microsoft.NetCore.Component.SDK \
+  -find 'MSBuild\**\Bin\MSBuild.exe' | tr -d '\r' | head -1)
 "$MSBUILD" tests/Agent/IntegrationTests/IntegrationTests.sln \
   -restore -m -p:Configuration=Debug -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy
 ```
@@ -95,6 +98,77 @@ public class BasicMvcTests : NewRelicIntegrationTest<AspNetFrameworkBasicMvcAppl
 ```
 
 **Where new test apps go** (three parallel dirs under `IntegrationTests/`): `Applications/` (host-run FW/Core), `ContainerApplications/` (Docker), `UnboundedApplications/` (external infra, paired with `UnboundedServices/` compose). **Prefer the MFA pattern below over a new app.** Add a new `*Applications/` project only for a specific hosting model (IIS/OWIN, ASP.NET Core startup, WCF, Azure Functions, Lambda).
+
+### CI selection check
+
+A test that no CI job selects stays green: an unlisted namespace gets no job, and Windows host and container jobs pass with zero tests (only Linux host jobs fail on zero tests, `build/Scripts/check-test-run.sh`). For each layer you touched, confirm:
+
+- **Host-run and unbounded:** the exact namespace is in `integration_all` or `unbounded_all` (`.github/workflows/test_selection.yml`), and the `WindowsOnly` trait follows the rules in "Target platforms".
+- **Setup keyed on the namespace:** workflow steps key on `matrix.namespace`. A new namespace that needs IIS/HostableWebCore goes into the install list in `integration_tests.yml`. A new unbounded service gets its setup step in `unbounded_tests.yml` (see the `MsSql` and `Msmq` steps).
+- **Container:** the class's traits match an `include:` filter in `linux_container_tests.yml`. `TestArea` filters exist for `amd64` only, so a functional class needs `Architecture=amd64`. See "Container tests: Distro vs TestArea traits".
+- **Proof:** ask the built assembly, not the source. Host-run: the `-list Classes` recipe in "Target platforms" (add `-namespace <FQN>` for one namespace) must list the class. Container: `dotnet test <ContainerIntegrationTests.csproj> --framework net10.0 --no-build --list-tests --filter "<matrix filter>"` must list it.
+
+### Target platforms
+
+`IntegrationTests.sln` and `UnboundedIntegrationTests.sln` build the Windows
+side.
+
+**The Linux side has no solution file, on purpose.** A solution would only
+restate what the build already derives. `build-test-solution-linux` builds the
+test `.csproj` directly (`project-path`), which pulls in its helper libraries,
+and then pre-publishes the test apps by globbing `search-paths` for every
+csproj that is not a `Library` and declares a `net<n>.<n>` target framework.
+`dotnet publish` builds each app's own `ProjectReference` closure, so nothing
+needs to be enumerated anywhere. A new Core test app is picked up with no
+manual step -- which is the point: an include list would go stale silently,
+and a forgotten app would simply never run on Linux.
+
+CI runs one job per namespace on each target platform:
+
+- Windows runs every test in the namespace. No filter.
+- Linux runs `dotnet <assembly>.dll -namespace <FQN> -trait- Platform=WindowsOnly`.
+
+A test class that cannot run on Linux carries
+`[Trait("Platform", "WindowsOnly")]`. That attribute is the only per-test
+declaration -- nothing derives a target platform from a namespace, a fixture,
+or a target framework. `TraitAttribute` is inherited and `-trait-` is
+absolute, so never put the trait on a base class that has portable derived
+classes.
+
+Before the tests run, each Linux job runs
+`build/Scripts/check-namespace-eligible.sh`. It fails the job when the trait
+is absent from the assembly or the exclusion filter is dead, and it skips the
+rest of the job when the namespace has no class left after the exclusion. A
+Framework-only namespace therefore costs one discovery step and nothing else,
+and it needs no list entry anywhere.
+
+Adding a test:
+
+| Scenario | Manual steps |
+|---|---|
+| New portable test, existing namespace | none |
+| New Framework-only test, existing namespace | add `[Trait("Platform", "WindowsOnly")]` to the class |
+| New FW+Core fixture pair | add the trait to the FW leaf only |
+| New namespace | add it to `integration_all` or `unbounded_all` in `.github/workflows/test_selection.yml` |
+| New **sub**-namespace, e.g. `Foo.Bar` under existing `Foo` | add `Foo.Bar` as its own entry -- see below |
+| Converting a Framework test to Core | delete the attribute |
+
+**`-namespace` matches exactly, not by prefix.** An entry for `Foo` does not run
+anything in `Foo.Bar`, so a sub-namespace without its own list entry never runs
+on either platform, and nothing fails -- the job reports success having selected
+zero tests. Three namespaces sat that way undetected
+(`DistributedTracing.W3CInstrumentationTests`,
+`HttpClientInstrumentation.NetFramework`, `RabbitMq.Legacy`).
+
+To check the lists against reality, ask the assembly rather than grepping source
+(a grep counts fixtures as classes):
+
+```
+dotnet NewRelic.Agent.IntegrationTests.dll -list Classes
+```
+
+Strip each class name to its namespace, and every distinct namespace must appear
+verbatim in the matching list. The counts should be equal.
 
 ### MFA (Console MultiFunction App) pattern
 
@@ -182,7 +256,7 @@ How the Linux-agent container tests actually wire up (rediscovered often -- capt
 `linux_container_tests.yml`'s matrix selects which `ContainerIntegrationTests` classes run per job via an xunit `--filter` on two **disjoint** trait axes -- a class must carry exactly one combination that exactly one matrix entry asks for:
 
 - `[Trait("Distro", "...")]` -- **OS-compatibility smoke tests only** (current values: `Ubuntu`, `Alpine`, `Centos`, `Amazon`, `Fedora`). Do not add new functional coverage here; it does not scale (this is what previously piled 15+ unrelated classes onto `Distro=Ubuntu`).
-- `[Trait("TestArea", "...")]` -- **functional test groupings** (current values: `Core`, `Messaging`, `Aws`, `Datastore`).
+- `[Trait("TestArea", "...")]` -- **functional test groupings** (current values: `Core`, `Messaging`, `Aws`, `Datastore`, `ContinuousProfiling`).
 
 **A new functional container test class must get a `TestArea` trait, never `Distro`.** Reuse an existing `TestArea` value where it fits. Adding a **new** `TestArea` value requires adding a matching matrix `include:` entry in `linux_container_tests.yml` (filter `Architecture=<arch>&TestArea=<value>`) -- nothing checks this for you, so a class whose trait no matrix entry asks for is silently never run.
 
@@ -198,7 +272,7 @@ GitHub Actions runs unit + integration tests on every PR via [`all_solutions.yml
 
 ### Targeted CI runs (`targeted_tests.yml`)
 
-`all_solutions.yml` runs all 93 test legs plus the MSI, both Linux packages, and
+`all_solutions.yml` runs every test leg plus the MSI, both Linux packages, and
 ArtifactBuilder. To run a few namespaces in CI, dispatch
 [`targeted_tests.yml`](../.github/workflows/targeted_tests.yml) instead. It builds
 the agent fresh from the branch and runs only what you name; no MSI, no packages,
@@ -206,12 +280,12 @@ no ArtifactBuilder.
 
 Three inputs, each a comma-separated list, each defaulting to empty:
 
-- `integration_namespaces` - e.g. `Errors, Api`. Validated against the 66
+- `integration_namespaces` - e.g. `Errors, Api`. Validated against the 68
   canonical integration namespaces.
-- `unbounded_namespaces` - e.g. `MsSql`. Validated against the 15 canonical
+- `unbounded_namespaces` - e.g. `MsSql`. Validated against the 16 canonical
   unbounded namespaces. These still contend for the shared AKS
   `UnboundedServices` deployment, so two runs at once can interfere.
-- `container_groups` - `name/arch` pairs, e.g. `Ubuntu/amd64, Core/amd64`. The 12
+- `container_groups` - `name/arch` pairs, e.g. `Ubuntu/amd64, Core/amd64`. The 14
   valid pairs are the `name` and `arch` values listed in the `select-matrix` job
   in [`linux_container_tests.yml`](../.github/workflows/linux_container_tests.yml).
 

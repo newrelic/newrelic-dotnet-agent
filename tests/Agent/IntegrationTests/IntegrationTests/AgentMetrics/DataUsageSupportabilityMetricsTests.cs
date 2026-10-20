@@ -10,6 +10,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.AgentMetrics;
 
+[Trait("Platform", "WindowsOnly")]
 public class DataUsageSupportabilityMetricsTestsFW : DataUsageSupportabilityMetricsTests<ConsoleDynamicMethodFixtureFWLatest>
 {
     public DataUsageSupportabilityMetricsTestsFW(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)

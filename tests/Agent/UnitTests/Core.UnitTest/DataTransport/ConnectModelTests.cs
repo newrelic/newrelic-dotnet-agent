@@ -108,6 +108,7 @@ public class ConnectModelTests
                                                     "browser_monitoring.javascript_agent.populated": true,
                                                     "browser_monitoring.javascript_agent_file": "BrowserMonitoringJavaScriptAgentFile",
                                                     "browser_monitoring.loader": "BrowserMonitoringJavaScriptAgentLoaderType",
+                                                    "browser_monitoring.version": "BrowserMonitoringVersion",
                                                     "browser_monitoring.loader_debug": false,
                                                     "browser_monitoring.monitoring_key.populated": true,
                                                     "browser_monitoring.use_ssl": true,
@@ -441,7 +442,13 @@ public class ConnectModelTests
                                                     "opentelemetry.metrics.exclude": ["ExcludedMeter1","ExcludedMeter2"],
                                                     "opentelemetry.metrics.export_interval_ms": 60000,
                                                     "opentelemetry.metrics.export_timeout_ms": 10000,
-                                                    "hybrid_http_context_storage.enabled":false
+                                                    "hybrid_http_context_storage.enabled":false,
+                                                    "profiling.enabled":true,
+                                                    "profiling.sampling_interval_ms":30000,
+                                                    "profiling.include_agent_code":true,
+                                                    "profiling.delay":1000,
+                                                    "profiling.duration":60000,
+                                                    "profiling.include":["all"]
                                                 },
                                                 "metadata": {
                                                     "hello": "there"

@@ -85,6 +85,9 @@ public class ReportedConfiguration : IConfiguration
     [JsonProperty("browser_monitoring.loader")]
     public string BrowserMonitoringJavaScriptAgentLoaderType => _configuration.BrowserMonitoringJavaScriptAgentLoaderType;
 
+    [JsonProperty("browser_monitoring.version")]
+    public string BrowserMonitoringVersion => _configuration.BrowserMonitoringVersion;
+
     // Not an IConfiguration member, but this is here to replicate the behavior of the old 'connect' payload
     [JsonProperty("browser_monitoring.loader_debug")]
     public bool LoaderDebug => false;
@@ -355,6 +358,9 @@ public class ReportedConfiguration : IConfiguration
 
     [JsonProperty("agent.entity_guid")]
     public string EntityGuid => _configuration.EntityGuid;
+
+    [JsonIgnore]
+    public IReadOnlyDictionary<string, string> OtlpResourceAttributes => _configuration.OtlpResourceAttributes;
 
     [JsonProperty("agent.high_security_mode_enabled")]
     public bool HighSecurityModeEnabled => _configuration.HighSecurityModeEnabled;
@@ -825,6 +831,31 @@ public class ReportedConfiguration : IConfiguration
 
     [JsonProperty("hybrid_http_context_storage.enabled")]
     public bool HybridHttpContextStorageEnabled => _configuration.HybridHttpContextStorageEnabled;
+
+    [JsonProperty("profiling.enabled")]
+    public bool ContinuousProfilingEnabled => _configuration.ContinuousProfilingEnabled;
+
+    [JsonProperty("profiling.sampling_interval_ms")]
+    public int ContinuousProfilingSamplingIntervalMs => _configuration.ContinuousProfilingSamplingIntervalMs;
+
+    [JsonProperty("profiling.include_agent_code")]
+    public bool ContinuousProfilingIncludeAgentCode => _configuration.ContinuousProfilingIncludeAgentCode;
+
+    // Local diagnostics only -- required by IConfiguration but deliberately not sent to the server.
+    [JsonIgnore]
+    public bool ContinuousProfilingLogPayload => _configuration.ContinuousProfilingLogPayload;
+
+    [JsonIgnore]
+    public int ContinuousProfilingLogPayloadMaxChars => _configuration.ContinuousProfilingLogPayloadMaxChars;
+
+    [JsonProperty("profiling.delay")]
+    public int ContinuousProfilingDelayMs => _configuration.ContinuousProfilingDelayMs;
+
+    [JsonProperty("profiling.duration")]
+    public int ContinuousProfilingDurationMs => _configuration.ContinuousProfilingDurationMs;
+
+    [JsonProperty("profiling.include")]
+    public IReadOnlyList<string> ContinuousProfilingInclude => _configuration.ContinuousProfilingInclude;
 
     #endregion
 }

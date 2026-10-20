@@ -122,6 +122,7 @@ public class HangfireTests_CoreLatest : HangfireTestsBase<ConsoleDynamicMethodFi
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class HangfireTests_FWOldest : HangfireTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public HangfireTests_FWOldest(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output, new Version(1, 7))
@@ -129,6 +130,7 @@ public class HangfireTests_FWOldest : HangfireTestsBase<ConsoleDynamicMethodFixt
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class HangfireTests_FWLatest : HangfireTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public HangfireTests_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output, new Version(1, 8))

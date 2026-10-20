@@ -82,6 +82,7 @@ public class OtlpExportSuccessMetricsTestsCoreOldest : OtlpExportSuccessMetricsT
     public OtlpExportSuccessMetricsTestsCoreOldest(OtlpMetricsWithCollectorFixtureCoreOldest fixture, ITestOutputHelper outputHelper) : base(fixture, outputHelper) { }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class OtlpExportSuccessMetricsTestsFWLatest : OtlpExportSuccessMetricsTestsBase<OtlpMetricsWithCollectorFixtureFWLatest>
 {
     public OtlpExportSuccessMetricsTestsFWLatest(OtlpMetricsWithCollectorFixtureFWLatest fixture, ITestOutputHelper outputHelper) : base(fixture, outputHelper) { }
@@ -114,8 +115,11 @@ public abstract class OtlpExportRetryMetricsTestsBase<TFixture> : NewRelicIntegr
                 var configModifier = new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath);
                 configModifier.SetLogLevel("finest");
                 configModifier.ConfigureFasterMetricsHarvestCycle(10);
-                configModifier.SetOpenTelemetryMetricsExportInterval(5000);
-                configModifier.SetOpenTelemetryMetricsExportTimeout(4000);
+                // The timeout must cover the handler's whole retry budget: two backoffs (~1s and ~2s, each plus
+                // up to 500ms jitter) and three requests. A shorter timeout cancels the export mid-backoff, which
+                // is correctly counted as export/failure. The timeout must also stay below the interval.
+                configModifier.SetOpenTelemetryMetricsExportInterval(15000);
+                configModifier.SetOpenTelemetryMetricsExportTimeout(12000);
             },
             exerciseApplication: () =>
             {
@@ -169,6 +173,7 @@ public class OtlpExportRetryMetricsTestsCoreOldest : OtlpExportRetryMetricsTests
     public OtlpExportRetryMetricsTestsCoreOldest(OtlpMetricsWithCollectorFixtureCoreOldest fixture, ITestOutputHelper outputHelper) : base(fixture, outputHelper) { }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class OtlpExportRetryMetricsTestsFWLatest : OtlpExportRetryMetricsTestsBase<OtlpMetricsWithCollectorFixtureFWLatest>
 {
     public OtlpExportRetryMetricsTestsFWLatest(OtlpMetricsWithCollectorFixtureFWLatest fixture, ITestOutputHelper outputHelper) : base(fixture, outputHelper) { }
@@ -256,6 +261,7 @@ public class OtlpExportFailureMetricsTestsCoreOldest : OtlpExportFailureMetricsT
     public OtlpExportFailureMetricsTestsCoreOldest(OtlpMetricsWithCollectorFixtureCoreOldest fixture, ITestOutputHelper outputHelper) : base(fixture, outputHelper) { }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class OtlpExportFailureMetricsTestsFWLatest : OtlpExportFailureMetricsTestsBase<OtlpMetricsWithCollectorFixtureFWLatest>
 {
     public OtlpExportFailureMetricsTestsFWLatest(OtlpMetricsWithCollectorFixtureFWLatest fixture, ITestOutputHelper outputHelper) : base(fixture, outputHelper) { }

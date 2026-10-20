@@ -321,7 +321,7 @@ public class DistributedTracePayloadHandler : IDistributedTracePayloadHandler
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "CreateExecuteEveryTimer() failed");
+            Log.Error(ex, "AcceptDistributedTraceHeaders() failed");
             return null;
         }
     }

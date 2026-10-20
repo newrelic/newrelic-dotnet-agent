@@ -64,6 +64,7 @@ public abstract class RabbitMqLegacyDistributedTracingTestsBase<TFixture> : NewR
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class RabbitMqLegacyDistributedTracingTestsFWLatest : RabbitMqLegacyDistributedTracingTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public RabbitMqLegacyDistributedTracingTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -72,6 +73,7 @@ public class RabbitMqLegacyDistributedTracingTestsFWLatest : RabbitMqLegacyDistr
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class RabbitMqLegacyDistributedTracingTestsFW48 : RabbitMqLegacyDistributedTracingTestsBase<ConsoleDynamicMethodFixtureFW48>
 {
     public RabbitMqLegacyDistributedTracingTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
@@ -80,6 +82,7 @@ public class RabbitMqLegacyDistributedTracingTestsFW48 : RabbitMqLegacyDistribut
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class RabbitMqLegacyDistributedTracingTestsFW471 : RabbitMqLegacyDistributedTracingTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     public RabbitMqLegacyDistributedTracingTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -88,6 +91,7 @@ public class RabbitMqLegacyDistributedTracingTestsFW471 : RabbitMqLegacyDistribu
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class RabbitMqLegacyDistributedTracingTestsFW462 : RabbitMqLegacyDistributedTracingTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public RabbitMqLegacyDistributedTracingTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)

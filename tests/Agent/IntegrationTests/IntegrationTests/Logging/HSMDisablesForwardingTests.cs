@@ -67,6 +67,7 @@ public abstract class HSMDisablesForwardingTestsBase<TFixture> : NewRelicIntegra
 
 #region log4net
 
+[Trait("Platform", "WindowsOnly")]
 public class Log4netHSMDisablesForwardingTestsFWLatestTests : HSMDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureFWLatestHSM>
 {
     public Log4netHSMDisablesForwardingTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatestHSM fixture, ITestOutputHelper output)
@@ -99,6 +100,7 @@ public class MicrosoftLoggingHSMDisablesForwardingTestsNetCoreLatestTests : HSMD
 
 #region Serilog
 
+[Trait("Platform", "WindowsOnly")]
 public class SerilogHSMDisablesForwardingTestsFWLatestTests : HSMDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureFWLatestHSM>
 {
     public SerilogHSMDisablesForwardingTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatestHSM fixture, ITestOutputHelper output)
@@ -119,6 +121,7 @@ public class SerilogHSMDisablesForwardingTestsNetCoreLatestTests : HSMDisablesFo
 
 #region NLog
 
+[Trait("Platform", "WindowsOnly")]
 public class NLogHSMDisablesForwardingTestsFWLatestTests : HSMDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureFWLatestHSM>
 {
     public NLogHSMDisablesForwardingTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatestHSM fixture, ITestOutputHelper output)
@@ -139,6 +142,7 @@ public class NLogHSMDisablesForwardingTestsNetCoreLatestTests : HSMDisablesForwa
 
 #region Sitecore
 
+[Trait("Platform", "WindowsOnly")]
 public class SitecoreHSMDisablesForwardingTestsFWLatestTests : HSMDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureFWLatestHSM>
 {
     public SitecoreHSMDisablesForwardingTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatestHSM fixture, ITestOutputHelper output)

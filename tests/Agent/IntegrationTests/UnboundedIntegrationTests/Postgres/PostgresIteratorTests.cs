@@ -99,6 +99,7 @@ public abstract class PostgresSqlIteratorTestsBase<TFixture> : NewRelicIntegrati
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class PostgresSqlIteratorTestsFW462 : PostgresSqlIteratorTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public PostgresSqlIteratorTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -107,6 +108,7 @@ public class PostgresSqlIteratorTestsFW462 : PostgresSqlIteratorTestsBase<Consol
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class PostgresSqlIteratorTestsFWLatest : PostgresSqlIteratorTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public PostgresSqlIteratorTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)

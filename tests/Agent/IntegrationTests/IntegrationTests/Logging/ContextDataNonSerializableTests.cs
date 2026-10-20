@@ -113,6 +113,7 @@ public class MELContextDataNonSerializableNetCoreOldestTests : ContextDataNonSer
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class MELContextDataNonSerializableFWLatestTests : ContextDataNonSerializableTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public MELContextDataNonSerializableFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)

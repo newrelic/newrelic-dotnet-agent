@@ -61,6 +61,7 @@ public abstract class TransactionUserIdTests<TFixture> : NewRelicIntegrationTest
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class TransactionUserIdTestsFW : TransactionUserIdTests<ConsoleDynamicMethodFixtureFWLatest>
 {
     public TransactionUserIdTestsFW(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)

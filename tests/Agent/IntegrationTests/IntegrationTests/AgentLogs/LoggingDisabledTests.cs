@@ -50,6 +50,7 @@ public abstract class LoggingDisabledTestsBase<TFixture> : NewRelicIntegrationTe
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class LoggingDisabledFWLatestTests : LoggingDisabledTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public LoggingDisabledFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -58,6 +59,7 @@ public class LoggingDisabledFWLatestTests : LoggingDisabledTestsBase<ConsoleDyna
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class LoggingDisabledFW462Tests : LoggingDisabledTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public LoggingDisabledFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)

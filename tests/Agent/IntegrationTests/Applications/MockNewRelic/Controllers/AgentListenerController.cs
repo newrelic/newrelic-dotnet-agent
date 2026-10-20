@@ -76,7 +76,13 @@ public class AgentListenerController : Controller
                 var serverConfig = new Dictionary<string, object>();
 
                 serverConfig["agent_run_id"] = Guid.NewGuid();
-                serverConfig["entity_guid"] = Guid.NewGuid();
+                var entityGuid = Guid.NewGuid();
+                serverConfig["entity_guid"] = entityGuid;
+                var otlpResourceAttributes = new Dictionary<string, string>(MockOtlpResourceAttributes.Values)
+                {
+                    ["entity.guid"] = entityGuid.ToString()
+                };
+                serverConfig["otlp_resource_attributes"] = otlpResourceAttributes;
 
                 if (_setLiveInstrumentationOnConnect)
                 {
@@ -198,6 +204,36 @@ public class AgentListenerController : Controller
         var liveInstrumentationAgentCommand = new AgentCommand(-1, liveInstrumentationAgentCommandDetails);
 
         _queuedCommands.Add(liveInstrumentationAgentCommand);
+    }
+
+    [HttpGet]
+    [Route("TriggerStartContinuousProfiler")]
+    public void TriggerStartContinuousProfiler(string include = "cpu", int? sampleInterval = null, int? cpuReportInterval = null)
+    {
+        var arguments = new Dictionary<string, object>
+        {
+            ["include"] = include.Split(',')
+        };
+        if (sampleInterval.HasValue)
+            arguments["sample_interval"] = sampleInterval.Value;
+        if (cpuReportInterval.HasValue)
+            arguments["cpu_report_interval"] = cpuReportInterval.Value;
+
+        var details = new CommandDetails("start_continuous_profiling", arguments);
+        _queuedCommands.Add(new AgentCommand(-1, details));
+    }
+
+    [HttpGet]
+    [Route("TriggerStopContinuousProfiler")]
+    public void TriggerStopContinuousProfiler(string include = "cpu")
+    {
+        var arguments = new Dictionary<string, object>
+        {
+            ["include"] = include.Split(',')
+        };
+
+        var details = new CommandDetails("stop_continuous_profiling", arguments);
+        _queuedCommands.Add(new AgentCommand(-1, details));
     }
 
     [HttpGet]

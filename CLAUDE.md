@@ -142,6 +142,11 @@ Test commands per layer and infra state: see the
 with publish flags; the `dotnet` SDK cannot build their legacy ASP.NET FW web
 apps. Invocation: [tests/CLAUDE.md](tests/CLAUDE.md#building-the-solution).
 
+**Linux target platform:** integration and unbounded tests also run on Linux.
+There is no Linux solution file -- CI builds the test `.csproj` directly and
+globs the test apps. Tests are selected with `-trait- Platform=WindowsOnly`.
+See [tests/CLAUDE.md](tests/CLAUDE.md) under Target platforms.
+
 **Extensions tests** (`NewRelic.Agent.Extensions.Tests`) build fine with
 plain `dotnet build`, but `dotnet test` against the `.csproj` silently fails
 via VSTestTask. Run against the built DLL instead:
@@ -206,7 +211,8 @@ later turn. Instead:
   wrapper. That keeps the interesting logic unit-testable while the
   wrapper itself stays thin (match, create segment, delegate, finish).
 - Integration tests: `tests/Agent/IntegrationTests/` — see
-  [tests/CLAUDE.md](tests/CLAUDE.md).
+  [tests/CLAUDE.md](tests/CLAUDE.md). Adding or moving an integration
+  test? Run its **CI selection check** (CI passes with zero tests selected).
 - **Never use `InternalsVisibleTo`** in any production or test assembly.
   If a test needs to reach non-public code, refactor the production type to
   expose what's needed through a proper surface (interface, public helper,

@@ -75,6 +75,7 @@ public abstract class OwinWebApiStatusCodeRollupTestsBase<TFixture> : NewRelicIn
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class OwinWebApiStatusCodeRollupTests : OwinWebApiStatusCodeRollupTestsBase<RemoteServiceFixtures.OwinWebApiFixture>
 {
     public OwinWebApiStatusCodeRollupTests(RemoteServiceFixtures.OwinWebApiFixture fixture, ITestOutputHelper output)
@@ -83,6 +84,7 @@ public class OwinWebApiStatusCodeRollupTests : OwinWebApiStatusCodeRollupTestsBa
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class Owin3WebApiStatusCodeRollupTests : OwinWebApiStatusCodeRollupTestsBase<RemoteServiceFixtures.Owin3WebApiFixture>
 {
     public Owin3WebApiStatusCodeRollupTests(RemoteServiceFixtures.Owin3WebApiFixture fixture, ITestOutputHelper output)
@@ -91,6 +93,7 @@ public class Owin3WebApiStatusCodeRollupTests : OwinWebApiStatusCodeRollupTestsB
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class Owin4WebApiStatusCodeRollupTests : OwinWebApiStatusCodeRollupTestsBase<RemoteServiceFixtures.Owin4WebApiFixture>
 {
     public Owin4WebApiStatusCodeRollupTests(RemoteServiceFixtures.Owin4WebApiFixture fixture, ITestOutputHelper output)

@@ -1,0 +1,57 @@
+// Copyright 2020 New Relic, Inc. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using Newtonsoft.Json.Linq;
+
+namespace NewRelic.Agent.Core.Commands;
+
+/// <summary>
+/// Parses the arguments of a start_continuous_profiling/stop_continuous_profiling agent command. Wire
+/// argument names are snake_case ("include", "sample_interval", "cpu_report_interval"), matching every
+/// other agent command in this codebase (profile_id, sample_period, report_data). sample_interval and
+/// cpu_report_interval are two independently-meaningful fields and must not collapse into one:
+/// sample_interval drives native sampling cadence (and the profile's reported period);
+/// cpu_report_interval drives the managed drain/POST cadence. Each falls back to local config
+/// independently when absent. Keep cpu_report_interval &lt;= sample_interval -- each drain reads one
+/// native sweep and the native queue holds only two, so a report interval longer than the sample
+/// interval drops sweeps between drains.
+/// </summary>
+public class ContinuousProfilerCommandArgs
+{
+    public IReadOnlyList<string> Include { get; }
+    public int? SampleIntervalMs { get; }
+    public int? CpuReportIntervalMs { get; }
+
+    public ContinuousProfilerCommandArgs(IDictionary<string, object> arguments)
+    {
+        Include = ParseInclude(arguments);
+        SampleIntervalMs = ParsePositiveInt(arguments, "sample_interval");
+        CpuReportIntervalMs = ParsePositiveInt(arguments, "cpu_report_interval");
+    }
+
+    private static IReadOnlyList<string> ParseInclude(IDictionary<string, object> arguments)
+    {
+        if (!arguments.TryGetValue("include", out var raw) || raw == null)
+            return Array.Empty<string>();
+
+        if (raw is JArray jArray)
+            return jArray.Select(token => token.ToString()).ToList();
+
+        // Defensive: a single bare string ("all") instead of a one-element array.
+        return new[] { raw.ToString() };
+    }
+
+    private static int? ParsePositiveInt(IDictionary<string, object> arguments, string key)
+    {
+        if (!arguments.TryGetValue(key, out var raw) || raw == null)
+            return null;
+
+        if (!int.TryParse(raw.ToString(), out var parsed) || parsed <= 0)
+            return null;
+
+        return parsed;
+    }
+}

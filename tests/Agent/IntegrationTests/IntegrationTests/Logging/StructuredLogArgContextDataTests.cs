@@ -166,6 +166,7 @@ public class MELStructuredLogArgContextDataNoContextNetCoreOldestTests : Structu
 
 #region Serilog
 
+[Trait("Platform", "WindowsOnly")]
 public class SerilogStructuredLogArgContextDataWithContextFWLatestTests : StructuredLogArgContextDataTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public SerilogStructuredLogArgContextDataWithContextFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -174,6 +175,7 @@ public class SerilogStructuredLogArgContextDataWithContextFWLatestTests : Struct
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class SerilogStructuredLogArgContextDataNoContextFWLatestTests : StructuredLogArgContextDataTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public SerilogStructuredLogArgContextDataNoContextFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -218,6 +220,7 @@ public class SerilogStructuredLogArgContextDataNoContextNetCoreOldestTests : Str
 
 #region NLog
 
+[Trait("Platform", "WindowsOnly")]
 public class NLogStructuredLogArgContextDataWithContextFWLatestTests : StructuredLogArgContextDataTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public NLogStructuredLogArgContextDataWithContextFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -226,6 +229,7 @@ public class NLogStructuredLogArgContextDataWithContextFWLatestTests : Structure
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class NLogStructuredLogArgContextDataNoContextFWLatestTests : StructuredLogArgContextDataTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public NLogStructuredLogArgContextDataNoContextFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -270,6 +274,7 @@ public class NLogStructuredLogArgContextDataNoContextNetCoreOldestTests : Struct
 
 #region MelWithSerilog
 
+[Trait("Platform", "WindowsOnly")]
 public class SerilogELStructuredLogArgContextDataWithContextFWLatestTests : StructuredLogArgContextDataTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public SerilogELStructuredLogArgContextDataWithContextFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -278,6 +283,7 @@ public class SerilogELStructuredLogArgContextDataWithContextFWLatestTests : Stru
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class SerilogELStructuredLogArgContextDataNoContextFWLatestTests : StructuredLogArgContextDataTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public SerilogELStructuredLogArgContextDataNoContextFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -286,6 +292,7 @@ public class SerilogELStructuredLogArgContextDataNoContextFWLatestTests : Struct
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class SerilogELStructuredLogArgContextDataWithContextFW48Tests : StructuredLogArgContextDataTestsBase<ConsoleDynamicMethodFixtureFW48>
 {
     public SerilogELStructuredLogArgContextDataWithContextFW48Tests(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
@@ -294,6 +301,7 @@ public class SerilogELStructuredLogArgContextDataWithContextFW48Tests : Structur
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class SerilogELStructuredLogArgContextDataNoContextFW48Tests : StructuredLogArgContextDataTestsBase<ConsoleDynamicMethodFixtureFW48>
 {
     public SerilogELStructuredLogArgContextDataNoContextFW48Tests(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
@@ -338,6 +346,7 @@ public class SerilogELStructuredLogArgContextDataNoContextNetCoreOldestTests : S
 
 #region MelWithNLog
 
+[Trait("Platform", "WindowsOnly")]
 public class NLogELStructuredLogArgContextDataWithContextFWLatestTests : StructuredLogArgContextDataTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public NLogELStructuredLogArgContextDataWithContextFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -346,6 +355,7 @@ public class NLogELStructuredLogArgContextDataWithContextFWLatestTests : Structu
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class NLogELStructuredLogArgContextDataNoContextFWLatestTests : StructuredLogArgContextDataTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public NLogELStructuredLogArgContextDataNoContextFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)

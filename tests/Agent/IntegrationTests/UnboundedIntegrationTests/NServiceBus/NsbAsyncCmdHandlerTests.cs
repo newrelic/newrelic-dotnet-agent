@@ -85,6 +85,7 @@ public abstract class NsbAsyncCmdHandlerTestsBase<TFixture> : NewRelicIntegratio
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class NsbAsyncCmdHandlerTestsFW471 : NsbAsyncCmdHandlerTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     public NsbAsyncCmdHandlerTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -93,6 +94,7 @@ public class NsbAsyncCmdHandlerTestsFW471 : NsbAsyncCmdHandlerTestsBase<ConsoleD
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class NsbAsyncCmdHandlerTestsFW48 : NsbAsyncCmdHandlerTestsBase<ConsoleDynamicMethodFixtureFW48>
 {
     public NsbAsyncCmdHandlerTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
@@ -101,6 +103,7 @@ public class NsbAsyncCmdHandlerTestsFW48 : NsbAsyncCmdHandlerTestsBase<ConsoleDy
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class NsbAsyncCmdHandlerTestsFWLatest : NsbAsyncCmdHandlerTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public NsbAsyncCmdHandlerTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)

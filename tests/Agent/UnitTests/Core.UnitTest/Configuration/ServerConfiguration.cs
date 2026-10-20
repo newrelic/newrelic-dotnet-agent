@@ -121,6 +121,29 @@ public class Method_FromDeserializedReturnValue
         });
     }
 
+    [Test]
+    public void continuous_profiling_agent_config_key_deserializes_correctly()
+    {
+        var agentConfig = new Dictionary<string, object>
+        {
+            { "profiling.enabled", true }
+        };
+
+        var serverConfiguration = ServerConfiguration.FromDeserializedReturnValue(
+            new Dictionary<string, object> { { "agent_run_id", 0 }, { "agent_config", agentConfig } });
+
+        Assert.That(serverConfiguration.RpmConfig.ContinuousProfilingEnabled, Is.True);
+    }
+
+    [Test]
+    public void continuous_profiling_agent_config_key_is_null_when_absent()
+    {
+        var serverConfiguration = ServerConfiguration.FromDeserializedReturnValue(
+            new Dictionary<string, object> { { "agent_run_id", 0 } });
+
+        Assert.That(serverConfiguration.RpmConfig.ContinuousProfilingEnabled, Is.Null);
+    }
+
 }
 
 [TestFixture, Category("Configuration")]
@@ -153,6 +176,22 @@ public class Method_FromJson
     {
         var serverConfiguration = ServerConfiguration.FromJson(@"{""agent_run_id"":42,""agent_config"": {""slow_sql.enabled"":true}}", ignoreServerConfig);
         return serverConfiguration.RpmConfig.SlowSqlEnabled;
+    }
+
+    [Test]
+    public void otlp_resource_attributes_deserializes_to_map()
+    {
+        var serverConfiguration = ServerConfiguration.FromJson("{\"agent_run_id\":42,\"otlp_resource_attributes\":{\"tags.team\":\"dotnet\",\"k8s.podName\":\"\"}}");
+
+        Assert.That(serverConfiguration.OtlpResourceAttributes, Is.EqualTo(new Dictionary<string, string> { { "tags.team", "dotnet" }, { "k8s.podName", "" } }));
+    }
+
+    [Test]
+    public void otlp_resource_attributes_is_null_when_absent()
+    {
+        var serverConfiguration = ServerConfiguration.FromJson("{\"agent_run_id\":42}");
+
+        Assert.That(serverConfiguration.OtlpResourceAttributes, Is.Null);
     }
 }
 

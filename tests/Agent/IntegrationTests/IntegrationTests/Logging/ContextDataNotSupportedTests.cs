@@ -83,6 +83,7 @@ public abstract class ContextDataNotSupportedTestsBase<TFixture> : NewRelicInteg
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class ContextDataNotSupportedFWLatestTests : ContextDataNotSupportedTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public ContextDataNotSupportedFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)

@@ -85,6 +85,7 @@ public abstract class NsbAsyncEventHandlerTestsBase<TFixture> : NewRelicIntegrat
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class NsbAsyncEventHandlerTestsFW471 : NsbAsyncEventHandlerTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     public NsbAsyncEventHandlerTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -93,6 +94,7 @@ public class NsbAsyncEventHandlerTestsFW471 : NsbAsyncEventHandlerTestsBase<Cons
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class NsbAsyncEventHandlerTestsFW48 : NsbAsyncEventHandlerTestsBase<ConsoleDynamicMethodFixtureFW48>
 {
     public NsbAsyncEventHandlerTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
@@ -101,6 +103,7 @@ public class NsbAsyncEventHandlerTestsFW48 : NsbAsyncEventHandlerTestsBase<Conso
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class NsbAsyncEventHandlerTestsFWLatest : NsbAsyncEventHandlerTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public NsbAsyncEventHandlerTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)

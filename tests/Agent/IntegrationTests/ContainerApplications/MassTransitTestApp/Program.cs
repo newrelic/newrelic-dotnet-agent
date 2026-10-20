@@ -4,6 +4,8 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
+using Amazon.SimpleNotificationService;
+using Amazon.SQS;
 using Confluent.Kafka;
 using Confluent.Kafka.Admin;
 using MassTransit;
@@ -23,6 +25,8 @@ public class Program
     private static string _kafkaBroker;
     private static string _rabbitMqHost;
     private static string _rabbitMqQueueName;
+    private static string _sqsQueueName;
+    private static string _sqsServiceUrl;
 
     public static async Task Main(string[] args)
     {
@@ -30,6 +34,8 @@ public class Program
         _kafkaBroker = GetKafkaBootstrapServer();
         _rabbitMqHost = Environment.GetEnvironmentVariable("MASSTRANSIT_RABBITMQ_HOST") ?? "rabbitmq";
         _rabbitMqQueueName = Environment.GetEnvironmentVariable("MASSTRANSIT_RABBITMQ_QUEUE") ?? "masstransit-test-queue";
+        _sqsQueueName = Environment.GetEnvironmentVariable("MASSTRANSIT_SQS_QUEUE") ?? "masstransit-test-sqs-queue";
+        _sqsServiceUrl = Environment.GetEnvironmentVariable("MASSTRANSIT_SQS_SERVICE_URL") ?? "http://floci:4566";
 
         // Pre-create the Kafka topic before MassTransit starts
         await CreateKafkaTopicAsync();
@@ -86,6 +92,30 @@ public class Program
             });
         });
 
+        // Amazon SQS as a third bus via MultiBus, pointed at the floci emulator
+        builder.Services.AddMassTransit<ISqsBus>(x =>
+        {
+            x.AddConsumer<SqsMessageConsumer>();
+
+            x.UsingAmazonSqs((context, cfg) =>
+            {
+                cfg.Host("us-east-1", h =>
+                {
+                    h.AccessKey("test");
+                    h.SecretKey("test");
+                    h.Config(new AmazonSQSConfig { ServiceURL = _sqsServiceUrl, AuthenticationRegion = "us-east-1" });
+                    h.Config(new AmazonSimpleNotificationServiceConfig { ServiceURL = _sqsServiceUrl, AuthenticationRegion = "us-east-1" });
+                });
+
+                cfg.ReceiveEndpoint(_sqsQueueName, e =>
+                {
+                    e.ConfigureConsumeTopology = false; // no SNS topic at startup
+                    e.PublishFaults = false;
+                    e.ConfigureConsumer<SqsMessageConsumer>(context);
+                });
+            });
+        });
+
         var configuredPort = ResolvePort();
         builder.Logging.AddFilter("Microsoft.Hosting.Lifetime", LogLevel.Information);
         builder.WebHost.ConfigureKestrel(options =>
@@ -121,6 +151,8 @@ public class Program
     }
 
     public static string GetRabbitMqQueueName() => _rabbitMqQueueName;
+
+    public static string GetSqsQueueName() => _sqsQueueName;
 
     private static async Task CreateKafkaTopicAsync()
     {

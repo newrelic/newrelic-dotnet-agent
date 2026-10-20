@@ -102,7 +102,7 @@ public class AzureServiceBusReceiverManagerWrapper : AzureServiceBusWrapperBase
         dynamic msg = receivedMessage;
         if (msg.ApplicationProperties is ReadOnlyDictionary<string, object> applicationProperties)
         {
-            transaction.LogFinest("ReceiveManagerWrapper: Accepting distributed trace headers");
+            transaction.LogFinest("AzureServiceBusReceiverManagerWrapper: Accepting distributed trace headers");
             transaction.AcceptDistributedTraceHeaders(applicationProperties, ProcessHeaders, TransportType.Queue);
         }
     }

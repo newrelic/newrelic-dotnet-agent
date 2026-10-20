@@ -1,0 +1,98 @@
+name: Report Host Test Results
+description: >
+  Post-run reporting for one namespace's host-run tests: flaky-retry telemetry,
+  payload-byte and executed-test extraction from the TRX, and artifact uploads.
+  Call this with "if: always()" immediately after the run-host-tests step.
+
+inputs:
+  namespace:
+    description: 'Namespace this run covered, used for the flaky-retry marker.'
+    required: true
+  results-dir:
+    description: 'Directory holding the TRX; the payload and count JSON are written here.'
+    required: true
+  payload-basename:
+    description: >
+      Basename for the payload and count JSON. Must be unique across namespaces
+      of the same suite: the aggregate job downloads every namespace with
+      merge-multiple, so a shared file name overwrites.
+    required: true
+  payload-artifact-name:
+    description: 'Artifact name for the payload and count JSON.'
+    required: true
+  results-artifact-name:
+    description: 'Artifact name for the on-failure log and TRX archive.'
+    required: true
+  archive-paths:
+    description: "Newline-separated globs archived when the namespace's run fails."
+    required: true
+  tests-outcome:
+    description: >
+      The test-run step's own outcome, passed as steps.<id>.outcome. Inside a
+      composite, failure() is scoped to this action's steps and never sees the
+      caller's, so the archive gates on this instead.
+    required: true
+  aggregate-payload-data:
+    description: 'Whether to extract and upload payload-byte data.'
+    required: true
+  nr-ci-ingest-key:
+    description: 'License key the flaky-retry telemetry reports with.'
+    required: true
+  nr-ci-account-id:
+    description: 'Account the flaky-retry telemetry reports to.'
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Report flaky retry telemetry
+      if: always()
+      shell: bash
+      env:
+        NR_CI_INGEST_KEY: ${{ inputs.nr-ci-ingest-key }}
+        NR_CI_ACCOUNT_ID: ${{ inputs.nr-ci-account-id }}
+        CI_BRANCH: ${{ github.ref_name }}
+        CI_COMMIT: ${{ github.sha }}
+        CI_RUN_ID: ${{ github.run_id }}
+        CI_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        CI_TRIGGER: ${{ github.event_name }}
+      run: |
+        # Telemetry must never fail the namespace's run.
+        marker="$RUNNER_TEMP/flaky-retry-${{ inputs.namespace }}.json"
+        if [ -f "$marker" ]; then
+          RETRY_TEST_TYPE="$(jq -r .testType "$marker")" \
+          RETRY_TEST_GROUP="$(jq -r .testGroup "$marker")" \
+            bash "$GITHUB_WORKSPACE/build/Scripts/report-flaky-retry.sh" || \
+            echo "::warning::Flaky-retry telemetry failed"
+          rm -f "$marker"
+        fi
+        exit 0
+
+    - name: Extract payload bytes log from TRX
+      if: inputs.aggregate-payload-data == 'true'
+      shell: bash
+      run: |
+        python3 "$GITHUB_WORKSPACE/build/Scripts/extract-payload-bytes.py" \
+          "${{ inputs.results-dir }}/${{ inputs.namespace }}_testResults.trx" \
+          "${{ inputs.results-dir }}/${{ inputs.payload-basename }}_payload_bytes.json" \
+          "${{ inputs.results-dir }}/${{ inputs.payload-basename }}_test_count.json"
+
+    - name: Upload payload bytes log
+      if: inputs.aggregate-payload-data == 'true'
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      with:
+        name: ${{ inputs.payload-artifact-name }}
+        path: |
+          ${{ inputs.results-dir }}/*_payload_bytes.json
+          ${{ inputs.results-dir }}/*_test_count.json
+        if-no-files-found: warn
+
+    - name: Archive test results on failure
+      # A timeout-minutes kill reports as cancelled, not failure, so cancelled()
+      # is kept: it discards no logs from exactly the hangs the cap exists for.
+      if: inputs.tests-outcome == 'failure' || cancelled()
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      with:
+        name: ${{ inputs.results-artifact-name }}
+        path: ${{ inputs.archive-paths }}
+        if-no-files-found: error

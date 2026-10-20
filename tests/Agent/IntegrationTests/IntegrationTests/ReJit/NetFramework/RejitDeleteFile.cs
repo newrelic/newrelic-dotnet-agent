@@ -17,6 +17,7 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetFramework;
 /// Logging: finest
 /// Files: Integration.Testing.DeleteXmlFileTest.xml
 /// </summary>
+[Trait("Platform", "WindowsOnly")]
 public class RejitDeleteFile : NewRelicIntegrationTest<AspNetFrameworkReJitMvcApplicationFixture>
 {
     private readonly AspNetFrameworkReJitMvcApplicationFixture _fixture;

@@ -1,6 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System;
 using System.Collections.Generic;
 using NewRelic.Agent.Core.OpenTelemetryBridge.Common;
 using NUnit.Framework;
@@ -184,5 +185,79 @@ public class TagHelpersTests
         Assert.That(result, Is.True);
         Assert.That(value, Is.EqualTo("value2"));
         Assert.That(tags, Is.Empty);
+    }
+
+    private static readonly object[] InRangeIntegralValues = [27018, 27018L, (short)27018, (ushort)27018, 200u, 200UL, (byte)200, (sbyte)100];
+
+    [TestCaseSource(nameof(InRangeIntegralValues))]
+    public void TryGetAndRemoveTag_Int_Should_Convert_In_Range_Integral_Value(object raw)
+    {
+        var tags = new Dictionary<string, object> { { "server.port", raw } };
+
+        var result = tags.TryGetAndRemoveTag(["server.port"], out int value);
+
+        Assert.That(result, Is.True);
+        Assert.That(value, Is.EqualTo(Convert.ToInt32(raw)));
+        Assert.That(tags, Is.Empty);
+    }
+
+    [TestCaseSource(nameof(InRangeIntegralValues))]
+    public void TryGetAndRemoveTag_NullableInt_Should_Convert_In_Range_Integral_Value(object raw)
+    {
+        var tags = new Dictionary<string, object> { { "server.port", raw } };
+
+        var result = tags.TryGetAndRemoveTag(["server.port"], out int? value);
+
+        Assert.That(result, Is.True);
+        Assert.That(value, Is.EqualTo(Convert.ToInt32(raw)));
+    }
+
+    [TestCase(long.MaxValue)]
+    [TestCase(long.MinValue)]
+    public void TryGetAndRemoveTag_Int_Should_Return_False_When_Value_Is_Out_Of_Range(long raw)
+    {
+        var tags = new Dictionary<string, object> { { "server.port", raw } };
+
+        var result = tags.TryGetAndRemoveTag(["server.port"], out int? value);
+
+        Assert.That(result, Is.False);
+        Assert.That(value, Is.Null);
+        Assert.That(tags, Is.Empty);
+    }
+
+    private static readonly object[] NonIntegralValues = ["27018", 27018.0, 27018.5f, 27018m, true, 'a', new object()];
+
+    [TestCaseSource(nameof(NonIntegralValues))]
+    public void TryGetAndRemoveTag_Int_Should_Return_False_When_Value_Is_Not_Integral(object raw)
+    {
+        var tags = new Dictionary<string, object> { { "server.port", raw } };
+
+        var result = tags.TryGetAndRemoveTag(["server.port"], out int value);
+
+        Assert.That(result, Is.False);
+        Assert.That(value, Is.EqualTo(0));
+    }
+
+    [Test]
+    public void TryGetTag_Should_Convert_Long_To_Int()
+    {
+        var tags = new Dictionary<string, object> { { "server.port", 27018L } };
+
+        var result = tags.TryGetTag(["server.port"], out int value);
+
+        Assert.That(result, Is.True);
+        Assert.That(value, Is.EqualTo(27018));
+        Assert.That(tags, Has.Count.EqualTo(1));
+    }
+
+    [Test]
+    public void TryGetTag_Should_Return_False_When_Requested_Type_Is_Not_Integral()
+    {
+        var tags = new Dictionary<string, object> { { "key1", 123L } };
+
+        var result = tags.TryGetTag(["key1"], out bool? value);
+
+        Assert.That(result, Is.False);
+        Assert.That(value, Is.Null);
     }
 }

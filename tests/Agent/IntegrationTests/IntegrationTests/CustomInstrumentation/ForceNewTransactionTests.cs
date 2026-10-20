@@ -11,6 +11,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation;
 
+[Trait("Platform", "WindowsOnly")]
 public class GloballyForceNewTransactionEnabledTestsFW462 : GloballyForceNewTransactionTests<ConsoleDynamicMethodFixtureFW462>
 {
     public GloballyForceNewTransactionEnabledTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -27,6 +28,7 @@ public class GloballyForceNewTransactionEnabledTestsCoreOldest : GloballyForceNe
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class GloballyForceNewTransactionDisabledTestsFW462 : GloballyForceNewTransactionTests<ConsoleDynamicMethodFixtureFW462>
 {
     public GloballyForceNewTransactionDisabledTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)

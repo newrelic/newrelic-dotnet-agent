@@ -169,6 +169,7 @@ public class OpenAITests_CoreOldest : OpenAITestsBase<ConsoleDynamicMethodFixtur
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class OpenAITests_FWLatest : OpenAITestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public OpenAITests_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)

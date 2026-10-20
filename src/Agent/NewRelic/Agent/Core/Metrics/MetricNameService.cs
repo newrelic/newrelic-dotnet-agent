@@ -122,6 +122,12 @@ public class MetricNameService : ConfigurationBasedService, IMetricNameService
 
     private static string RenameUsingRegexRules(string input, IEnumerable<RegexRule> rules)
     {
+        // Fast path for the common case (no naming rules configured): skip the OrderBy allocation/sort,
+        // which otherwise runs on every transaction end / URL normalization / metric rename regardless of
+        // whether there's anything to sort. Mirrors RenameUsingWhitelistRules' existing empty-set guard.
+        if (!rules.Any())
+            return input;
+
         foreach (var rule in rules.OrderBy(rule => rule.EvaluationOrder))
         {
             var ruleResult = rule.ApplyTo(input);

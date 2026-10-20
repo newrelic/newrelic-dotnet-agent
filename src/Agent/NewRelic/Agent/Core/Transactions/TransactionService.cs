@@ -8,6 +8,7 @@ using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.CallStack;
+using NewRelic.Agent.Core.ContinuousProfiling;
 using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.DistributedTracing.Samplers;
 using NewRelic.Agent.Core.Errors;
@@ -195,6 +196,11 @@ public class TransactionService : ConfigurationBasedService, ITransactionService
 
     private IInternalTransaction CreateInternalTransaction(ITransactionName initialTransactionName, Action onCreate)
     {
+        if (ContinuousProfilingContext.AnyEnabled)
+        {
+            ManagedThreadIdRegistry.Instance.EnsureRegistered();
+        }
+
         RemoveOutstandingInternalTransactions(true, true);
 
         var transactionContext = GetFirstActivePrimaryContext();

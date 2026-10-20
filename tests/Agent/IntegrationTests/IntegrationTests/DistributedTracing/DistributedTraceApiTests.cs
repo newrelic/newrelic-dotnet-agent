@@ -9,6 +9,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.DistributedTracing;
 
+[Trait("Platform", "WindowsOnly")]
 public class DistributedTracingApiTests_W3C : DtApiTestBase
 {
     public DistributedTracingApiTests_W3C(RemoteServiceFixtures.DistributedTracingApiFixture fixture, ITestOutputHelper output)

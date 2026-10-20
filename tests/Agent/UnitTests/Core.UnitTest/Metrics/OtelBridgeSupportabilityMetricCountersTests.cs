@@ -278,6 +278,49 @@ public class OtelBridgeSupportabilityMetricCountersTests
     }
 
     [Test]
+    public void RecordExportSuccess_PublishesTheDedicatedExportSuccessMetric()
+    {
+        _metricCounters.RecordExportSuccess();
+        _metricCounters.CollectMetrics();
+
+        Assert.That(_publishedMetrics, Has.Count.EqualTo(1));
+        var metric = _publishedMetrics.Single();
+        NrAssert.Multiple(
+            () => Assert.That(metric.MetricNameModel.Name, Is.EqualTo(MetricNames.SupportabilityOTelMetricsBridgeExportSuccess)),
+            () => Assert.That(metric.DataModel.Value0, Is.EqualTo(1))
+        );
+    }
+
+    [Test]
+    public void RecordExportRetry_PublishesTheDedicatedExportRetryMetric()
+    {
+        _metricCounters.RecordExportRetry();
+        _metricCounters.RecordExportRetry();
+        _metricCounters.CollectMetrics();
+
+        Assert.That(_publishedMetrics, Has.Count.EqualTo(1));
+        var metric = _publishedMetrics.Single();
+        NrAssert.Multiple(
+            () => Assert.That(metric.MetricNameModel.Name, Is.EqualTo(MetricNames.SupportabilityOTelMetricsBridgeExportRetry)),
+            () => Assert.That(metric.DataModel.Value0, Is.EqualTo(2))
+        );
+    }
+
+    [Test]
+    public void RecordExportFailure_PublishesTheDedicatedExportFailureMetric()
+    {
+        _metricCounters.RecordExportFailure();
+        _metricCounters.CollectMetrics();
+
+        Assert.That(_publishedMetrics, Has.Count.EqualTo(1));
+        var metric = _publishedMetrics.Single();
+        NrAssert.Multiple(
+            () => Assert.That(metric.MetricNameModel.Name, Is.EqualTo(MetricNames.SupportabilityOTelMetricsBridgeExportFailure)),
+            () => Assert.That(metric.DataModel.Value0, Is.EqualTo(1))
+        );
+    }
+
+    [Test]
     public void Record_ThreadSafety_MultipleThreadsRecordingSameMetric()
     {
         // Arrange

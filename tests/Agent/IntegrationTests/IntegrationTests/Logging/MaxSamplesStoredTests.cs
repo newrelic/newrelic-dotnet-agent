@@ -75,6 +75,7 @@ public abstract class MaxSamplesStoredTestsBase<TFixture> : NewRelicIntegrationT
 
 #region log4net
 
+[Trait("Platform", "WindowsOnly")]
 public class Log4netMaxSamplesStoredTestsFWLatestTests : MaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public Log4netMaxSamplesStoredTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -83,6 +84,7 @@ public class Log4netMaxSamplesStoredTestsFWLatestTests : MaxSamplesStoredTestsBa
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class Log4netMaxSamplesStoredTestsFW471Tests : MaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     public Log4netMaxSamplesStoredTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -91,6 +93,7 @@ public class Log4netMaxSamplesStoredTestsFW471Tests : MaxSamplesStoredTestsBase<
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class Log4netMaxSamplesStoredTestsFW462Tests : MaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public Log4netMaxSamplesStoredTestsFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -135,6 +138,7 @@ public class MicrosoftLoggingMaxSamplesStoredTestsNetCoreOldestTests : MaxSample
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class MicrosoftLoggingMaxSamplesStoredTestsFWLatestTests : MaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public MicrosoftLoggingMaxSamplesStoredTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -147,6 +151,7 @@ public class MicrosoftLoggingMaxSamplesStoredTestsFWLatestTests : MaxSamplesStor
 
 #region Serilog
 
+[Trait("Platform", "WindowsOnly")]
 public class SerilogMaxSamplesStoredTestsFWLatestTests : MaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public SerilogMaxSamplesStoredTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -155,6 +160,7 @@ public class SerilogMaxSamplesStoredTestsFWLatestTests : MaxSamplesStoredTestsBa
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class SerilogMaxSamplesStoredTestsFW471Tests : MaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     public SerilogMaxSamplesStoredTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -163,6 +169,7 @@ public class SerilogMaxSamplesStoredTestsFW471Tests : MaxSamplesStoredTestsBase<
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class SerilogMaxSamplesStoredTestsFW462Tests : MaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public SerilogMaxSamplesStoredTestsFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -191,6 +198,7 @@ public class SerilogMaxSamplesStoredTestsNetCoreOldestTests : MaxSamplesStoredTe
 
 #region NLog
 
+[Trait("Platform", "WindowsOnly")]
 public class NLogMaxSamplesStoredTestsFWLatestTests : MaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public NLogMaxSamplesStoredTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -199,6 +207,7 @@ public class NLogMaxSamplesStoredTestsFWLatestTests : MaxSamplesStoredTestsBase<
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class NLogMaxSamplesStoredTestsFW471Tests : MaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     public NLogMaxSamplesStoredTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -207,6 +216,7 @@ public class NLogMaxSamplesStoredTestsFW471Tests : MaxSamplesStoredTestsBase<Con
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class NLogMaxSamplesStoredTestsFW462Tests : MaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public NLogMaxSamplesStoredTestsFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)

@@ -122,6 +122,7 @@ public abstract class ContextDataTestsBase<TFixture> : NewRelicIntegrationTest<T
 
 #region log4net
 
+[Trait("Platform", "WindowsOnly")]
 public class Log4NetContextDataFWLatestTests : ContextDataTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public Log4NetContextDataFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -130,6 +131,7 @@ public class Log4NetContextDataFWLatestTests : ContextDataTestsBase<ConsoleDynam
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class Log4NetContextDataFW471Tests : ContextDataTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     public Log4NetContextDataFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -138,6 +140,7 @@ public class Log4NetContextDataFW471Tests : ContextDataTestsBase<ConsoleDynamicM
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class Log4NetContextDataFW462Tests : ContextDataTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public Log4NetContextDataFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -166,6 +169,7 @@ public class Log4NetContextDataNetCoreOldestTests : ContextDataTestsBase<Console
 
 #region NLog
 
+[Trait("Platform", "WindowsOnly")]
 public class NLogContextDataFWLatestTests : ContextDataTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public NLogContextDataFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -174,6 +178,7 @@ public class NLogContextDataFWLatestTests : ContextDataTestsBase<ConsoleDynamicM
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class NLogContextDataFW471Tests : ContextDataTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     public NLogContextDataFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -182,6 +187,7 @@ public class NLogContextDataFW471Tests : ContextDataTestsBase<ConsoleDynamicMeth
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class NLogContextDataFW462Tests : ContextDataTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public NLogContextDataFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -210,6 +216,7 @@ public class NLogContextDataNetCoreOldestTests : ContextDataTestsBase<ConsoleDyn
 
 #region Serilog
 
+[Trait("Platform", "WindowsOnly")]
 public class SerilogContextDataFWLatestTests : ContextDataTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public SerilogContextDataFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -218,6 +225,7 @@ public class SerilogContextDataFWLatestTests : ContextDataTestsBase<ConsoleDynam
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class SerilogContextDataFW471Tests : ContextDataTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     public SerilogContextDataFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -226,6 +234,7 @@ public class SerilogContextDataFW471Tests : ContextDataTestsBase<ConsoleDynamicM
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class SerilogContextDataFW462Tests : ContextDataTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public SerilogContextDataFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -254,6 +263,7 @@ public class SerilogContextDataNetCoreOldestTests : ContextDataTestsBase<Console
 
 #region MEL
 
+[Trait("Platform", "WindowsOnly")]
 public class MELContextDataFWLatestTests : ContextDataTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public MELContextDataFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -281,6 +291,7 @@ public class MELContextDataNetCoreOldestTests : ContextDataTestsBase<ConsoleDyna
 #endregion
 
 #region Sitecore
+[Trait("Platform", "WindowsOnly")]
 public class SitecoreContextDataFWLatestTests : ContextDataTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public SitecoreContextDataFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -289,6 +300,7 @@ public class SitecoreContextDataFWLatestTests : ContextDataTestsBase<ConsoleDyna
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class SitecoreContextDataFW48Tests : ContextDataTestsBase<ConsoleDynamicMethodFixtureFW48>
 {
     public SitecoreContextDataFW48Tests(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
@@ -297,6 +309,7 @@ public class SitecoreContextDataFW48Tests : ContextDataTestsBase<ConsoleDynamicM
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class SitecorePlusLog4NetContextDataFWLatestTests : ContextDataTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public SitecorePlusLog4NetContextDataFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -305,6 +318,7 @@ public class SitecorePlusLog4NetContextDataFWLatestTests : ContextDataTestsBase<
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class SitecorePlusLog4NetContextDataFW48Tests : ContextDataTestsBase<ConsoleDynamicMethodFixtureFW48>
 {
     public SitecorePlusLog4NetContextDataFW48Tests(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
@@ -317,6 +331,7 @@ public class SitecorePlusLog4NetContextDataFW48Tests : ContextDataTestsBase<Cons
 #endregion // Sitecore
 
 #region SEL
+[Trait("Platform", "WindowsOnly")]
 public class SELContextDataFWLatestTests : ContextDataTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public SELContextDataFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -325,6 +340,7 @@ public class SELContextDataFWLatestTests : ContextDataTestsBase<ConsoleDynamicMe
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class SELContextDataFW48Tests : ContextDataTestsBase<ConsoleDynamicMethodFixtureFW48>
 {
     public SELContextDataFW48Tests(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
@@ -352,6 +368,7 @@ public class SELContextDataCoreOldestTests : ContextDataTestsBase<ConsoleDynamic
 #endregion // SEL
 
 #region NEL
+[Trait("Platform", "WindowsOnly")]
 public class NELContextDataFWLatestTests : ContextDataTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public NELContextDataFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)

@@ -91,6 +91,7 @@ public class LlmErrorTests_CoreLatest : LlmErrorTestsBase<ConsoleDynamicMethodFi
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class LlmErrorTests_FWLatest : LlmErrorTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public LlmErrorTests_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)

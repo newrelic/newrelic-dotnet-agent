@@ -171,6 +171,7 @@ public abstract class OracleSyncTestsBase<TFixture> : NewRelicIntegrationTest<TF
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class OracleSyncTestsFramework462 : OracleSyncTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public OracleSyncTestsFramework462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -178,6 +179,7 @@ public class OracleSyncTestsFramework462 : OracleSyncTestsBase<ConsoleDynamicMet
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class OracleSyncTestsFramework471 : OracleSyncTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     public OracleSyncTestsFramework471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -185,6 +187,7 @@ public class OracleSyncTestsFramework471 : OracleSyncTestsBase<ConsoleDynamicMet
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class OracleSyncTestsFrameworkLatest : OracleSyncTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public OracleSyncTestsFrameworkLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)

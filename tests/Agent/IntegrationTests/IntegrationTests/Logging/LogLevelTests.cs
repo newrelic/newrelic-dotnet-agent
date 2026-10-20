@@ -77,6 +77,7 @@ public abstract class LogLevelTestsBase<TFixture> : NewRelicIntegrationTest<TFix
 
 #region log4net
 
+[Trait("Platform", "WindowsOnly")]
 public class Log4netLogLevelFWLatestTests : LogLevelTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public Log4netLogLevelFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -85,6 +86,7 @@ public class Log4netLogLevelFWLatestTests : LogLevelTestsBase<ConsoleDynamicMeth
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class Log4netLogLevelFW471Tests : LogLevelTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     public Log4netLogLevelFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -93,6 +95,7 @@ public class Log4netLogLevelFW471Tests : LogLevelTestsBase<ConsoleDynamicMethodF
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class Log4netLogLevelFW462Tests : LogLevelTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public Log4netLogLevelFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -137,6 +140,7 @@ public class MicrosoftLoggingLogLevelTestsNetCoreOldestTests : LogLevelTestsBase
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class MicrosoftLoggingLogLevelTestsFWLatestTests : LogLevelTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public MicrosoftLoggingLogLevelTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -149,6 +153,7 @@ public class MicrosoftLoggingLogLevelTestsFWLatestTests : LogLevelTestsBase<Cons
 
 #region Serilog
 
+[Trait("Platform", "WindowsOnly")]
 public class SerilogLogLevelTestsFWLatestTests : LogLevelTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public SerilogLogLevelTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -157,6 +162,7 @@ public class SerilogLogLevelTestsFWLatestTests : LogLevelTestsBase<ConsoleDynami
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class SerilogLogLevelTestsFW471Tests : LogLevelTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     public SerilogLogLevelTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -165,6 +171,7 @@ public class SerilogLogLevelTestsFW471Tests : LogLevelTestsBase<ConsoleDynamicMe
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class SerilogLogLevelTestsFW462Tests : LogLevelTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public SerilogLogLevelTestsFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -192,6 +199,7 @@ public class SerilogLogLevelTestsNetCoreOldestTests : LogLevelTestsBase<ConsoleD
 
 #region NLog
 
+[Trait("Platform", "WindowsOnly")]
 public class NLogLogLevelTestsFWLatestTests : LogLevelTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public NLogLogLevelTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -200,6 +208,7 @@ public class NLogLogLevelTestsFWLatestTests : LogLevelTestsBase<ConsoleDynamicMe
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class NLogLogLevelTestsFW471Tests : LogLevelTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     public NLogLogLevelTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -208,6 +217,7 @@ public class NLogLogLevelTestsFW471Tests : LogLevelTestsBase<ConsoleDynamicMetho
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class NLogLogLevelTestsFW462Tests : LogLevelTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public NLogLogLevelTestsFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -236,6 +246,7 @@ public class NLogLogLevelTestsNetCoreOldestTests : LogLevelTestsBase<ConsoleDyna
 
 #region Sitecore
 
+[Trait("Platform", "WindowsOnly")]
 public class SitecoreLogLevelTestsFWLatestTests : LogLevelTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public SitecoreLogLevelTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -244,6 +255,7 @@ public class SitecoreLogLevelTestsFWLatestTests : LogLevelTestsBase<ConsoleDynam
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class SitecoreLogLevelTestsFW480Tests : LogLevelTestsBase<ConsoleDynamicMethodFixtureFW48>
 {
     public SitecoreLogLevelTestsFW480Tests(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)

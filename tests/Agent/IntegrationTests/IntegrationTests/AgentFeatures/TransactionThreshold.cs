@@ -8,6 +8,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.AgentFeatures;
 
+[Trait("Platform", "WindowsOnly")]
 public class TransactionThreshold : NewRelicIntegrationTest<RemoteServiceFixtures.OwinWebApiFixture>
 {
     private readonly RemoteServiceFixtures.OwinWebApiFixture _fixture;

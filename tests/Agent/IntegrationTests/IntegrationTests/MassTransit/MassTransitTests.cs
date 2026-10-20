@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
+using NewRelic.Testing.Assertions;
 using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.MassTransit;
@@ -81,15 +82,39 @@ public abstract class MassTransitTestsBase<TFixture> : NewRelicIntegrationTest<T
             new Assertions.ExpectedMetric { metricName = massTransitProduceMetricNameRegex, CallCountAllHarvests = 2, IsRegexName = true, metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.MassTransitExerciser/Send"},
         };
 
-        Assertions.MetricsExist(expectedMetrics, metrics);
+        // The in-memory (loopback) transport maps to Unknown. App + allOther isolates the consumer transactions.
+        var transportMetrics = new List<Assertions.ExpectedMetric>
+        {
+            new Assertions.ExpectedMetric { metricName = @"^DurationByCaller/App/[^/]+/[^/]+/Unknown/allOther$", CallCountAllHarvests = 4, IsRegexName = true },
+            new Assertions.ExpectedMetric { metricName = @"^DurationByCaller/App/[^/]+/[^/]+/Unknown/all$", CallCountAllHarvests = 4, IsRegexName = true },
+            new Assertions.ExpectedMetric { metricName = @"^TransportDuration/App/[^/]+/[^/]+/Unknown/allOther$", CallCountAllHarvests = 4, IsRegexName = true },
+        };
+
+        var unexpectedMetrics = new List<Assertions.ExpectedMetric>
+        {
+            new Assertions.ExpectedMetric { metricName = @"^DurationByCaller/.*/AMQP/", IsRegexName = true },
+            new Assertions.ExpectedMetric { metricName = "Supportability/DistributedTrace/AcceptPayload/Ignored/CreateBeforeAccept" },
+        };
 
         var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent($"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.MassTransitExerciser/Publish");
 
-        Assert.NotNull( transactionEvent );
+        var consumeTransactionEvents = _fixture.AgentLog.GetTransactionEvents()
+            .Where(e => e.IntrinsicAttributes["name"].ToString().StartsWith("OtherTransaction/Message/MassTransit/Queue/Named/"))
+            .ToList();
+
+        NrAssert.Multiple(
+            () => Assertions.MetricsExist(expectedMetrics, metrics),
+            () => Assertions.MetricsExist(transportMetrics, metrics),
+            () => Assertions.MetricsDoNotExist(unexpectedMetrics, metrics),
+            () => Assert.NotNull(transactionEvent),
+            () => Assert.Equal(4, consumeTransactionEvents.Count),
+            () => Assert.All(consumeTransactionEvents, e => Assert.Equal("Unknown", e.IntrinsicAttributes["parent.transportType"].ToString()))
+        );
     }
 }
 
 // Tests using StartHost (hosted service configuration method)
+[Trait("Platform", "WindowsOnly")]
 public class MassTransitTests_StartHost_FW462 : MassTransitTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public MassTransitTests_StartHost_FW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -97,6 +122,7 @@ public class MassTransitTests_StartHost_FW462 : MassTransitTestsBase<ConsoleDyna
     {
     }
 }
+[Trait("Platform", "WindowsOnly")]
 public class MassTransitTests_StartHost_FWLatest : MassTransitTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public MassTransitTests_StartHost_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -120,6 +146,7 @@ public class MassTransitTests_StartHost_CoreLatest : MassTransitTestsBase<Consol
 }
 
 // Tests using StartBus (bus factory configuration method)
+[Trait("Platform", "WindowsOnly")]
 public class MassTransitTests_StartBus_FW462 : MassTransitTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public MassTransitTests_StartBus_FW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -127,6 +154,7 @@ public class MassTransitTests_StartBus_FW462 : MassTransitTestsBase<ConsoleDynam
     {
     }
 }
+[Trait("Platform", "WindowsOnly")]
 public class MassTransitTests_StartBus_FWLatest : MassTransitTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public MassTransitTests_StartBus_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)

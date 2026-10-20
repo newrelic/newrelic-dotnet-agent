@@ -30,6 +30,7 @@ public abstract class MsSqlDatabaseSwitchTestsBase<TFixture> : DatabaseSwitchTes
 
 #region ChangeDatabase
 
+[Trait("Platform", "WindowsOnly")]
 public class MsSqlDatabaseSwitchTests_FWLatest : MsSqlDatabaseSwitchTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public MsSqlDatabaseSwitchTests_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -50,6 +51,7 @@ public class MsSqlDatabaseSwitchTests_CoreLatest : MsSqlDatabaseSwitchTestsBase<
 
 #region USE statement
 
+[Trait("Platform", "WindowsOnly")]
 public class MsSqlDatabaseSwitchViaUseStatementTests_FWLatest : MsSqlDatabaseSwitchTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public MsSqlDatabaseSwitchViaUseStatementTests_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)

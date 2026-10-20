@@ -147,6 +147,7 @@ public abstract class MySqlAsyncTestsBase<TFixture> : NewRelicIntegrationTest<TF
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class MySqlAsyncTestsFW462 : MySqlAsyncTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public MySqlAsyncTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -155,6 +156,7 @@ public class MySqlAsyncTestsFW462 : MySqlAsyncTestsBase<ConsoleDynamicMethodFixt
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class MySqlAsyncTestsFW471 : MySqlAsyncTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     public MySqlAsyncTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -163,6 +165,7 @@ public class MySqlAsyncTestsFW471 : MySqlAsyncTestsBase<ConsoleDynamicMethodFixt
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class MySqlAsyncTestsFW48 : MySqlAsyncTestsBase<ConsoleDynamicMethodFixtureFW48>
 {
     public MySqlAsyncTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -171,6 +174,7 @@ public class MySqlAsyncTestsFW48 : MySqlAsyncTestsBase<ConsoleDynamicMethodFixtu
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class MySqlAsyncTestsFWLatest : MySqlAsyncTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public MySqlAsyncTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)

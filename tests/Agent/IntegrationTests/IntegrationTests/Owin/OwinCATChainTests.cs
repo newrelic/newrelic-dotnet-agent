@@ -12,6 +12,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.Owin;
 
+[Trait("Platform", "WindowsOnly")]
 public class OwinCATChainTests : NewRelicIntegrationTest<OwinTracingChainFixture>
 {
     private readonly OwinTracingChainFixture _fixture;

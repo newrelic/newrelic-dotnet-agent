@@ -16,6 +16,7 @@
     <PackageReference Include="CommandLineParser" Version="2.9.1" />
     <PackageReference Include="NuGet.Protocol" Version="7.9.0" />
     <PackageReference Include="System.Formats.Asn1" Version="10.0.12" /> <!-- For Nuget.Protocol transient depedency vulnerability -->
+    <PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.13" /> <!-- For Nuget.Protocol transient depedency vulnerability -->
     <PackageReference Include="YamlDotNet" Version="18.1.0" />
   </ItemGroup>
 

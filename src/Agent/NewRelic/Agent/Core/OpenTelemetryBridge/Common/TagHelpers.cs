@@ -1,7 +1,9 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System;
 using System.Collections.Generic;
+using System.Globalization;
 using NewRelic.Agent.Core.Utilities;
 
 namespace NewRelic.Agent.Core.OpenTelemetryBridge.Common;
@@ -30,7 +32,7 @@ public static class TagHelpers
 
         foreach (var key in keys)
         {
-            if (!retVal && tags.TryGetValue<T, string, object>(key, out value))
+            if (!retVal && TryGetTypedValue(tags, key, out value))
             {
                 retVal = true;
             }
@@ -61,11 +63,39 @@ public static class TagHelpers
         value = default;
         foreach (var key in keys)
         {
-            if (tags.TryGetValue<T, string, object>(key, out value))
+            if (TryGetTypedValue(tags, key, out value))
             {
                 return true;
             }
         }
         return false;
     }
+
+    // Integral tag values may be boxed as a different width than requested (e.g. long read as int).
+    private static bool TryGetTypedValue<T>(Dictionary<string, object> tags, string key, out T value)
+    {
+        if (tags.TryGetValue<T, string, object>(key, out value))
+        {
+            return true;
+        }
+
+        var targetType = Nullable.GetUnderlyingType(typeof(T)) ?? typeof(T);
+        if (!tags.TryGetValue(key, out var raw) || raw is not IConvertible convertible
+            || !IsIntegral(convertible.GetTypeCode()) || !IsIntegral(Type.GetTypeCode(targetType)))
+        {
+            return false;
+        }
+
+        try
+        {
+            value = (T)Convert.ChangeType(raw, targetType, CultureInfo.InvariantCulture);
+            return true;
+        }
+        catch (OverflowException)
+        {
+            return false;
+        }
+    }
+
+    private static bool IsIntegral(TypeCode typeCode) => typeCode >= TypeCode.SByte && typeCode <= TypeCode.UInt64;
 }

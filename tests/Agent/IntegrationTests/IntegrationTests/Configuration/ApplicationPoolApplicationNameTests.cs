@@ -103,6 +103,7 @@ public abstract class ApplicationPoolApplicationNameTestsBase<TFixture> : NewRel
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class ApplicationPoolApplicationNameFWLatestTests : ApplicationPoolApplicationNameTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public ApplicationPoolApplicationNameFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)

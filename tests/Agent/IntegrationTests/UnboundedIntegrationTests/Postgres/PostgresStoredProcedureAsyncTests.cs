@@ -107,6 +107,7 @@ public abstract class PostgresSqlStoredProcedureAsyncTestsBase<TFixture> : NewRe
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class PostgresSqlStoredProcedureAsyncTestsFW462 : PostgresSqlStoredProcedureAsyncTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public PostgresSqlStoredProcedureAsyncTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -115,6 +116,7 @@ public class PostgresSqlStoredProcedureAsyncTestsFW462 : PostgresSqlStoredProced
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class PostgresSqlStoredProcedureAsyncTestsFWLatest : PostgresSqlStoredProcedureAsyncTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public PostgresSqlStoredProcedureAsyncTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)

@@ -13,6 +13,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation;
 
+[Trait("Platform", "WindowsOnly")]
 public class ConsoleAsyncForceNewTransactionTests_Instrumented : ConsoleAsyncForceNewTransactionTests
 {
     private const decimal ExpectedTransactionCount = 10;
@@ -103,6 +104,7 @@ public class ConsoleAsyncForceNewTransactionTests_Instrumented : ConsoleAsyncFor
 
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class ConsoleAsyncForceNewTransactionTests_NotInstrumented : ConsoleAsyncForceNewTransactionTests
 {
     private const decimal ExpectedTransactionCount = 6;

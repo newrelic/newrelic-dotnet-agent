@@ -123,6 +123,7 @@ public abstract class PostgresSqlExecuteScalarAsyncTestsBase<TFixture> : NewReli
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class PostgresSqlExecuteScalarAsyncTestsFW462 : PostgresSqlExecuteScalarAsyncTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public PostgresSqlExecuteScalarAsyncTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -131,6 +132,7 @@ public class PostgresSqlExecuteScalarAsyncTestsFW462 : PostgresSqlExecuteScalarA
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class PostgresSqlExecuteScalarAsyncTestsFWLatest : PostgresSqlExecuteScalarAsyncTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public PostgresSqlExecuteScalarAsyncTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)

@@ -66,6 +66,7 @@ public abstract class EnvironmentVariableAllowAllHeadersDisabledTestsBase : NewR
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class EnvironmentVariableAllowAllHeadersDisabledTests_Defaults : EnvironmentVariableAllowAllHeadersDisabledTestsBase
 {
     public EnvironmentVariableAllowAllHeadersDisabledTests_Defaults(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output) : base(fixture, output)
@@ -110,6 +111,7 @@ public class EnvironmentVariableAllowAllHeadersDisabledTests_Defaults : Environm
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class EnvironmentVariableAllowAllHeadersDisabledTests_Excludes_CommaDelimited : EnvironmentVariableAllowAllHeadersDisabledTestsBase
 {
     public EnvironmentVariableAllowAllHeadersDisabledTests_Excludes_CommaDelimited(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output) : base(fixture, output)
@@ -155,6 +157,7 @@ public class EnvironmentVariableAllowAllHeadersDisabledTests_Excludes_CommaDelim
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class EnvironmentVariableAllowAllHeadersDisabledTests_Excludes_CommaSpaceDelimited : EnvironmentVariableAllowAllHeadersDisabledTestsBase
 {
     public EnvironmentVariableAllowAllHeadersDisabledTests_Excludes_CommaSpaceDelimited(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output) : base(fixture, output)

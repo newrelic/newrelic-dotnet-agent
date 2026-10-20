@@ -12,6 +12,7 @@ using Xunit;
 namespace NewRelic.Agent.IntegrationTests.AgentMetrics;
 
 // This test verifies that all supportability metrics are generated that are required by APM.
+[Trait("Platform", "WindowsOnly")]
 public class RequiredSupportabilityMetrics : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
 {
     private readonly RemoteServiceFixtures.BasicMvcApplicationTestFixture _fixture;

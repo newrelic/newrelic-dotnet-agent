@@ -94,6 +94,7 @@ public abstract class RestSharpInstrumentationCATBase<TFixture> : NewRelicIntegr
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class RestSharpInstrumentationCATFWLatest : RestSharpInstrumentationCATBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public RestSharpInstrumentationCATFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -102,6 +103,7 @@ public class RestSharpInstrumentationCATFWLatest : RestSharpInstrumentationCATBa
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class RestSharpInstrumentationCATFW48 : RestSharpInstrumentationCATBase<ConsoleDynamicMethodFixtureFW48>
 {
     public RestSharpInstrumentationCATFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
@@ -110,6 +112,7 @@ public class RestSharpInstrumentationCATFW48 : RestSharpInstrumentationCATBase<C
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class RestSharpInstrumentationCATFW471 : RestSharpInstrumentationCATBase<ConsoleDynamicMethodFixtureFW471>
 {
     public RestSharpInstrumentationCATFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -118,6 +121,7 @@ public class RestSharpInstrumentationCATFW471 : RestSharpInstrumentationCATBase<
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class RestSharpInstrumentationCATFW462 : RestSharpInstrumentationCATBase<ConsoleDynamicMethodFixtureFW462>
 {
     public RestSharpInstrumentationCATFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)

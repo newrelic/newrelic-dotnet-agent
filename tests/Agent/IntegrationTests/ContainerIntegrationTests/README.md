@@ -212,7 +212,7 @@ One `[Fact]` per assertion set, tagged with `[Trait("Architecture", "amd64")]` a
 Two trait axes select which tests a CI job runs, and they are **disjoint** — a class should carry exactly one combination that exactly one CI matrix entry asks for:
 
 - **`[Trait("Distro", "...")]`** — OS-compatibility smoke tests **only** (current values: `Ubuntu`, `Alpine`, `Centos`, `Amazon`, `Fedora`). Do not add new functional coverage here — it doesn't scale.
-- **`[Trait("TestArea", "...")]`** — functional test groupings (current values: `Core`, `Messaging`, `Aws`, `Datastore`). Reuse an existing value where your test fits.
+- **`[Trait("TestArea", "...")]`** — functional test groupings (current values: `Core`, `Messaging`, `Aws`, `Datastore`, `ContinuousProfiling`). Reuse an existing value where your test fits.
 
 Both traits may be declared on an abstract base class and inherited by concrete subclasses (e.g. `AwsSdkSQSTestBase` carries `TestArea=Aws`; its subclasses inherit it without redeclaring). Only concrete test classes need a selector — abstract bases never need one on their own, and a subclass's own trait wins over an inherited one.
 

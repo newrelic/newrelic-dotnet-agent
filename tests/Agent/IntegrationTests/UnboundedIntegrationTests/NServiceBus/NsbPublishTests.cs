@@ -79,6 +79,7 @@ public abstract class NsbPublishTestsBase<TFixture> : NewRelicIntegrationTest<TF
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class NsbPublishTestsFW471 : NsbPublishTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     public NsbPublishTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -87,6 +88,7 @@ public class NsbPublishTestsFW471 : NsbPublishTestsBase<ConsoleDynamicMethodFixt
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class NsbPublishTestsFW48 : NsbPublishTestsBase<ConsoleDynamicMethodFixtureFW48>
 {
     public NsbPublishTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
@@ -95,6 +97,7 @@ public class NsbPublishTestsFW48 : NsbPublishTestsBase<ConsoleDynamicMethodFixtu
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class NsbPublishTestsFWLatest : NsbPublishTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public NsbPublishTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)

@@ -85,6 +85,7 @@ public abstract class NsbCmdHandlerTestsBase<TFixture> : NewRelicIntegrationTest
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class NsbCmdHandlerTestsFW471 : NsbCmdHandlerTestsBase<ConsoleDynamicMethodFixtureFW471>
 {
     public NsbCmdHandlerTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -93,6 +94,7 @@ public class NsbCmdHandlerTestsFW471 : NsbCmdHandlerTestsBase<ConsoleDynamicMeth
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class NsbCmdHandlerTestsFW48 : NsbCmdHandlerTestsBase<ConsoleDynamicMethodFixtureFW48>
 {
     public NsbCmdHandlerTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
@@ -101,6 +103,7 @@ public class NsbCmdHandlerTestsFW48 : NsbCmdHandlerTestsBase<ConsoleDynamicMetho
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class NsbCmdHandlerTestsFWLatest : NsbCmdHandlerTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public NsbCmdHandlerTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)

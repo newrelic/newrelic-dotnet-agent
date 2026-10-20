@@ -13,6 +13,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.DataTransmission;
 
+[Trait("Platform", "WindowsOnly")]
 public class ConnectResponseHandlingTests : NewRelicIntegrationTest<MvcWithCollectorFixture>
 {
     private readonly MvcWithCollectorFixture _fixture;

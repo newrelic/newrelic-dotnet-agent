@@ -7,6 +7,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.HSM;
 
+[Trait("Platform", "WindowsOnly")]
 public class HighSecurityModeServerEnabled : NewRelicIntegrationTest<RemoteServiceFixtures.HSMOwinWebApiFixture>
 {
     private readonly RemoteServiceFixtures.HSMOwinWebApiFixture _fixture;

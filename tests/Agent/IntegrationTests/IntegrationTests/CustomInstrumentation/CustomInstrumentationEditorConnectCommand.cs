@@ -12,6 +12,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation;
 
+[Trait("Platform", "WindowsOnly")]
 public class CustomInstrumentationEditorConnectCommand : NewRelicIntegrationTest<MvcWithCollectorFixture>
 {
     private readonly MvcWithCollectorFixture _fixture;

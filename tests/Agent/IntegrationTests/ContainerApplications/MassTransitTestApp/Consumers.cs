@@ -39,7 +39,23 @@ public class RabbitMqMessageConsumer : IConsumer<RabbitMqMessage>
     }
 }
 
-public class InMemoryMessageConsumer : IConsumer<InMemoryMessage>
+public class SqsMessageConsumer : IConsumer<SqsMessage>
+{
+    private readonly ILogger<SqsMessageConsumer> _logger;
+
+    public SqsMessageConsumer(ILogger<SqsMessageConsumer> logger)
+    {
+        _logger = logger;
+    }
+
+    public Task Consume(ConsumeContext<SqsMessage> context)
+    {
+        _logger.LogInformation("SQS consumed: {Text}", context.Message.Text);
+        return Task.CompletedTask;
+    }
+}
+
+public class InMemoryMessageConsumer: IConsumer<InMemoryMessage>
 {
     private readonly ILogger<InMemoryMessageConsumer> _logger;
 

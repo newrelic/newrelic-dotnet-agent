@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using NewRelic.Agent.Core.DataTransport;
 
@@ -18,9 +19,9 @@ public interface IOtlpExporterConfigurationService : IDisposable
     object GetOrCreateMeterProvider();
 
     /// <summary>
-    /// Gets or creates the MeterProvider with specific connection info and entity GUID.
+    /// Gets or creates the MeterProvider with specific connection info, entity GUID, and server resource attributes.
     /// </summary>
-    object GetOrCreateMeterProvider(IConnectionInfo connectionInfo, string entityGuid);
+    object GetOrCreateMeterProvider(IConnectionInfo connectionInfo, string entityGuid, IReadOnlyDictionary<string, string> resourceAttributes);
 
     /// <summary>
     /// Forces a recreation of the MeterProvider (e.g., when EntityGuid changes).

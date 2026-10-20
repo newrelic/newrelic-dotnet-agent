@@ -145,6 +145,7 @@ public class BedrockConverseTests_Basic_CoreLatest : BedrockConverseTestsBase<Co
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class BedrockConverseTests_Basic_FWLatest : BedrockConverseTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public BedrockConverseTests_Basic_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)

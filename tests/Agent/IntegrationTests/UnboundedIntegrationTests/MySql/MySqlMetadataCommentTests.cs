@@ -120,6 +120,7 @@ public abstract class MySqlMetadataCommentTestsBase<TFixture> : NewRelicIntegrat
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class MySqlMetadataCommentTestsFW462 : MySqlMetadataCommentTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
     public MySqlMetadataCommentTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
@@ -127,6 +128,7 @@ public class MySqlMetadataCommentTestsFW462 : MySqlMetadataCommentTestsBase<Cons
     }
 }
 
+[Trait("Platform", "WindowsOnly")]
 public class MySqlMetadataCommentTestsFWLatest : MySqlMetadataCommentTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
     public MySqlMetadataCommentTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
