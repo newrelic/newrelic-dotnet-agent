@@ -18,6 +18,8 @@ public abstract class OracleMetadataCommentTestsBase<TFixture> : NewRelicIntegra
     private readonly ConsoleDynamicMethodFixture _fixture;
     private const string TransactionName = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Oracle.OracleExerciser/ExerciseSync";
 
+    protected virtual string RecordSql => "raw";
+
     public OracleMetadataCommentTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
     {
         _fixture = fixture;
@@ -42,7 +44,7 @@ public abstract class OracleMetadataCommentTestsBase<TFixture> : NewRelicIntegra
 
                 configModifier.ForceSqlTraces();
                 configModifier.SetTransactionTracerExplainEnabled(true);
-                configModifier.SetTransactionTracerRecordSql("raw");
+                configModifier.SetTransactionTracerRecordSql(RecordSql);
                 configModifier.SetTransactionTracerSqlMetadataCommentsEnabled(true);
 
                 var instrumentationFilePath = Path.Combine(fixture.DestinationNewRelicExtensionsDirectoryPath, "NewRelic.Providers.Wrapper.Sql.Instrumentation.xml");
@@ -74,6 +76,7 @@ public abstract class OracleMetadataCommentTestsBase<TFixture> : NewRelicIntegra
             Assert.True(
                 trace.Sql.StartsWith(commentPrefix, StringComparison.Ordinal),
                 $"Expected SQL trace to start with SQL metadata comment, but was: {trace.Sql}");
+            AssertBodyObfuscatedWhenRequired(trace.Sql);
         }
 
         // Transaction trace segments
@@ -92,6 +95,7 @@ public abstract class OracleMetadataCommentTestsBase<TFixture> : NewRelicIntegra
             Assert.True(
                 sql?.StartsWith(commentPrefix, StringComparison.Ordinal) == true,
                 $"Expected transaction trace segment SQL to start with metadata comment, but was: {sql}");
+            AssertBodyObfuscatedWhenRequired(sql);
         }
 
         // Span events
@@ -107,7 +111,22 @@ public abstract class OracleMetadataCommentTestsBase<TFixture> : NewRelicIntegra
             Assert.True(
                 sql?.StartsWith(commentPrefix, StringComparison.Ordinal) == true,
                 $"Expected span event db.statement to start with metadata comment, but was: {sql}");
+            AssertBodyObfuscatedWhenRequired(sql);
         }
+    }
+
+    // In obfuscated mode the metadata comment is kept verbatim, but every literal after it must be masked.
+    private void AssertBodyObfuscatedWhenRequired(string sql)
+    {
+        if (RecordSql != "obfuscated")
+            return;
+
+        var commentEnd = sql.IndexOf("\"*/", StringComparison.Ordinal);
+        Assert.True(commentEnd > 0, $"Expected a complete SQL metadata comment, but was: {sql}");
+
+        var body = sql.Substring(commentEnd + 3);
+        Assert.DoesNotContain("'", body);
+        // No Assert.Contains("?") here: this exerciser also runs statements with no literal (SELECT COUNT(*) FROM <table>).
     }
 
     private static IEnumerable<TransactionTraceSegment> GetAllSegments(TransactionTraceSegment segment)
@@ -148,4 +167,23 @@ public class OracleMetadataCommentTestsCoreLatest : OracleMetadataCommentTestsBa
     public OracleMetadataCommentTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)
     {
     }
+}
+
+public class OracleMetadataCommentTestsCoreLatest_Obfuscated : OracleMetadataCommentTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+{
+    public OracleMetadataCommentTestsCoreLatest_Obfuscated(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)
+    {
+    }
+
+    protected override string RecordSql => "obfuscated";
+}
+
+[Trait("Platform", "WindowsOnly")]
+public class OracleMetadataCommentTestsFrameworkLatest_Obfuscated : OracleMetadataCommentTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+{
+    public OracleMetadataCommentTestsFrameworkLatest_Obfuscated(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
+    {
+    }
+
+    protected override string RecordSql => "obfuscated";
 }

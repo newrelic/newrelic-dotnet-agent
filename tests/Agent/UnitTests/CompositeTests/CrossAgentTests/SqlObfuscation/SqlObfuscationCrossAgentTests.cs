@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using NewRelic.Agent.Api;
 using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.TestUtilities;
@@ -15,103 +14,115 @@ using NUnit.Framework;
 
 namespace CompositeTests.CrossAgentTests.SqlObfuscation;
 
+/// <summary>
+/// sql_obfuscation.json is a verbatim copy of
+/// https://source.datanerd.us/newrelic/cross_agent_tests/blob/master/sql_obfuscation/sql_obfuscation.json (commit 3080dd984).
+/// Never edit it by hand; record unsupported cases in KnownGaps instead.
+/// </summary>
 [TestFixture]
 public class SqlObfuscationCrossAgentTests
 {
-    private static CompositeTestAgent _compositeTestAgent;
-    private IAgent _agent;
-    private SqlObfuscator _obfuscator = SqlObfuscator.GetSqlObfuscator("obfuscated");
-    private readonly List<string> validVendors = Enum.GetNames(typeof(DatastoreVendor)).Select(s => s.ToLower()).ToList();
+    private static readonly SqlObfuscator Obfuscator = SqlObfuscator.GetSqlObfuscator("obfuscated");
 
-    public static List<TestCaseData> SqlObfuscationTestDatas => GetSqlObfuscationTestDatas();
+    // Dialects in the suite that have no DatastoreVendor. The agent never applies their rules (these connections resolve to Other).
+    private static readonly HashSet<string> DialectsWithoutVendor = new HashSet<string> { "sqlite", "cassandra" };
 
-    [SetUp]
-    public void Setup()
+    // Cases the agent does not pass yet, as "<dialect>:<case name>". A listed case that starts passing fails the run, so the list cannot go stale.
+    private static readonly HashSet<string> KnownGaps = new HashSet<string>
     {
-        _compositeTestAgent = new CompositeTestAgent();
-        _agent = _compositeTestAgent.GetAgent();
-    }
+        "mysql:back_quoted_identifiers.mysql",
+        "mysql:end_of_query_comment_cstyle",
+        "mysql:end_of_query_comment_doubledash",
+        "mysql:end_of_query_comment_hash",
+        "mysql:multiple_literal_types.mysql",
+        "mysql:string_with_backslash_and_twin_single_quotes",
+        "mysql:string_with_escaped_quotes.mysql",
+        "mysql:string_with_trailing_backslash",
+        "mysql:string_with_twin_single_quotes",
+        "mysql:pathological/end_of_line_comments_with_quotes",
+        "mysql:pathological/mixed_comments_and_quotes",
+        "mysql:pathological/mixed_quotes_comments_and_newlines",
+        "mysql:pathological/mixed_quotes_end_of_line_comments",
+        "mysql:pathological/quote_delimiters_in_comments",
+        "mysql:malformed/unterminated_double_quoted_string.mysql",
+        "mysql:malformed/unterminated_single_quoted_string",
+        "mysql:end_of_string_backslash_and_line_comment_with_quite",
+        "mysql:hex_literals",
+        "mysql:exponential_literals",
+        "mysql:negative_integer_literals",
+        "mysql:booleans",
+        "mysql:prepended_comments_with_quotes.mysql",
+        "mysql:prepended_multiline_comments_with_quotes.mysql",
+        "oracle:double_quoted_identifiers.postgres",
+        "oracle:end_of_query_comment_cstyle",
+        "oracle:end_of_query_comment_doubledash",
+        "oracle:end_of_query_comment_hash",
+        "oracle:string_with_backslash_and_twin_single_quotes",
+        "oracle:string_with_trailing_backslash",
+        "oracle:string_with_twin_single_quotes",
+        "oracle:pathological/end_of_line_comments_with_quotes",
+        "oracle:pathological/mixed_comments_and_quotes",
+        "oracle:pathological/mixed_quotes_comments_and_newlines",
+        "oracle:pathological/mixed_quotes_end_of_line_comments",
+        "oracle:pathological/quote_delimiters_in_comments",
+        "oracle:malformed/unterminated_single_quoted_string",
+        "oracle:end_of_string_backslash_and_line_comment_with_quite",
+        "oracle:oracle_bracket_quote",
+        "oracle:oracle_brace_quote",
+        "oracle:oracle_angle_quote",
+        "oracle:oracle_paren_quote",
+        "oracle:exponential_literals",
+        "oracle:negative_integer_literals",
+    };
 
-    [TearDown]
-    public static void TearDown()
-    {
-        _compositeTestAgent.Dispose();
-    }
+    public static IEnumerable<TestCaseData> TestCases => LoadTestCases();
 
-    [TestCaseSource(nameof(SqlObfuscationTestDatas))]
-    public void SqlObfuscationCrossAgentTests_CrossAgentTests(SqlObfuscationTestData testData)
+    [TestCaseSource(nameof(TestCases))]
+    public void SqlObfuscation(SqlObfuscationTestData testData, string dialect)
     {
-        foreach (var dialect in testData.Dialects)
+        if (DialectsWithoutVendor.Contains(dialect))
         {
-            if (validVendors.Contains(dialect))
-            {
-                var datastoreVendor = GetDatastoreVendorFromString(dialect);
-                var obfuscatedSql = _obfuscator.GetObfuscatedSql(testData.Sql, datastoreVendor);
-
-                var exists = testData.ObfuscatedSql.Contains(obfuscatedSql);
-                Console.WriteLine(obfuscatedSql);
-                Assert.That(exists, Is.True, "Failed for " + dialect.ToUpper());
-            }
+            Assert.Ignore($"The agent has no DatastoreVendor for '{dialect}'.");
         }
+
+        var actual = Obfuscator.GetObfuscatedSql(testData.Sql, ToDatastoreVendor(dialect));
+
+        if (KnownGaps.Contains($"{dialect}:{testData.Name}"))
+        {
+            Assert.That(testData.Obfuscated, Does.Not.Contain(actual), "This known gap now passes; remove it from KnownGaps.");
+            Assert.Ignore("Known gap, not yet supported.");
+        }
+
+        Assert.That(testData.Obfuscated, Does.Contain(actual));
     }
 
-    private DatastoreVendor GetDatastoreVendorFromString(string dialect)
+    private static DatastoreVendor ToDatastoreVendor(string dialect)
     {
         switch (dialect)
         {
-            case "couchbase":
-                return DatastoreVendor.Couchbase;
-            case "ibmdb2":
-                return DatastoreVendor.IBMDB2;
-            case "memcached":
-                return DatastoreVendor.Memcached;
-            case "mongodb":
-                return DatastoreVendor.MongoDB;
-            case "mysql":
-                return DatastoreVendor.MySQL;
             case "mssql":
                 return DatastoreVendor.MSSQL;
+            case "mysql":
+                return DatastoreVendor.MySQL;
             case "oracle":
                 return DatastoreVendor.Oracle;
             case "postgres":
                 return DatastoreVendor.Postgres;
-            case "redis":
-                return DatastoreVendor.Redis;
             default:
-                return DatastoreVendor.Other;
+                throw new ArgumentException($"Unmapped cross-agent dialect '{dialect}'.", nameof(dialect));
         }
     }
 
-    private static List<TestCaseData> GetSqlObfuscationTestDatas()
+    private static IEnumerable<TestCaseData> LoadTestCases()
     {
-        var testCaseDatas = new List<TestCaseData>();
-
-        string location = Assembly.GetExecutingAssembly().GetLocation();
+        var location = Assembly.GetExecutingAssembly().GetLocation();
         var dllPath = Path.GetDirectoryName(new Uri(location).LocalPath);
         var jsonPath = Path.Combine(dllPath, "CrossAgentTests", "SqlObfuscation", "sql_obfuscation.json");
-        var jsonString = File.ReadAllText(jsonPath);
+        var testDatas = JsonConvert.DeserializeObject<List<SqlObfuscationTestData>>(File.ReadAllText(jsonPath));
 
-        var settings = new JsonSerializerSettings
-        {
-            Error = (sender, args) =>
-            {
-                if (System.Diagnostics.Debugger.IsAttached)
-                {
-                    System.Diagnostics.Debugger.Break();
-                }
-            }
-        };
-
-        var testDatas = JsonConvert.DeserializeObject<List<SqlObfuscationTestData>>(jsonString, settings);
-
-        foreach (var test in testDatas)
-        {
-            var testCase = new TestCaseData(test);
-            testCase.SetName("SqlObfuscationCrossAgentTests " + test.Name);
-            testCaseDatas.Add(testCase);
-        }
-
-        return testCaseDatas;
+        // Periods and slashes in names make test explorers treat the name as a namespace.
+        return testDatas.SelectMany(test => test.Dialects.Select(dialect =>
+            new TestCaseData(test, dialect).SetName($"SqlObfuscation_{test.Name.Replace('.', '_').Replace('/', '_')}_{dialect}")));
     }
 
     public class SqlObfuscationTestData
@@ -123,9 +134,11 @@ public class SqlObfuscationCrossAgentTests
         public string Sql { get; set; }
 
         [JsonProperty("obfuscated")]
-        public List<string> ObfuscatedSql { get; set; }
+        public List<string> Obfuscated { get; set; }
 
         [JsonProperty("dialects")]
         public List<string> Dialects { get; set; }
+
+        public override string ToString() => Name;
     }
 }

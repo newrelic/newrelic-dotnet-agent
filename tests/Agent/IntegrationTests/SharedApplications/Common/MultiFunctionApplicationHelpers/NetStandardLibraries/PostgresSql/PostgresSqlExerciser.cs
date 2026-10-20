@@ -46,6 +46,31 @@ internal class PostgresSqlExerciser
     [LibraryMethod]
     [Transaction]
     [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+    public void QuotedIdentifierQuery()
+    {
+        var teamMembers = new List<string>();
+
+        var connectionString = PostgresConfiguration.PostgresConnectionString;
+
+        using (var connection = new NpgsqlConnection(connectionString))
+        using (var command = new NpgsqlCommand("/* quoted identifier test */ SELECT \"firstname\", \"lastname\" FROM \"newrelic\".\"teammembers\" WHERE \"firstname\" = 'Matthew' AND \"lastname\" <> $tag$Nobody$tag$", connection))
+        {
+            connection.Open();
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    teamMembers.Add(reader.GetString(reader.GetOrdinal("firstname")));
+                }
+            }
+        }
+
+        ConsoleMFLogger.Info(string.Join(",", teamMembers));
+    }
+
+    [LibraryMethod]
+    [Transaction]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
     public async Task SimpleQueryAsync()
     {
         var teamMembers = new List<string>();

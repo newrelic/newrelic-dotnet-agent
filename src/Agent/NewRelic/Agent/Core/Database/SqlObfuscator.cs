@@ -3,6 +3,7 @@
 
 using System;
 using System.Text;
+using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Agent.Core.Database;
@@ -58,9 +59,14 @@ public abstract class SqlObfuscator
         }
     }
 
+    private static string Truncate(string sql)
+    {
+        return sql.Length > SqlStatementMaxLength ? sql.Substring(0, SqlStatementMaxLength) : sql;
+    }
+
     /// <summary>
-    /// Replaces strings and numeric values with a simple "?".
-    /// Does not use regular expressions, but a finite state machine that is easier to demonstrate always makes progress.
+    /// Replaces literals with "?". Postgres uses the spec-compliant SqlLiteralScanner; the remaining vendors still use the
+    /// legacy finite state machine below. The agent's own leading SQL metadata comment is kept verbatim for every vendor.
     /// </summary>
     class ObfuscatingSqlObfuscatorUsingExplicit : SqlObfuscator
     {
@@ -71,6 +77,21 @@ public abstract class SqlObfuscator
                 return null;
             }
 
+            // Keep the agent's metadata comment so the commented form stays visible in traces (SQL-Metadata-Comments spec).
+            var commentLength = SqlMetadataCommentBuilder.GetMetadataCommentLength(sql);
+            var body = commentLength == 0 ? sql : sql.Substring(commentLength);
+            var obfuscatedBody = vendor == DatastoreVendor.Postgres
+                ? SqlLiteralScanner.Obfuscate(body, SqlDialects.Postgres)
+                : ObfuscateLegacy(body, vendor);
+
+            return Truncate(commentLength == 0 ? obfuscatedBody : sql.Substring(0, commentLength) + obfuscatedBody);
+        }
+
+        /// <summary>
+        /// Does not use regular expressions, but a finite state machine that is easier to demonstrate always makes progress.
+        /// </summary>
+        private static string ObfuscateLegacy(string sql, DatastoreVendor vendor)
+        {
             StringBuilder sb = new StringBuilder();
             int length = sql.Length;
             for (int i = 0; i < length; i++)
@@ -165,7 +186,7 @@ public abstract class SqlObfuscator
                 sb.Append(ch);
             }
 
-            return sb.ToString(0, Math.Min(sb.Length, SqlStatementMaxLength));
+            return sb.ToString();
         }
     }
 

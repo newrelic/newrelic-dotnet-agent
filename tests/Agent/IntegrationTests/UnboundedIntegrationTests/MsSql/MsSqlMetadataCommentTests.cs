@@ -19,6 +19,8 @@ public abstract class MsSqlMetadataCommentTestsBase<TFixture> : NewRelicIntegrat
     private readonly string _expectedTransactionName;
     private readonly string _tableName;
 
+    protected virtual string RecordSql => "raw";
+
     public MsSqlMetadataCommentTestsBase(TFixture fixture, ITestOutputHelper output, string exerciserName) : base(fixture)
     {
         _fixture = fixture;
@@ -45,7 +47,7 @@ public abstract class MsSqlMetadataCommentTestsBase<TFixture> : NewRelicIntegrat
 
                 configModifier.SetTransactionTracerExplainEnabled(true);
                 configModifier.ForceSqlTraces();
-                configModifier.SetTransactionTracerRecordSql("raw");
+                configModifier.SetTransactionTracerRecordSql(RecordSql);
                 configModifier.SetTransactionTracerSqlMetadataCommentsEnabled(true);
 
                 var instrumentationFilePath = Path.Combine(fixture.DestinationNewRelicExtensionsDirectoryPath, "NewRelic.Providers.Wrapper.Sql.Instrumentation.xml");
@@ -77,6 +79,7 @@ public abstract class MsSqlMetadataCommentTestsBase<TFixture> : NewRelicIntegrat
             Assert.True(
                 trace.Sql.StartsWith(commentPrefix, StringComparison.Ordinal),
                 $"Expected SQL trace to start with SQL metadata comment, but was: {trace.Sql}");
+            AssertBodyObfuscatedWhenRequired(trace.Sql);
         }
 
         // Transaction trace segments
@@ -95,6 +98,7 @@ public abstract class MsSqlMetadataCommentTestsBase<TFixture> : NewRelicIntegrat
             Assert.True(
                 sql?.StartsWith(commentPrefix, StringComparison.Ordinal) == true,
                 $"Expected transaction trace segment SQL to start with metadata comment, but was: {sql}");
+            AssertBodyObfuscatedWhenRequired(sql);
         }
 
         // Span events
@@ -110,7 +114,22 @@ public abstract class MsSqlMetadataCommentTestsBase<TFixture> : NewRelicIntegrat
             Assert.True(
                 sql?.StartsWith(commentPrefix, StringComparison.Ordinal) == true,
                 $"Expected span event db.statement to start with metadata comment, but was: {sql}");
+            AssertBodyObfuscatedWhenRequired(sql);
         }
+    }
+
+    // In obfuscated mode the metadata comment is kept verbatim, but every literal after it must be masked.
+    private void AssertBodyObfuscatedWhenRequired(string sql)
+    {
+        if (RecordSql != "obfuscated")
+            return;
+
+        var commentEnd = sql.IndexOf("\"*/", StringComparison.Ordinal);
+        Assert.True(commentEnd > 0, $"Expected a complete SQL metadata comment, but was: {sql}");
+
+        var body = sql.Substring(commentEnd + 3);
+        Assert.DoesNotContain("'", body);
+        // No Assert.Contains("?") here: this exerciser also runs statements with no literal (SELECT COUNT(*) FROM <table>).
     }
 
     private static IEnumerable<TransactionTraceSegment> GetAllSegments(TransactionTraceSegment segment)
@@ -339,6 +358,27 @@ public class MsSqlMetadataCommentTestsStoredProc_MicrosoftDataSqlClient_CoreLate
         : base(fixture, output, "MicrosoftDataSqlClientExerciser")
     {
     }
+}
+
+public class MsSqlMetadataCommentTests_MicrosoftDataSqlClient_CoreLatest_Obfuscated : MsSqlMetadataCommentTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+{
+    public MsSqlMetadataCommentTests_MicrosoftDataSqlClient_CoreLatest_Obfuscated(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output, "MicrosoftDataSqlClientExerciser")
+    {
+    }
+
+    protected override string RecordSql => "obfuscated";
+}
+
+[Trait("Platform", "WindowsOnly")]
+public class MsSqlMetadataCommentTests_SystemData_FWLatest_Obfuscated : MsSqlMetadataCommentTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+{
+    public MsSqlMetadataCommentTests_SystemData_FWLatest_Obfuscated(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+        : base(fixture, output, "SystemDataExerciser")
+    {
+    }
+
+    protected override string RecordSql => "obfuscated";
 }
 
 #endregion
