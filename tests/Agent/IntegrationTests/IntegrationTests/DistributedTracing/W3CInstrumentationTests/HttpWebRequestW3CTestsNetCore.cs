@@ -17,9 +17,10 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing.W3CInstrumentationT
 /// Test W3C support when chaining multiple requests by using WebRequest.
 /// Instrumentations occur in this test are AspNetCore and HttpClient.
 /// </summary>
-public class HttpWebRequestW3CTestsNetCore : NewRelicIntegrationTest<AspNetCoreDistTraceRequestChainFixture>
+public abstract class HttpWebRequestW3CTestsNetCoreBase<TFixture> : NewRelicIntegrationTest<TFixture>
+    where TFixture : AspNetCoreDistTraceRequestChainFixture
 {
-    private readonly AspNetCoreDistTraceRequestChainFixture _fixture;
+    private readonly TFixture _fixture;
 
     private const int ExpectedTransactionCount = 1;
     private const string TestTraceId = "12345678901234567890123456789012";
@@ -27,7 +28,7 @@ public class HttpWebRequestW3CTestsNetCore : NewRelicIntegrationTest<AspNetCoreD
     private const string TestTracingVendors = "rojo,congo";
     private const string TestOtherVendorEntries = "rojo=1,congo=2";
 
-    public HttpWebRequestW3CTestsNetCore(AspNetCoreDistTraceRequestChainFixture fixture, ITestOutputHelper output)
+    protected HttpWebRequestW3CTestsNetCoreBase(TFixture fixture, ITestOutputHelper output)
         : base(fixture)
     {
         _fixture = fixture;
@@ -127,5 +128,21 @@ public class HttpWebRequestW3CTestsNetCore : NewRelicIntegrationTest<AspNetCoreD
             () => Assertions.MetricsExist(receiverExpectedMetrics, receiverActualMetrics),
             () => Assertions.MetricsDoNotExist(receiverUnexpectedMetrics, receiverActualMetrics)
         );
+    }
+}
+
+public class HttpWebRequestW3CTestsNetCoreCoreOldest : HttpWebRequestW3CTestsNetCoreBase<AspNetCoreDistTraceRequestChainFixtureCoreOldest>
+{
+    public HttpWebRequestW3CTestsNetCoreCoreOldest(AspNetCoreDistTraceRequestChainFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
+}
+
+public class HttpWebRequestW3CTestsNetCoreCoreLatest : HttpWebRequestW3CTestsNetCoreBase<AspNetCoreDistTraceRequestChainFixtureCoreLatest>
+{
+    public HttpWebRequestW3CTestsNetCoreCoreLatest(AspNetCoreDistTraceRequestChainFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
     }
 }

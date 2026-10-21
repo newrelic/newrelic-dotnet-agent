@@ -7,16 +7,16 @@ using NewRelic.Agent.IntegrationTestHelpers;
 
 namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 
-public class AspNetCoreMvcAsyncTestsFixture : RemoteApplicationFixture
+public abstract class AspNetCoreMvcAsyncTestsFixture : RemoteApplicationFixture
 {
     private const string ApplicationDirectoryName = @"AspNetCoreMvcAsyncApplication";
     private const string ExecutableName = @"AspNetCoreMvcAsyncApplication.exe";
 
-    public AspNetCoreMvcAsyncTestsFixture() :
+    protected AspNetCoreMvcAsyncTestsFixture(string targetFramework) :
         base(new RemoteService(
             ApplicationDirectoryName,
             ExecutableName,
-            Tfm.NetLatest,
+            targetFramework,
             ApplicationType.Bounded,
             true,
             true,
@@ -64,5 +64,19 @@ public class AspNetCoreMvcAsyncTestsFixture : RemoteApplicationFixture
     {
         var address = $"http://{DestinationServerName}:{Port}/ManualAsync/NewThreadStartBlocked";
         GetStringAndAssertEqual(address, "Worked");
+    }
+}
+
+public class AspNetCoreMvcAsyncTestsFixtureCoreOldest : AspNetCoreMvcAsyncTestsFixture
+{
+    public AspNetCoreMvcAsyncTestsFixtureCoreOldest() : base(Tfm.NetOldest)
+    {
+    }
+}
+
+public class AspNetCoreMvcAsyncTestsFixtureCoreLatest : AspNetCoreMvcAsyncTestsFixture
+{
+    public AspNetCoreMvcAsyncTestsFixtureCoreLatest() : base(Tfm.NetLatest)
+    {
     }
 }

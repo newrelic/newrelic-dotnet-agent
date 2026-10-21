@@ -12,13 +12,14 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.AspNetCore;
 
-public class AspNetCoreMvcAsyncTests : NewRelicIntegrationTest<AspNetCoreMvcAsyncTestsFixture>
+public abstract class AspNetCoreMvcAsyncTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
+    where TFixture : AspNetCoreMvcAsyncTestsFixture
 {
-    private readonly AspNetCoreMvcAsyncTestsFixture _fixture;
+    private readonly TFixture _fixture;
     private const int ExpectedTransactionCount = 7;
     private const string AssemblyName = "AspNetCoreMvcAsyncApplication";
 
-    public AspNetCoreMvcAsyncTests(AspNetCoreMvcAsyncTestsFixture fixture, ITestOutputHelper output)
+    protected AspNetCoreMvcAsyncTestsBase(TFixture fixture, ITestOutputHelper output)
         : base(fixture)
     {
         _fixture = fixture;
@@ -206,4 +207,20 @@ public class AspNetCoreMvcAsyncTests : NewRelicIntegrationTest<AspNetCoreMvcAsyn
         new Assertions.ExpectedMetric { metricName = @"DotNet/Middleware Pipeline", metricScope = @"WebTransaction/MVC/ManualAsync/NewThreadStartBlocked", CallCountAllHarvests = 1 },
         new Assertions.ExpectedMetric { metricName = @"Custom/ManualThreadStartBackgroundMethod", metricScope = @"WebTransaction/MVC/ManualAsync/NewThreadStartBlocked", CallCountAllHarvests = 1 }
     };
+}
+
+public class AspNetCoreMvcAsyncTestsCoreOldest : AspNetCoreMvcAsyncTestsBase<AspNetCoreMvcAsyncTestsFixtureCoreOldest>
+{
+    public AspNetCoreMvcAsyncTestsCoreOldest(AspNetCoreMvcAsyncTestsFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
+}
+
+public class AspNetCoreMvcAsyncTestsCoreLatest : AspNetCoreMvcAsyncTestsBase<AspNetCoreMvcAsyncTestsFixtureCoreLatest>
+{
+    public AspNetCoreMvcAsyncTestsCoreLatest(AspNetCoreMvcAsyncTestsFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
 }

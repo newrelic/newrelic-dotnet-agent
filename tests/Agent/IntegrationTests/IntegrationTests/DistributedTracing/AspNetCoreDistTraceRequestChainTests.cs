@@ -14,14 +14,15 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.DistributedTracing;
 
-public class AspNetCoreDistTraceRequestChainTests : NewRelicIntegrationTest<AspNetCoreDistTraceRequestChainFixture>
+public abstract class AspNetCoreDistTraceRequestChainTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
+    where TFixture : AspNetCoreDistTraceRequestChainFixture
 {
-    private readonly AspNetCoreDistTraceRequestChainFixture _fixture;
+    private readonly TFixture _fixture;
 
     private const int ExpectedTransactionCount = 2;
     public const string TransportType = "HTTP"; //All calls are Http for the distributed traces
 
-    public AspNetCoreDistTraceRequestChainTests(AspNetCoreDistTraceRequestChainFixture fixture, ITestOutputHelper output)
+    protected AspNetCoreDistTraceRequestChainTestsBase(TFixture fixture, ITestOutputHelper output)
         : base(fixture)
     {
         _fixture = fixture;
@@ -606,4 +607,20 @@ public class AspNetCoreDistTraceRequestChainTests : NewRelicIntegrationTest<AspN
     }
 
     #endregion
+}
+
+public class AspNetCoreDistTraceRequestChainTestsCoreOldest : AspNetCoreDistTraceRequestChainTestsBase<AspNetCoreDistTraceRequestChainFixtureCoreOldest>
+{
+    public AspNetCoreDistTraceRequestChainTestsCoreOldest(AspNetCoreDistTraceRequestChainFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
+}
+
+public class AspNetCoreDistTraceRequestChainTestsCoreLatest : AspNetCoreDistTraceRequestChainTestsBase<AspNetCoreDistTraceRequestChainFixtureCoreLatest>
+{
+    public AspNetCoreDistTraceRequestChainTestsCoreLatest(AspNetCoreDistTraceRequestChainFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
 }
