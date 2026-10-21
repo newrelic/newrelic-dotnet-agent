@@ -8,11 +8,12 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.Logging.AuditLog;
 
-public class AuditLogTests : NewRelicIntegrationTest<RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture>
+public abstract class AuditLogTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
+    where TFixture : RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture
 {
-    private readonly RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture _fixture;
+    private readonly TFixture _fixture;
 
-    public AuditLogTests(RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture  fixture, ITestOutputHelper output) :
+    protected AuditLogTestsBase(TFixture fixture, ITestOutputHelper output) :
         base(fixture)
     {
         _fixture = fixture;
@@ -53,5 +54,21 @@ public class AuditLogTests : NewRelicIntegrationTest<RemoteServiceFixtures.AspNe
             () => Assert.NotEmpty(dataReceivedLogLines),
             () => Assert.True(dataSentLogLines.Count == 2 * dataReceivedLogLines.Count) // audit log always contains 2 "sent" lines for every "received" line
         );
+    }
+}
+
+public class AuditLogTestsCoreOldest : AuditLogTestsBase<RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixtureCoreOldest>
+{
+    public AuditLogTestsCoreOldest(RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
+}
+
+public class AuditLogTestsCoreLatest : AuditLogTestsBase<RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixtureCoreLatest>
+{
+    public AuditLogTestsCoreLatest(RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
     }
 }

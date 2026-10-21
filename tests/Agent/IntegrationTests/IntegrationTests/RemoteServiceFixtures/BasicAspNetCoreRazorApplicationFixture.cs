@@ -11,16 +11,16 @@ using NewRelic.Agent.IntegrationTestHelpers;
 
 namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 
-public class BasicAspNetCoreRazorApplicationFixture : RemoteApplicationFixture
+public abstract class BasicAspNetCoreRazorApplicationFixture : RemoteApplicationFixture
 {
     private bool _responseCompressionEnabled;
     private const string ApplicationDirectoryName = @"BasicAspNetCoreRazorApplication";
     private const string ExecutableName = @"BasicAspNetCoreRazorApplication.exe";
-    public BasicAspNetCoreRazorApplicationFixture()
+    protected BasicAspNetCoreRazorApplicationFixture(string targetFramework)
         : base(new RemoteService(
             ApplicationDirectoryName,
             ExecutableName,
-            targetFramework: Tfm.NetLatest,
+            targetFramework: targetFramework,
             ApplicationType.Bounded,
             true,
             true,
@@ -69,5 +69,19 @@ public class BasicAspNetCoreRazorApplicationFixture : RemoteApplicationFixture
         }
 
         return GetString(address);
+    }
+}
+
+public class BasicAspNetCoreRazorApplicationFixtureCoreOldest : BasicAspNetCoreRazorApplicationFixture
+{
+    public BasicAspNetCoreRazorApplicationFixtureCoreOldest() : base(Tfm.NetOldest)
+    {
+    }
+}
+
+public class BasicAspNetCoreRazorApplicationFixtureCoreLatest : BasicAspNetCoreRazorApplicationFixture
+{
+    public BasicAspNetCoreRazorApplicationFixtureCoreLatest() : base(Tfm.NetLatest)
+    {
     }
 }

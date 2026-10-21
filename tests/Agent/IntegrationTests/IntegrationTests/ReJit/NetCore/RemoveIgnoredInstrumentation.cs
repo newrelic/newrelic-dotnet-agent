@@ -19,11 +19,12 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetCore;
 /// Logging: finest
 /// Files: Integration.Testing.AddNodeTest.xml
 /// </summary>
-public class RemoveIgnoredInstrumentation : NewRelicIntegrationTest<AspNetCoreReJitMvcApplicationFixture>
+public abstract class RemoveIgnoredInstrumentationBase<TFixture> : NewRelicIntegrationTest<TFixture>
+    where TFixture : AspNetCoreReJitMvcApplicationFixture
 {
     private readonly AspNetCoreReJitMvcApplicationFixture _fixture;
 
-    public RemoveIgnoredInstrumentation(AspNetCoreReJitMvcApplicationFixture fixture, ITestOutputHelper output) : base(fixture)
+    protected RemoveIgnoredInstrumentationBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
     {
         _fixture = fixture;
 
@@ -88,5 +89,21 @@ public class RemoveIgnoredInstrumentation : NewRelicIntegrationTest<AspNetCoreRe
         NrAssert.Multiple(
             () => Assertions.MetricsExist(expectedMetrics, metrics)
         );
+    }
+}
+
+public class RemoveIgnoredInstrumentationCoreOldest : RemoveIgnoredInstrumentationBase<AspNetCoreReJitMvcApplicationFixtureCoreOldest>
+{
+    public RemoveIgnoredInstrumentationCoreOldest(AspNetCoreReJitMvcApplicationFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
+}
+
+public class RemoveIgnoredInstrumentationCoreLatest : RemoveIgnoredInstrumentationBase<AspNetCoreReJitMvcApplicationFixtureCoreLatest>
+{
+    public RemoveIgnoredInstrumentationCoreLatest(AspNetCoreReJitMvcApplicationFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
     }
 }

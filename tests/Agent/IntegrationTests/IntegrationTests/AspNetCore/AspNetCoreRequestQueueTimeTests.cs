@@ -10,11 +10,12 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.AspNetCore;
 
-public class AspNetCoreRequestQueueTimeTests : NewRelicIntegrationTest<RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture>
+public abstract class AspNetCoreRequestQueueTimeTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
+    where TFixture : RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture
 {
-    private readonly RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture _fixture;
+    private readonly TFixture _fixture;
 
-    public AspNetCoreRequestQueueTimeTests(RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture fixture, ITestOutputHelper output)
+    protected AspNetCoreRequestQueueTimeTestsBase(TFixture fixture, ITestOutputHelper output)
         : base(fixture)
     {
         _fixture = fixture;
@@ -91,5 +92,21 @@ public class AspNetCoreRequestQueueTimeTests : NewRelicIntegrationTest<RemoteSer
         Assert.True(
             totalCalls == 1,
             $"Expected exactly 1 WebFrontend/QueueTime call (from the past-header request only); got {totalCalls}.");
+    }
+}
+
+public class AspNetCoreRequestQueueTimeTestsCoreOldest : AspNetCoreRequestQueueTimeTestsBase<RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixtureCoreOldest>
+{
+    public AspNetCoreRequestQueueTimeTestsCoreOldest(RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
+}
+
+public class AspNetCoreRequestQueueTimeTestsCoreLatest : AspNetCoreRequestQueueTimeTestsBase<RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixtureCoreLatest>
+{
+    public AspNetCoreRequestQueueTimeTestsCoreLatest(RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
     }
 }

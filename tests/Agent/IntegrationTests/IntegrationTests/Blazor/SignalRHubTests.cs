@@ -11,11 +11,11 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.Blazor;
 
-public abstract class SignalRHubTests : NewRelicIntegrationTest<RemoteServiceFixtures.BlazorSignalRApplicationFixture>
+public abstract class SignalRHubTestsBase<TFixture> : NewRelicIntegrationTest<TFixture> where TFixture : RemoteServiceFixtures.BlazorSignalRApplicationFixture
 {
-    protected readonly RemoteServiceFixtures.BlazorSignalRApplicationFixture _fixture;
+    protected readonly TFixture _fixture;
 
-    protected SignalRHubTests(RemoteServiceFixtures.BlazorSignalRApplicationFixture fixture, ITestOutputHelper output, HttpTransportType transport)
+    protected SignalRHubTestsBase(TFixture fixture, ITestOutputHelper output, HttpTransportType transport)
         : base(fixture)
     {
         _fixture = fixture;
@@ -47,9 +47,9 @@ public abstract class SignalRHubTests : NewRelicIntegrationTest<RemoteServiceFix
     };
 }
 
-public class SignalRHubWebSocketsTests : SignalRHubTests
+public abstract class SignalRHubWebSocketsTestsBase<TFixture> : SignalRHubTestsBase<TFixture> where TFixture : RemoteServiceFixtures.BlazorSignalRApplicationFixture
 {
-    public SignalRHubWebSocketsTests(RemoteServiceFixtures.BlazorSignalRApplicationFixture fixture, ITestOutputHelper output)
+    protected SignalRHubWebSocketsTestsBase(TFixture fixture, ITestOutputHelper output)
         : base(fixture, output, HttpTransportType.WebSockets)
     {
     }
@@ -68,9 +68,9 @@ public class SignalRHubWebSocketsTests : SignalRHubTests
     }
 }
 
-public abstract class SignalRHubIgnoredTransportTests : SignalRHubTests
+public abstract class SignalRHubIgnoredTransportTestsBase<TFixture> : SignalRHubTestsBase<TFixture> where TFixture : RemoteServiceFixtures.BlazorSignalRApplicationFixture
 {
-    protected SignalRHubIgnoredTransportTests(RemoteServiceFixtures.BlazorSignalRApplicationFixture fixture, ITestOutputHelper output, HttpTransportType transport)
+    protected SignalRHubIgnoredTransportTestsBase(TFixture fixture, ITestOutputHelper output, HttpTransportType transport)
         : base(fixture, output, transport)
     {
     }
@@ -106,9 +106,9 @@ public abstract class SignalRHubIgnoredTransportTests : SignalRHubTests
     }
 }
 
-public class SignalRHubLongPollingTests : SignalRHubIgnoredTransportTests
+public abstract class SignalRHubLongPollingTestsBase<TFixture> : SignalRHubIgnoredTransportTestsBase<TFixture> where TFixture : RemoteServiceFixtures.BlazorSignalRApplicationFixture
 {
-    public SignalRHubLongPollingTests(RemoteServiceFixtures.BlazorSignalRApplicationFixture fixture, ITestOutputHelper output)
+    protected SignalRHubLongPollingTestsBase(TFixture fixture, ITestOutputHelper output)
         : base(fixture, output, HttpTransportType.LongPolling)
     {
     }
@@ -116,12 +116,60 @@ public class SignalRHubLongPollingTests : SignalRHubIgnoredTransportTests
     protected override bool ExpectServerSentEventsSkip => false;
 }
 
-public class SignalRHubServerSentEventsTests : SignalRHubIgnoredTransportTests
+public abstract class SignalRHubServerSentEventsTestsBase<TFixture> : SignalRHubIgnoredTransportTestsBase<TFixture> where TFixture : RemoteServiceFixtures.BlazorSignalRApplicationFixture
 {
-    public SignalRHubServerSentEventsTests(RemoteServiceFixtures.BlazorSignalRApplicationFixture fixture, ITestOutputHelper output)
+    protected SignalRHubServerSentEventsTestsBase(TFixture fixture, ITestOutputHelper output)
         : base(fixture, output, HttpTransportType.ServerSentEvents)
     {
     }
 
     protected override bool ExpectServerSentEventsSkip => true;
+}
+
+public class SignalRHubWebSocketsTestsCoreOldest : SignalRHubWebSocketsTestsBase<RemoteServiceFixtures.BlazorSignalRApplicationFixtureCoreOldest>
+{
+    public SignalRHubWebSocketsTestsCoreOldest(RemoteServiceFixtures.BlazorSignalRApplicationFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
+}
+
+public class SignalRHubWebSocketsTestsCoreLatest : SignalRHubWebSocketsTestsBase<RemoteServiceFixtures.BlazorSignalRApplicationFixtureCoreLatest>
+{
+    public SignalRHubWebSocketsTestsCoreLatest(RemoteServiceFixtures.BlazorSignalRApplicationFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
+}
+
+public class SignalRHubLongPollingTestsCoreOldest : SignalRHubLongPollingTestsBase<RemoteServiceFixtures.BlazorSignalRApplicationFixtureCoreOldest>
+{
+    public SignalRHubLongPollingTestsCoreOldest(RemoteServiceFixtures.BlazorSignalRApplicationFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
+}
+
+public class SignalRHubLongPollingTestsCoreLatest : SignalRHubLongPollingTestsBase<RemoteServiceFixtures.BlazorSignalRApplicationFixtureCoreLatest>
+{
+    public SignalRHubLongPollingTestsCoreLatest(RemoteServiceFixtures.BlazorSignalRApplicationFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
+}
+
+public class SignalRHubServerSentEventsTestsCoreOldest : SignalRHubServerSentEventsTestsBase<RemoteServiceFixtures.BlazorSignalRApplicationFixtureCoreOldest>
+{
+    public SignalRHubServerSentEventsTestsCoreOldest(RemoteServiceFixtures.BlazorSignalRApplicationFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
+}
+
+public class SignalRHubServerSentEventsTestsCoreLatest : SignalRHubServerSentEventsTestsBase<RemoteServiceFixtures.BlazorSignalRApplicationFixtureCoreLatest>
+{
+    public SignalRHubServerSentEventsTestsCoreLatest(RemoteServiceFixtures.BlazorSignalRApplicationFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
 }

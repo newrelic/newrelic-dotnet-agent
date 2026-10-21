@@ -12,12 +12,13 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation;
 
-public class NetCoreAsyncTests : NewRelicIntegrationTest<NetCoreAsyncTestsFixture>
+public abstract class NetCoreAsyncTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
+    where TFixture : NetCoreAsyncTestsFixture
 {
-    private readonly NetCoreAsyncTestsFixture _fixture;
+    private readonly TFixture _fixture;
     private const int ExpectedTransactionCount = 3;
 
-    public NetCoreAsyncTests(NetCoreAsyncTestsFixture fixture, ITestOutputHelper output) : base(fixture)
+    protected NetCoreAsyncTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
     {
         _fixture = fixture;
         _fixture.TestLogger = output;
@@ -114,4 +115,20 @@ public class NetCoreAsyncTests : NewRelicIntegrationTest<NetCoreAsyncTestsFixtur
         new Assertions.ExpectedMetric { metricName = @"Custom/TaskRunBackgroundMethod", metricScope = @"OtherTransaction/Custom/CpuBoundTasksAsync", CallCountAllHarvests = 1 },
         new Assertions.ExpectedMetric { metricName = @"Custom/TaskFactoryStartNewBackgroundMethod", metricScope = @"OtherTransaction/Custom/CpuBoundTasksAsync", CallCountAllHarvests = 1 }
     };
+}
+
+public class NetCoreAsyncTestsCoreOldest : NetCoreAsyncTestsBase<NetCoreAsyncTestsFixtureCoreOldest>
+{
+    public NetCoreAsyncTestsCoreOldest(NetCoreAsyncTestsFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
+}
+
+public class NetCoreAsyncTestsCoreLatest : NetCoreAsyncTestsBase<NetCoreAsyncTestsFixtureCoreLatest>
+{
+    public NetCoreAsyncTestsCoreLatest(NetCoreAsyncTestsFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
 }

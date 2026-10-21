@@ -15,13 +15,16 @@ public class MockNewRelicFixture : RemoteApplicationFixture
 {
     private const string ApplicationDirectoryName = @"MockNewRelic";
     private const string ExecutableName = @"MockNewRelic.exe";
-    private const string TargetFramework = Tfm.NetLatest;
 
     public RemoteService MockNewRelicApplication { get; set; }
 
-    public MockNewRelicFixture(RemoteApplication remoteApplication) : base(remoteApplication)
+    public MockNewRelicFixture(RemoteApplication remoteApplication) : this(remoteApplication, Tfm.NetLatest)
     {
-        MockNewRelicApplication = new RemoteService(ApplicationDirectoryName, ExecutableName, TargetFramework, ApplicationType.Bounded, true, true, true);
+    }
+
+    public MockNewRelicFixture(RemoteApplication remoteApplication, string mockTargetFramework) : base(remoteApplication)
+    {
+        MockNewRelicApplication = new RemoteService(ApplicationDirectoryName, ExecutableName, mockTargetFramework, ApplicationType.Bounded, true, true, true);
 
         Actions(
             setupConfiguration: () =>

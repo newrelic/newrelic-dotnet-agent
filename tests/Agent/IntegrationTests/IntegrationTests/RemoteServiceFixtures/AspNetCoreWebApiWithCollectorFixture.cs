@@ -7,17 +7,17 @@ using NewRelic.Agent.IntegrationTestHelpers;
 
 namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 
-public class AspNetCoreWebApiWithCollectorFixture : MockNewRelicFixture
+public abstract class AspNetCoreWebApiWithCollectorFixture : MockNewRelicFixture
 {
-    public AspNetCoreWebApiWithCollectorFixture() :
+    protected AspNetCoreWebApiWithCollectorFixture(string targetFramework) :
         base(new RemoteService(
             "AspNetCoreBasicWebApiApplication",
             "AspNetCoreBasicWebApiApplication.exe",
-            Tfm.NetLatest,
+            targetFramework,
             ApplicationType.Bounded,
             true,
             true,
-            true))
+            true), targetFramework)
     {
     }
 
@@ -32,5 +32,19 @@ public class AspNetCoreWebApiWithCollectorFixture : MockNewRelicFixture
     {
         var address = $"http://{DestinationServerName}:{Port}/api/default/BurnCpu?seconds={seconds}";
         GetStringAndAssertContains(address, "burned cpu");
+    }
+}
+
+public class AspNetCoreWebApiWithCollectorFixtureCoreOldest : AspNetCoreWebApiWithCollectorFixture
+{
+    public AspNetCoreWebApiWithCollectorFixtureCoreOldest() : base(Tfm.NetOldest)
+    {
+    }
+}
+
+public class AspNetCoreWebApiWithCollectorFixtureCoreLatest : AspNetCoreWebApiWithCollectorFixture
+{
+    public AspNetCoreWebApiWithCollectorFixtureCoreLatest() : base(Tfm.NetLatest)
+    {
     }
 }

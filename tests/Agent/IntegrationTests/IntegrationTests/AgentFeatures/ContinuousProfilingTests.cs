@@ -19,7 +19,7 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures;
 /// collector. Whether the POST is actually accepted depends on the target endpoint/account being reachable
 /// from the test host, so assertions key off the built-payload log lines rather than send success. The drain
 /// also reports supportability metrics. Independent receiver-side validation of the actual OTLP protobuf
-/// bytes lives in <see cref="ContinuousProfilingOtlpReceiverTests"/>, which runs against the mock collector.
+/// bytes lives in <c>ContinuousProfilingOtlpReceiverTestsBase</c>, which runs against the mock collector.
 ///
 /// Continuous profiling is enabled purely by configuration -- the session starts at agent initialization
 /// (<c>AgentManager.StartIfEnabled</c>) when the config/env flag is set, with no collector command required.

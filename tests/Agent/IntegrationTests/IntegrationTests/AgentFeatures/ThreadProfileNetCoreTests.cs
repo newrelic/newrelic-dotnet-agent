@@ -73,12 +73,7 @@ public abstract class ThreadProfileNetCoreTestsBase<TFixture> : NewRelicIntegrat
     [Fact]
     public void Test()
     {
-        var expectedMainMethodSignature = "";
-
-        if (_fixture.GetType() == typeof(AspNetCoreWebApiWithCollectorFixture))
-        {
-            expectedMainMethodSignature = @"[""AspNetCoreBasicWebApiApplication.Program"",""Main"",0]";
-        }
+        var expectedMainMethodSignature = @"[""AspNetCoreBasicWebApiApplication.Program"",""Main"",0]";
 
         NrAssert.Multiple(
             () => Assert.Contains(@"""OTHER"":[[[""Native"",""Function Call"",0]", _threadProfileString),
@@ -118,9 +113,17 @@ public abstract class ThreadProfileNetCoreTestsBase<TFixture> : NewRelicIntegrat
     }
 }
 
-public class ThreadProfileNetCoreLatestTests : ThreadProfileNetCoreTestsBase<AspNetCoreWebApiWithCollectorFixture>
+public class ThreadProfileNetCoreOldestTests : ThreadProfileNetCoreTestsBase<AspNetCoreWebApiWithCollectorFixtureCoreOldest>
 {
-    public ThreadProfileNetCoreLatestTests(AspNetCoreWebApiWithCollectorFixture fixture, ITestOutputHelper output)
+    public ThreadProfileNetCoreOldestTests(AspNetCoreWebApiWithCollectorFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
+}
+
+public class ThreadProfileNetCoreLatestTests : ThreadProfileNetCoreTestsBase<AspNetCoreWebApiWithCollectorFixtureCoreLatest>
+{
+    public ThreadProfileNetCoreLatestTests(AspNetCoreWebApiWithCollectorFixtureCoreLatest fixture, ITestOutputHelper output)
         : base(fixture, output)
     {
     }

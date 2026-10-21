@@ -1,8 +1,9 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.Web" TreatAsLocalProperty="DeployOnBuild">
 
   <PropertyGroup>
-    <TargetFramework>net11.0</TargetFramework>
-    <TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
+    <TargetFrameworks>net10.0;net11.0</TargetFrameworks>
+    <!-- The outer multi-TFM build cannot publish (NETSDK1129); each TFM build still deploys. -->
+    <DeployOnBuild Condition="'$(TargetFramework)' == ''">false</DeployOnBuild>
   </PropertyGroup>
 
   <ItemGroup>

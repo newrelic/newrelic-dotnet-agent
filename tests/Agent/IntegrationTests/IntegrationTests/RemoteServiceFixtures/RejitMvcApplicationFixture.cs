@@ -10,18 +10,13 @@ using NewRelic.Agent.IntegrationTestHelpers;
 
 namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 
-public class AspNetCoreReJitMvcApplicationFixture : RejitMvcApplicationFixture
+public abstract class AspNetCoreReJitMvcApplicationFixture : RejitMvcApplicationFixture
 {
-    public AspNetCoreReJitMvcApplicationFixture() :
-        this(useTieredCompilation: false)
-    {
-    }
-
-    protected AspNetCoreReJitMvcApplicationFixture(bool useTieredCompilation)
+    protected AspNetCoreReJitMvcApplicationFixture(string targetFramework, bool useTieredCompilation)
         : base(new RemoteService(
             "AspNetCoreMvcRejitApplication",
             "AspNetCoreMvcRejitApplication.exe",
-            Tfm.NetLatest,
+            targetFramework,
             ApplicationType.Bounded,
             true,
             true,
@@ -33,10 +28,34 @@ public class AspNetCoreReJitMvcApplicationFixture : RejitMvcApplicationFixture
     public override string DestinationServerName => "localhost";
 }
 
-public class AspNetCoreReJitMvcApplicationFixtureWithTieredCompilation : AspNetCoreReJitMvcApplicationFixture
+public class AspNetCoreReJitMvcApplicationFixtureCoreOldest : AspNetCoreReJitMvcApplicationFixture
 {
-    public AspNetCoreReJitMvcApplicationFixtureWithTieredCompilation()
-        : base(useTieredCompilation: true)
+    public AspNetCoreReJitMvcApplicationFixtureCoreOldest()
+        : base(Tfm.NetOldest, useTieredCompilation: false)
+    {
+    }
+}
+
+public class AspNetCoreReJitMvcApplicationFixtureCoreLatest : AspNetCoreReJitMvcApplicationFixture
+{
+    public AspNetCoreReJitMvcApplicationFixtureCoreLatest()
+        : base(Tfm.NetLatest, useTieredCompilation: false)
+    {
+    }
+}
+
+public class AspNetCoreReJitMvcApplicationFixtureWithTieredCompilationCoreOldest : AspNetCoreReJitMvcApplicationFixture
+{
+    public AspNetCoreReJitMvcApplicationFixtureWithTieredCompilationCoreOldest()
+        : base(Tfm.NetOldest, useTieredCompilation: true)
+    {
+    }
+}
+
+public class AspNetCoreReJitMvcApplicationFixtureWithTieredCompilationCoreLatest : AspNetCoreReJitMvcApplicationFixture
+{
+    public AspNetCoreReJitMvcApplicationFixtureWithTieredCompilationCoreLatest()
+        : base(Tfm.NetLatest, useTieredCompilation: true)
     {
     }
 }

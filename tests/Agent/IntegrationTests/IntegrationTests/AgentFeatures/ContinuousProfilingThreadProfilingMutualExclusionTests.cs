@@ -30,7 +30,7 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures;
 /// command -- which requires a connect plus a further agent-commands poll -- can possibly be delivered and
 /// processed. The forward guard is therefore genuinely exercised on every run, not just observed as absent.
 /// </summary>
-public class ContinuousProfilingThreadProfilingMutualExclusionTests : NewRelicIntegrationTest<AspNetCoreWebApiWithCollectorFixture>
+public abstract class ContinuousProfilingThreadProfilingMutualExclusionTestsBase<TFixture> : NewRelicIntegrationTest<TFixture> where TFixture : AspNetCoreWebApiWithCollectorFixture
 {
     private readonly AspNetCoreWebApiWithCollectorFixture _fixture;
 
@@ -46,7 +46,7 @@ public class ContinuousProfilingThreadProfilingMutualExclusionTests : NewRelicIn
     private static readonly string ThreadProfilingAttemptResolvedLogLineRegex =
         $"(?:{ThreadProfilingRefusedLogLineRegex})|(?:{AgentLogBase.ThreadProfileStartingLogLineRegex})";
 
-    public ContinuousProfilingThreadProfilingMutualExclusionTests(AspNetCoreWebApiWithCollectorFixture fixture, ITestOutputHelper output) : base(fixture)
+    protected ContinuousProfilingThreadProfilingMutualExclusionTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
     {
         _fixture = fixture;
         _fixture.TestLogger = output;
@@ -90,5 +90,21 @@ public class ContinuousProfilingThreadProfilingMutualExclusionTests : NewRelicIn
             () => Assert.True(refusalLogged, "The thread-profiling start attempt was not refused while continuous profiling was active."),
             () => Assert.False(threadProfilingStarted, "A thread-profiling session started while continuous profiling was active.")
         );
+    }
+}
+
+public class ContinuousProfilingThreadProfilingMutualExclusionTestsCoreOldest : ContinuousProfilingThreadProfilingMutualExclusionTestsBase<AspNetCoreWebApiWithCollectorFixtureCoreOldest>
+{
+    public ContinuousProfilingThreadProfilingMutualExclusionTestsCoreOldest(AspNetCoreWebApiWithCollectorFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
+}
+
+public class ContinuousProfilingThreadProfilingMutualExclusionTestsCoreLatest : ContinuousProfilingThreadProfilingMutualExclusionTestsBase<AspNetCoreWebApiWithCollectorFixtureCoreLatest>
+{
+    public ContinuousProfilingThreadProfilingMutualExclusionTestsCoreLatest(AspNetCoreWebApiWithCollectorFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
     }
 }

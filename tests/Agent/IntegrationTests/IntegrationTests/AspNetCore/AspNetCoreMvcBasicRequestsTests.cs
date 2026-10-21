@@ -12,13 +12,14 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.AspNetCore;
 
-public class AspNetCoreMvcBasicRequestsTests : NewRelicIntegrationTest<RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture>
+public abstract class AspNetCoreMvcBasicRequestsTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
+    where TFixture : RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture
 {
-    private readonly RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture _fixture;
+    private readonly TFixture _fixture;
 
     private const int ExpectedTransactionCount = 2;
 
-    public AspNetCoreMvcBasicRequestsTests(RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture fixture, ITestOutputHelper output)
+    protected AspNetCoreMvcBasicRequestsTestsBase(TFixture fixture, ITestOutputHelper output)
         : base(fixture)
     {
         _fixture = fixture;
@@ -144,4 +145,20 @@ public class AspNetCoreMvcBasicRequestsTests : NewRelicIntegrationTest<RemoteSer
         new Assertions.ExpectedMetric {metricName = @"WebTransaction/ASP/Home/About", CallCountAllHarvests = 1},
     };
 
+}
+
+public class AspNetCoreMvcBasicRequestsTestsCoreOldest : AspNetCoreMvcBasicRequestsTestsBase<RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixtureCoreOldest>
+{
+    public AspNetCoreMvcBasicRequestsTestsCoreOldest(RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
+}
+
+public class AspNetCoreMvcBasicRequestsTestsCoreLatest : AspNetCoreMvcBasicRequestsTestsBase<RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixtureCoreLatest>
+{
+    public AspNetCoreMvcBasicRequestsTestsCoreLatest(RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
 }

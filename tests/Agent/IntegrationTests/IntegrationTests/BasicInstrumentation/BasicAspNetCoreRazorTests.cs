@@ -11,12 +11,13 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation;
 
-public class BasicAspNetCoreRazorTests : NewRelicIntegrationTest<RemoteServiceFixtures.BasicAspNetCoreRazorApplicationFixture>
+public abstract class BasicAspNetCoreRazorTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
+    where TFixture : RemoteServiceFixtures.BasicAspNetCoreRazorApplicationFixture
 {
-    private readonly RemoteServiceFixtures.BasicAspNetCoreRazorApplicationFixture _fixture;
+    private readonly TFixture _fixture;
     private string _responseBody;
 
-    public BasicAspNetCoreRazorTests(RemoteServiceFixtures.BasicAspNetCoreRazorApplicationFixture fixture, ITestOutputHelper output)
+    protected BasicAspNetCoreRazorTestsBase(TFixture fixture, ITestOutputHelper output)
         : base(fixture)
     {
         _fixture = fixture;
@@ -133,5 +134,21 @@ public class BasicAspNetCoreRazorTests : NewRelicIntegrationTest<RemoteServiceFi
             () => Assert.Empty(_fixture.AgentLog.GetErrorTraces()),
             () => Assert.Empty(_fixture.AgentLog.GetErrorEvents())
         );
+    }
+}
+
+public class BasicAspNetCoreRazorTestsCoreOldest : BasicAspNetCoreRazorTestsBase<RemoteServiceFixtures.BasicAspNetCoreRazorApplicationFixtureCoreOldest>
+{
+    public BasicAspNetCoreRazorTestsCoreOldest(RemoteServiceFixtures.BasicAspNetCoreRazorApplicationFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
+}
+
+public class BasicAspNetCoreRazorTestsCoreLatest : BasicAspNetCoreRazorTestsBase<RemoteServiceFixtures.BasicAspNetCoreRazorApplicationFixtureCoreLatest>
+{
+    public BasicAspNetCoreRazorTestsCoreLatest(RemoteServiceFixtures.BasicAspNetCoreRazorApplicationFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
     }
 }

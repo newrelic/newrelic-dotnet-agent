@@ -12,11 +12,12 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.CodeLevelMetrics;
 
-public class AspNetCoreMvcCodeAttributeTests : NewRelicIntegrationTest<RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture>
+public abstract class AspNetCoreMvcCodeAttributeTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
+    where TFixture : RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture
 {
-    private readonly RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture _fixture;
+    private readonly TFixture _fixture;
 
-    public AspNetCoreMvcCodeAttributeTests(RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture fixture, ITestOutputHelper output)
+    protected AspNetCoreMvcCodeAttributeTestsBase(TFixture fixture, ITestOutputHelper output)
         : base(fixture)
     {
         _fixture = fixture;
@@ -78,4 +79,20 @@ public class AspNetCoreMvcCodeAttributeTests : NewRelicIntegrationTest<RemoteSer
         { "code.namespace", "AspNetCoreMvcBasicRequestsApplication.Controllers.DetachWrapperController" },
         { "code.function", "CallAsyncExternal" }
     };
+}
+
+public class AspNetCoreMvcCodeAttributeTestsCoreOldest : AspNetCoreMvcCodeAttributeTestsBase<RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixtureCoreOldest>
+{
+    public AspNetCoreMvcCodeAttributeTestsCoreOldest(RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
+}
+
+public class AspNetCoreMvcCodeAttributeTestsCoreLatest : AspNetCoreMvcCodeAttributeTestsBase<RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixtureCoreLatest>
+{
+    public AspNetCoreMvcCodeAttributeTestsCoreLatest(RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
 }

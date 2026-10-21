@@ -15,11 +15,12 @@ namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation;
 /// This test verifies that our TerminatingSegmentWrapper behaves correctly when running on .NET Core. In particular, we really care
 /// about testing the behavior of removing the transaction data from AsyncLocal storage.
 /// </summary>
-public class DetachWrapperTests : NewRelicIntegrationTest<RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture>
+public abstract class DetachWrapperTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
+    where TFixture : RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture
 {
-    private readonly RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture _fixture;
+    private readonly TFixture _fixture;
 
-    public DetachWrapperTests(RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture fixture, ITestOutputHelper output)
+    protected DetachWrapperTestsBase(TFixture fixture, ITestOutputHelper output)
         : base(fixture)
     {
         _fixture = fixture;
@@ -61,4 +62,20 @@ public class DetachWrapperTests : NewRelicIntegrationTest<RemoteServiceFixtures.
     {
         new Assertions.ExpectedMetric { metricName = @"External/www.google.com/Stream/GET"}
     };
+}
+
+public class DetachWrapperTestsCoreOldest : DetachWrapperTestsBase<RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixtureCoreOldest>
+{
+    public DetachWrapperTestsCoreOldest(RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
+}
+
+public class DetachWrapperTestsCoreLatest : DetachWrapperTestsBase<RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixtureCoreLatest>
+{
+    public DetachWrapperTestsCoreLatest(RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
 }

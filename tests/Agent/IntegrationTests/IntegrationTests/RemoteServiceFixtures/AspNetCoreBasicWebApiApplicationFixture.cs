@@ -7,12 +7,12 @@ using NewRelic.Agent.IntegrationTestHelpers;
 
 namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 
-public class AspNetCoreBasicWebApiApplicationFixture : RemoteApplicationFixture
+public abstract class AspNetCoreBasicWebApiApplicationFixture : RemoteApplicationFixture
 {
-    public AspNetCoreBasicWebApiApplicationFixture() :
+    protected AspNetCoreBasicWebApiApplicationFixture(string targetFramework) :
         base(new RemoteService("AspNetCoreBasicWebApiApplication",
             "AspNetCoreBasicWebApiApplication.exe",
-            Tfm.NetLatest,
+            targetFramework,
             ApplicationType.Bounded,
             true,
             true,
@@ -30,5 +30,19 @@ public class AspNetCoreBasicWebApiApplicationFixture : RemoteApplicationFixture
     {
         var address = $"http://{DestinationServerName}:{Port}/api/default/GetTraceId";
         return GetStringAndAssertIsNotNull(address);
+    }
+}
+
+public class AspNetCoreBasicWebApiApplicationFixtureCoreOldest : AspNetCoreBasicWebApiApplicationFixture
+{
+    public AspNetCoreBasicWebApiApplicationFixtureCoreOldest() : base(Tfm.NetOldest)
+    {
+    }
+}
+
+public class AspNetCoreBasicWebApiApplicationFixtureCoreLatest : AspNetCoreBasicWebApiApplicationFixture
+{
+    public AspNetCoreBasicWebApiApplicationFixtureCoreLatest() : base(Tfm.NetLatest)
+    {
     }
 }

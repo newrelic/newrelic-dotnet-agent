@@ -24,7 +24,7 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures;
 /// <c>/v1/profiles/response-status</c> control endpoint), exercised, then switched back so the recovery is
 /// observable. Nothing else covers this path -- the receiver test's mock always returns Ok.
 /// </summary>
-public class ContinuousProfilingOtlpSendFailureTests : NewRelicIntegrationTest<AspNetCoreWebApiWithCollectorFixture>
+public abstract class ContinuousProfilingOtlpSendFailureTestsBase<TFixture> : NewRelicIntegrationTest<TFixture> where TFixture : AspNetCoreWebApiWithCollectorFixture
 {
     private const int SamplingIntervalMs = 1000;
     private const int FailureStatusCode = 500;
@@ -45,7 +45,7 @@ public class ContinuousProfilingOtlpSendFailureTests : NewRelicIntegrationTest<A
     private static readonly string RejectionWarnLogLineRegex =
         AgentLogBase.WarnLogLinePrefixRegex + @"\[ContinuousProfiling\] Profile send rejected with status " + FailureStatusCode;
 
-    public ContinuousProfilingOtlpSendFailureTests(AspNetCoreWebApiWithCollectorFixture fixture, ITestOutputHelper output) : base(fixture)
+    protected ContinuousProfilingOtlpSendFailureTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
     {
         _fixture = fixture;
         _fixture.TestLogger = output;
@@ -117,5 +117,21 @@ public class ContinuousProfilingOtlpSendFailureTests : NewRelicIntegrationTest<A
             () => Assert.NotEmpty(_profilesAfterRecovery),
             () => Assert.Contains(_profilesAfterRecovery, p => p.ContentValid)
         );
+    }
+}
+
+public class ContinuousProfilingOtlpSendFailureTestsCoreOldest : ContinuousProfilingOtlpSendFailureTestsBase<AspNetCoreWebApiWithCollectorFixtureCoreOldest>
+{
+    public ContinuousProfilingOtlpSendFailureTestsCoreOldest(AspNetCoreWebApiWithCollectorFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
+}
+
+public class ContinuousProfilingOtlpSendFailureTestsCoreLatest : ContinuousProfilingOtlpSendFailureTestsBase<AspNetCoreWebApiWithCollectorFixtureCoreLatest>
+{
+    public ContinuousProfilingOtlpSendFailureTestsCoreLatest(AspNetCoreWebApiWithCollectorFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
     }
 }

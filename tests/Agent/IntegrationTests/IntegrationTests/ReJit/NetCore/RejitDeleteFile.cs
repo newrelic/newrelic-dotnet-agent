@@ -82,17 +82,33 @@ public abstract class RejitDeleteFileBase<TFixture> : NewRelicIntegrationTest<TF
     }
 }
 
-public class RejitDeleteFile : RejitDeleteFileBase<AspNetCoreReJitMvcApplicationFixture>
+public class RejitDeleteFileCoreOldest : RejitDeleteFileBase<AspNetCoreReJitMvcApplicationFixtureCoreOldest>
 {
-    public RejitDeleteFile(AspNetCoreReJitMvcApplicationFixture fixture, ITestOutputHelper output)
+    public RejitDeleteFileCoreOldest(AspNetCoreReJitMvcApplicationFixtureCoreOldest fixture, ITestOutputHelper output)
         : base(fixture, output)
     {
     }
 }
 
-public class RejitDeleteFileWithTieredCompilation : RejitDeleteFileBase<AspNetCoreReJitMvcApplicationFixtureWithTieredCompilation>
+public class RejitDeleteFileCoreLatest : RejitDeleteFileBase<AspNetCoreReJitMvcApplicationFixtureCoreLatest>
 {
-    public RejitDeleteFileWithTieredCompilation(AspNetCoreReJitMvcApplicationFixtureWithTieredCompilation fixture, ITestOutputHelper output)
+    public RejitDeleteFileCoreLatest(AspNetCoreReJitMvcApplicationFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
+}
+
+public class RejitDeleteFileWithTieredCompilationCoreOldest : RejitDeleteFileBase<AspNetCoreReJitMvcApplicationFixtureWithTieredCompilationCoreOldest>
+{
+    public RejitDeleteFileWithTieredCompilationCoreOldest(AspNetCoreReJitMvcApplicationFixtureWithTieredCompilationCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
+}
+
+public class RejitDeleteFileWithTieredCompilationCoreLatest : RejitDeleteFileBase<AspNetCoreReJitMvcApplicationFixtureWithTieredCompilationCoreLatest>
+{
+    public RejitDeleteFileWithTieredCompilationCoreLatest(AspNetCoreReJitMvcApplicationFixtureWithTieredCompilationCoreLatest fixture, ITestOutputHelper output)
         : base(fixture, output)
     {
     }

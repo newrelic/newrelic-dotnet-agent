@@ -9,15 +9,16 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.AgentFeatures;
 
-public abstract class BrowserAgentVersionPinningBase : NewRelicIntegrationTest<BasicAspNetCoreRazorApplicationFixture>
+public abstract class BrowserAgentVersionPinningBase<TFixture> : NewRelicIntegrationTest<TFixture>
+    where TFixture : BasicAspNetCoreRazorApplicationFixture
 {
     private const string VersionSettingKey = "browser_monitoring.version";
 
-    protected readonly BasicAspNetCoreRazorApplicationFixture _fixture;
+    protected readonly TFixture _fixture;
     protected readonly string _requestedVersion;
     protected string _htmlContent;
 
-    protected BrowserAgentVersionPinningBase(BasicAspNetCoreRazorApplicationFixture fixture, ITestOutputHelper output, string requestedVersion)
+    protected BrowserAgentVersionPinningBase(TFixture fixture, ITestOutputHelper output, string requestedVersion)
         : base(fixture)
     {
         _requestedVersion = requestedVersion;
@@ -56,12 +57,13 @@ public abstract class BrowserAgentVersionPinningBase : NewRelicIntegrationTest<B
     }
 }
 
-public class BrowserAgentVersionPinningResolved : BrowserAgentVersionPinningBase
+public abstract class BrowserAgentVersionPinningResolvedBase<TFixture> : BrowserAgentVersionPinningBase<TFixture>
+    where TFixture : BasicAspNetCoreRazorApplicationFixture
 {
     // A pinned version leaves browser agent support over time. Update it when the collector stops returning it.
     private const string PinnedVersion = "1.322.0";
 
-    public BrowserAgentVersionPinningResolved(BasicAspNetCoreRazorApplicationFixture fixture, ITestOutputHelper output)
+    protected BrowserAgentVersionPinningResolvedBase(TFixture fixture, ITestOutputHelper output)
         : base(fixture, output, PinnedVersion)
     {
     }
@@ -82,11 +84,12 @@ public class BrowserAgentVersionPinningResolved : BrowserAgentVersionPinningBase
     }
 }
 
-public class BrowserAgentVersionPinningUnresolved : BrowserAgentVersionPinningBase
+public abstract class BrowserAgentVersionPinningUnresolvedBase<TFixture> : BrowserAgentVersionPinningBase<TFixture>
+    where TFixture : BasicAspNetCoreRazorApplicationFixture
 {
     private const string UnavailableVersion = "0.0.1";
 
-    public BrowserAgentVersionPinningUnresolved(BasicAspNetCoreRazorApplicationFixture fixture, ITestOutputHelper output)
+    protected BrowserAgentVersionPinningUnresolvedBase(TFixture fixture, ITestOutputHelper output)
         : base(fixture, output, UnavailableVersion)
     {
     }
@@ -102,5 +105,37 @@ public class BrowserAgentVersionPinningUnresolved : BrowserAgentVersionPinningBa
             () => Assert.Null(JavaScriptAgent.GetJavaScriptAgentScriptFromSource(_htmlContent)),
             () => Assert.True(WarningLogged())
         );
+    }
+}
+
+public class BrowserAgentVersionPinningResolvedCoreOldest : BrowserAgentVersionPinningResolvedBase<BasicAspNetCoreRazorApplicationFixtureCoreOldest>
+{
+    public BrowserAgentVersionPinningResolvedCoreOldest(BasicAspNetCoreRazorApplicationFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
+}
+
+public class BrowserAgentVersionPinningResolvedCoreLatest : BrowserAgentVersionPinningResolvedBase<BasicAspNetCoreRazorApplicationFixtureCoreLatest>
+{
+    public BrowserAgentVersionPinningResolvedCoreLatest(BasicAspNetCoreRazorApplicationFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
+}
+
+public class BrowserAgentVersionPinningUnresolvedCoreOldest : BrowserAgentVersionPinningUnresolvedBase<BasicAspNetCoreRazorApplicationFixtureCoreOldest>
+{
+    public BrowserAgentVersionPinningUnresolvedCoreOldest(BasicAspNetCoreRazorApplicationFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
+}
+
+public class BrowserAgentVersionPinningUnresolvedCoreLatest : BrowserAgentVersionPinningUnresolvedBase<BasicAspNetCoreRazorApplicationFixtureCoreLatest>
+{
+    public BrowserAgentVersionPinningUnresolvedCoreLatest(BasicAspNetCoreRazorApplicationFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
     }
 }

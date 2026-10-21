@@ -10,11 +10,12 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation;
 
-public class AsyncStreamTests : NewRelicIntegrationTest<RemoteServiceFixtures.AspNetCoreFeaturesFixture>
+public abstract class AsyncStreamTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
+    where TFixture : RemoteServiceFixtures.AspNetCoreFeaturesFixture
 {
-    private readonly RemoteServiceFixtures.AspNetCoreFeaturesFixture _fixture;
+    private readonly TFixture _fixture;
 
-    public AsyncStreamTests(RemoteServiceFixtures.AspNetCoreFeaturesFixture fixture, ITestOutputHelper output)
+    protected AsyncStreamTestsBase(TFixture fixture, ITestOutputHelper output)
         : base(fixture)
     {
         _fixture = fixture;
@@ -54,4 +55,20 @@ public class AsyncStreamTests : NewRelicIntegrationTest<RemoteServiceFixtures.As
         new Assertions.ExpectedMetric { metricName = @"DotNet/AspNetCoreFeatures.Controllers.AsyncStreamController/GetNumbers", metricScope = "WebTransaction/MVC/AsyncStream/Get", CallCountAllHarvests = 1 },
         new Assertions.ExpectedMetric { metricName = @"DotNet/AspNetCoreFeatures.Controllers.AsyncStreamController/DoSomethingAsync", metricScope = "WebTransaction/MVC/AsyncStream/Get", CallCountAllHarvests = 10 }
     };
+}
+
+public class AsyncStreamTestsCoreOldest : AsyncStreamTestsBase<RemoteServiceFixtures.AspNetCoreFeaturesFixtureCoreOldest>
+{
+    public AsyncStreamTestsCoreOldest(RemoteServiceFixtures.AspNetCoreFeaturesFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
+}
+
+public class AsyncStreamTestsCoreLatest : AsyncStreamTestsBase<RemoteServiceFixtures.AspNetCoreFeaturesFixtureCoreLatest>
+{
+    public AsyncStreamTestsCoreLatest(RemoteServiceFixtures.AspNetCoreFeaturesFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
 }
