@@ -35,7 +35,7 @@ public abstract class ContinuousProfilingUbuntuX64ContainerTestFixture : Continu
 {
     private const string Dockerfile = "SmokeTestApp/Dockerfile.continuousprofiling";
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
-    private const string DistroTag = "noble"; // Ubuntu 24.04
+    private const string DistroTag = "resolute"; // Ubuntu 26.04
 
     protected ContinuousProfilingUbuntuX64ContainerTestFixture(string dotnetVersion) : base(DistroTag, Architecture, dotnetVersion, Dockerfile) { }
 }
@@ -54,7 +54,7 @@ public abstract class ContinuousProfilingUbuntuArm64ContainerTestFixture : Conti
 {
     private const string Dockerfile = "SmokeTestApp/Dockerfile.continuousprofiling";
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.Arm64;
-    private const string DistroTag = "noble"; // Ubuntu 24.04
+    private const string DistroTag = "resolute"; // Ubuntu 26.04
 
     protected ContinuousProfilingUbuntuArm64ContainerTestFixture(string dotnetVersion) : base(DistroTag, Architecture, dotnetVersion, Dockerfile) { }
 }

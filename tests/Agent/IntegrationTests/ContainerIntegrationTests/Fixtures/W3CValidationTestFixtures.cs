@@ -57,7 +57,7 @@ public abstract class W3CValidationTestFixture : W3CValidationTestFixtureBase
 {
     private const string Dockerfile = "W3CTestApp/Dockerfile";
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
-    private const string DistroTag = "noble"; // Ubuntu 24.04
+    private const string DistroTag = "resolute"; // Ubuntu 26.04
 
     protected W3CValidationTestFixture(string dotnetVersion) : base(DistroTag, Architecture, Dockerfile, dotnetVersion) { }
 }

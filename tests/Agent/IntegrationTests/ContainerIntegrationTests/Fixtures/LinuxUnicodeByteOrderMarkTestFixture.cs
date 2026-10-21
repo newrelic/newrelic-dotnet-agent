@@ -11,7 +11,7 @@ public abstract class LinuxUnicodeByteOrderMarkTestFixture : ContainerTestFixtur
     private const string Dockerfile = "SmokeTestApp/Dockerfile";
     private const string DockerComposeServiceName = "LinuxUnicodeByteOrderMarkTestFixture";
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
-    private const string DistroTag = "noble";
+    private const string DistroTag = "resolute";
 
     protected LinuxUnicodeByteOrderMarkTestFixture(string dotnetVersion) : base(DistroTag, Architecture, dotnetVersion, Dockerfile) { }
 }

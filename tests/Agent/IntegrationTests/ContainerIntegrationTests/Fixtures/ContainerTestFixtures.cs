@@ -36,7 +36,7 @@ public class UbuntuX64ContainerTestFixture : ContainerTestFixtureBase
 {
     private const string Dockerfile = "SmokeTestApp/Dockerfile";
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
-    private const string DistroTag = "noble"; // Ubuntu 24.04
+    private const string DistroTag = "resolute"; // Ubuntu 26.04
 
     public UbuntuX64ContainerTestFixture() : base(DistroTag, Architecture, Tfm.NetLtsVersion, Dockerfile) { }
 }
@@ -53,7 +53,7 @@ public class UbuntuArm64ContainerTestFixture : ContainerTestFixtureBase
 {
     private const string Dockerfile = "SmokeTestApp/Dockerfile";
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.Arm64;
-    private const string DistroTag = "noble"; // Ubuntu 24.04
+    private const string DistroTag = "resolute"; // Ubuntu 26.04
 
     public UbuntuArm64ContainerTestFixture() : base(DistroTag, Architecture, Tfm.NetLtsVersion, Dockerfile) { }
 }
