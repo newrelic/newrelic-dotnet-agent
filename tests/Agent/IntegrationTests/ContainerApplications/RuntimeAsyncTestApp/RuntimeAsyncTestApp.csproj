@@ -3,11 +3,11 @@
     <TargetFrameworks>net10.0;net11.0</TargetFrameworks>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     <DockerfileContext>.</DockerfileContext>
-  </PropertyGroup>
-  <!-- Runtime-async is on by default on net11.0. On net10.0 it is a preview feature that needs
-       this opt-in, plus DOTNET_RuntimeAsync=1 at run time (the Dockerfile sets it). -->
-  <PropertyGroup Condition="'$(TargetFramework)' == 'net10.0'">
+    <!-- Runtime-async is opt-in on both TFMs. It also needs DOTNET_RuntimeAsync=1 at run time
+         (the Dockerfile sets it). -->
     <Features>runtime-async=on</Features>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net10.0'">
     <!-- Both are emitted as errors, and Directory.Build.props sets TreatWarningsAsErrors.
          SYSLIB5007: the lowering targets System.Runtime.CompilerServices.AsyncHelpers, which
          is [Experimental] on net10.0. CA2252: using a preview feature.
