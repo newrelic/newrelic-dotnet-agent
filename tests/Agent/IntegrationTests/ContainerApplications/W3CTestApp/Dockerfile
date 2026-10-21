@@ -32,7 +32,7 @@ RUN apt-get update \
  && apt-get install -y --no-install-recommends python3 python3-aiohttp git ca-certificates \
  && rm -rf /var/lib/apt/lists/*
 RUN git clone https://github.com/w3c/trace-context.git /trace-context \
- && git -C /trace-context checkout 98f210efd89c63593dce90e2bae0a1bdcb986f51
+ && git -C /trace-context checkout acab820be9db7b3433668baa5cdd43f57f4c4be0
 
 # Enable the agent
 ARG NEW_RELIC_HOST
