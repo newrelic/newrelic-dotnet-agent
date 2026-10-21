@@ -41,10 +41,6 @@ public abstract class NetCoreAsyncTestsBase<TFixture> : NewRelicIntegrationTest<
 
                 CommonUtils.AddCustomInstrumentation(instrumentationFilePath, "NetCoreAsyncApplication", "NetCoreAsyncApplication.AsyncUseCases", "TaskRunBackgroundMethod", "NewRelic.Providers.Wrapper.CustomInstrumentationAsync.DefaultWrapperAsync", "TaskRunBackgroundMethod");
                 CommonUtils.AddCustomInstrumentation(instrumentationFilePath, "NetCoreAsyncApplication", "NetCoreAsyncApplication.AsyncUseCases", "TaskFactoryStartNewBackgroundMethod", "NewRelic.Providers.Wrapper.CustomInstrumentationAsync.DefaultWrapperAsync", "TaskFactoryStartNewBackgroundMethod");
-
-                var configPath = fixture.DestinationNewRelicConfigFilePath;
-                var configModifier = new NewRelicConfigModifier(configPath);
-                configModifier.DisableEventListenerSamplers(); // Required for .NET 10+ to pass.
             }
         );
         _fixture.Initialize();

@@ -27,7 +27,6 @@ public abstract class TransactionNameTests<TFixture> : NewRelicIntegrationTest<T
                 var configModifier = new NewRelicConfigModifier(Fixture.DestinationNewRelicConfigFilePath);
                 configModifier.SetOrDeleteDistributedTraceEnabled(true);
                 configModifier.SetLogLevel("finest");
-                configModifier.DisableEventListenerSamplers(); // Required for .NET 10+ to pass.
             }
         );
 

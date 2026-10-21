@@ -75,7 +75,6 @@ public abstract class InstrumentationLoaderTestsBase<TFixture> : NewRelicIntegra
 
                 configModifier.ForceTransactionTraces();
                 configModifier.SetLogLevel("finest");
-                configModifier.DisableEventListenerSamplers(); // Required for .NET 10+ to pass.
             },
             exerciseApplication: () =>
             {

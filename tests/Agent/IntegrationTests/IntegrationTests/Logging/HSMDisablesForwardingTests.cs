@@ -37,7 +37,6 @@ public abstract class HSMDisablesForwardingTestsBase<TFixture> : NewRelicIntegra
                 // applicationLogging metrics and forwarding enabled by default
                 configModifier
                     .SetLogLevel("debug");
-                configModifier.DisableEventListenerSamplers(); // Required for .NET 10+ to pass.
 
                 // Set HSM to "true"
                 configModifier.SetHighSecurityMode(true);

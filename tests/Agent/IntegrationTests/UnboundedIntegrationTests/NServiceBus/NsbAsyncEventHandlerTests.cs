@@ -35,7 +35,6 @@ public abstract class NsbAsyncEventHandlerTestsBase<TFixture> : NewRelicIntegrat
                 var configModifier = new NewRelicConfigModifier(configPath);
                 configModifier.ForceTransactionTraces();
                 configModifier.SetLogLevel("finest");
-                configModifier.DisableEventListenerSamplers(); // Required for .NET 10+ to pass.
                 configModifier.ConfigureFasterMetricsHarvestCycle(10);
             },
             exerciseApplication: () =>

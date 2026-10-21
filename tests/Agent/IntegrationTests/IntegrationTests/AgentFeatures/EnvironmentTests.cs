@@ -22,14 +22,6 @@ public abstract class EnvironmentTests<T> : NewRelicIntegrationTest<T> where T :
         _fixture.TestLogger = output;
         _fixture.Actions
         (
-            setupConfiguration: () =>
-            {
-                var configPath = fixture.DestinationNewRelicConfigFilePath;
-                var configModifier = new NewRelicConfigModifier(configPath);
-
-                configModifier.DisableEventListenerSamplers(); // Required for .NET 10+ to pass.
-
-            },
             exerciseApplication: ExerciseApplication
         );
         _fixture.Initialize();
