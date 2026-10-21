@@ -680,4 +680,72 @@ public class MeterBridgingServiceTests
         // Assert
         Mock.Assert(() => _mockListener.EnableMeasurementEvents(Arg.IsAny<object>(), Arg.IsAny<object>()), Occurs.Once());
     }
+
+    [Test]
+    public void ObservableGauge_WithValueCallback_BridgesValue()
+    {
+        using var meter = new Meter("TestMeter");
+        var gauge = meter.CreateObservableGauge("test.gauge", () => 7);
+
+        var measurements = ReadBridgedObservable<int>(gauge);
+
+        Assert.That(measurements.Values, Is.EqualTo(new[] { 7 }));
+        Assert.That(measurements.Tags[0], Is.Empty);
+    }
+
+    [Test]
+    public void ObservableCounter_WithMeasurementCallback_BridgesValueAndTags()
+    {
+        using var meter = new Meter("TestMeter");
+        var counter = meter.CreateObservableCounter("test.counter", () => new Measurement<long>(5L, new KeyValuePair<string, object>("route", "/api")));
+
+        var measurements = ReadBridgedObservable<long>(counter);
+
+        Assert.That(measurements.Values, Is.EqualTo(new[] { 5L }));
+        Assert.That(measurements.Tags[0], Is.EqualTo(new[] { new KeyValuePair<string, object>("route", "/api") }));
+    }
+
+    [Test]
+    public void ObservableUpDownCounter_WithMeasurementsCallback_BridgesAllMeasurements()
+    {
+        using var meter = new Meter("TestMeter");
+        var upDownCounter = meter.CreateObservableUpDownCounter("test.updown", () => new[]
+        {
+            new Measurement<int>(3, new KeyValuePair<string, object>("k", "v")),
+            new Measurement<int>(4)
+        });
+
+        var measurements = ReadBridgedObservable<int>(upDownCounter);
+
+        Assert.That(measurements.Values, Is.EqualTo(new[] { 3, 4 }));
+        Assert.That(measurements.Tags[0], Is.EqualTo(new[] { new KeyValuePair<string, object>("k", "v") }));
+        Assert.That(measurements.Tags[1], Is.Empty);
+    }
+
+    // Publishes the instrument through the service, then observes the bridged instrument
+    // with a plain MeterListener, as an exporter would.
+    private (List<T> Values, List<KeyValuePair<string, object>[]> Tags) ReadBridgedObservable<T>(Instrument instrument) where T : struct
+    {
+        object bridgedState = null;
+        Mock.Arrange(() => _mockListener.EnableMeasurementEvents(instrument, Arg.IsAny<object>()))
+            .DoInstead((object _, object state) => bridgedState = state);
+
+        _service.OnInstrumentPublished(instrument, _mockListener);
+
+        var bridged = bridgedState as Instrument;
+        Assert.That(bridged, Is.Not.Null, "The service did not create a bridged instrument.");
+
+        var values = new List<T>();
+        var tags = new List<KeyValuePair<string, object>[]>();
+        using var listener = new MeterListener();
+        listener.SetMeasurementEventCallback<T>((_, value, measurementTags, _) =>
+        {
+            values.Add(value);
+            tags.Add(measurementTags.ToArray());
+        });
+        listener.EnableMeasurementEvents(bridged);
+        listener.RecordObservableInstruments();
+
+        return (values, tags);
+    }
 }
