@@ -10,12 +10,12 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.DistributedTracing.W3CInstrumentationTests;
 
-public class TraceIdTests : NewRelicIntegrationTest<AspNetCoreBasicWebApiApplicationFixture>
+public abstract class TraceIdTestsBase<TFixture> : NewRelicIntegrationTest<TFixture> where TFixture : AspNetCoreBasicWebApiApplicationFixture
 {
     private readonly AspNetCoreBasicWebApiApplicationFixture _fixture;
     private string _traceId;
 
-    public TraceIdTests(AspNetCoreBasicWebApiApplicationFixture fixture, ITestOutputHelper output)
+    protected TraceIdTestsBase(TFixture fixture, ITestOutputHelper output)
         : base(fixture)
     {
         _fixture = fixture;
@@ -54,5 +54,21 @@ public class TraceIdTests : NewRelicIntegrationTest<AspNetCoreBasicWebApiApplica
         {
             Assert.Equal(_traceId, span.IntrinsicAttributes["traceId"]);
         }
+    }
+}
+
+public class TraceIdTestsCoreOldest : TraceIdTestsBase<AspNetCoreBasicWebApiApplicationFixtureCoreOldest>
+{
+    public TraceIdTestsCoreOldest(AspNetCoreBasicWebApiApplicationFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
+}
+
+public class TraceIdTestsCoreLatest : TraceIdTestsBase<AspNetCoreBasicWebApiApplicationFixtureCoreLatest>
+{
+    public TraceIdTestsCoreLatest(AspNetCoreBasicWebApiApplicationFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
     }
 }

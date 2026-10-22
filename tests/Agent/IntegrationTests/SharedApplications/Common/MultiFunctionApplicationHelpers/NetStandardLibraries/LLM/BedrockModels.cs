@@ -11,7 +11,7 @@ using Amazon.BedrockRuntime;
 using Amazon.BedrockRuntime.Model;
 using Amazon.Util;
 using NewRelic.Agent.IntegrationTests.Shared;
-#if NET481 || NET10_0
+#if NET481 || NET11_0
 using System.Collections.Generic;
 using Amazon.Runtime.Documents;
 #endif
@@ -295,7 +295,7 @@ internal class BedrockModels
         });
     }
 
-#if NET481 ||  NET10_0 // Converse API is only available in AWSSDK.BedrockRuntime v3.7.303 and later, tested by net481 and net10.0 tfms
+#if NET481 ||  NET11_0 // Converse API is only available in AWSSDK.BedrockRuntime v3.7.303 and later, tested by net481 and net11.0 tfms
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static async Task<string> ConverseNovaMicro(string prompt, bool generateError)
     {

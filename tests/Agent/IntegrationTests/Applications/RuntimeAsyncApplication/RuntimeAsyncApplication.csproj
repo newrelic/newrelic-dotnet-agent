@@ -2,12 +2,13 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net10.0</TargetFramework>
-    <!-- Compiles the async methods in this app using the runtime-async calling convention
-         rather than compiler-generated state machines. It is a preview feature on net10.0,
-         so no newer SDK is needed to build this.
-         The methods still need DOTNET_RuntimeAsync=1 at run time; the test fixture sets it. -->
+    <TargetFrameworks>net10.0;net11.0</TargetFrameworks>
+    <!-- Runtime-async is opt-in on both TFMs. It also needs DOTNET_RuntimeAsync=1 at run time
+         (the test fixture sets it). -->
     <Features>runtime-async=on</Features>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net10.0'">
     <!-- Both are emitted as errors, and Directory.Build.props sets TreatWarningsAsErrors.
          SYSLIB5007: the lowering targets System.Runtime.CompilerServices.AsyncHelpers, which
          is [Experimental] on net10.0. CA2252: using a preview feature.

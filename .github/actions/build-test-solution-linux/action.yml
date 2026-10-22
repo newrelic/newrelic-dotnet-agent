@@ -36,10 +36,14 @@ runs:
     - name: Install .NET SDKs and runtimes
       uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
       with:
-        dotnet-version: |
-          8.0.x
-          10.0.x
+        dotnet-version: '10.0.x'
         dotnet-quality: 'ga'
+
+    - name: Install .NET 11 Preview SDK
+      uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+      with:
+        dotnet-version: '11.0.x'
+        dotnet-quality: 'preview'
 
     - name: List SDKs and runtimes
       shell: bash

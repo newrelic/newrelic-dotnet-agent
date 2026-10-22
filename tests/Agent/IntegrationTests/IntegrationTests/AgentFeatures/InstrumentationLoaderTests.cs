@@ -57,11 +57,11 @@ public class InstrumentationLoaderTests : NewRelicIntegrationTest<RemoteServiceF
     }
 }
 
-public class InstrumentationLoaderTestsCore : NewRelicIntegrationTest<RemoteServiceFixtures.ConsoleInstrumentationLoaderFixtureCore>
+public abstract class InstrumentationLoaderTestsBase<TFixture> : NewRelicIntegrationTest<TFixture> where TFixture : RemoteServiceFixtures.ConsoleInstrumentationLoaderFixtureCore
 {
-    private readonly RemoteServiceFixtures.ConsoleInstrumentationLoaderFixtureCore _fixture;
+    private readonly TFixture _fixture;
 
-    public InstrumentationLoaderTestsCore(RemoteServiceFixtures.ConsoleInstrumentationLoaderFixtureCore fixture, ITestOutputHelper output) : base(fixture)
+    protected InstrumentationLoaderTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
     {
         _fixture = fixture;
         _fixture.TestLogger = output;
@@ -75,7 +75,6 @@ public class InstrumentationLoaderTestsCore : NewRelicIntegrationTest<RemoteServ
 
                 configModifier.ForceTransactionTraces();
                 configModifier.SetLogLevel("finest");
-                configModifier.DisableEventListenerSamplers(); // Required for .NET 8 to pass.
             },
             exerciseApplication: () =>
             {
@@ -100,5 +99,21 @@ public class InstrumentationLoaderTestsCore : NewRelicIntegrationTest<RemoteServ
             () => { Assert.Single(trxTransformLines); },
             () => { Assert.Contains("InstrumentedMethod", trxTransformLines.FirstOrDefault().Value); }
         );
+    }
+}
+
+public class InstrumentationLoaderTestsCoreOldest : InstrumentationLoaderTestsBase<RemoteServiceFixtures.ConsoleInstrumentationLoaderFixtureCoreOldest>
+{
+    public InstrumentationLoaderTestsCoreOldest(RemoteServiceFixtures.ConsoleInstrumentationLoaderFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
+}
+
+public class InstrumentationLoaderTestsCoreLatest : InstrumentationLoaderTestsBase<RemoteServiceFixtures.ConsoleInstrumentationLoaderFixtureCoreLatest>
+{
+    public InstrumentationLoaderTestsCoreLatest(RemoteServiceFixtures.ConsoleInstrumentationLoaderFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
     }
 }

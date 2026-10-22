@@ -139,18 +139,36 @@ public abstract class ContinuousProfilingContainerTest<T> : NewRelicIntegrationT
 // see the matching "ContinuousProfiling" matrix entries in linux_container_tests.yml. No Distro trait:
 // per tests/CLAUDE.md, Distro is reserved for OS-compatibility smoke tests, not functional coverage.
 [Trait("Architecture", "amd64")]
-public class ContinuousProfilingUbuntuX64ContainerTest : ContinuousProfilingContainerTest<ContinuousProfilingUbuntuX64ContainerTestFixture>
+public class ContinuousProfilingUbuntuX64ContainerTestCoreOldest : ContinuousProfilingContainerTest<ContinuousProfilingUbuntuX64ContainerTestFixtureCoreOldest>
 {
-    public ContinuousProfilingUbuntuX64ContainerTest(ContinuousProfilingUbuntuX64ContainerTestFixture fixture, ITestOutputHelper output)
+    public ContinuousProfilingUbuntuX64ContainerTestCoreOldest(ContinuousProfilingUbuntuX64ContainerTestFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
+}
+
+[Trait("Architecture", "amd64")]
+public class ContinuousProfilingUbuntuX64ContainerTestCoreLatest : ContinuousProfilingContainerTest<ContinuousProfilingUbuntuX64ContainerTestFixtureCoreLatest>
+{
+    public ContinuousProfilingUbuntuX64ContainerTestCoreLatest(ContinuousProfilingUbuntuX64ContainerTestFixtureCoreLatest fixture, ITestOutputHelper output)
         : base(fixture, output)
     {
     }
 }
 
 [Trait("Architecture", "arm64")]
-public class ContinuousProfilingUbuntuArm64ContainerTest : ContinuousProfilingContainerTest<ContinuousProfilingUbuntuArm64ContainerTestFixture>
+public class ContinuousProfilingUbuntuArm64ContainerTestCoreOldest : ContinuousProfilingContainerTest<ContinuousProfilingUbuntuArm64ContainerTestFixtureCoreOldest>
 {
-    public ContinuousProfilingUbuntuArm64ContainerTest(ContinuousProfilingUbuntuArm64ContainerTestFixture fixture, ITestOutputHelper output)
+    public ContinuousProfilingUbuntuArm64ContainerTestCoreOldest(ContinuousProfilingUbuntuArm64ContainerTestFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
+}
+
+[Trait("Architecture", "arm64")]
+public class ContinuousProfilingUbuntuArm64ContainerTestCoreLatest : ContinuousProfilingContainerTest<ContinuousProfilingUbuntuArm64ContainerTestFixtureCoreLatest>
+{
+    public ContinuousProfilingUbuntuArm64ContainerTestCoreLatest(ContinuousProfilingUbuntuArm64ContainerTestFixtureCoreLatest fixture, ITestOutputHelper output)
         : base(fixture, output)
     {
     }
@@ -161,9 +179,18 @@ public class ContinuousProfilingUbuntuArm64ContainerTest : ContinuousProfilingCo
 // Alpine variant: the arm64 glibc .so imports __stack_chk_guard from ld-linux-aarch64.so.1, which musl
 // does not provide, so the profiler (and the whole agent) cannot load there.
 [Trait("Architecture", "amd64")]
-public class ContinuousProfilingAlpineX64ContainerTest : ContinuousProfilingContainerTest<ContinuousProfilingAlpineX64ContainerTestFixture>
+public class ContinuousProfilingAlpineX64ContainerTestCoreOldest : ContinuousProfilingContainerTest<ContinuousProfilingAlpineX64ContainerTestFixtureCoreOldest>
 {
-    public ContinuousProfilingAlpineX64ContainerTest(ContinuousProfilingAlpineX64ContainerTestFixture fixture, ITestOutputHelper output)
+    public ContinuousProfilingAlpineX64ContainerTestCoreOldest(ContinuousProfilingAlpineX64ContainerTestFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
+}
+
+[Trait("Architecture", "amd64")]
+public class ContinuousProfilingAlpineX64ContainerTestCoreLatest : ContinuousProfilingContainerTest<ContinuousProfilingAlpineX64ContainerTestFixtureCoreLatest>
+{
+    public ContinuousProfilingAlpineX64ContainerTestCoreLatest(ContinuousProfilingAlpineX64ContainerTestFixtureCoreLatest fixture, ITestOutputHelper output)
         : base(fixture, output)
     {
     }

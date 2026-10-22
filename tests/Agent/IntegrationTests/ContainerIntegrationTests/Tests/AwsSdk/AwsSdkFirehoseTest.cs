@@ -10,12 +10,12 @@ using Xunit;
 
 namespace NewRelic.Agent.ContainerIntegrationTests.Tests.AwsSdk;
 
-[Collection("AwsSdkTests")]
 [Trait("Architecture", "amd64")]
 [Trait("TestArea", "Aws")]
-public class AwsSdkFirehoseTest : NewRelicIntegrationTest<AwsSdkContainerFirehoseTestFixture>
+public abstract class AwsSdkFirehoseTestBase<TFixture> : NewRelicIntegrationTest<TFixture>
+    where TFixture : AwsSdkContainerFirehoseTestFixture
 {
-    private readonly AwsSdkContainerFirehoseTestFixture _fixture;
+    private readonly TFixture _fixture;
 
     private readonly string _streamName = $"TestStream-{Guid.NewGuid()}";
     private readonly string _bucketName = $"test-bucket-{Guid.NewGuid()}"; // s3 bucket names can't have capital letters
@@ -23,7 +23,7 @@ public class AwsSdkFirehoseTest : NewRelicIntegrationTest<AwsSdkContainerFirehos
 
     private const string _region = "us-west-2"; // matches AuthenticationRegion in AwsSdkFirehoseExerciser
 
-    public AwsSdkFirehoseTest(AwsSdkContainerFirehoseTestFixture fixture, ITestOutputHelper output) : base(fixture)
+    protected AwsSdkFirehoseTestBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
     {
         _fixture = fixture;
         _fixture.TestLogger = output;
@@ -113,5 +113,21 @@ public class AwsSdkFirehoseTest : NewRelicIntegrationTest<AwsSdkContainerFirehos
 
             () => Assertions.MetricsExist(expectedMetrics, metrics)
             );
+    }
+}
+
+[Collection("AwsSdkTests")]
+public class AwsSdkFirehoseTestCoreOldest : AwsSdkFirehoseTestBase<AwsSdkContainerFirehoseTestFixtureCoreOldest>
+{
+    public AwsSdkFirehoseTestCoreOldest(AwsSdkContainerFirehoseTestFixtureCoreOldest fixture, ITestOutputHelper output) : base(fixture, output)
+    {
+    }
+}
+
+[Collection("AwsSdkTests")]
+public class AwsSdkFirehoseTestCoreLatest : AwsSdkFirehoseTestBase<AwsSdkContainerFirehoseTestFixtureCoreLatest>
+{
+    public AwsSdkFirehoseTestCoreLatest(AwsSdkContainerFirehoseTestFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)
+    {
     }
 }

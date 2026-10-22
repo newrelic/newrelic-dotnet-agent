@@ -3,6 +3,7 @@
 
 
 using System;
+using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 
 namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
@@ -21,16 +22,30 @@ public class ConsoleInstrumentationLoaderFixture : RemoteApplicationFixture
 }
 
 
-public class ConsoleInstrumentationLoaderFixtureCore : RemoteApplicationFixture
+public abstract class ConsoleInstrumentationLoaderFixtureCore : RemoteApplicationFixture
 {
     private static readonly string ApplicationDirectoryName = @"ConsoleInstrumentationLoaderCore";
     private static readonly string ExecutableName = $"{ApplicationDirectoryName}.exe";
 
-    public ConsoleInstrumentationLoaderFixtureCore()
-        : base(new RemoteConsoleApplication(ApplicationDirectoryName, ExecutableName, ApplicationType.Bounded, true, true)
+    protected ConsoleInstrumentationLoaderFixtureCore(string targetFramework)
+        : base(new RemoteConsoleApplication(ApplicationDirectoryName, ExecutableName, targetFramework, ApplicationType.Bounded, true, true)
             .SetTimeout(TimeSpan.FromMinutes(2)))
     {
 
     }
 
+}
+
+public class ConsoleInstrumentationLoaderFixtureCoreOldest : ConsoleInstrumentationLoaderFixtureCore
+{
+    public ConsoleInstrumentationLoaderFixtureCoreOldest() : base(Tfm.NetOldest)
+    {
+    }
+}
+
+public class ConsoleInstrumentationLoaderFixtureCoreLatest : ConsoleInstrumentationLoaderFixtureCore
+{
+    public ConsoleInstrumentationLoaderFixtureCoreLatest() : base(Tfm.NetLatest)
+    {
+    }
 }

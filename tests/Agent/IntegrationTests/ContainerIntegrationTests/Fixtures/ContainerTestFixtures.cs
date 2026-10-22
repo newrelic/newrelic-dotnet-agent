@@ -5,18 +5,17 @@ using System;
 using System.Threading.Tasks;
 using NewRelic.Agent.ContainerIntegrationTests.Applications;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
+using NewRelic.Agent.IntegrationTestHelpers;
 
 namespace NewRelic.Agent.ContainerIntegrationTests.Fixtures;
 
 public abstract class ContainerTestFixtureBase : RemoteApplicationFixture
 {
-    private const string DotnetVersion = "10.0";
-
     protected override int MaxTries => 1;
 
-    protected ContainerTestFixtureBase(string distroTag, ContainerApplication.Architecture containerArchitecture, string dockerfile,
+    protected ContainerTestFixtureBase(string distroTag, ContainerApplication.Architecture containerArchitecture, string dotnetVersion, string dockerfile,
         string dockerComposeFile = "docker-compose.yml") :
-        base(new ContainerApplication(distroTag, containerArchitecture, DotnetVersion, dockerfile, dockerComposeFile))
+        base(new ContainerApplication(distroTag, containerArchitecture, dotnetVersion, dockerfile, dockerComposeFile))
     {
     }
 
@@ -32,13 +31,14 @@ public abstract class ContainerTestFixtureBase : RemoteApplicationFixture
     }
 }
 
+// The distro fixtures below are OS-compatibility smoke tests and target only the current LTS.
 public class UbuntuX64ContainerTestFixture : ContainerTestFixtureBase
 {
     private const string Dockerfile = "SmokeTestApp/Dockerfile";
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
-    private const string DistroTag = "noble"; // Ubuntu 24.04
+    private const string DistroTag = ContainerApplication.UbuntuDistroTag;
 
-    public UbuntuX64ContainerTestFixture() : base(DistroTag, Architecture, Dockerfile) { }
+    public UbuntuX64ContainerTestFixture() : base(DistroTag, Architecture, Tfm.NetLtsVersion, Dockerfile) { }
 }
 public class AlpineX64ContainerTestFixture : ContainerTestFixtureBase
 {
@@ -46,16 +46,16 @@ public class AlpineX64ContainerTestFixture : ContainerTestFixtureBase
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
     private const string DistroTag = "alpine";
 
-    public AlpineX64ContainerTestFixture() : base(DistroTag, Architecture, Dockerfile) { }
+    public AlpineX64ContainerTestFixture() : base(DistroTag, Architecture, Tfm.NetLtsVersion, Dockerfile) { }
 }
 
 public class UbuntuArm64ContainerTestFixture : ContainerTestFixtureBase
 {
     private const string Dockerfile = "SmokeTestApp/Dockerfile";
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.Arm64;
-    private const string DistroTag = "noble"; // Ubuntu 24.04
+    private const string DistroTag = ContainerApplication.UbuntuDistroTag;
 
-    public UbuntuArm64ContainerTestFixture() : base(DistroTag, Architecture, Dockerfile) { }
+    public UbuntuArm64ContainerTestFixture() : base(DistroTag, Architecture, Tfm.NetLtsVersion, Dockerfile) { }
 }
 
 public class CentosX64ContainerTestFixture : ContainerTestFixtureBase
@@ -64,7 +64,7 @@ public class CentosX64ContainerTestFixture : ContainerTestFixtureBase
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
     private const string DistroTag = "centos";
 
-    public CentosX64ContainerTestFixture() : base(DistroTag, Architecture, Dockerfile) { }
+    public CentosX64ContainerTestFixture() : base(DistroTag, Architecture, Tfm.NetLtsVersion, Dockerfile) { }
 }
 public class CentosArm64ContainerTestFixture : ContainerTestFixtureBase
 {
@@ -72,7 +72,7 @@ public class CentosArm64ContainerTestFixture : ContainerTestFixtureBase
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.Arm64;
     private const string DistroTag = "centos";
 
-    public CentosArm64ContainerTestFixture() : base(DistroTag, Architecture, Dockerfile) { }
+    public CentosArm64ContainerTestFixture() : base(DistroTag, Architecture, Tfm.NetLtsVersion, Dockerfile) { }
 }
 
 public class AmazonX64ContainerTestFixture : ContainerTestFixtureBase
@@ -81,7 +81,7 @@ public class AmazonX64ContainerTestFixture : ContainerTestFixtureBase
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
     private const string DistroTag = "amazonlinux";
 
-    public AmazonX64ContainerTestFixture() : base(DistroTag, Architecture, Dockerfile) { }
+    public AmazonX64ContainerTestFixture() : base(DistroTag, Architecture, Tfm.NetLtsVersion, Dockerfile) { }
 }
 public class AmazonArm64ContainerTestFixture : ContainerTestFixtureBase
 {
@@ -89,7 +89,7 @@ public class AmazonArm64ContainerTestFixture : ContainerTestFixtureBase
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.Arm64;
     private const string DistroTag = "amazonlinux";
 
-    public AmazonArm64ContainerTestFixture() : base(DistroTag, Architecture, Dockerfile) { }
+    public AmazonArm64ContainerTestFixture() : base(DistroTag, Architecture, Tfm.NetLtsVersion, Dockerfile) { }
 }
 
 public class FedoraX64ContainerTestFixture : ContainerTestFixtureBase
@@ -98,7 +98,7 @@ public class FedoraX64ContainerTestFixture : ContainerTestFixtureBase
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
     private const string DistroTag = "fedora";
 
-    public FedoraX64ContainerTestFixture() : base(DistroTag, Architecture, Dockerfile) { }
+    public FedoraX64ContainerTestFixture() : base(DistroTag, Architecture, Tfm.NetLtsVersion, Dockerfile) { }
 }
 public class FedoraArm64ContainerTestFixture : ContainerTestFixtureBase
 {
@@ -106,5 +106,5 @@ public class FedoraArm64ContainerTestFixture : ContainerTestFixtureBase
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.Arm64;
     private const string DistroTag = "fedora";
 
-    public FedoraArm64ContainerTestFixture() : base(DistroTag, Architecture, Dockerfile) { }
+    public FedoraArm64ContainerTestFixture() : base(DistroTag, Architecture, Tfm.NetLtsVersion, Dockerfile) { }
 }

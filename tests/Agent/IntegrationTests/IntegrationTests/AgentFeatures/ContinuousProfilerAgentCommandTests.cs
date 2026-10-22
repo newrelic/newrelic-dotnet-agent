@@ -23,7 +23,7 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures;
 /// config -- turned it on, mirroring how <c>ContinuousProfilingThreadProfilingMutualExclusionTests</c>
 /// isolates the collector-driven path from config-driven CP behavior.
 /// </summary>
-public class ContinuousProfilerAgentCommandTests : NewRelicIntegrationTest<AspNetCoreWebApiWithCollectorFixture>
+public abstract class ContinuousProfilerAgentCommandTestsBase<TFixture> : NewRelicIntegrationTest<TFixture> where TFixture : AspNetCoreWebApiWithCollectorFixture
 {
     private readonly AspNetCoreWebApiWithCollectorFixture _fixture;
     private int _commandAcksSent;
@@ -34,7 +34,7 @@ public class ContinuousProfilerAgentCommandTests : NewRelicIntegrationTest<AspNe
     private static readonly string SessionStoppedLogLineRegex =
         AgentLogBase.InfoLogLinePrefixRegex + @"\[ContinuousProfiling\] Session stopped\.";
 
-    public ContinuousProfilerAgentCommandTests(AspNetCoreWebApiWithCollectorFixture fixture, ITestOutputHelper output) : base(fixture)
+    protected ContinuousProfilerAgentCommandTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
     {
         _fixture = fixture;
         _fixture.TestLogger = output;
@@ -81,5 +81,21 @@ public class ContinuousProfilerAgentCommandTests : NewRelicIntegrationTest<AspNe
             () => Assert.True(sessionStopped, "stop_continuous_profiling did not stop the continuous profiling session."),
             () => Assert.True(_commandAcksSent >= 2, $"Expected at least 2 agent_command_results posts (start + stop), got {_commandAcksSent}.")
         );
+    }
+}
+
+public class ContinuousProfilerAgentCommandTestsCoreOldest : ContinuousProfilerAgentCommandTestsBase<AspNetCoreWebApiWithCollectorFixtureCoreOldest>
+{
+    public ContinuousProfilerAgentCommandTestsCoreOldest(AspNetCoreWebApiWithCollectorFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
+}
+
+public class ContinuousProfilerAgentCommandTestsCoreLatest : ContinuousProfilerAgentCommandTestsBase<AspNetCoreWebApiWithCollectorFixtureCoreLatest>
+{
+    public ContinuousProfilerAgentCommandTestsCoreLatest(AspNetCoreWebApiWithCollectorFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
     }
 }

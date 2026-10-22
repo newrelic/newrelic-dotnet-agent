@@ -5,6 +5,7 @@ using System;
 using System.Threading.Tasks;
 using NewRelic.Agent.ContainerIntegrationTests.Applications;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
+using NewRelic.Agent.IntegrationTestHelpers;
 
 namespace NewRelic.Agent.ContainerIntegrationTests.Fixtures;
 
@@ -48,22 +49,22 @@ public abstract class MassTransitTestFixtureBase : RemoteApplicationFixture
     }
 }
 
-public class MassTransitDotNet8TestFixture : MassTransitTestFixtureBase
+public class MassTransitDotNetOldestTestFixture : MassTransitTestFixtureBase
 {
     private const string Dockerfile = "MassTransitTestApp/Dockerfile";
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
-    private const string DistroTag = "noble";
-    private const string DotnetVersion = "8.0";
+    private const string DistroTag = ContainerApplication.UbuntuDistroTag;
+    private const string DotnetVersion = Tfm.NetOldestVersion;
 
-    public MassTransitDotNet8TestFixture() : base(DistroTag, Architecture, Dockerfile, DotnetVersion) { }
+    public MassTransitDotNetOldestTestFixture() : base(DistroTag, Architecture, Dockerfile, DotnetVersion) { }
 }
 
-public class MassTransitDotNet10TestFixture : MassTransitTestFixtureBase
+public class MassTransitDotNetLatestTestFixture : MassTransitTestFixtureBase
 {
     private const string Dockerfile = "MassTransitTestApp/Dockerfile";
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
-    private const string DistroTag = "noble";
-    private const string DotnetVersion = "10.0";
+    private const string DistroTag = ContainerApplication.UbuntuDistroTag;
+    private const string DotnetVersion = Tfm.NetLatestVersion;
 
-    public MassTransitDotNet10TestFixture() : base(DistroTag, Architecture, Dockerfile, DotnetVersion) { }
+    public MassTransitDotNetLatestTestFixture() : base(DistroTag, Architecture, Dockerfile, DotnetVersion) { }
 }

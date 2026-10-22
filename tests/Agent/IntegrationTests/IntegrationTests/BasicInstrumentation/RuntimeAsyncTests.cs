@@ -15,7 +15,7 @@ namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation;
 
 /// <summary>
 /// Covers instrumentation of runtime-async methods. The application is built for
-/// net10.0 with runtime-async enabled as a preview feature, so this needs no newer SDK.
+/// net10.0 and net11.0 with runtime-async enabled.
 ///
 /// The assertion that matters is the scoped count of the nested InnerAsync segment. InnerAsync
 /// is called twice per OuterAsync invocation, both times after a suspension point, so its
@@ -29,9 +29,9 @@ namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation;
 /// InvalidProgramException rather than failing an assertion -- if that is what you are seeing,
 /// check the profiler build rather than this test.
 /// </summary>
-public class RuntimeAsyncTests : NewRelicIntegrationTest<RuntimeAsyncTestsFixture>
+public abstract class RuntimeAsyncTestsBase<TFixture> : NewRelicIntegrationTest<TFixture> where TFixture : RuntimeAsyncTestsFixture
 {
-    private readonly RuntimeAsyncTestsFixture _fixture;
+    private readonly TFixture _fixture;
 
     // Must match RuntimeAsyncUseCases.Iterations in the test application.
     private const int Iterations = 25;
@@ -51,7 +51,7 @@ public class RuntimeAsyncTests : NewRelicIntegrationTest<RuntimeAsyncTestsFixtur
 
     private const string ThreadIdAttributeName = "thread.id";
 
-    public RuntimeAsyncTests(RuntimeAsyncTestsFixture fixture, ITestOutputHelper output) : base(fixture)
+    protected RuntimeAsyncTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
     {
         _fixture = fixture;
         _fixture.TestLogger = output;
@@ -191,4 +191,20 @@ public class RuntimeAsyncTests : NewRelicIntegrationTest<RuntimeAsyncTestsFixtur
         new Assertions.ExpectedMetric { metricName = OuterSegmentName, metricScope = OuterTransactionName, CallCountAllHarvests = Iterations },
         new Assertions.ExpectedMetric { metricName = InnerSegmentName, metricScope = OuterTransactionName, CallCountAllHarvests = ExpectedNestedSegmentCount },
     };
+}
+
+public class RuntimeAsyncTestsCoreOldest : RuntimeAsyncTestsBase<RuntimeAsyncTestsFixtureCoreOldest>
+{
+    public RuntimeAsyncTestsCoreOldest(RuntimeAsyncTestsFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
+}
+
+public class RuntimeAsyncTestsCoreLatest : RuntimeAsyncTestsBase<RuntimeAsyncTestsFixtureCoreLatest>
+{
+    public RuntimeAsyncTestsCoreLatest(RuntimeAsyncTestsFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
 }

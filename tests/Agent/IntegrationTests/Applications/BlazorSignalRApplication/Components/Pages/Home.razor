@@ -25,7 +25,14 @@
     {
         if (firstRender)
         {
-            await JS.InvokeVoidAsync("eval", "window.__blazorCircuitReady = true");
+            try
+            {
+                await JS.InvokeVoidAsync("eval", "window.__blazorCircuitReady = true");
+            }
+            catch (JSDisconnectedException)
+            {
+                // The circuit can disconnect before this call completes during test teardown; safe to ignore.
+            }
         }
     }
 

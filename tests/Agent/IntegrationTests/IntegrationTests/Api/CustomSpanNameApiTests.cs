@@ -47,7 +47,6 @@ public abstract class CustomSpanNameApiTests<TFixture> : NewRelicIntegrationTest
                 var configPath = fixture.DestinationNewRelicConfigFilePath;
                 var configModifier = new NewRelicConfigModifier(configPath);
                 configModifier.ForceTransactionTraces();
-                configModifier.DisableEventListenerSamplers(); // Required for .NET 8 to pass.
                 configModifier.SetLogLevel("finest");
                 configModifier.ConfigureFasterMetricsHarvestCycle(10);
                 configModifier.ConfigureFasterTransactionTracesHarvestCycle(10);

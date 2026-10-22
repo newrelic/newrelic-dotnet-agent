@@ -82,8 +82,13 @@ public abstract class InfiniteTracingContainerTest<T> : NewRelicIntegrationTest<
 
 [Trait("Architecture", "amd64")]
 [Trait("Distro", "Alpine")]
-public class AlpineX64InfiniteTracingContainerTest(AlpineX64ContainerTestFixture fixture, ITestOutputHelper output)
-    : InfiniteTracingContainerTest<AlpineX64ContainerTestFixture>(fixture, output);
+public class AlpineX64InfiniteTracingContainerTestCoreOldest(InfiniteTracingAlpineX64ContainerTestFixtureCoreOldest fixture, ITestOutputHelper output)
+    : InfiniteTracingContainerTest<InfiniteTracingAlpineX64ContainerTestFixtureCoreOldest>(fixture, output);
+
+[Trait("Architecture", "amd64")]
+[Trait("Distro", "Alpine")]
+public class AlpineX64InfiniteTracingContainerTestCoreLatest(InfiniteTracingAlpineX64ContainerTestFixtureCoreLatest fixture, ITestOutputHelper output)
+    : InfiniteTracingContainerTest<InfiniteTracingAlpineX64ContainerTestFixtureCoreLatest>(fixture, output);
 
 //[Trait("Architecture", "arm64")]
 //public class UbuntuArm64InfiniteTracingContainerTest(UbuntuArm64ContainerTestFixture fixture, ITestOutputHelper output)
@@ -99,13 +104,23 @@ public class AlpineX64InfiniteTracingContainerTest(AlpineX64ContainerTestFixture
 
 [Trait("Architecture", "amd64")]
 [Trait("Distro", "Amazon")]
-public class AmazonX64InfiniteTracingContainerTest(AmazonX64ContainerTestFixture fixture, ITestOutputHelper output)
-    : InfiniteTracingContainerTest<AmazonX64ContainerTestFixture>(fixture, output);
+public class AmazonX64InfiniteTracingContainerTestCoreOldest(InfiniteTracingAmazonX64ContainerTestFixtureCoreOldest fixture, ITestOutputHelper output)
+    : InfiniteTracingContainerTest<InfiniteTracingAmazonX64ContainerTestFixtureCoreOldest>(fixture, output);
+
+[Trait("Architecture", "amd64")]
+[Trait("Distro", "Amazon")]
+public class AmazonX64InfiniteTracingContainerTestCoreLatest(InfiniteTracingAmazonX64ContainerTestFixtureCoreLatest fixture, ITestOutputHelper output)
+    : InfiniteTracingContainerTest<InfiniteTracingAmazonX64ContainerTestFixtureCoreLatest>(fixture, output);
 
 [Trait("Architecture", "arm64")]
 [Trait("Distro", "Amazon")]
-public class AmazonArm64InfiniteTracingContainerTest(AmazonArm64ContainerTestFixture fixture, ITestOutputHelper output)
-    : InfiniteTracingContainerTest<AmazonArm64ContainerTestFixture>(fixture, output);
+public class AmazonArm64InfiniteTracingContainerTestCoreOldest(InfiniteTracingAmazonArm64ContainerTestFixtureCoreOldest fixture, ITestOutputHelper output)
+    : InfiniteTracingContainerTest<InfiniteTracingAmazonArm64ContainerTestFixtureCoreOldest>(fixture, output);
+
+[Trait("Architecture", "arm64")]
+[Trait("Distro", "Amazon")]
+public class AmazonArm64InfiniteTracingContainerTestCoreLatest(InfiniteTracingAmazonArm64ContainerTestFixtureCoreLatest fixture, ITestOutputHelper output)
+    : InfiniteTracingContainerTest<InfiniteTracingAmazonArm64ContainerTestFixtureCoreLatest>(fixture, output);
 
 //[Trait("Architecture", "amd64")]
 //public class FedoraX64InfiniteTracingContainerTest(FedoraX64ContainerTestFixture fixture, ITestOutputHelper output)

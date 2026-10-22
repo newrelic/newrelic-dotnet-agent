@@ -93,17 +93,33 @@ public abstract class RejitRenameFileBase<TFixture> : NewRelicIntegrationTest<TF
     }
 }
 
-public class RejitRenameFile : RejitRenameFileBase<AspNetCoreReJitMvcApplicationFixture>
+public class RejitRenameFileCoreOldest : RejitRenameFileBase<AspNetCoreReJitMvcApplicationFixtureCoreOldest>
 {
-    public RejitRenameFile(AspNetCoreReJitMvcApplicationFixture fixture, ITestOutputHelper output)
+    public RejitRenameFileCoreOldest(AspNetCoreReJitMvcApplicationFixtureCoreOldest fixture, ITestOutputHelper output)
         : base(fixture, output)
     {
     }
 }
 
-public class RejitRenameFileWithTieredCompilation : RejitRenameFileBase<AspNetCoreReJitMvcApplicationFixtureWithTieredCompilation>
+public class RejitRenameFileCoreLatest : RejitRenameFileBase<AspNetCoreReJitMvcApplicationFixtureCoreLatest>
 {
-    public RejitRenameFileWithTieredCompilation(AspNetCoreReJitMvcApplicationFixtureWithTieredCompilation fixture, ITestOutputHelper output)
+    public RejitRenameFileCoreLatest(AspNetCoreReJitMvcApplicationFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
+}
+
+public class RejitRenameFileWithTieredCompilationCoreOldest : RejitRenameFileBase<AspNetCoreReJitMvcApplicationFixtureWithTieredCompilationCoreOldest>
+{
+    public RejitRenameFileWithTieredCompilationCoreOldest(AspNetCoreReJitMvcApplicationFixtureWithTieredCompilationCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
+}
+
+public class RejitRenameFileWithTieredCompilationCoreLatest : RejitRenameFileBase<AspNetCoreReJitMvcApplicationFixtureWithTieredCompilationCoreLatest>
+{
+    public RejitRenameFileWithTieredCompilationCoreLatest(AspNetCoreReJitMvcApplicationFixtureWithTieredCompilationCoreLatest fixture, ITestOutputHelper output)
         : base(fixture, output)
     {
     }

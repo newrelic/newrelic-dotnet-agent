@@ -12,18 +12,18 @@ using OpenQA.Selenium.Support.UI;
 
 namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 
-public class BlazorSignalRApplicationFixture : RemoteApplicationFixture
+public abstract class BlazorSignalRApplicationFixture : RemoteApplicationFixture
 {
     private const string ApplicationDirectoryName = "BlazorSignalRApplication";
     private const string ExecutableName = "BlazorSignalRApplication.exe";
 
     private IWebDriver _driver;
 
-    public BlazorSignalRApplicationFixture()
+    protected BlazorSignalRApplicationFixture(string targetFramework)
         : base(new RemoteService(
             ApplicationDirectoryName,
             ExecutableName,
-            targetFramework: "net10.0",
+            targetFramework: targetFramework,
             ApplicationType.Bounded,
             true,
             true,
@@ -122,5 +122,19 @@ public class BlazorSignalRApplicationFixture : RemoteApplicationFixture
     {
         CloseBrowser();
         base.Dispose();
+    }
+}
+
+public class BlazorSignalRApplicationFixtureCoreOldest : BlazorSignalRApplicationFixture
+{
+    public BlazorSignalRApplicationFixtureCoreOldest() : base(Tfm.NetOldest)
+    {
+    }
+}
+
+public class BlazorSignalRApplicationFixtureCoreLatest : BlazorSignalRApplicationFixture
+{
+    public BlazorSignalRApplicationFixtureCoreLatest() : base(Tfm.NetLatest)
+    {
     }
 }

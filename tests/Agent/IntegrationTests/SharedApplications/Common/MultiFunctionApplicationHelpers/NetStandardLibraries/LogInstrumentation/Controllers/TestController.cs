@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
-#if NET10_0
+#if NET11_0
 
 using System;
 using Microsoft.AspNetCore.Mvc;

@@ -16,6 +16,9 @@ namespace NewRelic.Agent.ContainerIntegrationTests.Applications;
 
 public class ContainerApplication : RemoteApplication
 {
+    // Ubuntu 26.04. Update when moving container tests to a new Ubuntu release.
+    public const string UbuntuDistroTag = "resolute";
+
     private readonly string _dockerfile;
     private readonly string _dockerComposeFile;
     private readonly string _serviceName;

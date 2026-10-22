@@ -9,11 +9,11 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures;
 /// <summary>
 /// Tests that the agent doesn't deadlock at startup
 /// </summary>
-public class InstrumentationStartupDeadlockTests : NewRelicIntegrationTest<RemoteServiceFixtures.ConsoleInstrumentationStartupFixtureCore>
+public abstract class InstrumentationStartupDeadlockTestsBase<TFixture> : NewRelicIntegrationTest<TFixture> where TFixture : RemoteServiceFixtures.ConsoleInstrumentationStartupFixtureCore
 {
-    private readonly RemoteServiceFixtures.ConsoleInstrumentationStartupFixtureCore _fixture;
+    private readonly TFixture _fixture;
 
-    public InstrumentationStartupDeadlockTests(RemoteServiceFixtures.ConsoleInstrumentationStartupFixtureCore fixture, ITestOutputHelper output) : base(fixture)
+    protected InstrumentationStartupDeadlockTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
     {
         _fixture = fixture;
         _fixture.TestLogger = output;
@@ -30,7 +30,6 @@ public class InstrumentationStartupDeadlockTests : NewRelicIntegrationTest<Remot
 
                 configModifier.ForceTransactionTraces();
                 configModifier.SetLogLevel("finest");
-                configModifier.DisableEventListenerSamplers(); // Required for .NET 8 to pass.
             },
             exerciseApplication: () =>
             {
@@ -46,5 +45,21 @@ public class InstrumentationStartupDeadlockTests : NewRelicIntegrationTest<Remot
         var expectedLogLineRegexes = new[] { AgentLogBase.ShutdownLogLineRegex };
 
         Assertions.LogLinesExist(expectedLogLineRegexes, _fixture.AgentLog.GetFileLines());
+    }
+}
+
+public class InstrumentationStartupDeadlockTestsCoreOldest : InstrumentationStartupDeadlockTestsBase<RemoteServiceFixtures.ConsoleInstrumentationStartupFixtureCoreOldest>
+{
+    public InstrumentationStartupDeadlockTestsCoreOldest(RemoteServiceFixtures.ConsoleInstrumentationStartupFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
+}
+
+public class InstrumentationStartupDeadlockTestsCoreLatest : InstrumentationStartupDeadlockTestsBase<RemoteServiceFixtures.ConsoleInstrumentationStartupFixtureCoreLatest>
+{
+    public InstrumentationStartupDeadlockTestsCoreLatest(RemoteServiceFixtures.ConsoleInstrumentationStartupFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
     }
 }

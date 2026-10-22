@@ -10,11 +10,12 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation;
 
-public class InterfaceDefaultsInstrumentationTests : NewRelicIntegrationTest<RemoteServiceFixtures.AspNetCoreFeaturesFixture>
+public abstract class InterfaceDefaultsInstrumentationTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
+    where TFixture : RemoteServiceFixtures.AspNetCoreFeaturesFixture
 {
-    private readonly RemoteServiceFixtures.AspNetCoreFeaturesFixture _fixture;
+    private readonly TFixture _fixture;
 
-    public InterfaceDefaultsInstrumentationTests(RemoteServiceFixtures.AspNetCoreFeaturesFixture fixture, ITestOutputHelper output)
+    protected InterfaceDefaultsInstrumentationTestsBase(TFixture fixture, ITestOutputHelper output)
         : base(fixture)
     {
         _fixture = fixture;
@@ -72,4 +73,20 @@ public class InterfaceDefaultsInstrumentationTests : NewRelicIntegrationTest<Rem
         new Assertions.ExpectedMetric { metricName = @"DotNet/AspNetCoreFeatures.Controllers.ConsoleLoggerNoAttributesOverridesDefault/LogException", metricScope = "WebTransaction/MVC/InterfaceDefaults/GetWithoutAttributes", CallCountAllHarvests = 1 },
         new Assertions.ExpectedMetric { metricName = @"DotNet/AspNetCoreFeatures.Controllers.ConsoleLoggerNoAttributesOverridesDefault/LogMessage", metricScope = "WebTransaction/MVC/InterfaceDefaults/GetWithoutAttributes", CallCountAllHarvests = 1 }
     };
+}
+
+public class InterfaceDefaultsInstrumentationTestsCoreOldest : InterfaceDefaultsInstrumentationTestsBase<RemoteServiceFixtures.AspNetCoreFeaturesFixtureCoreOldest>
+{
+    public InterfaceDefaultsInstrumentationTestsCoreOldest(RemoteServiceFixtures.AspNetCoreFeaturesFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
+}
+
+public class InterfaceDefaultsInstrumentationTestsCoreLatest : InterfaceDefaultsInstrumentationTestsBase<RemoteServiceFixtures.AspNetCoreFeaturesFixtureCoreLatest>
+{
+    public InterfaceDefaultsInstrumentationTestsCoreLatest(RemoteServiceFixtures.AspNetCoreFeaturesFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
 }

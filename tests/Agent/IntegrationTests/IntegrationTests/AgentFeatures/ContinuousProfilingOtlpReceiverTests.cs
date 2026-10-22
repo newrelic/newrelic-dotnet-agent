@@ -30,7 +30,7 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures;
 /// shuts the collector process down as soon as it returns, so a <c>[Fact]</c> calling the collector would hit
 /// a torn-down port.
 /// </summary>
-public class ContinuousProfilingOtlpReceiverTests : NewRelicIntegrationTest<AspNetCoreWebApiWithCollectorFixture>
+public abstract class ContinuousProfilingOtlpReceiverTestsBase<TFixture> : NewRelicIntegrationTest<TFixture> where TFixture : AspNetCoreWebApiWithCollectorFixture
 {
     private const int SamplingIntervalMs = 1000;
 
@@ -45,7 +45,7 @@ public class ContinuousProfilingOtlpReceiverTests : NewRelicIntegrationTest<AspN
     private static readonly string BuiltProfileLogLineRegex =
         AgentLogBase.DebugLogLinePrefixRegex + @"\[ContinuousProfiling\] Posting profile \((\w+)\); (\d+) bytes to (\S+)\.";
 
-    public ContinuousProfilingOtlpReceiverTests(AspNetCoreWebApiWithCollectorFixture fixture, ITestOutputHelper output) : base(fixture)
+    protected ContinuousProfilingOtlpReceiverTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
     {
         _fixture = fixture;
         _fixture.TestLogger = output;
@@ -157,5 +157,21 @@ public class ContinuousProfilingOtlpReceiverTests : NewRelicIntegrationTest<AspN
             () => Assert.True(_placeholderLineCount > 0, "No placeholder payload line was logged with payload logging off."),
             () => Assert.Equal(0, _encodedLineCount)
         );
+    }
+}
+
+public class ContinuousProfilingOtlpReceiverTestsCoreOldest : ContinuousProfilingOtlpReceiverTestsBase<AspNetCoreWebApiWithCollectorFixtureCoreOldest>
+{
+    public ContinuousProfilingOtlpReceiverTestsCoreOldest(AspNetCoreWebApiWithCollectorFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
+}
+
+public class ContinuousProfilingOtlpReceiverTestsCoreLatest : ContinuousProfilingOtlpReceiverTestsBase<AspNetCoreWebApiWithCollectorFixtureCoreLatest>
+{
+    public ContinuousProfilingOtlpReceiverTestsCoreLatest(AspNetCoreWebApiWithCollectorFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
     }
 }

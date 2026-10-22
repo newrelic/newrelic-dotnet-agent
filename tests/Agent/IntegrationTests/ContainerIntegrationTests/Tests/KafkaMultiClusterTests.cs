@@ -13,17 +13,14 @@ namespace NewRelic.Agent.ContainerIntegrationTests.Tests;
 // Proves that KafkaClusterIdCache keys cluster ids by bootstrap servers, never
 // attaching one cluster's id to another cluster's traffic. Two independent
 // single-node KRaft clusters, each with its own CLUSTER_ID and topic.
-[Collection("KafkaTests")]
-[Trait("Architecture", "amd64")]
-[Trait("TestArea", "Messaging")]
-public class KafkaMultiClusterTest : NewRelicIntegrationTest<KafkaMultiClusterTestFixture>
+public abstract class KafkaMultiClusterTestBase<TFixture> : NewRelicIntegrationTest<TFixture> where TFixture : KafkaMultiClusterTestFixture
 {
     private const string ExpectedClusterId1 = "MkU3OEVBNTcwNTJENDM2Qg";
     private const string ExpectedClusterId2 = "fzwakkuOTSGcbypei3HUAw";
 
-    private readonly KafkaMultiClusterTestFixture _fixture;
+    private readonly TFixture _fixture;
 
-    public KafkaMultiClusterTest(KafkaMultiClusterTestFixture fixture, ITestOutputHelper output) : base(fixture)
+    protected KafkaMultiClusterTestBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
     {
         _fixture = fixture;
         _fixture.TestLogger = output;
@@ -142,5 +139,25 @@ public class KafkaMultiClusterTest : NewRelicIntegrationTest<KafkaMultiClusterTe
         var described = ids.Select(id => id ?? "<no id>").GroupBy(id => id)
             .Select(g => $"{g.Key} x{g.Count()}");
         return string.Join(", ", described);
+    }
+}
+
+[Collection("KafkaTests")]
+[Trait("Architecture", "amd64")]
+[Trait("TestArea", "Messaging")]
+public class KafkaMultiClusterTestCoreOldest : KafkaMultiClusterTestBase<KafkaMultiClusterTestFixtureCoreOldest>
+{
+    public KafkaMultiClusterTestCoreOldest(KafkaMultiClusterTestFixtureCoreOldest fixture, ITestOutputHelper output) : base(fixture, output)
+    {
+    }
+}
+
+[Collection("KafkaTests")]
+[Trait("Architecture", "amd64")]
+[Trait("TestArea", "Messaging")]
+public class KafkaMultiClusterTestCoreLatest : KafkaMultiClusterTestBase<KafkaMultiClusterTestFixtureCoreLatest>
+{
+    public KafkaMultiClusterTestCoreLatest(KafkaMultiClusterTestFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)
+    {
     }
 }

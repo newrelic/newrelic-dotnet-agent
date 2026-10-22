@@ -10,12 +10,12 @@ using Xunit;
 
 namespace NewRelic.Agent.ContainerIntegrationTests.Tests.AwsSdk;
 
-[Collection("AwsSdkTests")]
 [Trait("Architecture", "amd64")]
 [Trait("TestArea", "Aws")]
-public class AwsSdkDynamoDBTest : NewRelicIntegrationTest<AwsSdkContainerDynamoDBTestFixture>
+public abstract class AwsSdkDynamoDBTestBase<TFixture> : NewRelicIntegrationTest<TFixture>
+    where TFixture : AwsSdkContainerDynamoDBTestFixture
 {
-    private readonly AwsSdkContainerDynamoDBTestFixture _fixture;
+    private readonly TFixture _fixture;
 
     private readonly string _tableName = $"TestTable-{Guid.NewGuid()}";
     private readonly string _title = "Ghost";
@@ -24,7 +24,7 @@ public class AwsSdkDynamoDBTest : NewRelicIntegrationTest<AwsSdkContainerDynamoD
     private const string _accountId = "520056171328"; // matches the account ID parsed from the fake access key used in AwsSdkDynamoDBExerciser
     private const string _region = "us-east-2"; // matches AuthenticationRegion in AwsSdkDynamoDBExerciser
 
-    public AwsSdkDynamoDBTest(AwsSdkContainerDynamoDBTestFixture fixture, ITestOutputHelper output) : base(fixture)
+    protected AwsSdkDynamoDBTestBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
     {
         _fixture = fixture;
         _fixture.TestLogger = output;
@@ -134,5 +134,21 @@ public class AwsSdkDynamoDBTest : NewRelicIntegrationTest<AwsSdkContainerDynamoD
 
             () => Assertions.MetricsExist(expectedMetrics, metrics)
             );
+    }
+}
+
+[Collection("AwsSdkTests")]
+public class AwsSdkDynamoDBTestCoreOldest : AwsSdkDynamoDBTestBase<AwsSdkContainerDynamoDBTestFixtureCoreOldest>
+{
+    public AwsSdkDynamoDBTestCoreOldest(AwsSdkContainerDynamoDBTestFixtureCoreOldest fixture, ITestOutputHelper output) : base(fixture, output)
+    {
+    }
+}
+
+[Collection("AwsSdkTests")]
+public class AwsSdkDynamoDBTestCoreLatest : AwsSdkDynamoDBTestBase<AwsSdkContainerDynamoDBTestFixtureCoreLatest>
+{
+    public AwsSdkDynamoDBTestCoreLatest(AwsSdkContainerDynamoDBTestFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)
+    {
     }
 }

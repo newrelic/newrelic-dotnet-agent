@@ -14,9 +14,10 @@ namespace NewRelic.Agent.ContainerIntegrationTests.Tests.AwsSdk;
 
 [Trait("Architecture", "amd64")]
 [Trait("TestArea", "Aws")]
-public abstract class AwsSdkSQSTestBase : NewRelicIntegrationTest<AwsSdkContainerSQSTestFixture>
+public abstract class AwsSdkSQSTestBase<TFixture> : NewRelicIntegrationTest<TFixture>
+    where TFixture : AwsSdkContainerSQSTestFixture
 {
-    private readonly AwsSdkContainerSQSTestFixture _fixture;
+    private readonly TFixture _fixture;
 
     private readonly string _testQueueName1 = $"TestQueue1-{Guid.NewGuid()}";
     private readonly string _testQueueName2 = $"TestQueue2-{Guid.NewGuid()}";
@@ -27,7 +28,7 @@ public abstract class AwsSdkSQSTestBase : NewRelicIntegrationTest<AwsSdkContaine
     private readonly string _metricScope4 = "WebTransaction/MVC/AwsSdkSQS/SQS_SendMessageWithExistingDTHeadersToQueue/{message}/{messageQueueUrl}";
     private bool _initCollections;
 
-    protected AwsSdkSQSTestBase(AwsSdkContainerSQSTestFixture fixture, ITestOutputHelper output, bool initCollections) : base(fixture)
+    protected AwsSdkSQSTestBase(TFixture fixture, ITestOutputHelper output, bool initCollections) : base(fixture)
     {
         _fixture = fixture;
         _fixture.TestLogger = output;
@@ -197,17 +198,33 @@ public abstract class AwsSdkSQSTestBase : NewRelicIntegrationTest<AwsSdkContaine
 }
 
 [Collection("AwsSdkTests")]
-public class AwsSdkSQSTestInitializedCollections : AwsSdkSQSTestBase
+public class AwsSdkSQSTestInitializedCollectionsCoreOldest : AwsSdkSQSTestBase<AwsSdkContainerSQSTestFixtureCoreOldest>
 {
-    public AwsSdkSQSTestInitializedCollections(AwsSdkContainerSQSTestFixture fixture, ITestOutputHelper output) : base(fixture, output, true)
+    public AwsSdkSQSTestInitializedCollectionsCoreOldest(AwsSdkContainerSQSTestFixtureCoreOldest fixture, ITestOutputHelper output) : base(fixture, output, true)
     {
     }
 }
 
 [Collection("AwsSdkTests")]
-public class AwsSdkSQSTestNullCollections : AwsSdkSQSTestBase
+public class AwsSdkSQSTestInitializedCollectionsCoreLatest : AwsSdkSQSTestBase<AwsSdkContainerSQSTestFixtureCoreLatest>
 {
-    public AwsSdkSQSTestNullCollections(AwsSdkContainerSQSTestFixture fixture, ITestOutputHelper output) : base(fixture, output, false)
+    public AwsSdkSQSTestInitializedCollectionsCoreLatest(AwsSdkContainerSQSTestFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output, true)
+    {
+    }
+}
+
+[Collection("AwsSdkTests")]
+public class AwsSdkSQSTestNullCollectionsCoreOldest : AwsSdkSQSTestBase<AwsSdkContainerSQSTestFixtureCoreOldest>
+{
+    public AwsSdkSQSTestNullCollectionsCoreOldest(AwsSdkContainerSQSTestFixtureCoreOldest fixture, ITestOutputHelper output) : base(fixture, output, false)
+    {
+    }
+}
+
+[Collection("AwsSdkTests")]
+public class AwsSdkSQSTestNullCollectionsCoreLatest : AwsSdkSQSTestBase<AwsSdkContainerSQSTestFixtureCoreLatest>
+{
+    public AwsSdkSQSTestNullCollectionsCoreLatest(AwsSdkContainerSQSTestFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output, false)
     {
     }
 }

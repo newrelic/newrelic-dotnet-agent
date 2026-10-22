@@ -10,13 +10,14 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.AspNetCore;
 
-public class AspNetCoreCollectibleAssemblyContextTests : NewRelicIntegrationTest<RemoteServiceFixtures.AspNetCoreFeaturesFixture>
+public abstract class AspNetCoreCollectibleAssemblyContextTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
+    where TFixture : RemoteServiceFixtures.AspNetCoreFeaturesFixture
 {
-    private readonly RemoteServiceFixtures.AspNetCoreFeaturesFixture _fixture;
+    private readonly TFixture _fixture;
 
     private const int ExpectedTransactionCount = 2;
 
-    public AspNetCoreCollectibleAssemblyContextTests(RemoteServiceFixtures.AspNetCoreFeaturesFixture fixture, ITestOutputHelper output)
+    protected AspNetCoreCollectibleAssemblyContextTestsBase(TFixture fixture, ITestOutputHelper output)
         : base(fixture)
     {
         _fixture = fixture;
@@ -76,4 +77,20 @@ public class AspNetCoreCollectibleAssemblyContextTests : NewRelicIntegrationTest
         new Assertions.ExpectedMetric { metricName = @"DotNet/CollectibleController/AccessCollectible", CallCountAllHarvests = 2 },
         new Assertions.ExpectedMetric { metricName = @"DotNet/CollectibleController/AccessCollectible", metricScope = @"WebTransaction/MVC/Collectible/AccessCollectible", CallCountAllHarvests = 2 },
     };
+}
+
+public class AspNetCoreCollectibleAssemblyContextTestsCoreOldest : AspNetCoreCollectibleAssemblyContextTestsBase<RemoteServiceFixtures.AspNetCoreFeaturesFixtureCoreOldest>
+{
+    public AspNetCoreCollectibleAssemblyContextTestsCoreOldest(RemoteServiceFixtures.AspNetCoreFeaturesFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
+}
+
+public class AspNetCoreCollectibleAssemblyContextTestsCoreLatest : AspNetCoreCollectibleAssemblyContextTestsBase<RemoteServiceFixtures.AspNetCoreFeaturesFixtureCoreLatest>
+{
+    public AspNetCoreCollectibleAssemblyContextTestsCoreLatest(RemoteServiceFixtures.AspNetCoreFeaturesFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
 }

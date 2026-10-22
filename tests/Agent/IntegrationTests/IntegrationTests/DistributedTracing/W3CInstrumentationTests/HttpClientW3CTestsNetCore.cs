@@ -17,9 +17,10 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing.W3CInstrumentationT
 /// Test W3C support when chaining multiple requests by using HttpClient.
 /// Instrumentations occur in this test are AspNetCore and HttpClient.
 /// </summary>
-public abstract class HttpClientW3CTestsNetCore : NewRelicIntegrationTest<AspNetCoreDistTraceRequestChainFixture>
+public abstract class HttpClientW3CTestsNetCoreBase<TFixture> : NewRelicIntegrationTest<TFixture>
+    where TFixture : AspNetCoreDistTraceRequestChainFixture
 {
-    private readonly AspNetCoreDistTraceRequestChainFixture _fixture;
+    private readonly TFixture _fixture;
 
     private const int ExpectedTransactionCount = 1;
 
@@ -28,7 +29,7 @@ public abstract class HttpClientW3CTestsNetCore : NewRelicIntegrationTest<AspNet
     private const string TestTracingVendors = "rojo,congo";
     private const string TestOtherVendorEntries = "rojo=1,congo=2";
 
-    public HttpClientW3CTestsNetCore(AspNetCoreDistTraceRequestChainFixture fixture, ITestOutputHelper output, bool excludeNewRelicHeader)
+    protected HttpClientW3CTestsNetCoreBase(TFixture fixture, ITestOutputHelper output, bool excludeNewRelicHeader)
         : base(fixture)
     {
         _fixture = fixture;
@@ -160,18 +161,33 @@ public abstract class HttpClientW3CTestsNetCore : NewRelicIntegrationTest<AspNet
     }
 }
 
-public class HttpClientW3CTestsNetCoreWithNRHeader : HttpClientW3CTestsNetCore
+public class HttpClientW3CTestsNetCoreWithNRHeaderCoreOldest : HttpClientW3CTestsNetCoreBase<AspNetCoreDistTraceRequestChainFixtureCoreOldest>
 {
-    public HttpClientW3CTestsNetCoreWithNRHeader(AspNetCoreDistTraceRequestChainFixture fixture, ITestOutputHelper output)
+    public HttpClientW3CTestsNetCoreWithNRHeaderCoreOldest(AspNetCoreDistTraceRequestChainFixtureCoreOldest fixture, ITestOutputHelper output)
         : base(fixture, output, excludeNewRelicHeader: false)
     {
     }
-
 }
 
-public class HttpClientW3CTestsNetCoreWithoutNRHeader : HttpClientW3CTestsNetCore
+public class HttpClientW3CTestsNetCoreWithNRHeaderCoreLatest : HttpClientW3CTestsNetCoreBase<AspNetCoreDistTraceRequestChainFixtureCoreLatest>
 {
-    public HttpClientW3CTestsNetCoreWithoutNRHeader(AspNetCoreDistTraceRequestChainFixture fixture, ITestOutputHelper output)
+    public HttpClientW3CTestsNetCoreWithNRHeaderCoreLatest(AspNetCoreDistTraceRequestChainFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output, excludeNewRelicHeader: false)
+    {
+    }
+}
+
+public class HttpClientW3CTestsNetCoreWithoutNRHeaderCoreOldest : HttpClientW3CTestsNetCoreBase<AspNetCoreDistTraceRequestChainFixtureCoreOldest>
+{
+    public HttpClientW3CTestsNetCoreWithoutNRHeaderCoreOldest(AspNetCoreDistTraceRequestChainFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output, excludeNewRelicHeader: true)
+    {
+    }
+}
+
+public class HttpClientW3CTestsNetCoreWithoutNRHeaderCoreLatest : HttpClientW3CTestsNetCoreBase<AspNetCoreDistTraceRequestChainFixtureCoreLatest>
+{
+    public HttpClientW3CTestsNetCoreWithoutNRHeaderCoreLatest(AspNetCoreDistTraceRequestChainFixtureCoreLatest fixture, ITestOutputHelper output)
         : base(fixture, output, excludeNewRelicHeader: true)
     {
     }

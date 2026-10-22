@@ -69,9 +69,9 @@ public abstract class AppDomainCachingContainerTest<T> : NewRelicIntegrationTest
 
 [Trait("Architecture", "amd64")]
 [Trait("TestArea", "Core")]
-public class AppDomainCachingEnabledContainerTest : AppDomainCachingContainerTest<AppDomainCachingEnabledContainerTestFixture>
+public class AppDomainCachingEnabledContainerTestCoreOldest : AppDomainCachingContainerTest<AppDomainCachingEnabledContainerTestFixtureCoreOldest>
 {
-    public AppDomainCachingEnabledContainerTest(AppDomainCachingEnabledContainerTestFixture fixture, ITestOutputHelper output)
+    public AppDomainCachingEnabledContainerTestCoreOldest(AppDomainCachingEnabledContainerTestFixtureCoreOldest fixture, ITestOutputHelper output)
         : base(fixture, output, "AppDomain Fallback Cache", cachingDisabled: false)
     {
     }
@@ -79,9 +79,29 @@ public class AppDomainCachingEnabledContainerTest : AppDomainCachingContainerTes
 
 [Trait("Architecture", "amd64")]
 [Trait("TestArea", "Core")]
-public class AppDomainCachingDisabledContainerTest : AppDomainCachingContainerTest<AppDomainCachingDisabledContainerTestFixture>
+public class AppDomainCachingEnabledContainerTestCoreLatest : AppDomainCachingContainerTest<AppDomainCachingEnabledContainerTestFixtureCoreLatest>
 {
-    public AppDomainCachingDisabledContainerTest(AppDomainCachingDisabledContainerTestFixture fixture, ITestOutputHelper output)
+    public AppDomainCachingEnabledContainerTestCoreLatest(AppDomainCachingEnabledContainerTestFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output, "AppDomain Fallback Cache", cachingDisabled: false)
+    {
+    }
+}
+
+[Trait("Architecture", "amd64")]
+[Trait("TestArea", "Core")]
+public class AppDomainCachingDisabledContainerTestCoreOldest : AppDomainCachingContainerTest<AppDomainCachingDisabledContainerTestFixtureCoreOldest>
+{
+    public AppDomainCachingDisabledContainerTestCoreOldest(AppDomainCachingDisabledContainerTestFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output, "Reflection", cachingDisabled: true)
+    {
+    }
+}
+
+[Trait("Architecture", "amd64")]
+[Trait("TestArea", "Core")]
+public class AppDomainCachingDisabledContainerTestCoreLatest : AppDomainCachingContainerTest<AppDomainCachingDisabledContainerTestFixtureCoreLatest>
+{
+    public AppDomainCachingDisabledContainerTestCoreLatest(AppDomainCachingDisabledContainerTestFixtureCoreLatest fixture, ITestOutputHelper output)
         : base(fixture, output, "Reflection", cachingDisabled: true)
     {
     }

@@ -131,7 +131,7 @@ on:
         default: 2
         required: false
       dotnet_version:
-        description: '.NET version for the test app container (e.g. "10.0", "8.0")'
+        description: '.NET version for the test app container (e.g. "10.0")'
         type: string
         default: '10.0'
         required: false

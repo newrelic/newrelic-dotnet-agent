@@ -10,14 +10,15 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.HSM;
 
-public class AspNetCoreLocalHSMDisabledAndServerSideHSMDisabledTests : NewRelicIntegrationTest<RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture>
+public abstract class AspNetCoreLocalHSMDisabledAndServerSideHSMDisabledTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
+    where TFixture : RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture
 {
     private const string QueryStringParameterValue = @"my thing";
 
 
-    private readonly RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture _fixture;
+    private readonly TFixture _fixture;
 
-    public AspNetCoreLocalHSMDisabledAndServerSideHSMDisabledTests(RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture fixture, ITestOutputHelper output)
+    protected AspNetCoreLocalHSMDisabledAndServerSideHSMDisabledTestsBase(TFixture fixture, ITestOutputHelper output)
         : base(fixture)
     {
         _fixture = fixture;
@@ -51,5 +52,21 @@ public class AspNetCoreLocalHSMDisabledAndServerSideHSMDisabledTests : NewRelicI
 
         var transactionSample = _fixture.AgentLog.GetTransactionSamples().FirstOrDefault();
         Assertions.TransactionTraceHasAttributes(expectedAttributes, TransactionTraceAttributeType.Agent, transactionSample);
+    }
+}
+
+public class AspNetCoreLocalHSMDisabledAndServerSideHSMDisabledTestsCoreOldest : AspNetCoreLocalHSMDisabledAndServerSideHSMDisabledTestsBase<RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixtureCoreOldest>
+{
+    public AspNetCoreLocalHSMDisabledAndServerSideHSMDisabledTestsCoreOldest(RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
+}
+
+public class AspNetCoreLocalHSMDisabledAndServerSideHSMDisabledTestsCoreLatest : AspNetCoreLocalHSMDisabledAndServerSideHSMDisabledTestsBase<RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixtureCoreLatest>
+{
+    public AspNetCoreLocalHSMDisabledAndServerSideHSMDisabledTestsCoreLatest(RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
     }
 }

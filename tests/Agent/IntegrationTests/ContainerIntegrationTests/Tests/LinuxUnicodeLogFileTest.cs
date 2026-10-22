@@ -17,11 +17,11 @@ namespace NewRelic.Agent.ContainerIntegrationTests.Tests;
 /// </summary>
 [Trait("Architecture", "amd64")]
 [Trait("TestArea", "Core")]
-public class LinuxUnicodeLogFileTest : NewRelicIntegrationTest<LinuxUnicodeLogFileTestFixture>
+public abstract class LinuxUnicodeLogFileTest<T> : NewRelicIntegrationTest<T> where T : LinuxUnicodeLogFileTestFixture
 {
-    private readonly LinuxUnicodeLogFileTestFixture _fixture;
+    private readonly T _fixture;
 
-    public LinuxUnicodeLogFileTest(LinuxUnicodeLogFileTestFixture fixture, ITestOutputHelper output) : base(fixture)
+    protected LinuxUnicodeLogFileTest(T fixture, ITestOutputHelper output) : base(fixture)
     {
         _fixture = fixture;
         _fixture.TestLogger = output;
@@ -66,5 +66,21 @@ public class LinuxUnicodeLogFileTest : NewRelicIntegrationTest<LinuxUnicodeLogFi
         var profilerLog = _fixture.ProfilerLog.GetFullLogAsString();
         Assert.Contains("SmokeTestApp", profilerLog);
         Assert.Contains("WeatherForecastController", profilerLog);
+    }
+}
+
+public class LinuxUnicodeLogFileTestCoreOldest : LinuxUnicodeLogFileTest<LinuxUnicodeLogFileTestFixtureCoreOldest>
+{
+    public LinuxUnicodeLogFileTestCoreOldest(LinuxUnicodeLogFileTestFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
+}
+
+public class LinuxUnicodeLogFileTestCoreLatest : LinuxUnicodeLogFileTest<LinuxUnicodeLogFileTestFixtureCoreLatest>
+{
+    public LinuxUnicodeLogFileTestCoreLatest(LinuxUnicodeLogFileTestFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
     }
 }

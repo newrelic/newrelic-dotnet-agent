@@ -24,7 +24,7 @@ public class BedrockExerciser
             //{ "amazonexpress", BedrockModels.InvokeAmazonExpressAsync }, // Model is EOLed as of 12/29/25
             { "cohere", BedrockModels.InvokeCohereAsync },
             // { "anthropic", BedrockModels.InvokeClaudeAsync }, // Model is EOLed as of 9/11/25
-#if NET481 || NET10_0
+#if NET481 || NET11_0
             { "converse", BedrockModels.ConverseNovaMicro },
 #endif
         };
@@ -126,7 +126,7 @@ public class BedrockExerciser
         }
     }
 
-#if NET481 ||  NET10_0 // Converse API is only available in AWSSDK.BedrockRuntime v3.7.303 and later, tested by net481 and net10.0 tfms
+#if NET481 ||  NET11_0 // Converse API is only available in AWSSDK.BedrockRuntime v3.7.303 and later, tested by net481 and net11.0 tfms
     [LibraryMethod]
     [Transaction]
     [MethodImpl(MethodImplOptions.NoInlining)]

@@ -10,14 +10,15 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.HSM;
 
-public class AspNetCoreLocalHSMEnabledAndServerSideHSMEnabledTests : NewRelicIntegrationTest<RemoteServiceFixtures.HSMAspNetCoreMvcBasicRequestsFixture>
+public abstract class AspNetCoreLocalHSMEnabledAndServerSideHSMEnabledTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
+    where TFixture : RemoteServiceFixtures.HSMAspNetCoreMvcBasicRequestsFixture
 {
     private const string QueryStringParameterValue = @"my thing";
 
 
-    private readonly RemoteServiceFixtures.HSMAspNetCoreMvcBasicRequestsFixture _fixture;
+    private readonly TFixture _fixture;
 
-    public AspNetCoreLocalHSMEnabledAndServerSideHSMEnabledTests(RemoteServiceFixtures.HSMAspNetCoreMvcBasicRequestsFixture fixture, ITestOutputHelper output) : base(fixture)
+    protected AspNetCoreLocalHSMEnabledAndServerSideHSMEnabledTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
     {
         _fixture = fixture;
         _fixture.TestLogger = output;
@@ -102,5 +103,21 @@ public class AspNetCoreLocalHSMEnabledAndServerSideHSMEnabledTests : NewRelicInt
             () => Assertions.TransactionEventHasAttributes(expectedTransactionEventAgentAttributes, TransactionEventAttributeType.Agent, getDataTransactionEvent),
             () => Assertions.TransactionEventHasAttributes(expectedErrorTransactionEventAttributes, TransactionEventAttributeType.Intrinsic, getExceptionTransactionEvent)
         );
+    }
+}
+
+public class AspNetCoreLocalHSMEnabledAndServerSideHSMEnabledTestsCoreOldest : AspNetCoreLocalHSMEnabledAndServerSideHSMEnabledTestsBase<RemoteServiceFixtures.HSMAspNetCoreMvcBasicRequestsFixtureCoreOldest>
+{
+    public AspNetCoreLocalHSMEnabledAndServerSideHSMEnabledTestsCoreOldest(RemoteServiceFixtures.HSMAspNetCoreMvcBasicRequestsFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
+}
+
+public class AspNetCoreLocalHSMEnabledAndServerSideHSMEnabledTestsCoreLatest : AspNetCoreLocalHSMEnabledAndServerSideHSMEnabledTestsBase<RemoteServiceFixtures.HSMAspNetCoreMvcBasicRequestsFixtureCoreLatest>
+{
+    public AspNetCoreLocalHSMEnabledAndServerSideHSMEnabledTestsCoreLatest(RemoteServiceFixtures.HSMAspNetCoreMvcBasicRequestsFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
     }
 }

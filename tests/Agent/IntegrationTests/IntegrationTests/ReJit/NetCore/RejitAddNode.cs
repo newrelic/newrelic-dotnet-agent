@@ -86,18 +86,33 @@ public abstract class RejitAddNodeBase<TFixture> : NewRelicIntegrationTest<TFixt
     }
 }
 
-public class RejitAddNode : RejitAddNodeBase<AspNetCoreReJitMvcApplicationFixture>
+public class RejitAddNodeCoreOldest : RejitAddNodeBase<AspNetCoreReJitMvcApplicationFixtureCoreOldest>
 {
-    public RejitAddNode(AspNetCoreReJitMvcApplicationFixture fixture, ITestOutputHelper output)
+    public RejitAddNodeCoreOldest(AspNetCoreReJitMvcApplicationFixtureCoreOldest fixture, ITestOutputHelper output)
         : base(fixture, output)
     {
     }
-
 }
 
-public class RejitAddNodeWithTieredCompilation : RejitAddNodeBase<AspNetCoreReJitMvcApplicationFixtureWithTieredCompilation>
+public class RejitAddNodeCoreLatest : RejitAddNodeBase<AspNetCoreReJitMvcApplicationFixtureCoreLatest>
 {
-    public RejitAddNodeWithTieredCompilation(AspNetCoreReJitMvcApplicationFixtureWithTieredCompilation fixture, ITestOutputHelper output)
+    public RejitAddNodeCoreLatest(AspNetCoreReJitMvcApplicationFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
+}
+
+public class RejitAddNodeWithTieredCompilationCoreOldest : RejitAddNodeBase<AspNetCoreReJitMvcApplicationFixtureWithTieredCompilationCoreOldest>
+{
+    public RejitAddNodeWithTieredCompilationCoreOldest(AspNetCoreReJitMvcApplicationFixtureWithTieredCompilationCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
+}
+
+public class RejitAddNodeWithTieredCompilationCoreLatest : RejitAddNodeBase<AspNetCoreReJitMvcApplicationFixtureWithTieredCompilationCoreLatest>
+{
+    public RejitAddNodeWithTieredCompilationCoreLatest(AspNetCoreReJitMvcApplicationFixtureWithTieredCompilationCoreLatest fixture, ITestOutputHelper output)
         : base(fixture, output)
     {
     }

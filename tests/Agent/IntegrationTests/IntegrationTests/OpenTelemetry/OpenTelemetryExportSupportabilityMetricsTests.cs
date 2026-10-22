@@ -77,9 +77,9 @@ public class OtlpExportSuccessMetricsTestsCoreLatest : OtlpExportSuccessMetricsT
     public OtlpExportSuccessMetricsTestsCoreLatest(OtlpMetricsWithCollectorFixtureCoreLatest fixture, ITestOutputHelper outputHelper) : base(fixture, outputHelper) { }
 }
 
-public class OtlpExportSuccessMetricsTestsCoreNet8 : OtlpExportSuccessMetricsTestsBase<OtlpMetricsWithCollectorFixtureCoreNet8>
+public class OtlpExportSuccessMetricsTestsCoreOldest : OtlpExportSuccessMetricsTestsBase<OtlpMetricsWithCollectorFixtureCoreOldest>
 {
-    public OtlpExportSuccessMetricsTestsCoreNet8(OtlpMetricsWithCollectorFixtureCoreNet8 fixture, ITestOutputHelper outputHelper) : base(fixture, outputHelper) { }
+    public OtlpExportSuccessMetricsTestsCoreOldest(OtlpMetricsWithCollectorFixtureCoreOldest fixture, ITestOutputHelper outputHelper) : base(fixture, outputHelper) { }
 }
 
 [Trait("Platform", "WindowsOnly")]
@@ -168,9 +168,9 @@ public class OtlpExportRetryMetricsTestsCoreLatest : OtlpExportRetryMetricsTests
     public OtlpExportRetryMetricsTestsCoreLatest(OtlpMetricsWithCollectorFixtureCoreLatest fixture, ITestOutputHelper outputHelper) : base(fixture, outputHelper) { }
 }
 
-public class OtlpExportRetryMetricsTestsCoreNet8 : OtlpExportRetryMetricsTestsBase<OtlpMetricsWithCollectorFixtureCoreNet8>
+public class OtlpExportRetryMetricsTestsCoreOldest : OtlpExportRetryMetricsTestsBase<OtlpMetricsWithCollectorFixtureCoreOldest>
 {
-    public OtlpExportRetryMetricsTestsCoreNet8(OtlpMetricsWithCollectorFixtureCoreNet8 fixture, ITestOutputHelper outputHelper) : base(fixture, outputHelper) { }
+    public OtlpExportRetryMetricsTestsCoreOldest(OtlpMetricsWithCollectorFixtureCoreOldest fixture, ITestOutputHelper outputHelper) : base(fixture, outputHelper) { }
 }
 
 [Trait("Platform", "WindowsOnly")]
@@ -256,9 +256,9 @@ public class OtlpExportFailureMetricsTestsCoreLatest : OtlpExportFailureMetricsT
     public OtlpExportFailureMetricsTestsCoreLatest(OtlpMetricsWithCollectorFixtureCoreLatest fixture, ITestOutputHelper outputHelper) : base(fixture, outputHelper) { }
 }
 
-public class OtlpExportFailureMetricsTestsCoreNet8 : OtlpExportFailureMetricsTestsBase<OtlpMetricsWithCollectorFixtureCoreNet8>
+public class OtlpExportFailureMetricsTestsCoreOldest : OtlpExportFailureMetricsTestsBase<OtlpMetricsWithCollectorFixtureCoreOldest>
 {
-    public OtlpExportFailureMetricsTestsCoreNet8(OtlpMetricsWithCollectorFixtureCoreNet8 fixture, ITestOutputHelper outputHelper) : base(fixture, outputHelper) { }
+    public OtlpExportFailureMetricsTestsCoreOldest(OtlpMetricsWithCollectorFixtureCoreOldest fixture, ITestOutputHelper outputHelper) : base(fixture, outputHelper) { }
 }
 
 [Trait("Platform", "WindowsOnly")]

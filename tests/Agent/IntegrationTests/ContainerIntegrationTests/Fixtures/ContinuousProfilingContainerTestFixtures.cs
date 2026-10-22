@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using NewRelic.Agent.ContainerIntegrationTests.Applications;
+using NewRelic.Agent.IntegrationTestHelpers;
 
 namespace NewRelic.Agent.ContainerIntegrationTests.Fixtures;
 
@@ -16,8 +17,8 @@ public abstract class ContinuousProfilingContainerTestFixtureBase : ContainerTes
     // several 1000 ms sampling intervals so a sample is reliably taken while the transaction is active.
     private const int BurnSeconds = 8;
 
-    protected ContinuousProfilingContainerTestFixtureBase(string distroTag, ContainerApplication.Architecture containerArchitecture, string dockerfile)
-        : base(distroTag, containerArchitecture, dockerfile)
+    protected ContinuousProfilingContainerTestFixtureBase(string distroTag, ContainerApplication.Architecture containerArchitecture, string dotnetVersion, string dockerfile)
+        : base(distroTag, containerArchitecture, dotnetVersion, dockerfile)
     {
     }
 
@@ -30,29 +31,59 @@ public abstract class ContinuousProfilingContainerTestFixtureBase : ContainerTes
     }
 }
 
-public class ContinuousProfilingUbuntuX64ContainerTestFixture : ContinuousProfilingContainerTestFixtureBase
+public abstract class ContinuousProfilingUbuntuX64ContainerTestFixture : ContinuousProfilingContainerTestFixtureBase
 {
     private const string Dockerfile = "SmokeTestApp/Dockerfile.continuousprofiling";
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
-    private const string DistroTag = "noble"; // Ubuntu 24.04
+    private const string DistroTag = ContainerApplication.UbuntuDistroTag;
 
-    public ContinuousProfilingUbuntuX64ContainerTestFixture() : base(DistroTag, Architecture, Dockerfile) { }
+    protected ContinuousProfilingUbuntuX64ContainerTestFixture(string dotnetVersion) : base(DistroTag, Architecture, dotnetVersion, Dockerfile) { }
 }
 
-public class ContinuousProfilingUbuntuArm64ContainerTestFixture : ContinuousProfilingContainerTestFixtureBase
+public class ContinuousProfilingUbuntuX64ContainerTestFixtureCoreOldest : ContinuousProfilingUbuntuX64ContainerTestFixture
+{
+    public ContinuousProfilingUbuntuX64ContainerTestFixtureCoreOldest() : base(Tfm.NetOldestVersion) { }
+}
+
+public class ContinuousProfilingUbuntuX64ContainerTestFixtureCoreLatest : ContinuousProfilingUbuntuX64ContainerTestFixture
+{
+    public ContinuousProfilingUbuntuX64ContainerTestFixtureCoreLatest() : base(Tfm.NetLatestVersion) { }
+}
+
+public abstract class ContinuousProfilingUbuntuArm64ContainerTestFixture : ContinuousProfilingContainerTestFixtureBase
 {
     private const string Dockerfile = "SmokeTestApp/Dockerfile.continuousprofiling";
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.Arm64;
-    private const string DistroTag = "noble"; // Ubuntu 24.04
+    private const string DistroTag = ContainerApplication.UbuntuDistroTag;
 
-    public ContinuousProfilingUbuntuArm64ContainerTestFixture() : base(DistroTag, Architecture, Dockerfile) { }
+    protected ContinuousProfilingUbuntuArm64ContainerTestFixture(string dotnetVersion) : base(DistroTag, Architecture, dotnetVersion, Dockerfile) { }
 }
 
-public class ContinuousProfilingAlpineX64ContainerTestFixture : ContinuousProfilingContainerTestFixtureBase
+public class ContinuousProfilingUbuntuArm64ContainerTestFixtureCoreOldest : ContinuousProfilingUbuntuArm64ContainerTestFixture
+{
+    public ContinuousProfilingUbuntuArm64ContainerTestFixtureCoreOldest() : base(Tfm.NetOldestVersion) { }
+}
+
+public class ContinuousProfilingUbuntuArm64ContainerTestFixtureCoreLatest : ContinuousProfilingUbuntuArm64ContainerTestFixture
+{
+    public ContinuousProfilingUbuntuArm64ContainerTestFixtureCoreLatest() : base(Tfm.NetLatestVersion) { }
+}
+
+public abstract class ContinuousProfilingAlpineX64ContainerTestFixture : ContinuousProfilingContainerTestFixtureBase
 {
     private const string Dockerfile = "SmokeTestApp/Dockerfile.continuousprofiling";
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
     private const string DistroTag = "alpine";
 
-    public ContinuousProfilingAlpineX64ContainerTestFixture() : base(DistroTag, Architecture, Dockerfile) { }
+    protected ContinuousProfilingAlpineX64ContainerTestFixture(string dotnetVersion) : base(DistroTag, Architecture, dotnetVersion, Dockerfile) { }
+}
+
+public class ContinuousProfilingAlpineX64ContainerTestFixtureCoreOldest : ContinuousProfilingAlpineX64ContainerTestFixture
+{
+    public ContinuousProfilingAlpineX64ContainerTestFixtureCoreOldest() : base(Tfm.NetOldestVersion) { }
+}
+
+public class ContinuousProfilingAlpineX64ContainerTestFixtureCoreLatest : ContinuousProfilingAlpineX64ContainerTestFixture
+{
+    public ContinuousProfilingAlpineX64ContainerTestFixtureCoreLatest() : base(Tfm.NetLatestVersion) { }
 }

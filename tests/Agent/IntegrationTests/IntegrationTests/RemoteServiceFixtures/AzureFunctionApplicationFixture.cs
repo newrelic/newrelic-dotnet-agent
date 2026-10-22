@@ -4,6 +4,7 @@
 using System.Collections.Generic;
 using System.Net;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
+using NewRelic.Agent.IntegrationTestHelpers;
 
 namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 
@@ -11,9 +12,6 @@ public abstract class AzureFunctionApplicationFixture : RemoteApplicationFixture
 {
     private const string ApplicationDirectoryName = "AzureFunctionApplication";
     private const string ExecutableName = "AzureFunctionApplication.exe";
-
-    private const string InProcApplicationDirectoryName = "AzureFunctionInProcApplication";
-    private const string InProcExecutableName = "AzureFunctionInProcApplication.dll";
 
     private const string TestTraceId = "12345678901234567890123456789012";
     private const string TestTraceParent = "1234567890123456";
@@ -29,8 +27,6 @@ public abstract class AzureFunctionApplicationFixture : RemoteApplicationFixture
     private const string Priority = "1.23456";
     private const string Timestamp = "1518469636025";
 
-    private readonly bool _inProc;
-
     // func is instrumented as well as the worker, and it keeps logging after the
     // worker goes quiet. Choosing the most recently written agent log therefore
     // lands on func's log, which never holds the worker's transactions. A test
@@ -45,18 +41,16 @@ public abstract class AzureFunctionApplicationFixture : RemoteApplicationFixture
                 return configuredName;
             }
 
-            return _inProc ? "newrelic_agent_func.log" : "newrelic_agent_AzureFunctionApplication.log";
+            return "newrelic_agent_AzureFunctionApplication.log";
         }
     }
 
-    protected AzureFunctionApplicationFixture(string functionNames, string targetFramework, bool enableAzureFunctionMode, bool isCoreApp = true, bool inProc = false)
-        : base(new AzureFuncTool(inProc ? InProcApplicationDirectoryName : ApplicationDirectoryName, inProc ? InProcExecutableName : ExecutableName, targetFramework, ApplicationType.Bounded, true, isCoreApp, true, enableAzureFunctionMode, inProc))
+    protected AzureFunctionApplicationFixture(string functionNames, string targetFramework, bool enableAzureFunctionMode, bool isCoreApp = true)
+        : base(new AzureFuncTool(ApplicationDirectoryName, ExecutableName, targetFramework, ApplicationType.Bounded, true, isCoreApp, true, enableAzureFunctionMode))
     {
-        _inProc = inProc;
-
         CommandLineArguments = $"start --no-build --functions {functionNames} --language-worker ";
 
-        CommandLineArguments += inProc ? "dotnet --dotnet " : "dotnet-isolated --dotnet-isolated ";
+        CommandLineArguments += "dotnet-isolated --dotnet-isolated ";
 
 #if DEBUG
         // set a long timeout if you're going to debug into the function
@@ -113,15 +107,14 @@ public abstract class AzureFunctionApplicationFixture : RemoteApplicationFixture
 
 public class AzureFunctionApplicationFixtureHttpTriggerCoreOldest : AzureFunctionApplicationFixture
 {
-    public AzureFunctionApplicationFixtureHttpTriggerCoreOldest() : base("httpTriggerFunctionUsingAspNetCorePipeline httpTriggerFunctionUsingSimpleInvocation", "net8.0", true)
+    public AzureFunctionApplicationFixtureHttpTriggerCoreOldest() : base("httpTriggerFunctionUsingAspNetCorePipeline httpTriggerFunctionUsingSimpleInvocation", Tfm.NetOldest, true)
     {
     }
 }
 
-// TODO: will need to update this for net10.0
 public class AzureFunctionApplicationFixtureHttpTriggerCoreLatest : AzureFunctionApplicationFixture
 {
-    public AzureFunctionApplicationFixtureHttpTriggerCoreLatest() : base("httpTriggerFunctionUsingAspNetCorePipeline httpTriggerFunctionUsingSimpleInvocation", "net10.0", true)
+    public AzureFunctionApplicationFixtureHttpTriggerCoreLatest() : base("httpTriggerFunctionUsingAspNetCorePipeline httpTriggerFunctionUsingSimpleInvocation", Tfm.NetLatest, true)
     {
     }
 }
@@ -136,46 +129,30 @@ public class AzureFunctionApplicationFixtureHttpTriggerFWLatest : AzureFunctionA
 public class AzureFunctionApplicationFixtureHttpTriggerThrowsCoreLatest : AzureFunctionApplicationFixture
 {
     public AzureFunctionApplicationFixtureHttpTriggerThrowsCoreLatest()
-        : base("httpTriggerFunctionThatThrows httpTriggerFunctionUsingSimpleInvocation", "net10.0", true)
+        : base("httpTriggerFunctionThatThrows httpTriggerFunctionUsingSimpleInvocation", Tfm.NetLatest, true)
     {
     }
 }
 
 public class AzureFunctionApplicationFixtureInstrumentationDisabledCoreLatest : AzureFunctionApplicationFixture
 {
-    public AzureFunctionApplicationFixtureInstrumentationDisabledCoreLatest() : base("httpTriggerFunctionUsingAspNetCorePipeline httpTriggerFunctionUsingSimpleInvocation", "net10.0", false)
+    public AzureFunctionApplicationFixtureInstrumentationDisabledCoreLatest() : base("httpTriggerFunctionUsingAspNetCorePipeline httpTriggerFunctionUsingSimpleInvocation", Tfm.NetLatest, false)
     {
     }
 }
 
 public class AzureFunctionApplicationFixtureQueueTriggerCoreOldest : AzureFunctionApplicationFixture
 {
-    public AzureFunctionApplicationFixtureQueueTriggerCoreOldest() : base("queueTriggerFunction", "net8.0", true)
+    public AzureFunctionApplicationFixtureQueueTriggerCoreOldest() : base("queueTriggerFunction", Tfm.NetOldest, true)
     {
     }
 }
 
 public class AzureFunctionApplicationFixtureQueueTriggerCoreLatest : AzureFunctionApplicationFixture
 {
-    public AzureFunctionApplicationFixtureQueueTriggerCoreLatest() : base("queueTriggerFunction", "net10.0", true)
+    public AzureFunctionApplicationFixtureQueueTriggerCoreLatest() : base("queueTriggerFunction", Tfm.NetLatest, true)
     {
     }
 }
 
-#endregion
-
-#region InProc model fixtures
-public class AzureFunctionApplicationFixtureHttpTriggerInProcCoreOldest : AzureFunctionApplicationFixture
-{
-    public AzureFunctionApplicationFixtureHttpTriggerInProcCoreOldest() : base("HttpTriggerFunction", "net8.0", true, inProc: true)
-    {
-    }
-}
-
-public class AzureFunctionApplicationFixtureServiceBusTriggerInProcCoreOldest : AzureFunctionApplicationFixture
-{
-    public AzureFunctionApplicationFixtureServiceBusTriggerInProcCoreOldest() : base("ServiceBusTriggerFunction HttpTrigger_SendServiceBusMessage", "net8.0", true, inProc: true)
-    {
-    }
-}
 #endregion

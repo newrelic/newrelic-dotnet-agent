@@ -10,18 +10,19 @@ using System.Net.Http.Headers;
 using System.Text;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Xunit;
+using NewRelic.Agent.IntegrationTestHelpers;
 
 namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 
-public class AspNetCoreMvcBasicRequestsFixture : RemoteApplicationFixture
+public abstract class AspNetCoreMvcBasicRequestsFixture : RemoteApplicationFixture
 {
     private const string ApplicationDirectoryName = @"AspNetCoreMvcBasicRequestsApplication";
     private const string ExecutableName = @"AspNetCoreMvcBasicRequestsApplication.exe";
-    public AspNetCoreMvcBasicRequestsFixture() :
+    protected AspNetCoreMvcBasicRequestsFixture(string targetFramework) :
         base(new RemoteService(
             ApplicationDirectoryName,
             ExecutableName,
-            "net10.0",
+            targetFramework,
             ApplicationType.Bounded,
             true,
             true,
@@ -162,7 +163,39 @@ public class AspNetCoreMvcBasicRequestsFixture : RemoteApplicationFixture
     }
 }
 
-public class HSMAspNetCoreMvcBasicRequestsFixture : AspNetCoreMvcBasicRequestsFixture
+public class AspNetCoreMvcBasicRequestsFixtureCoreOldest : AspNetCoreMvcBasicRequestsFixture
 {
+    public AspNetCoreMvcBasicRequestsFixtureCoreOldest() : base(Tfm.NetOldest)
+    {
+    }
+}
+
+public class AspNetCoreMvcBasicRequestsFixtureCoreLatest : AspNetCoreMvcBasicRequestsFixture
+{
+    public AspNetCoreMvcBasicRequestsFixtureCoreLatest() : base(Tfm.NetLatest)
+    {
+    }
+}
+
+public abstract class HSMAspNetCoreMvcBasicRequestsFixture : AspNetCoreMvcBasicRequestsFixture
+{
+    protected HSMAspNetCoreMvcBasicRequestsFixture(string targetFramework) : base(targetFramework)
+    {
+    }
+
     public override string TestSettingCategory { get { return "HSM"; } }
+}
+
+public class HSMAspNetCoreMvcBasicRequestsFixtureCoreOldest : HSMAspNetCoreMvcBasicRequestsFixture
+{
+    public HSMAspNetCoreMvcBasicRequestsFixtureCoreOldest() : base(Tfm.NetOldest)
+    {
+    }
+}
+
+public class HSMAspNetCoreMvcBasicRequestsFixtureCoreLatest : HSMAspNetCoreMvcBasicRequestsFixture
+{
+    public HSMAspNetCoreMvcBasicRequestsFixtureCoreLatest() : base(Tfm.NetLatest)
+    {
+    }
 }

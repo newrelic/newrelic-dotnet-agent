@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using NewRelic.Agent.ContainerIntegrationTests.Applications;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
+using NewRelic.Agent.IntegrationTestHelpers;
 
 namespace NewRelic.Agent.ContainerIntegrationTests.Fixtures;
 
@@ -100,47 +101,55 @@ public abstract class KafkaTestFixtureBase : RemoteApplicationFixture
 
 }
 
-public class KafkaDotNet8TestFixture : KafkaTestFixtureBase
+public class KafkaDotNetOldestTestFixture : KafkaTestFixtureBase
 {
     private const string Dockerfile = "KafkaTestApp/Dockerfile";
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
-    private const string DistroTag = "noble";
-    private const string DotnetVersion = "8.0";
+    private const string DistroTag = ContainerApplication.UbuntuDistroTag;
+    private const string DotnetVersion = Tfm.NetOldestVersion;
 
-    public KafkaDotNet8TestFixture() : base(DistroTag, Architecture, Dockerfile, DotnetVersion) { }
+    public KafkaDotNetOldestTestFixture() : base(DistroTag, Architecture, Dockerfile, DotnetVersion) { }
 }
 
-public class KafkaDotNet10TestFixture : KafkaTestFixtureBase
+public class KafkaDotNetLatestTestFixture : KafkaTestFixtureBase
 {
     private const string Dockerfile = "KafkaTestApp/Dockerfile";
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
-    private const string DistroTag = "noble";
-    private const string DotnetVersion = "10.0";
+    private const string DistroTag = ContainerApplication.UbuntuDistroTag;
+    private const string DotnetVersion = Tfm.NetLatestVersion;
 
-    public KafkaDotNet10TestFixture() : base(DistroTag, Architecture, Dockerfile, DotnetVersion) { }
+    public KafkaDotNetLatestTestFixture() : base(DistroTag, Architecture, Dockerfile, DotnetVersion) { }
 }
 
-public class KafkaClusterMetricsEnabledTestFixture : KafkaTestFixtureBase
+public abstract class KafkaClusterMetricsEnabledTestFixture : KafkaTestFixtureBase
 {
     private const string Dockerfile = "KafkaTestApp/Dockerfile";
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
-    private const string DistroTag = "noble";
-    private const string DotnetVersion = "10.0";
+    private const string DistroTag = ContainerApplication.UbuntuDistroTag;
 
-    public KafkaClusterMetricsEnabledTestFixture() : base(DistroTag, Architecture, Dockerfile, DotnetVersion) { }
+    protected KafkaClusterMetricsEnabledTestFixture(string dotnetVersion) : base(DistroTag, Architecture, Dockerfile, dotnetVersion) { }
 }
 
-public class KafkaMultiClusterTestFixture : KafkaTestFixtureBase
+public class KafkaClusterMetricsEnabledTestFixtureCoreOldest : KafkaClusterMetricsEnabledTestFixture
+{
+    public KafkaClusterMetricsEnabledTestFixtureCoreOldest() : base(Tfm.NetOldestVersion) { }
+}
+
+public class KafkaClusterMetricsEnabledTestFixtureCoreLatest : KafkaClusterMetricsEnabledTestFixture
+{
+    public KafkaClusterMetricsEnabledTestFixtureCoreLatest() : base(Tfm.NetLatestVersion) { }
+}
+
+public abstract class KafkaMultiClusterTestFixture : KafkaTestFixtureBase
 {
     private const string Dockerfile = "KafkaTestApp/Dockerfile";
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
-    private const string DistroTag = "noble";
-    private const string DotnetVersion = "10.0";
+    private const string DistroTag = ContainerApplication.UbuntuDistroTag;
     private const string ComposeFile = "docker-compose-kafka-multicluster.yml";
 
     public string TopicName2 { get; } = GenerateTopic2();
 
-    public KafkaMultiClusterTestFixture() : base(DistroTag, Architecture, Dockerfile, DotnetVersion, ComposeFile) { }
+    protected KafkaMultiClusterTestFixture(string dotnetVersion) : base(DistroTag, Architecture, Dockerfile, dotnetVersion, ComposeFile) { }
 
     public override void ExerciseApplication()
     {
@@ -168,4 +177,14 @@ public class KafkaMultiClusterTestFixture : KafkaTestFixtureBase
         GetAndAssertStatusCode(address + "consumewithtimeout", System.Net.HttpStatusCode.OK);
         GetAndAssertStatusCode(address + "consumewithtimeout2", System.Net.HttpStatusCode.OK);
     }
+}
+
+public class KafkaMultiClusterTestFixtureCoreOldest : KafkaMultiClusterTestFixture
+{
+    public KafkaMultiClusterTestFixtureCoreOldest() : base(Tfm.NetOldestVersion) { }
+}
+
+public class KafkaMultiClusterTestFixtureCoreLatest : KafkaMultiClusterTestFixture
+{
+    public KafkaMultiClusterTestFixtureCoreLatest() : base(Tfm.NetLatestVersion) { }
 }

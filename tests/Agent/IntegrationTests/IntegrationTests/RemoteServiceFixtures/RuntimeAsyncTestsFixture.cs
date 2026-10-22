@@ -2,23 +2,39 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
+using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 
 namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 
-public class RuntimeAsyncTestsFixture : RemoteApplicationFixture
+public abstract class RuntimeAsyncTestsFixture : RemoteApplicationFixture
 {
     private const string ApplicationDirectoryName = @"RuntimeAsyncApplication";
     private const string ExecutableName = @"RuntimeAsyncApplication.exe";
-    public RuntimeAsyncTestsFixture() :
+
+    protected RuntimeAsyncTestsFixture(string targetFramework) :
         base(new RemoteService(
             ApplicationDirectoryName,
             ExecutableName,
-            "net10.0",
+            targetFramework,
             ApplicationType.Bounded,
             true,
             true,
             true))
+    {
+    }
+}
+
+public class RuntimeAsyncTestsFixtureCoreOldest : RuntimeAsyncTestsFixture
+{
+    public RuntimeAsyncTestsFixtureCoreOldest() : base(Tfm.NetOldest)
+    {
+    }
+}
+
+public class RuntimeAsyncTestsFixtureCoreLatest : RuntimeAsyncTestsFixture
+{
+    public RuntimeAsyncTestsFixtureCoreLatest() : base(Tfm.NetLatest)
     {
     }
 }

@@ -15,6 +15,8 @@ public static class DbParameterData
     public static DbParameter[] MsSqlParameters =
     {
         new DbParameter("bigint", "@typeBigInt", (long) 123),
+        // Note that casting a double literal to decimal, e.g. "(decimal) 123.4567" is broken in .NET 11, hence the switch to supplying a decimal literal
+        // with the "m" suffix. See https://github.com/dotnet/sdk/issues/55909
         new DbParameter("decimal (30,0)", "@typeDecimal", 123.4567m),
         new DbParameter("float", "@typeFloat", (float) 123.4567),
         new DbParameter("int", "@typeInt", (int) 123),
