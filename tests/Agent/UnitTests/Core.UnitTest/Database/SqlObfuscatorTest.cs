@@ -9,6 +9,8 @@ namespace NewRelic.Agent.Core.Database;
 [TestFixture]
 public class SqlObfuscatorTest
 {
+    private const string MetadataComment = "/*nr_service_guid=\"MXxBUE18MTIz\"*/";
+
     SqlObfuscator obfuscator = SqlObfuscator.GetSqlObfuscator("obfuscated");
 
     [Test]
@@ -219,6 +221,71 @@ public class SqlObfuscatorTest
     public void verify_GetObfuscatedSql_replaces_numbers_on_right_of_equals_sign_with_a_question_mark()
     {
         Assert.That(obfuscator.GetObfuscatedSql("Select * from users where ssn = 7777777"), Is.EqualTo("Select * from users where ssn = ?"));
+    }
+
+    [TestCase("SELECT \"t001\".\"c2\" FROM \"t001\" WHERE \"t001\".\"c2\" = 'value' AND c3=1234 LIMIT 1",
+              "SELECT \"t001\".\"c2\" FROM \"t001\" WHERE \"t001\".\"c2\" = ? AND c3=? LIMIT ?")]
+    [TestCase("/*app:demo*/ SELECT * FROM t WHERE a = 'b'", "? SELECT * FROM t WHERE a = ?")]
+    [TestCase("SELECT * FROM t WHERE a = 'unterminated", "?")]
+    public void GetObfuscatedSql_Postgres_UsesPostgresDialect(string sql, string expected)
+    {
+        Assert.That(obfuscator.GetObfuscatedSql(sql, DatastoreVendor.Postgres), Is.EqualTo(expected));
+    }
+
+    [Test]
+    public void GetObfuscatedSql_Postgres_Null_ReturnsNull()
+    {
+        Assert.That(obfuscator.GetObfuscatedSql(null, DatastoreVendor.Postgres), Is.Null);
+    }
+
+    [TestCase(DatastoreVendor.Postgres)]
+    [TestCase(DatastoreVendor.MSSQL)]
+    public void GetObfuscatedSql_TruncatesTo16384(DatastoreVendor vendor)
+    {
+        var sql = "SELECT " + new string('a', 20000);
+        Assert.That(obfuscator.GetObfuscatedSql(sql, vendor).Length, Is.EqualTo(16384));
+    }
+
+    [TestCase(DatastoreVendor.Postgres)]
+    [TestCase(DatastoreVendor.MSSQL)]
+    [TestCase(DatastoreVendor.MySQL)]
+    [TestCase(DatastoreVendor.Oracle)]
+    [TestCase(DatastoreVendor.IBMDB2)]
+    [TestCase(DatastoreVendor.Other)]
+    public void GetObfuscatedSql_KeepsMetadataComment(DatastoreVendor vendor)
+    {
+        var result = obfuscator.GetObfuscatedSql(MetadataComment + "SELECT * FROM t WHERE a = 'b'", vendor);
+        Assert.That(result, Is.EqualTo(MetadataComment + "SELECT * FROM t WHERE a = ?"));
+    }
+
+    [Test]
+    public void GetObfuscatedSql_Postgres_KeepsMetadataCommentWhenBodyIsUnterminated()
+    {
+        Assert.That(obfuscator.GetObfuscatedSql(MetadataComment + "SELECT 'x", DatastoreVendor.Postgres), Is.EqualTo(MetadataComment + "?"));
+    }
+
+    [Test]
+    public void GetObfuscatedSql_KeepsMetadataCommentWhenTruncating()
+    {
+        var result = obfuscator.GetObfuscatedSql(MetadataComment + "SELECT " + new string('a', 20000), DatastoreVendor.MSSQL);
+        Assert.That(result.Length, Is.EqualTo(16384));
+        Assert.That(result, Does.StartWith(MetadataComment + "SELECT aaa"));
+    }
+
+    [TestCase(DatastoreVendor.Other, "/*nr_service_guid=\"a\"b\"*/SELECT 1", "/*nr_service_guid=?b?")]
+    [TestCase(DatastoreVendor.Other, "/*nr_other=\"x\"*/SELECT 1", "/*nr_other=?*/SELECT ?")]
+    [TestCase(DatastoreVendor.Postgres, "/*nr_other=\"x\"*/SELECT 1", "?SELECT ?")]
+    public void GetObfuscatedSql_DoesNotKeepLookAlikeComments(DatastoreVendor vendor, string sql, string expected)
+    {
+        Assert.That(obfuscator.GetObfuscatedSql(sql, vendor), Is.EqualTo(expected));
+    }
+
+    [TestCase(DatastoreVendor.Other, "\"dude\" and dob = '10/31/1955' -- c", "? and dob = ? -- c")]
+    [TestCase(DatastoreVendor.MySQL, "\"dude\" and dob = '10/31/1955' -- c", "? and dob = ? -- c")]
+    [TestCase(DatastoreVendor.Oracle, "\"dude\" and dob = '10/31/1955' -- c", "? and dob = ? -- c")]
+    public void GetObfuscatedSql_NonPostgres_KeepsLegacyBehavior(DatastoreVendor vendor, string sql, string expected)
+    {
+        Assert.That(obfuscator.GetObfuscatedSql(sql, vendor), Is.EqualTo(expected));
     }
 
 }

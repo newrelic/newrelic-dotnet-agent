@@ -18,6 +18,8 @@ public abstract class MySqlMetadataCommentTestsBase<TFixture> : NewRelicIntegrat
     private readonly ConsoleDynamicMethodFixture _fixture;
     private const string TransactionName = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.MySql.MySqlExerciser/SingleDateQuery";
 
+    protected virtual string RecordSql => "raw";
+
     public MySqlMetadataCommentTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
     {
         _fixture = fixture;
@@ -39,7 +41,7 @@ public abstract class MySqlMetadataCommentTestsBase<TFixture> : NewRelicIntegrat
 
                 configModifier.SetTransactionTracerExplainEnabled(true);
                 configModifier.ForceSqlTraces();
-                configModifier.SetTransactionTracerRecordSql("raw");
+                configModifier.SetTransactionTracerRecordSql(RecordSql);
                 configModifier.SetTransactionTracerSqlMetadataCommentsEnabled(true);
 
                 var instrumentationFilePath = Path.Combine(fixture.DestinationNewRelicExtensionsDirectoryPath, "NewRelic.Providers.Wrapper.Sql.Instrumentation.xml");
@@ -73,6 +75,7 @@ public abstract class MySqlMetadataCommentTestsBase<TFixture> : NewRelicIntegrat
             Assert.True(
                 trace.Sql.StartsWith(commentPrefix, StringComparison.Ordinal),
                 $"Expected SQL trace to start with SQL metadata comment, but was: {trace.Sql}");
+            AssertBodyObfuscatedWhenRequired(trace.Sql);
         }
 
         // Transaction trace segments
@@ -91,6 +94,7 @@ public abstract class MySqlMetadataCommentTestsBase<TFixture> : NewRelicIntegrat
             Assert.True(
                 sql?.StartsWith(commentPrefix, StringComparison.Ordinal) == true,
                 $"Expected transaction trace segment SQL to start with metadata comment, but was: {sql}");
+            AssertBodyObfuscatedWhenRequired(sql);
         }
 
         // Span events
@@ -106,7 +110,22 @@ public abstract class MySqlMetadataCommentTestsBase<TFixture> : NewRelicIntegrat
             Assert.True(
                 sql?.StartsWith(commentPrefix, StringComparison.Ordinal) == true,
                 $"Expected span event db.statement to start with metadata comment, but was: {sql}");
+            AssertBodyObfuscatedWhenRequired(sql);
         }
+    }
+
+    // In obfuscated mode the metadata comment is kept verbatim, but every literal after it must be masked.
+    private void AssertBodyObfuscatedWhenRequired(string sql)
+    {
+        if (RecordSql != "obfuscated")
+            return;
+
+        var commentEnd = sql.IndexOf("\"*/", StringComparison.Ordinal);
+        Assert.True(commentEnd > 0, $"Expected a complete SQL metadata comment, but was: {sql}");
+
+        var body = sql.Substring(commentEnd + 3);
+        Assert.DoesNotContain("'", body);
+        Assert.Contains("?", body);
     }
 
     private static IEnumerable<TransactionTraceSegment> GetAllSegments(TransactionTraceSegment segment)
@@ -148,4 +167,23 @@ public class MySqlMetadataCommentTestsCoreLatest : MySqlMetadataCommentTestsBase
     public MySqlMetadataCommentTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)
     {
     }
+}
+
+public class MySqlMetadataCommentTestsCoreLatest_Obfuscated : MySqlMetadataCommentTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+{
+    public MySqlMetadataCommentTestsCoreLatest_Obfuscated(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)
+    {
+    }
+
+    protected override string RecordSql => "obfuscated";
+}
+
+[Trait("Platform", "WindowsOnly")]
+public class MySqlMetadataCommentTestsFWLatest_Obfuscated : MySqlMetadataCommentTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+{
+    public MySqlMetadataCommentTestsFWLatest_Obfuscated(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
+    {
+    }
+
+    protected override string RecordSql => "obfuscated";
 }
