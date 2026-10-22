@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
@@ -14,6 +15,8 @@ namespace InstallerActions;
 
 public class CustomActions
 {
+    private const string StrongCryptoDocsUrl = "https://docs.newrelic.com/docs/apm/agents/net-agent/troubleshooting/no-data-appears-net-framework-tls-12/#strongcrypto";
+
     [CustomAction]
     public static ActionResult FindPreviousLicenseKey(Session session)
     {
@@ -306,6 +309,91 @@ public class CustomActions
             session.Log("Exception thrown checking bitness:\n{0}", exception);
             return ActionResult.Failure;
         }
+    }
+
+    [CustomAction]
+    public static ActionResult CheckStrongCrypto(Session session)
+    {
+        // Advisory only: TLS 1.2 also depends on each app's target framework, config and code, so never block the install.
+        try
+        {
+            var keysWithoutStrongCrypto = GetNetFrameworkKeysWithoutStrongCrypto(session);
+            if (keysWithoutStrongCrypto.Count == 0)
+            {
+                session.Log("Strong crypto check: TLS 1.2 is enabled machine-wide for .NET Framework applications.");
+                return ActionResult.Success;
+            }
+
+            var warning = BuildStrongCryptoWarning(keysWithoutStrongCrypto);
+            session.Log("WARNING: " + warning + Environment.NewLine + Environment.NewLine + "See " + StrongCryptoDocsUrl + Environment.NewLine + Environment.NewLine + "Installation will continue.");
+
+            // Shown by StrongCryptoWarningDialog in full UI installs only; the stock message box truncates long text.
+            session["NR_STRONGCRYPTO_WARNING"] = warning;
+        }
+        catch (Exception exception)
+        {
+            session.Log("Exception thrown checking .NET Framework strong crypto settings:\n{0}", exception);
+        }
+
+        return ActionResult.Success;
+    }
+
+    internal static List<string> GetNetFrameworkKeysWithoutStrongCrypto(Session session)
+    {
+        const string netFrameworkSubKey = "SOFTWARE\\Microsoft\\.NETFramework\\v4.0.30319";
+
+        // On a 64-bit OS the 32-bit view is the WOW6432Node key that 32-bit processes (e.g. 32-bit app pools) read.
+        var views = Environment.Is64BitOperatingSystem
+            ? new[] { RegistryView.Registry64, RegistryView.Registry32 }
+            : new[] { RegistryView.Registry32 };
+
+        var keysWithoutStrongCrypto = new List<string>();
+        foreach (var view in views)
+        {
+            var displayPath = view == RegistryView.Registry32 && Environment.Is64BitOperatingSystem
+                ? "HKLM\\SOFTWARE\\WOW6432Node\\Microsoft\\.NETFramework\\v4.0.30319"
+                : "HKLM\\" + netFrameworkSubKey;
+
+            using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, view))
+            using (var key = baseKey.OpenSubKey(netFrameworkSubKey))
+            {
+                if (key == null)
+                {
+                    session?.Log("Strong crypto check: {0} does not exist, skipping.", displayPath);
+                    continue;
+                }
+
+                var schUseStrongCrypto = key.GetValue("SchUseStrongCrypto");
+                var systemDefaultTlsVersions = key.GetValue("SystemDefaultTlsVersions");
+                session?.Log("Strong crypto check: {0} SchUseStrongCrypto={1}, SystemDefaultTlsVersions={2}", displayPath, schUseStrongCrypto ?? "(not set)", systemDefaultTlsVersions ?? "(not set)");
+
+                // .NET Framework only honors these as DWORDs.
+                if (!IsDwordOne(schUseStrongCrypto) && !IsDwordOne(systemDefaultTlsVersions))
+                {
+                    keysWithoutStrongCrypto.Add(displayPath);
+                }
+            }
+        }
+
+        return keysWithoutStrongCrypto;
+    }
+
+    private static bool IsDwordOne(object value) => value is int intValue && intValue == 1;
+
+    private static string BuildStrongCryptoWarning(List<string> keysWithoutStrongCrypto)
+    {
+        var builder = new StringBuilder();
+        builder.AppendLine("TLS 1.2 is not enabled machine-wide for .NET Framework applications. Applications may fail to connect to New Relic, and no data may appear for them. This depends on each application's target framework and configuration.");
+        builder.AppendLine();
+        builder.AppendLine("To enable it for all applications, set the DWORD values SystemDefaultTlsVersions and SchUseStrongCrypto to 1 under:");
+        foreach (var key in keysWithoutStrongCrypto)
+        {
+            builder.AppendLine(key);
+        }
+
+        builder.AppendLine();
+        builder.Append("Then restart the affected applications.");
+        return builder.ToString();
     }
 
     private static string GetDisplayName(string path)
