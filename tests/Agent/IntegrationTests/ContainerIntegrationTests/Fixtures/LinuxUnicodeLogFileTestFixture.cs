@@ -11,7 +11,7 @@ public abstract class LinuxUnicodeLogFileTestFixture : ContainerTestFixtureBase
     private const string Dockerfile = "SmokeTestApp/Dockerfile";
     private const string DockerComposeServiceName = "LinuxUnicodeLogfileTestApp";
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
-    private const string DistroTag = "resolute";
+    private const string DistroTag = ContainerApplication.UbuntuDistroTag;
 
     protected LinuxUnicodeLogFileTestFixture(string dotnetVersion) : base(DistroTag, Architecture, dotnetVersion, Dockerfile)
     {

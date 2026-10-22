@@ -42,7 +42,7 @@ public class MemcachedDotNetOldestTestFixture : MemcachedTestFixtureBase
 {
     private const string Dockerfile = "MemcachedTestApp/Dockerfile";
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
-    private const string DistroTag = "noble";
+    private const string DistroTag = ContainerApplication.UbuntuDistroTag;
     private const string DotnetVersion = Tfm.NetOldestVersion;
 
     public MemcachedDotNetOldestTestFixture() : base(DistroTag, Architecture, Dockerfile, DotnetVersion) { }
@@ -52,7 +52,7 @@ public class MemcachedDotNetLatestTestFixture : MemcachedTestFixtureBase
 {
     private const string Dockerfile = "MemcachedTestApp/Dockerfile";
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
-    private const string DistroTag = "noble";
+    private const string DistroTag = ContainerApplication.UbuntuDistroTag;
     private const string DotnetVersion = Tfm.NetLatestVersion;
 
     public MemcachedDotNetLatestTestFixture() : base(DistroTag, Architecture, Dockerfile, DotnetVersion) { }

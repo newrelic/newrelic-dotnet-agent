@@ -105,7 +105,7 @@ public class KafkaDotNetOldestTestFixture : KafkaTestFixtureBase
 {
     private const string Dockerfile = "KafkaTestApp/Dockerfile";
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
-    private const string DistroTag = "noble";
+    private const string DistroTag = ContainerApplication.UbuntuDistroTag;
     private const string DotnetVersion = Tfm.NetOldestVersion;
 
     public KafkaDotNetOldestTestFixture() : base(DistroTag, Architecture, Dockerfile, DotnetVersion) { }
@@ -115,7 +115,7 @@ public class KafkaDotNetLatestTestFixture : KafkaTestFixtureBase
 {
     private const string Dockerfile = "KafkaTestApp/Dockerfile";
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
-    private const string DistroTag = "noble";
+    private const string DistroTag = ContainerApplication.UbuntuDistroTag;
     private const string DotnetVersion = Tfm.NetLatestVersion;
 
     public KafkaDotNetLatestTestFixture() : base(DistroTag, Architecture, Dockerfile, DotnetVersion) { }
@@ -125,7 +125,7 @@ public abstract class KafkaClusterMetricsEnabledTestFixture : KafkaTestFixtureBa
 {
     private const string Dockerfile = "KafkaTestApp/Dockerfile";
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
-    private const string DistroTag = "noble";
+    private const string DistroTag = ContainerApplication.UbuntuDistroTag;
 
     protected KafkaClusterMetricsEnabledTestFixture(string dotnetVersion) : base(DistroTag, Architecture, Dockerfile, dotnetVersion) { }
 }
@@ -144,7 +144,7 @@ public abstract class KafkaMultiClusterTestFixture : KafkaTestFixtureBase
 {
     private const string Dockerfile = "KafkaTestApp/Dockerfile";
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
-    private const string DistroTag = "noble";
+    private const string DistroTag = ContainerApplication.UbuntuDistroTag;
     private const string ComposeFile = "docker-compose-kafka-multicluster.yml";
 
     public string TopicName2 { get; } = GenerateTopic2();

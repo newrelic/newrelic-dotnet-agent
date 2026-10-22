@@ -10,7 +10,7 @@ public abstract class AppDomainCachingEnabledContainerTestFixture : ContainerTes
 {
     private const string Dockerfile = "SmokeTestApp/Dockerfile";
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
-    private const string DistroTag = "resolute";
+    private const string DistroTag = ContainerApplication.UbuntuDistroTag;
 
     protected AppDomainCachingEnabledContainerTestFixture(string dotnetVersion) : base(DistroTag, Architecture, dotnetVersion, Dockerfile)
     {
@@ -32,7 +32,7 @@ public abstract class AppDomainCachingDisabledContainerTestFixture : ContainerTe
 {
     private const string Dockerfile = "SmokeTestApp/Dockerfile";
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
-    private const string DistroTag = "resolute";
+    private const string DistroTag = ContainerApplication.UbuntuDistroTag;
     private const string DockerComposeFile = "docker-compose-appdomaincaching.yml";
 
     protected AppDomainCachingDisabledContainerTestFixture(string dotnetVersion) : base(DistroTag, Architecture, dotnetVersion, Dockerfile, DockerComposeFile)

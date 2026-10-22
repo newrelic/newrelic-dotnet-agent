@@ -53,7 +53,7 @@ public class MassTransitDotNetOldestTestFixture : MassTransitTestFixtureBase
 {
     private const string Dockerfile = "MassTransitTestApp/Dockerfile";
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
-    private const string DistroTag = "noble";
+    private const string DistroTag = ContainerApplication.UbuntuDistroTag;
     private const string DotnetVersion = Tfm.NetOldestVersion;
 
     public MassTransitDotNetOldestTestFixture() : base(DistroTag, Architecture, Dockerfile, DotnetVersion) { }
@@ -63,7 +63,7 @@ public class MassTransitDotNetLatestTestFixture : MassTransitTestFixtureBase
 {
     private const string Dockerfile = "MassTransitTestApp/Dockerfile";
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
-    private const string DistroTag = "noble";
+    private const string DistroTag = ContainerApplication.UbuntuDistroTag;
     private const string DotnetVersion = Tfm.NetLatestVersion;
 
     public MassTransitDotNetLatestTestFixture() : base(DistroTag, Architecture, Dockerfile, DotnetVersion) { }

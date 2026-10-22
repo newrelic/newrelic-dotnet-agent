@@ -22,7 +22,7 @@ public abstract class RuntimeAsyncContainerTestFixture : RemoteApplicationFixtur
     private const string Dockerfile = "RuntimeAsyncTestApp/Dockerfile";
     private const string ComposeFile = "docker-compose-runtimeasync.yml";
     private const string ServiceName = "runtimeasynctestapp";
-    private const string DistroTag = "resolute"; // Ubuntu 26.04 -- glibc, which is what the homefolders artifact ships
+    private const string DistroTag = ContainerApplication.UbuntuDistroTag; // glibc, which is what the homefolders artifact ships
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
 
     protected override int MaxTries => 1;

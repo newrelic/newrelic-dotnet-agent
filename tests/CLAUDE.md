@@ -249,7 +249,7 @@ How the Linux-agent container tests actually wire up (rediscovered often -- capt
 - **glibc vs musl:** `build.ps1 -Platform linux` and the `homefolders` CI artifact only carry the **glibc**
   `.so` (`newrelichome_{x64,arm64}_coreclr_linux`); `CopyNewRelicHomeCoreClrLinuxDirectoryToRemote` copies that
   same glibc home for **every** distro fixture including Alpine (the separate musl profiler artifacts from
-  `build_profiler.yml` are not wired into `homefolders`). Target **glibc distros (Ubuntu "noble")** for new
+  `build_profiler.yml` are not wired into `homefolders`). Target **glibc distros (Ubuntu, `ContainerApplication.UbuntuDistroTag`)** for new
   functional tests; avoid Alpine unless specifically validating musl.
 ### Container tests: Distro vs TestArea traits
 

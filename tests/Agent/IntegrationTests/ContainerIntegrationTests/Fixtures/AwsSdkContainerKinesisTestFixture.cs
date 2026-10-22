@@ -10,7 +10,7 @@ public abstract class AwsSdkContainerKinesisTestFixture : AwsSdkContainerTestFix
 {
     private const string Dockerfile = "AwsSdkTestApp/Dockerfile";
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
-    private const string DistroTag = "resolute";
+    private const string DistroTag = ContainerApplication.UbuntuDistroTag;
 
     private readonly string BaseUrl;
 
