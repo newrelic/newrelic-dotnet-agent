@@ -285,41 +285,33 @@ public class DynamicMeterListenerWrapper : IMeterListenerWrapper
     {
         try
         {
-            var spanType = typeof(TSpan);
-            var lengthProp = spanType.GetProperty("Length");
-            var getItemMethod = spanType.GetMethod("get_Item", new[] { typeof(int) });
-
-            if (lengthProp == null || getItemMethod == null)
-            {
-                callback(instrument, measurement, Span<KeyValuePair<string, object>>.Empty, state);
-                return;
-            }
-
-            int length = (int)lengthProp.GetValue(tagsSpan);
-            if (length == 0)
-            {
-                callback(instrument, measurement, Span<KeyValuePair<string, object>>.Empty, state);
-                return;
-            }
-
-            var tags = new KeyValuePair<string, object>[length];
-            for (int i = 0; i < length; i++)
-            {
-                var kvp = getItemMethod.Invoke(tagsSpan, new object[] { i });
-                if (kvp == null) continue;
-
-                var kvpType = kvp.GetType();
-                var key = kvpType.GetProperty("Key")?.GetValue(kvp) as string;
-                var value = kvpType.GetProperty("Value")?.GetValue(kvp);
-                tags[i] = new KeyValuePair<string, object>(key, value);
-            }
-
+            var tags = ToTagArray(tagsSpan);
             callback(instrument, measurement, new ReadOnlySpan<KeyValuePair<string, object>>(tags), state);
         }
         catch (Exception ex)
         {
             Log.Error(ex, "Error bridging measurement callback tags.");
         }
+    }
+
+    /// <summary>
+    /// Copies the tags of a ReadOnlySpan of a different type identity into an array by calling its ToArray method.
+    /// Returns an empty array when the span type has no ToArray method or the call returns null.
+    /// </summary>
+    public static KeyValuePair<string, object>[] ToTagArray<TSpan>(TSpan tagsSpan)
+    {
+        var toArray = ToArrayMethodCache<TSpan>.Method;
+        if (toArray == null)
+        {
+            return Array.Empty<KeyValuePair<string, object>>();
+        }
+
+        return toArray.Invoke(tagsSpan, null) as KeyValuePair<string, object>[] ?? Array.Empty<KeyValuePair<string, object>>();
+    }
+
+    private static class ToArrayMethodCache<TSpan>
+    {
+        public static readonly MethodInfo Method = typeof(TSpan).GetMethod("ToArray", Type.EmptyTypes);
     }
 
     private void ConfigureCallbacks()
