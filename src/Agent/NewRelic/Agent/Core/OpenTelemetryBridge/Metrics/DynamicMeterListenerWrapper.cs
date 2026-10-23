@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading;
 using NewRelic.Agent.Core.OpenTelemetryBridge.Common;
 using NewRelic.Agent.Core.OpenTelemetryBridge.Metrics.Interfaces;
 using NewRelic.Agent.Extensions.Logging;
@@ -285,40 +286,54 @@ public class DynamicMeterListenerWrapper : IMeterListenerWrapper
     {
         try
         {
-            var spanType = typeof(TSpan);
-            var lengthProp = spanType.GetProperty("Length");
-            var getItemMethod = spanType.GetMethod("get_Item", new[] { typeof(int) });
-
-            if (lengthProp == null || getItemMethod == null)
-            {
-                callback(instrument, measurement, Span<KeyValuePair<string, object>>.Empty, state);
-                return;
-            }
-
-            int length = (int)lengthProp.GetValue(tagsSpan);
-            if (length == 0)
-            {
-                callback(instrument, measurement, Span<KeyValuePair<string, object>>.Empty, state);
-                return;
-            }
-
-            var tags = new KeyValuePair<string, object>[length];
-            for (int i = 0; i < length; i++)
-            {
-                var kvp = getItemMethod.Invoke(tagsSpan, new object[] { i });
-                if (kvp == null) continue;
-
-                var kvpType = kvp.GetType();
-                var key = kvpType.GetProperty("Key")?.GetValue(kvp) as string;
-                var value = kvpType.GetProperty("Value")?.GetValue(kvp);
-                tags[i] = new KeyValuePair<string, object>(key, value);
-            }
-
+            var tags = ToTagArray(tagsSpan);
             callback(instrument, measurement, new ReadOnlySpan<KeyValuePair<string, object>>(tags), state);
         }
         catch (Exception ex)
         {
             Log.Error(ex, "Error bridging measurement callback tags.");
+        }
+    }
+
+    /// <summary>
+    /// Copies the tags of a ReadOnlySpan of a different type identity into an array by calling its ToArray method.
+    /// Returns an empty array when the span type has no ToArray method (logging a warning once per span type)
+    /// or the call returns null.
+    /// </summary>
+    public static KeyValuePair<string, object>[] ToTagArray<TSpan>(TSpan tagsSpan)
+    {
+        var toArray = ToArrayCache<TSpan>.Delegate;
+        if (toArray == null)
+        {
+            if (Interlocked.Exchange(ref ToArrayCache<TSpan>.LoggedMissingToArray, 1) == 0)
+            {
+                Log.Warn($"OpenTelemetry bridge cannot copy measurement tags from {typeof(TSpan).FullName} because it has no ToArray method. Tags from this type will be dropped. Later occurrences will not be logged.");
+            }
+
+            return Array.Empty<KeyValuePair<string, object>>();
+        }
+
+        return toArray(tagsSpan) ?? Array.Empty<KeyValuePair<string, object>>();
+    }
+
+    private static class ToArrayCache<TSpan>
+    {
+        // Per-TSpan flag so the missing-method warning is logged once for each span type.
+        public static int LoggedMissingToArray;
+
+        public static readonly Func<TSpan, KeyValuePair<string, object>[]> Delegate = CreateDelegate();
+
+        private static Func<TSpan, KeyValuePair<string, object>[]> CreateDelegate()
+        {
+            var method = typeof(TSpan).GetMethod("ToArray", Type.EmptyTypes);
+            if (method == null)
+            {
+                return null;
+            }
+
+            var parameter = Expression.Parameter(typeof(TSpan), "span");
+            var call = Expression.TypeAs(Expression.Call(parameter, method), typeof(KeyValuePair<string, object>[]));
+            return Expression.Lambda<Func<TSpan, KeyValuePair<string, object>[]>>(call, parameter).Compile();
         }
     }
 
