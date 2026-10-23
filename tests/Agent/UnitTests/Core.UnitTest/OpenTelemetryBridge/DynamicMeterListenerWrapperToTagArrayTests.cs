@@ -35,6 +35,17 @@ public class DynamicMeterListenerWrapperToTagArrayTests
         public int Length => 0;
     }
 
+    // Dedicated type so the per-type warning flag is fresh for the log-once test.
+    private readonly struct FakeSpanWithoutToArrayForLogging
+    {
+        public int Length => 0;
+    }
+
+    private readonly struct FakeSpanWithToArrayForLogging
+    {
+        public KeyValuePair<string, object>[] ToArray() => new KeyValuePair<string, object>[0];
+    }
+
     [Test]
     public void ToTagArray_CopiesTagsWithKeysAndValues()
     {
@@ -83,5 +94,33 @@ public class DynamicMeterListenerWrapperToTagArrayTests
         var result = DynamicMeterListenerWrapper.ToTagArray(new FakeSpanWithoutToArray());
 
         Assert.That(result, Is.Not.Null.And.Empty);
+    }
+
+    [Test]
+    public void ToTagArray_WhenSpanTypeHasNoToArrayMethod_LogsWarningOnlyOnce()
+    {
+        using (var logging = new TestUtilities.Logging())
+        {
+            DynamicMeterListenerWrapper.ToTagArray(new FakeSpanWithoutToArrayForLogging());
+            DynamicMeterListenerWrapper.ToTagArray(new FakeSpanWithoutToArrayForLogging());
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(logging.WarnCount, Is.EqualTo(1));
+                Assert.That(logging.HasMessageThatContains("no ToArray method"), Is.True);
+                Assert.That(logging.HasMessageThatContains(nameof(FakeSpanWithoutToArrayForLogging)), Is.True);
+            });
+        }
+    }
+
+    [Test]
+    public void ToTagArray_WhenSpanTypeHasToArrayMethod_DoesNotLogWarning()
+    {
+        using (var logging = new TestUtilities.Logging())
+        {
+            DynamicMeterListenerWrapper.ToTagArray(new FakeSpanWithToArrayForLogging());
+
+            Assert.That(logging.WarnCount, Is.EqualTo(0));
+        }
     }
 }
