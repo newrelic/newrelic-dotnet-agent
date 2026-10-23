@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading;
 using NewRelic.Agent.Core.OpenTelemetryBridge.Common;
 using NewRelic.Agent.Core.OpenTelemetryBridge.Metrics.Interfaces;
 using NewRelic.Agent.Extensions.Logging;
@@ -296,22 +297,44 @@ public class DynamicMeterListenerWrapper : IMeterListenerWrapper
 
     /// <summary>
     /// Copies the tags of a ReadOnlySpan of a different type identity into an array by calling its ToArray method.
-    /// Returns an empty array when the span type has no ToArray method or the call returns null.
+    /// Returns an empty array when the span type has no ToArray method (logging a warning once per span type)
+    /// or the call returns null.
     /// </summary>
     public static KeyValuePair<string, object>[] ToTagArray<TSpan>(TSpan tagsSpan)
     {
-        var toArray = ToArrayMethodCache<TSpan>.Method;
+        var toArray = ToArrayCache<TSpan>.Delegate;
         if (toArray == null)
         {
+            if (Interlocked.Exchange(ref ToArrayCache<TSpan>.LoggedMissingToArray, 1) == 0)
+            {
+                Log.Warn($"OpenTelemetry bridge cannot copy measurement tags from {typeof(TSpan).FullName} because it has no ToArray method. Tags from this type will be dropped. Later occurrences will not be logged.");
+            }
+
             return Array.Empty<KeyValuePair<string, object>>();
         }
 
-        return toArray.Invoke(tagsSpan, null) as KeyValuePair<string, object>[] ?? Array.Empty<KeyValuePair<string, object>>();
+        return toArray(tagsSpan) ?? Array.Empty<KeyValuePair<string, object>>();
     }
 
-    private static class ToArrayMethodCache<TSpan>
+    private static class ToArrayCache<TSpan>
     {
-        public static readonly MethodInfo Method = typeof(TSpan).GetMethod("ToArray", Type.EmptyTypes);
+        // Per-TSpan flag so the missing-method warning is logged once for each span type.
+        public static int LoggedMissingToArray;
+
+        public static readonly Func<TSpan, KeyValuePair<string, object>[]> Delegate = CreateDelegate();
+
+        private static Func<TSpan, KeyValuePair<string, object>[]> CreateDelegate()
+        {
+            var method = typeof(TSpan).GetMethod("ToArray", Type.EmptyTypes);
+            if (method == null)
+            {
+                return null;
+            }
+
+            var parameter = Expression.Parameter(typeof(TSpan), "span");
+            var call = Expression.TypeAs(Expression.Call(parameter, method), typeof(KeyValuePair<string, object>[]));
+            return Expression.Lambda<Func<TSpan, KeyValuePair<string, object>[]>>(call, parameter).Compile();
+        }
     }
 
     private void ConfigureCallbacks()
