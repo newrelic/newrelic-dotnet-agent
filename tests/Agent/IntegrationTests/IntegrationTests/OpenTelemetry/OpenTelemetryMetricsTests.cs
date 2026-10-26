@@ -14,9 +14,9 @@ namespace NewRelic.Agent.IntegrationTests.OpenTelemetry;
 public abstract class OpenTelemetryMetricsTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
     where TFixture : OtlpMetricsWithCollectorFixtureBase
 {
-    private static readonly string[] ExpectedMetrics = { "requests_total", "payload_size_bytes", "active_requests", "queue_depth", "cpu_usage_percent", "active_connections" };
-
     private const string ExpectedExponentialHistogramMetricName = "payload_size_bytes";
+
+    private static readonly string[] ExpectedMetrics = { "requests_total", "payload_size_bytes", "active_requests", "queue_depth", "cpu_usage_percent", "active_connections" };
 
     protected readonly TFixture _fixture;
 
