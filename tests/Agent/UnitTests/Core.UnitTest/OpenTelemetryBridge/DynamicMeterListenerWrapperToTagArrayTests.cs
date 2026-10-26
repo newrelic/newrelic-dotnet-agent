@@ -35,7 +35,7 @@ public class DynamicMeterListenerWrapperToTagArrayTests
         public int Length => 0;
     }
 
-    // Dedicated type so the per-type warning flag is fresh for the log-once test.
+    // Dedicated type so its delegate cache initializes, and logs, inside the log-once test.
     private readonly struct FakeSpanWithoutToArrayForLogging
     {
         public int Length => 0;

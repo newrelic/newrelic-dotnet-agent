@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Threading;
 using NewRelic.Agent.Core.OpenTelemetryBridge.Common;
 using NewRelic.Agent.Core.OpenTelemetryBridge.Metrics.Interfaces;
 using NewRelic.Agent.Extensions.Logging;
@@ -305,11 +304,6 @@ public class DynamicMeterListenerWrapper : IMeterListenerWrapper
         var toArray = ToArrayCache<TSpan>.Delegate;
         if (toArray == null)
         {
-            if (Interlocked.Exchange(ref ToArrayCache<TSpan>.LoggedMissingToArray, 1) == 0)
-            {
-                Log.Warn($"OpenTelemetry bridge cannot copy measurement tags from {typeof(TSpan).FullName} because it has no ToArray method. Tags from this type will be dropped. Later occurrences will not be logged.");
-            }
-
             return Array.Empty<KeyValuePair<string, object>>();
         }
 
@@ -318,9 +312,7 @@ public class DynamicMeterListenerWrapper : IMeterListenerWrapper
 
     private static class ToArrayCache<TSpan>
     {
-        // Per-TSpan flag so the missing-method warning is logged once for each span type.
-        public static int LoggedMissingToArray;
-
+        // Initialized once per TSpan, so the missing-method warning is logged once for each span type.
         public static readonly Func<TSpan, KeyValuePair<string, object>[]> Delegate = CreateDelegate();
 
         private static Func<TSpan, KeyValuePair<string, object>[]> CreateDelegate()
@@ -328,6 +320,7 @@ public class DynamicMeterListenerWrapper : IMeterListenerWrapper
             var method = typeof(TSpan).GetMethod("ToArray", Type.EmptyTypes);
             if (method == null)
             {
+                Log.Warn($"OpenTelemetry bridge cannot copy measurement tags from {typeof(TSpan).FullName} because it has no ToArray method. Tags from this type will be dropped.");
                 return null;
             }
 
