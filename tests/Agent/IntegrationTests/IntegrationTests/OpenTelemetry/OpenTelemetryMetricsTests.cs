@@ -14,6 +14,10 @@ namespace NewRelic.Agent.IntegrationTests.OpenTelemetry;
 public abstract class OpenTelemetryMetricsTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
     where TFixture : OtlpMetricsWithCollectorFixtureBase
 {
+    private const string ExpectedExponentialHistogramMetricName = "payload_size_bytes";
+
+    private static readonly string[] ExpectedMetrics = { "requests_total", "payload_size_bytes", "active_requests", "queue_depth", "cpu_usage_percent", "active_connections" };
+
     protected readonly TFixture _fixture;
 
     protected OpenTelemetryMetricsTestsBase(TFixture fixture, ITestOutputHelper outputHelper) : base(fixture)
@@ -82,7 +86,7 @@ public abstract class OpenTelemetryMetricsTestsBase<TFixture> : NewRelicIntegrat
         }
 
         // Verify all expected metrics are present by name (ignore type differences across platforms)
-        foreach (var expectedMetric in GetExpectedMetrics())
+        foreach (var expectedMetric in ExpectedMetrics)
         {
             var found = aggregatedTotals.Any(m => m.Name == expectedMetric);
             Assert.True(found, $"Expected metric '{expectedMetric}' not found. Available metrics: {string.Join(", ", aggregatedTotals.Select(m => m.Name))}");
@@ -100,15 +104,11 @@ public abstract class OpenTelemetryMetricsTestsBase<TFixture> : NewRelicIntegrat
         Assert.True(explicitBucketHistograms.Count == 0,
             $"Expected no explicit-bucket Histogram metrics (base-2 exponential is configured), but found: {string.Join(", ", explicitBucketHistograms)}");
 
-        // Where a histogram instrument is exported on this platform, confirm it is an ExponentialHistogram.
-        var histogramMetricName = GetExpectedExponentialHistogramMetricName();
-        if (histogramMetricName != null)
-        {
-            var match = metricEntries.FirstOrDefault(m => m.Name == histogramMetricName);
-            Assert.True(match != null,
-                $"Expected histogram metric '{histogramMetricName}' was not exported. Available: {string.Join(", ", metricEntries.Select(m => m.Name).Distinct())}");
-            Assert.Equal("ExponentialHistogram", match.Type);
-        }
+        // Confirm the histogram instrument is exported as an ExponentialHistogram.
+        var match = metricEntries.FirstOrDefault(m => m.Name == ExpectedExponentialHistogramMetricName);
+        Assert.True(match != null,
+            $"Expected histogram metric '{ExpectedExponentialHistogramMetricName}' was not exported. Available: {string.Join(", ", metricEntries.Select(m => m.Name).Distinct())}");
+        Assert.Equal("ExponentialHistogram", match.Type);
     }
 
     [Fact]
@@ -134,15 +134,6 @@ public abstract class OpenTelemetryMetricsTestsBase<TFixture> : NewRelicIntegrat
             Assert.False(string.IsNullOrEmpty(entityGuid));
         }
     }
-
-    protected virtual string[] GetExpectedMetrics()
-    {
-        return new[] { "requests_total", "payload_size_bytes", "active_requests", "queue_depth", "cpu_usage_percent", "active_connections" };
-    }
-
-    // The histogram instrument expected to be exported on this platform, or null if histogram
-    // instruments are not bridged here (e.g. .NET Framework, which omits payload_size_bytes).
-    protected virtual string GetExpectedExponentialHistogramMetricName() => "payload_size_bytes";
 }
 
 // NET11 test targets DiagnosticSource v10.x
@@ -162,8 +153,6 @@ public class OpenTelemetryMetricsTestsCoreOldest : OpenTelemetryMetricsTestsBase
 public class OpenTelemetryMetricsTestsFw472 : OpenTelemetryMetricsTestsBase<OtlpMetricsWithCollectorFixtureFW472>
 {
     public OpenTelemetryMetricsTestsFw472(OtlpMetricsWithCollectorFixtureFW472 fixture, ITestOutputHelper outputHelper) : base(fixture, outputHelper) { }
-    protected override string[] GetExpectedMetrics() => new[] { "active_requests", "queue_depth", "cpu_usage_percent", "active_connections" };
-    protected override string GetExpectedExponentialHistogramMetricName() => null;
 }
 
 // Net481 test targets DiagnosticSource v9.x
@@ -171,6 +160,4 @@ public class OpenTelemetryMetricsTestsFw472 : OpenTelemetryMetricsTestsBase<Otlp
 public class OpenTelemetryMetricsTestsFw481 : OpenTelemetryMetricsTestsBase<OtlpMetricsWithCollectorFixtureFW481>
 {
     public OpenTelemetryMetricsTestsFw481(OtlpMetricsWithCollectorFixtureFW481 fixture, ITestOutputHelper outputHelper) : base(fixture, outputHelper) { }
-    protected override string[] GetExpectedMetrics() => new[] { "active_requests", "queue_depth", "cpu_usage_percent", "active_connections" };
-    protected override string GetExpectedExponentialHistogramMetricName() => null;
 }
