@@ -322,6 +322,7 @@ public class SqlObfuscatorTest
     [TestCase("--x", "?")]
     [TestCase("  --x", "  ?")]
     [TestCase("  |-x", "  |-x")]
+    [TestCase("  |ab", "  |ab")]
     [TestCase("  |", "  |")]
     [TestCase("|-", "|-")]
     [TestCase("", "")]

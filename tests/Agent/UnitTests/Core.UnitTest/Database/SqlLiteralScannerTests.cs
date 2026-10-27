@@ -140,6 +140,9 @@ public class SqlLiteralScannerTests
     [TestCase("x = 1 -- c\ny = 2", MySql, "x = ? ?\ny = ?")]
     [TestCase("x = 1 --\tc\ny = 2", MySql, "x = ? ?\ny = ?")]
     [TestCase("x = 1 --", MySql, "x = ? ?")]
+    // Only ASCII space and control characters end MySQL's -- marker; a Unicode space such as NBSP does not.
+    [TestCase("SELECT 1 -- '\nsecret \"'\" # \"", MySql, "SELECT ? ?")]
+    [TestCase("x = 1 --\u0001c\ny = 2", MySql, "x = ? ?\ny = ?")]
     [TestCase("x = 5--1 AND y = 'a'", MySql, "x = ??")]
     [TestCase("x = 1 --'\ny = 2", Ms, "x = ? ?\ny = ?")]
     // Oracle q-quotes
@@ -163,6 +166,9 @@ public class SqlLiteralScannerTests
     [TestCase("x = q'[a]'", MySql, "x = q?")]
     // Oracle identifiers may contain # and $; standalone # is a comment
     [TestCase("SELECT EMP#, V$SESSION FROM t # tail", Ora, "SELECT EMP#, V$SESSION FROM t ?")]
+    // An identifier ending in # is an operand, so a following minus is binary and kept.
+    [TestCase("SELECT EMP#-1 FROM t", Ora, "SELECT EMP#-? FROM t")]
+    [TestCase("SELECT EMP#-1 FROM t", None, "SELECT EMP#? FROM t")]
     [TestCase("SELECT \"T\".\"C\" FROM \"T\" WHERE ROWNUM <= 1", Ora, "SELECT \"T\".\"C\" FROM \"T\" WHERE ROWNUM <= ?")]
     [TestCase("a = true", Ora, "a = true")]
     // MSSQL: no # comments, no backslash escapes, double quotes are strings, hex binary literals

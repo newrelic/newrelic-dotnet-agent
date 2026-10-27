@@ -153,7 +153,7 @@ public static class SqlLiteralScanner
             }
 
             // Numbers, including a unary minus but never a binary one
-            if (ch == '-' && StartsNumber(sql, i + 1) && IsUnaryMinusPosition(sb, prefixLength))
+            if (ch == '-' && StartsNumber(sql, i + 1) && IsUnaryMinusPosition(sb, prefixLength, Has(features, SqlDialectFeatures.HashInIdentifiers)))
             {
                 AppendCapped(sb, '?', maxLength);
                 i = SkipNumber(sql, i + 1);
@@ -237,12 +237,21 @@ public static class SqlLiteralScanner
                    || (Has(features, SqlDialectFeatures.HashWhitespaceMasksRestOfQuery) && IsWhiteSpaceOrEnd(sql, i + 1));
         }
 
-        return ch == '-' && next == '-' && Has(features, SqlDialectFeatures.DashDashRequiresWhitespace) && !IsWhiteSpaceOrEnd(sql, i + 2);
+        return ch == '-' && next == '-' && Has(features, SqlDialectFeatures.DashDashRequiresWhitespace) && !IsAsciiSpaceOrControlOrEnd(sql, i + 2);
     }
 
     private static bool IsWhiteSpaceOrEnd(string sql, int i)
     {
         return i >= sql.Length || char.IsWhiteSpace(sql[i]);
+    }
+
+    /// <summary>
+    /// MySQL ends its -- marker only with an ASCII space or control character. A Unicode space such as NBSP is not one,
+    /// so the server reads the text after it as SQL.
+    /// </summary>
+    private static bool IsAsciiSpaceOrControlOrEnd(string sql, int i)
+    {
+        return i >= sql.Length || sql[i] <= ' ';
     }
 
     private static bool Has(SqlDialectFeatures features, SqlDialectFeatures feature) => (features & feature) != 0;
@@ -405,10 +414,11 @@ public static class SqlLiteralScanner
 
     /// <summary>
     /// A minus is unary (part of a negative literal) unless it follows an operand. Only output written after the verbatim
-    /// prefix (from outputStart) is considered, so a prefix never changes how the SQL after it is read. Once the output is
-    /// capped the answer only decides how the number is consumed, never how quotes are read, so the scan stays in step.
+    /// prefix (from outputStart) is considered, so a prefix never changes how the SQL after it is read. When # is legal in
+    /// identifiers (Oracle EMP#), a trailing # also ends an operand. Once the output is capped the answer only decides how
+    /// the number is consumed, never how quotes are read, so the scan stays in step.
     /// </summary>
-    private static bool IsUnaryMinusPosition(StringBuilder output, int outputStart)
+    private static bool IsUnaryMinusPosition(StringBuilder output, int outputStart, bool hashInIdentifiers)
     {
         for (var i = output.Length - 1; i >= outputStart; i--)
         {
@@ -418,7 +428,8 @@ public static class SqlLiteralScanner
                 continue;
             }
 
-            return !(char.IsLetterOrDigit(ch) || ch == '_' || ch == '?' || ch == ')' || ch == '"' || ch == ']' || ch == '`' || ch == '$');
+            return !(char.IsLetterOrDigit(ch) || ch == '_' || ch == '?' || ch == ')' || ch == '"' || ch == ']' || ch == '`' || ch == '$'
+                     || (hashInIdentifiers && ch == '#'));
         }
 
         return true;

@@ -65,7 +65,8 @@ public enum SqlDialectFeatures
     HashWhitespaceMasksRestOfQuery = 1 << 11,
 
     /// <summary>
-    /// -- starts an end-of-line comment only when followed by whitespace or the end of the query (MySQL). Any other --
+    /// -- starts an end-of-line comment only when followed by an ASCII space or control character, or the end of the query
+    /// (MySQL). Any other --, including one followed by a Unicode space such as NBSP,
     /// is read by the server as SQL (5--1 is arithmetic), so the rest of the query is masked rather than risk a quote in
     /// it desyncing the scan.
     /// </summary>
