@@ -1,6 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System.Linq;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NUnit.Framework;
 
@@ -264,12 +265,29 @@ public class SqlObfuscatorTest
         Assert.That(obfuscator.GetObfuscatedSql(MetadataComment + "SELECT 'x", DatastoreVendor.Postgres), Is.EqualTo(MetadataComment + "?"));
     }
 
-    [Test]
-    public void GetObfuscatedSql_KeepsMetadataCommentWhenTruncating()
+    [TestCase(DatastoreVendor.Postgres)]
+    [TestCase(DatastoreVendor.MSSQL)]
+    public void GetObfuscatedSql_KeepsMetadataCommentWhenTruncating(DatastoreVendor vendor)
     {
-        var result = obfuscator.GetObfuscatedSql(MetadataComment + "SELECT " + new string('a', 20000), DatastoreVendor.MSSQL);
+        var result = obfuscator.GetObfuscatedSql(MetadataComment + "SELECT " + new string('a', 20000), vendor);
         Assert.That(result.Length, Is.EqualTo(16384));
         Assert.That(result, Does.StartWith(MetadataComment + "SELECT aaa"));
+    }
+
+    [Test]
+    public void GetObfuscatedSql_Postgres_MasksBodyWhenUnterminatedPastTheLimit()
+    {
+        var body = "SELECT " + new string('a', 20000) + " WHERE b = 'x";
+        Assert.That(obfuscator.GetObfuscatedSql(body, DatastoreVendor.Postgres), Is.EqualTo("?"));
+        Assert.That(obfuscator.GetObfuscatedSql(MetadataComment + body, DatastoreVendor.Postgres), Is.EqualTo(MetadataComment + "?"));
+    }
+
+    [Test]
+    public void GetObfuscatedSql_NonPostgres_TruncatesLikeMain()
+    {
+        var sql = "SELECT " + string.Concat(Enumerable.Repeat("1, ", 10000));
+        var expected = ("SELECT " + string.Concat(Enumerable.Repeat("?, ", 10000))).Substring(0, 16384);
+        Assert.That(obfuscator.GetObfuscatedSql(sql, DatastoreVendor.MySQL), Is.EqualTo(expected));
     }
 
     [TestCase(DatastoreVendor.Other, "/*nr_service_guid=\"a\"b\"*/SELECT 1", "/*nr_service_guid=?b?")]

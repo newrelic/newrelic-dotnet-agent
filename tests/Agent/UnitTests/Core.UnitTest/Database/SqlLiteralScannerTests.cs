@@ -1,6 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System;
 using System.Linq;
 using NUnit.Framework;
 
@@ -128,5 +129,47 @@ public class SqlLiteralScannerTests
         var expected = "INSERT INTO t VALUES " + string.Join(",", Enumerable.Repeat("(?,?,\"c\")", rows));
 
         Assert.That(SqlLiteralScanner.Obfuscate(sql, Pg), Is.EqualTo(expected));
+    }
+
+    // Prefix and start index: the prefix is written verbatim and the SQL before startIndex is skipped.
+    [TestCase("XXSELECT 'a'", 2, "P:", 100, "P:SELECT ?")]
+    // The prefix never makes a following minus binary.
+    [TestCase("-1", 0, "x", 100, "x?")]
+    // Output is capped at maxLength, including part of an identifier or quoted identifier.
+    [TestCase("SELECT 1, 2, 3", 0, null, 8, "SELECT ?")]
+    [TestCase("SELECT abcdef", 0, null, 9, "SELECT ab")]
+    [TestCase("ab cd", 0, null, 2, "ab")]
+    [TestCase("\"abcdef\"", 0, null, 3, "\"ab")]
+    // Input that cannot be tokenized safely past the cap still masks the whole body.
+    [TestCase("SELECT 1, 'x", 0, "P", 4, "P?")]
+    // A prefix longer than maxLength is truncated too.
+    [TestCase("'x", 0, "PREFIX", 3, "PRE")]
+    [TestCase("a", 0, "PREFIX", 3, "PRE")]
+    public void Obfuscate_WithPrefixStartIndexAndMaxLength(string sql, int startIndex, string prefix, int maxLength, string expected)
+    {
+        Assert.That(SqlLiteralScanner.Obfuscate(sql, startIndex, prefix, maxLength, Pg), Is.EqualTo(expected));
+    }
+
+    [Test]
+    public void Obfuscate_WithPrefixStartIndexAndMaxLength_Null_ReturnsNull()
+    {
+        Assert.That(SqlLiteralScanner.Obfuscate(null, 0, "P", 10, Pg), Is.Null);
+    }
+
+    [TestCase(-1, 10, "startIndex")]
+    [TestCase(4, 10, "startIndex")]
+    [TestCase(0, -1, "maxLength")]
+    public void Obfuscate_WithPrefixStartIndexAndMaxLength_InvalidArguments_Throw(int startIndex, int maxLength, string paramName)
+    {
+        var ex = Assert.Throws<ArgumentOutOfRangeException>(() => SqlLiteralScanner.Obfuscate("abc", startIndex, null, maxLength, Pg));
+        Assert.That(ex.ParamName, Is.EqualTo(paramName));
+    }
+
+    // Boundaries: startIndex at the end of sql and a zero maxLength are valid.
+    [TestCase(3, 10, "P")]
+    [TestCase(0, 0, "")]
+    public void Obfuscate_WithPrefixStartIndexAndMaxLength_BoundaryArguments(int startIndex, int maxLength, string expected)
+    {
+        Assert.That(SqlLiteralScanner.Obfuscate("abc", startIndex, "P", maxLength, Pg), Is.EqualTo(expected));
     }
 }

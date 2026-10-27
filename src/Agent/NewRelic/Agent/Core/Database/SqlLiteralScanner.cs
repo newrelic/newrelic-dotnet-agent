@@ -20,14 +20,39 @@ public static class SqlLiteralScanner
 
     public static string Obfuscate(string sql, SqlDialectFeatures features)
     {
+        return Obfuscate(sql, 0, null, int.MaxValue, features);
+    }
+
+    /// <summary>
+    /// Returns prefix + Obfuscate(sql.Substring(startIndex), features), truncated to maxLength, without copying sql.
+    /// The prefix is written verbatim. Output stops growing at maxLength, but the scan still runs to the end of sql, so
+    /// input that cannot be tokenized safely anywhere after startIndex (even beyond maxLength) still yields prefix + "?".
+    /// </summary>
+    public static string Obfuscate(string sql, int startIndex, string prefix, int maxLength, SqlDialectFeatures features)
+    {
         if (sql == null)
         {
             return null;
         }
 
-        var sb = new StringBuilder(sql.Length);
+        if (startIndex < 0 || startIndex > sql.Length)
+        {
+            throw new ArgumentOutOfRangeException(nameof(startIndex));
+        }
+
+        if (maxLength < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(maxLength));
+        }
+
+        var prefixLength = prefix?.Length ?? 0;
+        var sb = new StringBuilder(prefix, Math.Min(sql.Length - startIndex + prefixLength, maxLength));
         var length = sql.Length;
-        var i = 0;
+        var i = startIndex;
+
+        // Branch order matters: the Postgres # mask before comments, comments before strings, quotes before $ handling,
+        // UUIDs before numbers and identifiers, unary minus before numbers. Reordering can desync the scan or leak part
+        // of a literal.
         while (i < length)
         {
             var ch = sql[i];
@@ -36,7 +61,7 @@ public static class SqlLiteralScanner
             // Postgres has no # comment, so a # masks the rest of the query: a string opened after it could span lines and desync the scan.
             if (ch == '#' && Has(features, SqlDialectFeatures.HashMasksRestOfQuery))
             {
-                sb.Append('?');
+                AppendCapped(sb, '?', maxLength);
                 i = length;
                 continue;
             }
@@ -44,7 +69,7 @@ public static class SqlLiteralScanner
             // End-of-line comments
             if ((ch == '-' && next == '-') || (ch == '#' && Has(features, SqlDialectFeatures.HashComments)))
             {
-                sb.Append('?');
+                AppendCapped(sb, '?', maxLength);
                 i = EndOfLine(sql, i);
                 continue;
             }
@@ -55,19 +80,19 @@ public static class SqlLiteralScanner
                 var close = sql.IndexOf("*/", i + 2, StringComparison.Ordinal);
                 if (close < 0)
                 {
-                    return FullyObfuscated;
+                    return FullyObfuscatedWithPrefix(prefix, maxLength);
                 }
 
                 // Postgres block comments nest, so a second opener before the first closer makes the extent ambiguous: mask the rest.
                 var nested = sql.IndexOf("/*", i + 2, close - i - 1, StringComparison.Ordinal);
-                sb.Append('?');
+                AppendCapped(sb, '?', maxLength);
                 i = nested >= 0 ? length : close + 2;
                 continue;
             }
 
             if (ch == '*' && next == '/')
             {
-                return FullyObfuscated;
+                return FullyObfuscatedWithPrefix(prefix, maxLength);
             }
 
             // String literals
@@ -76,10 +101,10 @@ public static class SqlLiteralScanner
                 i = SkipQuoted(sql, i, Has(features, SqlDialectFeatures.BackslashEscapes));
                 if (i == Unterminated)
                 {
-                    return FullyObfuscated;
+                    return FullyObfuscatedWithPrefix(prefix, maxLength);
                 }
 
-                sb.Append('?');
+                AppendCapped(sb, '?', maxLength);
                 continue;
             }
 
@@ -89,10 +114,10 @@ public static class SqlLiteralScanner
                 var end = SkipQuoted(sql, i, false);
                 if (end == Unterminated)
                 {
-                    return FullyObfuscated;
+                    return FullyObfuscatedWithPrefix(prefix, maxLength);
                 }
 
-                sb.Append(sql, i, end - i);
+                AppendCapped(sb, sql, i, end - i, maxLength);
                 i = end;
                 continue;
             }
@@ -103,34 +128,34 @@ public static class SqlLiteralScanner
                 var tagEnd = DollarTagEnd(sql, i);
                 if (tagEnd == Unterminated)
                 {
-                    return FullyObfuscated;
+                    return FullyObfuscatedWithPrefix(prefix, maxLength);
                 }
 
                 var tag = sql.Substring(i, tagEnd - i + 1);
                 var close = sql.IndexOf(tag, tagEnd + 1, StringComparison.Ordinal);
-                sb.Append('?');
+                AppendCapped(sb, '?', maxLength);
                 i = close < 0 ? length : close + tag.Length;
                 continue;
             }
 
             if (Has(features, SqlDialectFeatures.UuidLiterals) && TryMatchUuid(sql, i, out var uuidEnd))
             {
-                sb.Append('?');
+                AppendCapped(sb, '?', maxLength);
                 i = uuidEnd;
                 continue;
             }
 
             // Numbers, including a unary minus but never a binary one
-            if (ch == '-' && StartsNumber(sql, i + 1) && IsUnaryMinusPosition(sb))
+            if (ch == '-' && StartsNumber(sql, i + 1) && IsUnaryMinusPosition(sb, prefixLength))
             {
-                sb.Append('?');
+                AppendCapped(sb, '?', maxLength);
                 i = SkipNumber(sql, i + 1);
                 continue;
             }
 
             if (StartsNumber(sql, i))
             {
-                sb.Append('?');
+                AppendCapped(sb, '?', maxLength);
                 i = SkipNumber(sql, i);
                 continue;
             }
@@ -147,21 +172,47 @@ public static class SqlLiteralScanner
 
                 if (Has(features, SqlDialectFeatures.BooleanLiterals) && IsBooleanLiteral(sql, start, i - start))
                 {
-                    sb.Append('?');
+                    AppendCapped(sb, '?', maxLength);
                 }
                 else
                 {
-                    sb.Append(sql, start, i - start);
+                    AppendCapped(sb, sql, start, i - start, maxLength);
                 }
 
                 continue;
             }
 
-            sb.Append(ch);
+            AppendCapped(sb, ch, maxLength);
             i++;
         }
 
-        return sb.ToString();
+        return sb.ToString(0, Math.Min(sb.Length, maxLength));
+    }
+
+    private static string FullyObfuscatedWithPrefix(string prefix, int maxLength)
+    {
+        var result = prefix + FullyObfuscated;
+        return result.Length > maxLength ? result.Substring(0, maxLength) : result;
+    }
+
+    /// <summary>
+    /// Appends only while the output is under maxLength, so a huge statement never builds more than the truncated result.
+    /// </summary>
+    private static void AppendCapped(StringBuilder sb, char ch, int maxLength)
+    {
+        if (sb.Length < maxLength)
+        {
+            sb.Append(ch);
+        }
+    }
+
+    private static void AppendCapped(StringBuilder sb, string sql, int start, int count, int maxLength)
+    {
+        var room = maxLength - sb.Length;
+        if (room > 0)
+        {
+            sb.Append(sql, start, Math.Min(count, room));
+        }
     }
 
     private static bool Has(SqlDialectFeatures features, SqlDialectFeatures feature) => (features & feature) != 0;
@@ -323,11 +374,13 @@ public static class SqlLiteralScanner
     }
 
     /// <summary>
-    /// A minus is unary (part of a negative literal) unless it follows an operand.
+    /// A minus is unary (part of a negative literal) unless it follows an operand. Only output written after the verbatim
+    /// prefix (from outputStart) is considered, so a prefix never changes how the SQL after it is read. Once the output is
+    /// capped the answer only decides how the number is consumed, never how quotes are read, so the scan stays in step.
     /// </summary>
-    private static bool IsUnaryMinusPosition(StringBuilder output)
+    private static bool IsUnaryMinusPosition(StringBuilder output, int outputStart)
     {
-        for (var i = output.Length - 1; i >= 0; i--)
+        for (var i = output.Length - 1; i >= outputStart; i--)
         {
             var ch = output[i];
             if (char.IsWhiteSpace(ch))
