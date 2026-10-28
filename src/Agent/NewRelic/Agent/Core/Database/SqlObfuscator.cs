@@ -3,6 +3,7 @@
 
 using System;
 using System.Text;
+using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Agent.Core.Database;
@@ -59,8 +60,8 @@ public abstract class SqlObfuscator
     }
 
     /// <summary>
-    /// Replaces strings and numeric values with a simple "?".
-    /// Does not use regular expressions, but a finite state machine that is easier to demonstrate always makes progress.
+    /// Replaces literals with "?". Postgres uses the spec-compliant SqlLiteralScanner; the remaining vendors still use the
+    /// legacy finite state machine below. The agent's own leading SQL metadata comment is kept verbatim for every vendor.
     /// </summary>
     class ObfuscatingSqlObfuscatorUsingExplicit : SqlObfuscator
     {
@@ -71,9 +72,27 @@ public abstract class SqlObfuscator
                 return null;
             }
 
-            StringBuilder sb = new StringBuilder();
+            // Keep the agent's metadata comment so the commented form stays visible in traces (SQL-Metadata-Comments spec).
+            // Both obfuscators write the comment and the obfuscated body into one buffer and truncate it, so a huge statement
+            // is not copied again for the body, the concatenation or the truncation.
+            var commentLength = SqlMetadataCommentBuilder.GetMetadataCommentLength(sql);
+            var comment = commentLength == 0 ? null : sql.Substring(0, commentLength);
+
+            return vendor == DatastoreVendor.Postgres
+                ? SqlLiteralScanner.Obfuscate(sql, commentLength, comment, SqlStatementMaxLength, SqlDialects.Postgres)
+                : ObfuscateLegacy(sql, commentLength, comment, vendor);
+        }
+
+        /// <summary>
+        /// Does not use regular expressions, but a finite state machine that is easier to demonstrate always makes progress.
+        /// Returns prefix + the obfuscated sql from startIndex, truncated to SqlStatementMaxLength. The output only ever
+        /// grows, so the scan stops once it reaches the limit.
+        /// </summary>
+        private static string ObfuscateLegacy(string sql, int startIndex, string prefix, DatastoreVendor vendor)
+        {
+            StringBuilder sb = new StringBuilder(prefix, Math.Min(sql.Length - startIndex + (prefix?.Length ?? 0), SqlStatementMaxLength));
             int length = sql.Length;
-            for (int i = 0; i < length; i++)
+            for (int i = startIndex; i < length && sb.Length < SqlStatementMaxLength; i++)
             {
                 char ch = sql[i];
 

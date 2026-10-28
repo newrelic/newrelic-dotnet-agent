@@ -17,6 +17,8 @@ public abstract class PostgresMetadataCommentTestsBase<TFixture> : NewRelicInteg
     private readonly ConsoleDynamicMethodFixture _fixture;
     private const string TransactionName = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.PostgresSql.PostgresSqlExerciser/SimpleQuery";
 
+    protected virtual string RecordSql => "raw";
+
     public PostgresMetadataCommentTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
     {
         _fixture = fixture;
@@ -37,7 +39,7 @@ public abstract class PostgresMetadataCommentTestsBase<TFixture> : NewRelicInteg
                 configModifier.ForceTransactionTraces().SetLogLevel("finest");
 
                 configModifier.ForceSqlTraces();
-                configModifier.SetTransactionTracerRecordSql("raw");
+                configModifier.SetTransactionTracerRecordSql(RecordSql);
                 configModifier.SetTransactionTracerSqlMetadataCommentsEnabled(true);
             },
             exerciseApplication: () =>
@@ -67,6 +69,7 @@ public abstract class PostgresMetadataCommentTestsBase<TFixture> : NewRelicInteg
             Assert.True(
                 trace.Sql.StartsWith(commentPrefix, StringComparison.Ordinal),
                 $"Expected SQL trace to start with SQL metadata comment, but was: {trace.Sql}");
+            AssertBodyObfuscatedWhenRequired(trace.Sql);
         }
 
         // Transaction trace segments
@@ -85,6 +88,7 @@ public abstract class PostgresMetadataCommentTestsBase<TFixture> : NewRelicInteg
             Assert.True(
                 sql?.StartsWith(commentPrefix, StringComparison.Ordinal) == true,
                 $"Expected transaction trace segment SQL to start with metadata comment, but was: {sql}");
+            AssertBodyObfuscatedWhenRequired(sql);
         }
 
         // Span events
@@ -100,7 +104,22 @@ public abstract class PostgresMetadataCommentTestsBase<TFixture> : NewRelicInteg
             Assert.True(
                 sql?.StartsWith(commentPrefix, StringComparison.Ordinal) == true,
                 $"Expected span event db.statement to start with metadata comment, but was: {sql}");
+            AssertBodyObfuscatedWhenRequired(sql);
         }
+    }
+
+    // In obfuscated mode the metadata comment is kept verbatim, but every literal after it must be masked.
+    private void AssertBodyObfuscatedWhenRequired(string sql)
+    {
+        if (RecordSql != "obfuscated")
+            return;
+
+        var commentEnd = sql.IndexOf("\"*/", StringComparison.Ordinal);
+        Assert.True(commentEnd > 0, $"Expected a complete SQL metadata comment, but was: {sql}");
+
+        var body = sql.Substring(commentEnd + 3);
+        Assert.DoesNotContain("'", body);
+        Assert.Contains("?", body);
     }
 
     private static IEnumerable<TransactionTraceSegment> GetAllSegments(TransactionTraceSegment segment)
@@ -142,4 +161,23 @@ public class PostgresMetadataCommentTestsCoreLatest : PostgresMetadataCommentTes
     public PostgresMetadataCommentTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)
     {
     }
+}
+
+public class PostgresMetadataCommentTestsCoreLatest_Obfuscated : PostgresMetadataCommentTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+{
+    public PostgresMetadataCommentTestsCoreLatest_Obfuscated(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)
+    {
+    }
+
+    protected override string RecordSql => "obfuscated";
+}
+
+[Trait("Platform", "WindowsOnly")]
+public class PostgresMetadataCommentTestsFWLatest_Obfuscated : PostgresMetadataCommentTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+{
+    public PostgresMetadataCommentTestsFWLatest_Obfuscated(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
+    {
+    }
+
+    protected override string RecordSql => "obfuscated";
 }
