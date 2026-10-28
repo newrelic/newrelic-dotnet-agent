@@ -1,7 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
 using System.Linq;
 using NUnit.Framework;
 
@@ -156,13 +155,13 @@ public class SqlLiteralScannerTests
         Assert.That(SqlLiteralScanner.Obfuscate(null, 0, "P", 10, Pg), Is.Null);
     }
 
-    [TestCase(-1, 10, "startIndex")]
-    [TestCase(4, 10, "startIndex")]
-    [TestCase(0, -1, "maxLength")]
-    public void Obfuscate_WithPrefixStartIndexAndMaxLength_InvalidArguments_Throw(int startIndex, int maxLength, string paramName)
+    // Out-of-range arguments mask everything, including the prefix, instead of throwing.
+    [TestCase(-1, 10)]
+    [TestCase(4, 10)]
+    [TestCase(0, -1)]
+    public void Obfuscate_WithPrefixStartIndexAndMaxLength_InvalidArguments_ReturnFullyObfuscated(int startIndex, int maxLength)
     {
-        var ex = Assert.Throws<ArgumentOutOfRangeException>(() => SqlLiteralScanner.Obfuscate("abc", startIndex, null, maxLength, Pg));
-        Assert.That(ex.ParamName, Is.EqualTo(paramName));
+        Assert.That(SqlLiteralScanner.Obfuscate("abc", startIndex, "P", maxLength, Pg), Is.EqualTo("?"));
     }
 
     // Boundaries: startIndex at the end of sql and a zero maxLength are valid.

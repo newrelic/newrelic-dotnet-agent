@@ -35,14 +35,10 @@ public static class SqlLiteralScanner
             return null;
         }
 
-        if (startIndex < 0 || startIndex > sql.Length)
+        // Out-of-range arguments mean the prefix boundary can't be trusted, so mask everything rather than throw into the caller.
+        if (startIndex < 0 || startIndex > sql.Length || maxLength < 0)
         {
-            throw new ArgumentOutOfRangeException(nameof(startIndex));
-        }
-
-        if (maxLength < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(maxLength));
+            return FullyObfuscated;
         }
 
         var prefixLength = prefix?.Length ?? 0;
