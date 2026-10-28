@@ -112,7 +112,10 @@ public abstract class RabbitMqLegacyTestsBase<TFixture> : NewRelicIntegrationTes
             "server.port",
             "messaging.destination.name",
             "message.routingKey",
-            "messaging.rabbitmq.destination.routing_key"
+            "messaging.rabbitmq.destination.routing_key",
+            "messaging.system",
+            "rabbitmq.cluster.name",
+            "rabbitmq.vhost.name"
         };
 
         var expectedTempProduceAgentAttributes = new List<string>
@@ -120,7 +123,10 @@ public abstract class RabbitMqLegacyTestsBase<TFixture> : NewRelicIntegrationTes
             "server.address",
             "server.port",
             "message.routingKey",
-            "messaging.rabbitmq.destination.routing_key"
+            "messaging.rabbitmq.destination.routing_key",
+            "messaging.system",
+            "rabbitmq.cluster.name",
+            "rabbitmq.vhost.name"
         };
 
         var expectedConsumeAgentAttributes = new List<string>
@@ -130,12 +136,18 @@ public abstract class RabbitMqLegacyTestsBase<TFixture> : NewRelicIntegrationTes
             "messaging.destination.name",
             "message.queueName",
             "messaging.destination_publish.name",
+            "messaging.system",
+            "rabbitmq.cluster.name",
+            "rabbitmq.vhost.name"
         };
 
         var expectedTempConsumeAgentAttributes = new List<string>
         {
             "server.address",
             "server.port",
+            "messaging.system",
+            "rabbitmq.cluster.name",
+            "rabbitmq.vhost.name"
         };
 
         var expectedIntrisicAttributes = new List<string> { "span.kind", };

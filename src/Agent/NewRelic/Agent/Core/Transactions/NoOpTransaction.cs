@@ -86,7 +86,8 @@ public class NoOpTransaction : ITransaction, ITransactionExperimental
     public ISegment StartMessageBrokerSegment(MethodCall methodCall, MessageBrokerDestinationType destinationType,
         MessageBrokerAction operation, string brokerVendorName, string destinationName,
         string messagingSystemName = null, string cloudAccountId = null, string cloudRegion = null,
-        string serverAddress = null, int? serverPort = null, string routingKey = null)
+        string serverAddress = null, int? serverPort = null, string routingKey = null,
+        string clusterName = null, string virtualHostName = null)
     {
 #if DEBUG
         Log.Finest("Skipping StartMessageBrokerSegment outside of a transaction");

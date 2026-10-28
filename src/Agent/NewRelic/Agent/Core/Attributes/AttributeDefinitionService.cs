@@ -150,6 +150,8 @@ public interface IAttributeDefinitions
     AttributeDefinition<string, string> MessageQueueName { get; }
     AttributeDefinition<string, string> MessageRoutingKey { get; }
     AttributeDefinition<string, string> MessagingRabbitMqDestinationRoutingKey { get; }
+    AttributeDefinition<string, string> RabbitMqClusterName { get; }
+    AttributeDefinition<string, string> RabbitMqVhostName { get; }
     AttributeDefinition<string, string> MessagingDestinationPublishName { get; }
     AttributeDefinition<string, string> LinkedTraceId { get; }
     AttributeDefinition<string, string> LinkedSpanId { get; }
@@ -1235,6 +1237,18 @@ public class AttributeDefinitions : IAttributeDefinitions
     private AttributeDefinition<string, string> _messagingRabbitMqDestinationRoutingKey;
     public AttributeDefinition<string, string> MessagingRabbitMqDestinationRoutingKey => _messagingRabbitMqDestinationRoutingKey ?? (_messagingRabbitMqDestinationRoutingKey =
         AttributeDefinitionBuilder.CreateString("messaging.rabbitmq.destination.routing_key", AttributeClassification.AgentAttributes)
+            .AppliesTo(AttributeDestinations.SpanEvent)
+            .Build(_attribFilter));
+
+    private AttributeDefinition<string, string> _rabbitMqClusterName;
+    public AttributeDefinition<string, string> RabbitMqClusterName => _rabbitMqClusterName ?? (_rabbitMqClusterName =
+        AttributeDefinitionBuilder.CreateString("rabbitmq.cluster.name", AttributeClassification.AgentAttributes)
+            .AppliesTo(AttributeDestinations.SpanEvent)
+            .Build(_attribFilter));
+
+    private AttributeDefinition<string, string> _rabbitMqVhostName;
+    public AttributeDefinition<string, string> RabbitMqVhostName => _rabbitMqVhostName ?? (_rabbitMqVhostName =
+        AttributeDefinitionBuilder.CreateString("rabbitmq.vhost.name", AttributeClassification.AgentAttributes)
             .AppliesTo(AttributeDestinations.SpanEvent)
             .Build(_attribFilter));
 

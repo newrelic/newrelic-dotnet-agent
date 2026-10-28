@@ -57,7 +57,8 @@ public class HandleBasicDeliverWrapper : IWrapper
 
         agent.CurrentTransaction.AcceptDistributedTraceHeaders(headers, GetHeaderValue, TransportType.AMQP);
 
-        GetServerDetails(instrumentedMethodCall, out var hostname, out var port, agent);
+        GetServerDetails(instrumentedMethodCall, out var hostname, out var port, out var connection, agent);
+        var identity = RabbitMqHelper.GetConnectionIdentity(connection, agent);
 
         var segment = transaction.StartMessageBrokerSegment(
             instrumentedMethodCall.MethodCall,
@@ -65,9 +66,12 @@ public class HandleBasicDeliverWrapper : IWrapper
             MessageBrokerAction.Consume,
             MessageBrokerVendorConstants.RabbitMQ,
             destName,
+            messagingSystemName: RabbitMqHelper.MessagingSystemName,
             serverAddress: hostname,
             serverPort: port,
-            routingKey: routingKey);
+            routingKey: routingKey,
+            clusterName: identity?.ClusterName,
+            virtualHostName: identity?.VirtualHost);
 
         return Delegates.GetDelegateFor(
             onFailure: transaction.NoticeError,
@@ -97,8 +101,10 @@ public class HandleBasicDeliverWrapper : IWrapper
         }
     }
 
-    private void GetServerDetails(InstrumentedMethodCall instrumentedMethodCall, out string hostname, out int? port, IAgent agent)
+    private void GetServerDetails(InstrumentedMethodCall instrumentedMethodCall, out string hostname, out int? port, out object connection, IAgent agent)
     {
+        connection = null;
+
         if (_hasGetServerFailed)
         {
             hostname = null;
@@ -110,7 +116,6 @@ public class HandleBasicDeliverWrapper : IWrapper
             _modelGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(instrumentedMethodCall.MethodCall.InvocationTarget.GetType(), "Model");
             var model = _modelGetter(instrumentedMethodCall.MethodCall.InvocationTarget);
 
-            object connection = null;
             var modelType = model.GetType();
             var connectionGetter = _connectionGetter.GetOrAdd(modelType, GetConnectionForType);
             if (connectionGetter != null)

@@ -371,6 +371,8 @@ public static class ActivityBridgeSegmentHelpers
 
         tags.TryGetAndRemoveTag<string>(["server.address", "net.peer.name", "net.peer.ip"], out var serverAddress);
         tags.TryGetAndRemoveTag<int>(["server.port", "net.peer.port"], out var serverPort);
+        tags.TryGetAndRemoveTag<string>(["rabbitmq.cluster.name", "messaging.rabbitmq.cluster.name"], out var clusterName);
+        tags.TryGetAndRemoveTag<string>(["rabbitmq.vhost.name", "messaging.rabbitmq.vhost.name"], out var virtualHostName);
 
         var action = MetricNames.AgentWrapperApiEnumToMetricNamesEnum(operation);
         var destType = MetricNames.AgentWrapperApiEnumToMetricNamesEnum(destinationType);
@@ -384,7 +386,9 @@ public static class ActivityBridgeSegmentHelpers
             messagingSystemName: messagingSystem,
             serverAddress: serverAddress,
             serverPort: serverPort,
-            routingKey: routingKey);
+            routingKey: routingKey,
+            clusterName: clusterName,
+            virtualHostName: virtualHostName);
 
         Log.Finest($"Created MessageBrokerSegmentData for {activityLogPrefix}.");
 

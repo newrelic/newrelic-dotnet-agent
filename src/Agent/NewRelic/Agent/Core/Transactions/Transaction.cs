@@ -321,7 +321,8 @@ public class Transaction : IInternalTransaction, ITransactionSegmentState, IHybr
     public ISegment StartMessageBrokerSegment(MethodCall methodCall, MessageBrokerDestinationType destinationType,
         MessageBrokerAction operation, string brokerVendorName, string destinationName,
         string messagingSystemName = null, string cloudAccountId = null, string cloudRegion = null,
-        string serverAddress = null, int? serverPort = null, string routingKey = null)
+        string serverAddress = null, int? serverPort = null, string routingKey = null,
+        string clusterName = null, string virtualHostName = null)
     {
         if (Ignored)
             return Segment.NoOpSegment;
@@ -330,7 +331,7 @@ public class Transaction : IInternalTransaction, ITransactionSegmentState, IHybr
 
         var segment = StartSegmentImpl(methodCall);
 
-        var messageBrokerSegmentData = CreateMessageBrokerSegmentData(destinationType, operation, brokerVendorName, destinationName, messagingSystemName, cloudAccountId, cloudRegion, serverAddress, serverPort, routingKey);
+        var messageBrokerSegmentData = CreateMessageBrokerSegmentData(destinationType, operation, brokerVendorName, destinationName, messagingSystemName, cloudAccountId, cloudRegion, serverAddress, serverPort, routingKey, clusterName, virtualHostName);
 
         segment.SetSegmentData(messageBrokerSegmentData);
 
@@ -362,7 +363,8 @@ public class Transaction : IInternalTransaction, ITransactionSegmentState, IHybr
     public AbstractSegmentData CreateMessageBrokerSegmentData(MessageBrokerDestinationType destinationType,
         MessageBrokerAction operation, string brokerVendorName, string destinationName,
         string messagingSystemName = null, string cloudAccountId = null, string cloudRegion = null,
-        string serverAddress = null, int? serverPort = null, string routingKey = null)
+        string serverAddress = null, int? serverPort = null, string routingKey = null,
+        string clusterName = null, string virtualHostName = null)
     {
         if (brokerVendorName == null)
             throw new ArgumentNullException("brokerVendorName");
@@ -370,7 +372,7 @@ public class Transaction : IInternalTransaction, ITransactionSegmentState, IHybr
         var action = MetricNames.AgentWrapperApiEnumToMetricNamesEnum(operation);
         var destType = MetricNames.AgentWrapperApiEnumToMetricNamesEnum(destinationType);
 
-        return new MessageBrokerSegmentData(brokerVendorName, destinationName, destType, action, messagingSystemName: messagingSystemName, cloudAccountId: cloudAccountId, cloudRegion: cloudRegion, serverAddress: serverAddress, serverPort: serverPort, routingKey: routingKey);
+        return new MessageBrokerSegmentData(brokerVendorName, destinationName, destType, action, messagingSystemName: messagingSystemName, cloudAccountId: cloudAccountId, cloudRegion: cloudRegion, serverAddress: serverAddress, serverPort: serverPort, routingKey: routingKey, clusterName: clusterName, virtualHostName: virtualHostName);
     }
 
     public AbstractSegmentData CreateMessageBrokerSerializationSegmentData(MessageBrokerDestinationType destinationType, MessageBrokerAction operation, string brokerVendorName, string destinationName, string kind)

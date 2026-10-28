@@ -2,8 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using NewRelic.Agent.Api;
+using NewRelic.Agent.Extensions.Helpers;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Extensions.SystemExtensions;
 using NewRelic.Reflection;
@@ -16,17 +19,25 @@ public class RabbitMqHelper
     private const string BasicPropertiesType = "RabbitMQ.Client.Framing.BasicProperties";
     public const string AssemblyName = "RabbitMQ.Client";
     public const string TypeName = "RabbitMQ.Client.Framing.Impl.Model";
+    public const string MessagingSystemName = "rabbitmq";
+
+    private static readonly ConditionalWeakTable<object, RabbitMqConnectionIdentity> _identityCache = new();
+    private static readonly ConditionalWeakTable<object, RabbitMqConnectionIdentity>.CreateValueCallback _readIdentityCallback = ReadConnectionIdentity;
+    private static readonly ConcurrentDictionary<Type, Func<object, IDictionary<string, object>>> _serverPropertiesGetters = new();
+    private static readonly ConcurrentDictionary<Type, Func<object, object>> _factoryGetters = new();
 
     private static Func<object, object> _sessionGetter;
     private static Func<object, object> _connectionGetter;
     private static Func<object, object> _endpointGetter;
     private static Func<object, string> _hostnameGetter;
     private static Func<object, int> _portGetter;
+    private static Func<object, string> _virtualHostGetter;
 
     private static Func<object, object> _getHeadersFunc;
 
     private static int? _version;
     private static bool _hasGetServerFailed = false;
+    private static bool _hasGetConnectionIdentityFailed;
 
     public static IDictionary<string, object> GetHeaders(object properties)
     {
@@ -69,6 +80,7 @@ public class RabbitMqHelper
         var routingKey = instrumentedMethodCall.MethodCall.MethodArguments.ExtractNotNullAs<string>(1);
         var destType = GetBrokerDestinationType(routingKey);
         var destName = ResolveDestinationName(destType, routingKey);
+        var identity = GetConnectionIdentity(instrumentedMethodCall, agent);
 
         var segment = transaction.StartMessageBrokerSegment(
             instrumentedMethodCall.MethodCall,
@@ -76,9 +88,12 @@ public class RabbitMqHelper
             MessageBrokerAction.Produce,
             MessageBrokerVendorConstants.RabbitMQ,
             destName,
+            messagingSystemName: MessagingSystemName,
             serverAddress: GetServerAddress(instrumentedMethodCall, agent),
             serverPort: GetServerPort(instrumentedMethodCall, agent),
-            routingKey: routingKey);
+            routingKey: routingKey,
+            clusterName: identity?.ClusterName,
+            virtualHostName: identity?.VirtualHost);
 
         //If the RabbitMQ version doesn't provide the BasicProperties parameter we just bail.
         if (basicProperties.GetType().FullName != BasicPropertiesType)
@@ -116,6 +131,7 @@ public class RabbitMqHelper
         var routingKey = instrumentedMethodCall.MethodCall.MethodArguments.ExtractNotNullAs<string>(1);
         var destType = GetBrokerDestinationType(routingKey);
         var destName = ResolveDestinationName(destType, routingKey);
+        var identity = GetConnectionIdentity(instrumentedMethodCall, agent);
 
         var segment = transaction.StartMessageBrokerSegment(
             instrumentedMethodCall.MethodCall,
@@ -123,14 +139,17 @@ public class RabbitMqHelper
             MessageBrokerAction.Produce,
             MessageBrokerVendorConstants.RabbitMQ,
             destName,
+            messagingSystemName: MessagingSystemName,
             serverAddress: GetServerAddress(instrumentedMethodCall, agent),
             serverPort: GetServerPort(instrumentedMethodCall, agent),
-            routingKey: routingKey);
+            routingKey: routingKey,
+            clusterName: identity?.ClusterName,
+            virtualHostName: identity?.VirtualHost);
 
         //If the RabbitMQ version doesn't provide the BasicProperties parameter we just bail.
         if (basicProperties.GetType().FullName != BasicPropertiesType)
         {
-                
+
             return segment;
         }
 
@@ -239,5 +258,78 @@ public class RabbitMqHelper
             _hasGetServerFailed = true;
             return null;
         }
+    }
+
+    public static RabbitMqConnectionIdentity GetConnectionIdentity(InstrumentedMethodCall instrumentedMethodCall, IAgent agent)
+    {
+        if (_hasGetConnectionIdentityFailed)
+        {
+            return null;
+        }
+
+        try
+        {
+            _sessionGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(instrumentedMethodCall.MethodCall.InvocationTarget.GetType(), "Session");
+            var session = _sessionGetter(instrumentedMethodCall.MethodCall.InvocationTarget);
+
+            _connectionGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(session.GetType(), "Connection");
+            var connection = _connectionGetter(session);
+
+            return GetConnectionIdentity(connection, agent);
+        }
+        catch (Exception exception)
+        {
+            DisableConnectionIdentity(exception, agent);
+            return null;
+        }
+    }
+
+    public static RabbitMqConnectionIdentity GetConnectionIdentity(object connection, IAgent agent)
+    {
+        if (connection == null || _hasGetConnectionIdentityFailed)
+        {
+            return null;
+        }
+
+        try
+        {
+            return _identityCache.GetValue(connection, _readIdentityCallback);
+        }
+        catch (Exception exception)
+        {
+            DisableConnectionIdentity(exception, agent);
+            return null;
+        }
+    }
+
+    // Known limitation: the vhost is the factory's VirtualHost at the first span on the connection,
+    // not the value the connection opened with, so a factory reused with a changed VirtualHost
+    // can report the later value.
+    private static RabbitMqConnectionIdentity ReadConnectionIdentity(object connection)
+    {
+        var connectionType = connection.GetType();
+
+        var serverPropertiesGetter = _serverPropertiesGetters.GetOrAdd(connectionType, type =>
+            VisibilityBypasser.Instance.GeneratePropertyAccessor<IDictionary<string, object>>(type, "ServerProperties"));
+        var clusterName = RabbitMqServerProperties.GetClusterName(serverPropertiesGetter(connection));
+
+        var factoryGetter = _factoryGetters.GetOrAdd(connectionType, type =>
+            VisibilityBypasser.Instance.GenerateFieldReadAccessor<object>(type, GetRabbitMQVersion(type) <= 5 ? "m_factory" : "_factory"));
+        var factory = factoryGetter(connection);
+
+        string virtualHost = null;
+        if (factory != null)
+        {
+            _virtualHostGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(factory.GetType(), "VirtualHost");
+            virtualHost = _virtualHostGetter(factory);
+        }
+
+        return new RabbitMqConnectionIdentity(clusterName, string.IsNullOrEmpty(virtualHost) ? null : virtualHost);
+    }
+
+    private static void DisableConnectionIdentity(Exception exception, IAgent agent)
+    {
+        agent.Logger.Warn(exception, "Unable to get the RabbitMQ cluster name and virtual host due to differences in the expected types. Cluster name and vhost attributes will not be available.");
+        _hasGetConnectionIdentityFailed = true;
     }
 }

@@ -1647,6 +1647,198 @@
         }
     },
     {
+        "testDescription": "Producer Messaging - RabbitMQ Topic with cluster name and vhost",
+        "operations": [
+            {
+                "command": "DoWorkInTransaction",
+                "parameters": {
+                    "transactionName": "OriginalTxnRabbitMqProduce"
+                },
+                "childOperations": [
+                    {
+                        "command": "DoWorkInSpan",
+                        "parameters": {
+                            "spanName": "RabbitMQ Produce",
+                            "spanKind": "Producer"
+                        },
+                        "childOperations": [
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "messaging.system",
+                                    "value": "rabbitmq"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "messaging.rabbitmq.destination.routing_key",
+                                    "value": "order.created"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "server.address",
+                                    "value": "rabbitmq.local"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "server.port",
+                                    "value": 5672,
+                                    "type": "int"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "rabbitmq.cluster.name",
+                                    "value": "mycluster"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "rabbitmq.vhost.name",
+                                    "value": "/"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "agentOutput": {
+            "transactions": [
+                {
+                    "name": "OriginalTxnRabbitMqProduce"
+                }
+            ],
+            "spans": [
+                {
+                    "name": "MessageBroker/RabbitMQ/Topic/Produce/Named/order.created",
+                    "parentName": "OriginalTxnRabbitMqProduce",
+                    "category": "generic",
+                    "attributes": {
+                        "span.kind": "producer",
+                        "server.address": "rabbitmq.local",
+                        "server.port": 5672,
+                        "messaging.destination.name": "order.created",
+                        "messaging.system": "rabbitmq",
+                        "rabbitmq.cluster.name": "mycluster",
+                        "rabbitmq.vhost.name": "/"
+                    }
+                }
+            ]
+        }
+    },
+    {
+        "testDescription": "Consumer Messaging - RabbitMQ Topic with deprecated cluster name and vhost tags",
+        "operations": [
+            {
+                "command": "DoWorkInTransaction",
+                "parameters": {
+                    "transactionName": "OriginalTxn"
+                },
+                "childOperations": [
+                    {
+                        "command": "DoWorkInSpan",
+                        "parameters": {
+                            "spanName": "RabbitMQ Consume",
+                            "spanKind": "Consumer"
+                        },
+                        "childOperations": [
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "messaging.system",
+                                    "value": "rabbitmq"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "messaging.rabbitmq.destination.routing_key",
+                                    "value": "order.created"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "messaging.operation.name",
+                                    "value": "deliver"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "messaging.destination.temporary",
+                                    "value": false,
+                                    "type": "bool"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "server.address",
+                                    "value": "rabbitmq.local"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "server.port",
+                                    "value": 5672,
+                                    "type": "int"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "messaging.rabbitmq.cluster.name",
+                                    "value": "mycluster"
+                                }
+                            },
+                            {
+                                "command": "AddOTelAttribute",
+                                "parameters": {
+                                    "name": "messaging.rabbitmq.vhost.name",
+                                    "value": "/"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "agentOutput": {
+            "transactions": [
+                {
+                    "name": "OtherTransaction/Message/RabbitMQ/Topic/Named/order.created"
+                }
+            ],
+            "spans": [
+                {
+                    "name": "MessageBroker/RabbitMQ/Topic/Consume/Named/order.created",
+                    "parentName": "OtherTransaction/Message/RabbitMQ/Topic/Named/order.created",
+                    "category": "generic",
+                    "attributes": {
+                        "span.kind": "consumer",
+                        "server.address": "rabbitmq.local",
+                        "server.port": 5672,
+                        "messaging.destination.name": "order.created",
+                        "messaging.destination_publish.name": "order.created",
+                        "messaging.system": "rabbitmq",
+                        "rabbitmq.cluster.name": "mycluster",
+                        "rabbitmq.vhost.name": "/"
+                    }
+                }
+            ]
+        }
+    },
+    {
         "testDescription": "Server HTTP activity with http.route, query params, headers (success path)",
         "operations": [
             {

@@ -6,16 +6,28 @@ using System.Collections.Generic;
 using System.Data;
 using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Core.AgentHealth;
+using NewRelic.Agent.Core.Aggregators;
+using NewRelic.Agent.Core.Api;
 using NewRelic.Agent.Core.Attributes;
+using NewRelic.Agent.Core.BrowserMonitoring;
 using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.ContinuousProfiling;
 using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.DistributedTracing.Samplers;
 using NewRelic.Agent.Core.Errors;
+using NewRelic.Agent.Core.Metrics;
+using NewRelic.Agent.Core.OpenTelemetryBridge.Tracing;
 using NewRelic.Agent.Core.Segments;
+using NewRelic.Agent.Core.SharedInterfaces;
 using NewRelic.Agent.Core.Time;
+using NewRelic.Agent.Core.Transformers;
+using NewRelic.Agent.Core.Transformers.TransactionTransformer;
+using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
+using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
+using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Synthetics;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NUnit.Framework;
@@ -70,6 +82,42 @@ public class TransactionTests
         // Assert
         Assert.That(result, Is.Not.Null);
         Assert.That(result, Is.TypeOf<Segment>());
+    }
+
+    [Test]
+    public void StartMessageBrokerSegment_PassesClusterNameAndVirtualHostNameToSegmentData()
+    {
+        // Arrange
+        CreateAgentToSetInstance();
+        var method = new Method(typeof(object), "TestMethod", "ParameterTypeNames");
+        var methodCall = new MethodCall(method, new object(), Array.Empty<object>(), false);
+
+        // Act
+        var result = _transaction.StartMessageBrokerSegment(methodCall, MessageBrokerDestinationType.Queue, MessageBrokerAction.Produce,
+            "RabbitMQ", "queue", clusterName: "c", virtualHostName: "v");
+
+        // Assert
+        var segment = (Segment)result;
+        Assert.That(segment.Data, Is.TypeOf<MessageBrokerSegmentData>());
+        var data = (MessageBrokerSegmentData)segment.Data;
+        Assert.Multiple(() =>
+        {
+            Assert.That(data.ClusterName, Is.EqualTo("c"));
+            Assert.That(data.VirtualHostName, Is.EqualTo("v"));
+        });
+    }
+
+    // StartSegmentImpl reads the static Agent.Instance, which the Agent constructor sets.
+    private static void CreateAgentToSetInstance()
+    {
+        _ = new Agent(Mock.Create<ITransactionService>(), Mock.Create<ITransactionTransformer>(), Mock.Create<IThreadPoolStatic>(),
+            Mock.Create<ITransactionMetricNameMaker>(), Mock.Create<IPathHashMaker>(), Mock.Create<ICatHeaderHandler>(),
+            Mock.Create<IDistributedTracePayloadHandler>(), Mock.Create<ISyntheticsHeaderHandler>(), Mock.Create<ITransactionFinalizer>(),
+            Mock.Create<IBrowserMonitoringPrereqChecker>(), Mock.Create<IBrowserMonitoringScriptMaker>(), Mock.Create<IConfigurationService>(),
+            Mock.Create<IAgentHealthReporter>(), Mock.Create<IAgentTimerService>(), Mock.Create<IMetricNameService>(),
+            Mock.Create<ITraceMetadataFactory>(), Mock.Create<ICATSupportabilityMetricCounters>(), Mock.Create<ILogEventAggregator>(),
+            Mock.Create<ILogContextDataFilter>(), Mock.Create<ISimpleSchedulingService>(), Mock.Create<ICustomEventTransformer>(),
+            new NewRelicActivitySourceProxy(), Mock.Create<IDatabaseService>());
     }
 
     [Test]

@@ -35,11 +35,16 @@ public class MessageBrokerSegmentData : AbstractSegmentData
 
     public string RoutingKey { get; set; }
 
+    public string ClusterName { get; set; }
+
+    public string VirtualHostName { get; set; }
+
 
     public MessageBrokerSegmentData(string vendor, string destination,
         MetricNames.MessageBrokerDestinationType destinationType, MetricNames.MessageBrokerAction action,
         string messagingSystemName = null, string cloudAccountId = null, string cloudRegion = null,
-        string serverAddress = null, int? serverPort = null, string routingKey = null)
+        string serverAddress = null, int? serverPort = null, string routingKey = null,
+        string clusterName = null, string virtualHostName = null)
     {
         Vendor = vendor;
         Destination = destination;
@@ -53,6 +58,8 @@ public class MessageBrokerSegmentData : AbstractSegmentData
         ServerAddress = serverAddress;
         ServerPort = serverPort;
         RoutingKey = routingKey;
+        ClusterName = clusterName;
+        VirtualHostName = virtualHostName;
     }
 
 
@@ -135,5 +142,7 @@ public class MessageBrokerSegmentData : AbstractSegmentData
         AttribDefs.MessagingDestinationName.TrySetValue(attribVals, Destination);
         AttribDefs.MessageRoutingKey.TrySetValue(attribVals, RoutingKey);
         AttribDefs.MessagingRabbitMqDestinationRoutingKey.TrySetValue(attribVals, RoutingKey);
+        AttribDefs.RabbitMqClusterName.TrySetValue(attribVals, ClusterName);
+        AttribDefs.RabbitMqVhostName.TrySetValue(attribVals, VirtualHostName);
     }
 }

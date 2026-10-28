@@ -89,6 +89,116 @@ public class ActivityBridgeSegmentHelpersPortTests
     }
 
     [Test]
+    public void Messaging_Should_Map_RabbitMq_Cluster_And_Vhost()
+    {
+        ProcessActivity("publish", ActivityKind.Producer,
+            ("messaging.system", "rabbitmq"), ("messaging.destination.name", "queue"),
+            ("rabbitmq.cluster.name", "mycluster"), ("rabbitmq.vhost.name", "/"));
+
+        var messageBrokerSegmentData = (MessageBrokerSegmentData)_segmentData;
+        Assert.That(messageBrokerSegmentData.ClusterName, Is.EqualTo("mycluster"));
+        Assert.That(messageBrokerSegmentData.VirtualHostName, Is.EqualTo("/"));
+    }
+
+    [Test]
+    public void Messaging_Should_Map_Only_Cluster_When_Vhost_Missing()
+    {
+        ProcessActivity("publish", ActivityKind.Producer,
+            ("messaging.system", "rabbitmq"), ("messaging.destination.name", "queue"),
+            ("rabbitmq.cluster.name", "mycluster"));
+
+        var messageBrokerSegmentData = (MessageBrokerSegmentData)_segmentData;
+        Assert.That(messageBrokerSegmentData.ClusterName, Is.EqualTo("mycluster"));
+        Assert.That(messageBrokerSegmentData.VirtualHostName, Is.Null);
+    }
+
+    [Test]
+    public void Messaging_Should_Map_Only_Vhost_When_Cluster_Missing()
+    {
+        ProcessActivity("publish", ActivityKind.Producer,
+            ("messaging.system", "rabbitmq"), ("messaging.destination.name", "queue"),
+            ("rabbitmq.vhost.name", "/"));
+
+        var messageBrokerSegmentData = (MessageBrokerSegmentData)_segmentData;
+        Assert.That(messageBrokerSegmentData.ClusterName, Is.Null);
+        Assert.That(messageBrokerSegmentData.VirtualHostName, Is.EqualTo("/"));
+    }
+
+    [Test]
+    public void Messaging_Should_Map_Deprecated_RabbitMq_Cluster_And_Vhost()
+    {
+        ProcessActivity("publish", ActivityKind.Producer,
+            ("messaging.system", "rabbitmq"), ("messaging.destination.name", "queue"),
+            ("messaging.rabbitmq.cluster.name", "mycluster"), ("messaging.rabbitmq.vhost.name", "/"));
+
+        var messageBrokerSegmentData = (MessageBrokerSegmentData)_segmentData;
+        Assert.That(messageBrokerSegmentData.ClusterName, Is.EqualTo("mycluster"));
+        Assert.That(messageBrokerSegmentData.VirtualHostName, Is.EqualTo("/"));
+    }
+
+    [Test]
+    public void Messaging_Should_Map_Only_Deprecated_Cluster_When_Vhost_Missing()
+    {
+        ProcessActivity("publish", ActivityKind.Producer,
+            ("messaging.system", "rabbitmq"), ("messaging.destination.name", "queue"),
+            ("messaging.rabbitmq.cluster.name", "mycluster"));
+
+        var messageBrokerSegmentData = (MessageBrokerSegmentData)_segmentData;
+        Assert.That(messageBrokerSegmentData.ClusterName, Is.EqualTo("mycluster"));
+        Assert.That(messageBrokerSegmentData.VirtualHostName, Is.Null);
+    }
+
+    [Test]
+    public void Messaging_Should_Map_Only_Deprecated_Vhost_When_Cluster_Missing()
+    {
+        ProcessActivity("publish", ActivityKind.Producer,
+            ("messaging.system", "rabbitmq"), ("messaging.destination.name", "queue"),
+            ("messaging.rabbitmq.vhost.name", "/"));
+
+        var messageBrokerSegmentData = (MessageBrokerSegmentData)_segmentData;
+        Assert.That(messageBrokerSegmentData.ClusterName, Is.Null);
+        Assert.That(messageBrokerSegmentData.VirtualHostName, Is.EqualTo("/"));
+    }
+
+    [Test]
+    public void Messaging_Should_Prefer_New_RabbitMq_Names_Over_Deprecated_Names()
+    {
+        ProcessActivity("publish", ActivityKind.Producer,
+            ("messaging.system", "rabbitmq"), ("messaging.destination.name", "queue"),
+            ("messaging.rabbitmq.cluster.name", "oldcluster"), ("messaging.rabbitmq.vhost.name", "/old"),
+            ("rabbitmq.cluster.name", "newcluster"), ("rabbitmq.vhost.name", "/new"));
+
+        var messageBrokerSegmentData = (MessageBrokerSegmentData)_segmentData;
+        Assert.That(messageBrokerSegmentData.ClusterName, Is.EqualTo("newcluster"));
+        Assert.That(messageBrokerSegmentData.VirtualHostName, Is.EqualTo("/new"));
+    }
+
+    [Test]
+    public void Messaging_Should_Leave_RabbitMq_Properties_Null_When_Tags_Missing()
+    {
+        ProcessActivity("publish", ActivityKind.Producer,
+            ("messaging.system", "rabbitmq"), ("messaging.destination.name", "queue"));
+
+        var messageBrokerSegmentData = (MessageBrokerSegmentData)_segmentData;
+        Assert.That(messageBrokerSegmentData.ClusterName, Is.Null);
+        Assert.That(messageBrokerSegmentData.VirtualHostName, Is.Null);
+    }
+
+    [Test]
+    public void Messaging_Should_Not_Add_RabbitMq_Cluster_And_Vhost_As_Custom_Attributes()
+    {
+        ProcessActivity("publish", ActivityKind.Producer,
+            ("messaging.system", "rabbitmq"), ("messaging.destination.name", "queue"),
+            ("rabbitmq.cluster.name", "mycluster"), ("rabbitmq.vhost.name", "/"),
+            ("messaging.rabbitmq.cluster.name", "oldcluster"), ("messaging.rabbitmq.vhost.name", "/old"));
+
+        Mock.Assert(() => _segment.AddCustomAttribute("rabbitmq.cluster.name", Arg.AnyObject), Occurs.Never());
+        Mock.Assert(() => _segment.AddCustomAttribute("rabbitmq.vhost.name", Arg.AnyObject), Occurs.Never());
+        Mock.Assert(() => _segment.AddCustomAttribute("messaging.rabbitmq.cluster.name", Arg.AnyObject), Occurs.Never());
+        Mock.Assert(() => _segment.AddCustomAttribute("messaging.rabbitmq.vhost.name", Arg.AnyObject), Occurs.Never());
+    }
+
+    [Test]
     public void RpcClient_Should_Read_Long_Server_Port()
     {
         ProcessActivity("call", ActivityKind.Client,

@@ -125,7 +125,8 @@ public abstract class RabbitMqTestsBase<TFixture> : NewRelicIntegrationTest<TFix
             "server.port",
             "messaging.destination.name",
             "message.routingKey",
-            "messaging.rabbitmq.destination.routing_key"
+            "messaging.rabbitmq.destination.routing_key",
+            "messaging.system"
         };
 
         var expectedTempProduceAgentAttributes = new List<string>
@@ -133,7 +134,8 @@ public abstract class RabbitMqTestsBase<TFixture> : NewRelicIntegrationTest<TFix
             "server.address",
             "server.port",
             "message.routingKey",
-            "messaging.rabbitmq.destination.routing_key"
+            "messaging.rabbitmq.destination.routing_key",
+            "messaging.system"
         };
 
         var expectedConsumeAgentAttributes = new List<string>
@@ -144,6 +146,7 @@ public abstract class RabbitMqTestsBase<TFixture> : NewRelicIntegrationTest<TFix
             "messaging.destination.name",
             "message.queueName",
             "messaging.destination_publish.name",
+            "messaging.system"
         };
 
         // not available via otel bridge

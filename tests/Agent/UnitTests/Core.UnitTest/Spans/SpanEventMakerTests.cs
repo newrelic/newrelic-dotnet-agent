@@ -64,6 +64,8 @@ public class SpanEventMakerTests
     private const string MessageBrokerCloudAccountId = "1234";
     private const string MessageBrokerCloudRegion = "us-west-2";
     private const string MessageBrokerRoutingKey = "myroutingkey";
+    private const string MessageBrokerRabbitMqClusterName = "mycluster";
+    private const string MessageBrokerRabbitMqVhostName = "/";
 
 
     private SpanEventMaker _spanEventMaker;
@@ -200,7 +202,9 @@ public class SpanEventMakerTests
                 cloudRegion: MessageBrokerCloudRegion,
                 serverAddress: ServerAddress,
                 serverPort: ServerPort,
-                routingKey: MessageBrokerRoutingKey));
+                routingKey: MessageBrokerRoutingKey,
+                clusterName: MessageBrokerRabbitMqClusterName,
+                virtualHostName: MessageBrokerRabbitMqVhostName));
 
         _baseMessageBrokerProduceSegment = new Segment(CreateTransactionSegmentState(3, null, 777), new MethodCallData(MethodCallType, MethodCallMethod, 1));
         _baseMessageBrokerProduceSegment.SetSegmentData(
@@ -214,7 +218,9 @@ public class SpanEventMakerTests
                 cloudRegion: MessageBrokerCloudRegion,
                 serverAddress: ServerAddress,
                 serverPort: ServerPort,
-                routingKey: MessageBrokerRoutingKey));
+                routingKey: MessageBrokerRoutingKey,
+                clusterName: MessageBrokerRabbitMqClusterName,
+                virtualHostName: MessageBrokerRabbitMqVhostName));
     }
 
     [TearDown]
@@ -513,6 +519,8 @@ public class SpanEventMakerTests
             () => Assert.That((string)consumeSpanEventAgentAttributes["messaging.destination.name"], Is.EqualTo(MessageBrokerQueue)),
             () => Assert.That((string)consumeSpanEventAgentAttributes["message.queueName"], Is.EqualTo(MessageBrokerQueue)),
             () => Assert.That((string)consumeSpanEventAgentAttributes["messaging.destination_publish.name"], Is.EqualTo(MessageBrokerQueue)),
+            () => Assert.That((string)consumeSpanEventAgentAttributes["rabbitmq.cluster.name"], Is.EqualTo(MessageBrokerRabbitMqClusterName)),
+            () => Assert.That((string)consumeSpanEventAgentAttributes["rabbitmq.vhost.name"], Is.EqualTo(MessageBrokerRabbitMqVhostName)),
 
             // Produce
             () => Assert.That((string)produceSpanEventIntrinsicAttributes["span.kind"], Is.EqualTo("producer")),
@@ -520,7 +528,9 @@ public class SpanEventMakerTests
             () => Assert.That(produceSpanEventAgentAttributes["server.port"], Is.EqualTo(ServerPort)),
             () => Assert.That((string)produceSpanEventAgentAttributes["messaging.destination.name"], Is.EqualTo(MessageBrokerQueue)),
             () => Assert.That((string)produceSpanEventAgentAttributes["message.routingKey"], Is.EqualTo(MessageBrokerRoutingKey)),
-            () => Assert.That((string)produceSpanEventAgentAttributes["messaging.rabbitmq.destination.routing_key"], Is.EqualTo(MessageBrokerRoutingKey))
+            () => Assert.That((string)produceSpanEventAgentAttributes["messaging.rabbitmq.destination.routing_key"], Is.EqualTo(MessageBrokerRoutingKey)),
+            () => Assert.That((string)produceSpanEventAgentAttributes["rabbitmq.cluster.name"], Is.EqualTo(MessageBrokerRabbitMqClusterName)),
+            () => Assert.That((string)produceSpanEventAgentAttributes["rabbitmq.vhost.name"], Is.EqualTo(MessageBrokerRabbitMqVhostName))
         );
     }
 
@@ -592,7 +602,9 @@ public class SpanEventMakerTests
             () => Assert.That(!produceSpanEventAgentAttributes.ContainsKey("server.address"), Is.True),
             () => Assert.That(!produceSpanEventAgentAttributes.ContainsKey("server.port"), Is.True),
             () => Assert.That(!produceSpanEventAgentAttributes.ContainsKey("message.routingKey"), Is.True),
-            () => Assert.That(!produceSpanEventAgentAttributes.ContainsKey("messaging.rabbitmq.destination.routing_key"), Is.True)
+            () => Assert.That(!produceSpanEventAgentAttributes.ContainsKey("messaging.rabbitmq.destination.routing_key"), Is.True),
+            () => Assert.That(!produceSpanEventAgentAttributes.ContainsKey("rabbitmq.cluster.name"), Is.True),
+            () => Assert.That(!produceSpanEventAgentAttributes.ContainsKey("rabbitmq.vhost.name"), Is.True)
         );
     }
 

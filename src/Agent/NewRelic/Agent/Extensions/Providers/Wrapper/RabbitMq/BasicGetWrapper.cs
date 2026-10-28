@@ -23,15 +23,20 @@ public class BasicGetWrapper : IWrapper
         var destType = RabbitMqHelper.GetBrokerDestinationType(queue);
         var destName = RabbitMqHelper.ResolveDestinationName(destType, queue);
 
+        var identity = RabbitMqHelper.GetConnectionIdentity(instrumentedMethodCall, agent);
+
         var segment = transaction.StartMessageBrokerSegment(
             instrumentedMethodCall.MethodCall,
             destType,
             MessageBrokerAction.Consume,
             MessageBrokerVendorConstants.RabbitMQ,
             destName,
+            messagingSystemName: RabbitMqHelper.MessagingSystemName,
             serverAddress: RabbitMqHelper.GetServerAddress(instrumentedMethodCall, agent),
             serverPort: RabbitMqHelper.GetServerPort(instrumentedMethodCall, agent),
-            routingKey: queue); // no way to get routing key from BasicGet
+            routingKey: queue, // no way to get routing key from BasicGet
+            clusterName: identity?.ClusterName,
+            virtualHostName: identity?.VirtualHost);
 
         return Delegates.GetDelegateFor(
             onFailure: transaction.NoticeError,

@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Xunit;
@@ -61,6 +62,20 @@ public abstract class RabbitMqLegacyDistributedTracingTestsBase<TFixture> : NewR
         var metrics = _fixture.AgentLog.GetMetrics();
 
         Assertions.MetricsExist(expectedMetrics, metrics);
+
+        // BasicGet and both deliver callbacks produce consume spans with the same name
+        var consumeSpanName = $"MessageBroker/RabbitMQ/Queue/Consume/Named/{_sendReceiveQueue}";
+        var consumeSpans = _fixture.AgentLog.GetSpanEvents()
+            .Where(@event => @event?.IntrinsicAttributes?["type"]?.ToString() == "Span" && @event?.IntrinsicAttributes?["name"]?.ToString() == consumeSpanName)
+            .ToList();
+
+        Assert.True(consumeSpans.Count >= 3, $"Expected at least 3 consume spans but found {consumeSpans.Count}");
+        foreach (var span in consumeSpans)
+        {
+            Assert.Equal("rabbitmq", span.AgentAttributes["messaging.system"]?.ToString());
+            Assert.Equal("/", span.AgentAttributes["rabbitmq.vhost.name"]?.ToString());
+            Assert.False(string.IsNullOrEmpty(span.AgentAttributes["rabbitmq.cluster.name"]?.ToString()));
+        }
     }
 }
 
