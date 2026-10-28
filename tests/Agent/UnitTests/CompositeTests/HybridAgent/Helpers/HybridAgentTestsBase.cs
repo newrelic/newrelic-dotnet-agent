@@ -41,11 +41,8 @@ public abstract class HybridAgentTestsBase
             _compositeTestAgent.LocalConfiguration.cloud.aws.accountId = "123456";
         }
 
-        // enable AI monitoring (used in LLM tests)
-        if (_enableAiMonitoring)
-        {
-            _compositeTestAgent.LocalConfiguration.aiMonitoring.enabled = true;
-        }
+        // AI monitoring is on by default (basic telemetry), so set it explicitly: on for LLM tests, off for the rest
+        _compositeTestAgent.LocalConfiguration.aiMonitoring.enabled = _enableAiMonitoring;
 
         // enable the OTel bridge and include our test activity source
         _compositeTestAgent.LocalConfiguration.openTelemetry.enabled = true;

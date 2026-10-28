@@ -122,7 +122,7 @@ public class OpenAiChatWrapper : IWrapper
     {
         // required per spec
         var version = GetOrAddLibraryVersion(instrumentedMethodCall.MethodCall.Method.Type.Assembly.ManifestModule.Assembly.FullName);
-        agent.RecordSupportabilityMetric($"DotNet/ML/{GetVendorName()}/{version}");
+        agent.RecordSupportabilityMetric(SupportabilityHelpers.GetLlmLibraryVersionMetricName(GetVendorName(), version, agent.Configuration.AiMonitoringRecordContentEnabled));
 
         SupportabilityHelpers.CreateModelIdSupportabilityMetricsForOpenAi(model, agent); // prepend vendor name to model id
 

@@ -558,6 +558,16 @@ public class NewRelicConfigModifier
         return this;
     }
 
+    public NewRelicConfigModifier EnableAiMonitoringBasicTelemetry(bool enabled = true)
+    {
+        CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(
+            _configFilePath,
+            new[] { "configuration", "aiMonitoring", "basicTelemetry" },
+            "enabled",
+            enabled.ToString().ToLower());
+        return this;
+    }
+
     public void SetCompleteTransactionsOnThread(bool enable)
     {
         CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "service" },

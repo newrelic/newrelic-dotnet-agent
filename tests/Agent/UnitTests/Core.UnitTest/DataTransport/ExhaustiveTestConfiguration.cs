@@ -514,6 +514,7 @@ public class ExhaustiveTestConfiguration : IConfiguration
     public bool AiMonitoringEnabled => true;
     public bool AiMonitoringStreamingEnabled => true;
     public bool AiMonitoringRecordContentEnabled => true;
+    public bool AiMonitoringBasicTelemetryEnabled => true;
 
     public Func<string, string, int> LlmTokenCountingCallback => (s1, s2) => 1234;
 

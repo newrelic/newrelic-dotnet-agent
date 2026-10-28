@@ -1941,23 +1941,63 @@ public class DefaultConfiguration : IConfiguration
 
     #region AI Monitoring
 
-    public bool AiMonitoringEnabled =>
-        // HSM disables AIM (defense-in-depth; connect-service also strips the keys server-side).
-        // Precedence: agent_config ai_monitoring.enabled (full override) > collect_ai (disable-only) > local/env.
-        !HighSecurityModeEnabled &&
-        ServerOverrides(_serverConfiguration.RpmConfig.AiMonitoringEnabled,
-            ServerCanDisable(_serverConfiguration.AICollectionEnabled,
-                EnvironmentOverrides(_localConfiguration.aiMonitoring.enabled, "NEW_RELIC_AI_MONITORING_ENABLED")));
+    // AIM is active when ai_monitoring.enabled is true, or when it is unset and basic_telemetry.enabled is true.
+    // HSM and collect_ai=false always disable it; an effective enabled=false also disables it.
+    // Each of enabled, basic_telemetry and record_content resolves as agent_config > env var > newrelic.config.
+    public bool AiMonitoringEnabled => AiMonitoringState.Active;
 
     public bool AiMonitoringStreamingEnabled =>
         AiMonitoringEnabled &&
         ServerOverrides(_serverConfiguration.RpmConfig.AiMonitoringStreamingEnabled,
             EnvironmentOverrides(_localConfiguration.aiMonitoring.streaming.enabled, "NEW_RELIC_AI_MONITORING_STREAMING_ENABLED"));
 
-    public bool AiMonitoringRecordContentEnabled =>
-        AiMonitoringEnabled &&
-        ServerOverrides(_serverConfiguration.RpmConfig.AiMonitoringRecordContentEnabled,
-            EnvironmentOverrides(_localConfiguration.aiMonitoring.recordContent.enabled, "NEW_RELIC_AI_MONITORING_RECORD_CONTENT_ENABLED"));
+    public bool AiMonitoringRecordContentEnabled => AiMonitoringState.RecordContent;
+
+    public bool AiMonitoringBasicTelemetryEnabled =>
+        ServerOverrides(_serverConfiguration.RpmConfig.AiMonitoringBasicTelemetryEnabled,
+            EnvironmentOverrides(_localConfiguration.aiMonitoring.basicTelemetry.enabled, "NEW_RELIC_AI_MONITORING_BASIC_TELEMETRY_ENABLED"));
+
+    private sealed class AiMonitoringResolvedState
+    {
+        public readonly bool Active;
+        public readonly bool RecordContent;
+
+        public AiMonitoringResolvedState(bool active, bool recordContent)
+        {
+            Active = active;
+            RecordContent = recordContent;
+        }
+    }
+
+    private AiMonitoringResolvedState _aiMonitoringState;
+    private AiMonitoringResolvedState AiMonitoringState => _aiMonitoringState ??= ResolveAiMonitoringState();
+
+    private AiMonitoringResolvedState ResolveAiMonitoringState()
+    {
+        // HSM disables AIM (defense-in-depth; connect-service also strips the keys server-side).
+        if (HighSecurityModeEnabled || _serverConfiguration.AICollectionEnabled == false)
+        {
+            return new AiMonitoringResolvedState(false, false);
+        }
+
+        var localEnabled = EnvironmentOverrides(
+            _localConfiguration.aiMonitoring.enabledSpecified ? _localConfiguration.aiMonitoring.enabled : (bool?)null,
+            "NEW_RELIC_AI_MONITORING_ENABLED");
+        var enabled = _serverConfiguration.RpmConfig.AiMonitoringEnabled ?? localEnabled;
+
+        if (enabled == false || (enabled == null && !AiMonitoringBasicTelemetryEnabled))
+        {
+            return new AiMonitoringResolvedState(false, false);
+        }
+
+        // Content is forced on only when enabled=true was set locally and record_content is still unset.
+        var localRecordContent = EnvironmentOverrides(
+            _localConfiguration.aiMonitoring.recordContent.enabledSpecified ? _localConfiguration.aiMonitoring.recordContent.enabled : (bool?)null,
+            "NEW_RELIC_AI_MONITORING_RECORD_CONTENT_ENABLED");
+        var recordContent = _serverConfiguration.RpmConfig.AiMonitoringRecordContentEnabled ?? localRecordContent ?? (localEnabled == true);
+
+        return new AiMonitoringResolvedState(true, recordContent);
+    }
 
     public Func<string, string, int> LlmTokenCountingCallback => _runTimeConfiguration.LlmTokenCountingCallback;
 
@@ -2398,18 +2438,30 @@ public class DefaultConfiguration : IConfiguration
     {
         var env = environment.GetEnvironmentVariableFromList(environmentVariableNames ?? []);
 
-        env = env?.ToLower();
+        return ParseBool(env) ?? local;
+    }
 
-        if (bool.TryParse(env, out var parsedValue))
+    private bool? EnvironmentOverrides(bool? local, params string[] environmentVariableNames)
+    {
+        var env = _environment.GetEnvironmentVariableFromList(environmentVariableNames ?? []);
+
+        return ParseBool(env) ?? local;
+    }
+
+    private static bool? ParseBool(string value)
+    {
+        value = value?.ToLower();
+
+        if (bool.TryParse(value, out var parsedValue))
         {
             return parsedValue;
         }
 
-        return env switch
+        return value switch
         {
             "0" => false,
             "1" => true,
-            _ => local
+            _ => null
         };
     }
 
@@ -2743,15 +2795,22 @@ public class DefaultConfiguration : IConfiguration
         {
             LogDisabledPropertyUse("errorCollector.ignoreErrors", "errorCollector.ignoreClasses");
         }
+
+        // aiMonitoring.enabled
+        if (_localConfiguration.aiMonitoring.enabledSpecified)
+        {
+            LogDeprecatedPropertyUse("aiMonitoring.enabled", "aiMonitoring.basicTelemetry.enabled (also set aiMonitoring.recordContent.enabled=\"true\" to keep recording content)");
+        }
+        else if (!string.IsNullOrWhiteSpace(_environment.GetEnvironmentVariableFromList("NEW_RELIC_AI_MONITORING_ENABLED")))
+        {
+            LogDeprecatedPropertyUse("NEW_RELIC_AI_MONITORING_ENABLED", "NEW_RELIC_AI_MONITORING_BASIC_TELEMETRY_ENABLED (also set NEW_RELIC_AI_MONITORING_RECORD_CONTENT_ENABLED=true to keep recording content)");
+        }
     }
 
-    // This method is now unused as all previously deprecated config properties have been fully disabled.
-    // However, we may wish to deprecate more config properties in the future, so it seems prudent to
-    // leave this code in here, commented out.
-    //private void LogDeprecatedPropertyUse(string deprecatedPropertyName, string newPropertyName)
-    //{
-    //    Log.WarnFormat("Deprecated configuration property '{0}'.  Use '{1}'.  See https://docs.newrelic.com/docs/agents/net-agent/configuration/net-agent-configuration/ for details.", deprecatedPropertyName, newPropertyName);
-    //}
+    private void LogDeprecatedPropertyUse(string deprecatedPropertyName, string newPropertyName)
+    {
+        Log.Warn("Deprecated configuration property '{0}'.  Use '{1}'.  See https://docs.newrelic.com/docs/agents/net-agent/configuration/net-agent-configuration/ for details.", deprecatedPropertyName, newPropertyName);
+    }
 
     private void LogDisabledPropertyUse(string disabledPropertyName, string newPropertyName = "")
     {

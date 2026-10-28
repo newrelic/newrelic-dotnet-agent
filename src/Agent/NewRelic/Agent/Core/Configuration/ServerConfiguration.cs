@@ -258,6 +258,9 @@ public class ServerConfiguration
         [JsonProperty("ai_monitoring.record_content.enabled")]
         public bool? AiMonitoringRecordContentEnabled { get; set; }
 
+        [JsonProperty("ai_monitoring.basic_telemetry.enabled")]
+        public bool? AiMonitoringBasicTelemetryEnabled { get; set; }
+
         [JsonProperty("profiling.enabled")]
         public bool? ContinuousProfilingEnabled { get; set; }
     }

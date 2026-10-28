@@ -242,6 +242,7 @@ public interface IConfiguration
     bool AiMonitoringEnabled { get; }
     bool AiMonitoringStreamingEnabled { get; }
     bool AiMonitoringRecordContentEnabled { get; }
+    bool AiMonitoringBasicTelemetryEnabled { get; }
     public Func<string, string, int> LlmTokenCountingCallback { get; }
     bool AzureFunctionModeDetected { get; }
     bool AzureFunctionModeEnabled { get; }
