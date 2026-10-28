@@ -4347,12 +4347,14 @@ public class DefaultConfigurationTests
     [Test]
     public void AiMonitoringEnabledByLocalConfig()
     {
+        _localConfig.aiMonitoring.basicTelemetry.enabled = false;
         _localConfig.aiMonitoring.enabled = true;
         Assert.That(_defaultConfig.AiMonitoringEnabled, Is.True);
     }
     [Test]
     public void AiMonitoringEnabledByEnvironmentVariable()
     {
+        _localConfig.aiMonitoring.basicTelemetry.enabled = false;
         Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_AI_MONITORING_ENABLED")).Returns("true");
         Assert.That(_defaultConfig.AiMonitoringEnabled, Is.True);
     }
@@ -4367,22 +4369,28 @@ public class DefaultConfigurationTests
     [Test]
     public void AiMonitoringStreamingDisabledByLocalConfig()
     {
-        _localConfig.aiMonitoring.enabled = true;
+        SetLocalAiMonitoring(basicTelemetry: true);
         _localConfig.aiMonitoring.streaming.enabled = false;
-        Assert.That(_defaultConfig.AiMonitoringStreamingEnabled, Is.False);
+        NrAssert.Multiple(
+            () => Assert.That(_defaultConfig.AiMonitoringEnabled, Is.True),
+            () => Assert.That(_defaultConfig.AiMonitoringStreamingEnabled, Is.False)
+        );
     }
     [Test]
     public void AiMonitoringStreamingEnabledByDefaultWhenAiMonitoringEnabled()
     {
-        _localConfig.aiMonitoring.enabled = true;
+        SetLocalAiMonitoring(basicTelemetry: true);
         Assert.That(_defaultConfig.AiMonitoringStreamingEnabled, Is.True);
     }
     [Test]
     public void AiMonitoringStreamingDisabledByEnvironmentVariableWhenAiMonitoringEnabled()
     {
-        _localConfig.aiMonitoring.enabled = true;
+        SetLocalAiMonitoring(basicTelemetry: true);
         Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_AI_MONITORING_STREAMING_ENABLED")).Returns("false");
-        Assert.That(_defaultConfig.AiMonitoringStreamingEnabled, Is.False);
+        NrAssert.Multiple(
+            () => Assert.That(_defaultConfig.AiMonitoringEnabled, Is.True),
+            () => Assert.That(_defaultConfig.AiMonitoringStreamingEnabled, Is.False)
+        );
     }
 
     [Test]
@@ -4409,6 +4417,7 @@ public class DefaultConfigurationTests
     public void AiMonitoringRecordContentDisabledWhenAiMonitoringDisabled()
     {
         _localConfig.aiMonitoring.enabled = false;
+        _localConfig.aiMonitoring.recordContent.enabled = true;
         Assert.That(_defaultConfig.AiMonitoringRecordContentEnabled, Is.False);
     }
 
@@ -4546,7 +4555,7 @@ public class DefaultConfigurationTests
     [Test]
     public void AiMonitoring_inactive_and_no_content_when_high_security_mode_is_enabled()
     {
-        SetLocalAiMonitoring(enabled: true, recordContent: true);
+        SetLocalAiMonitoring(basicTelemetry: true, recordContent: true);
         _localConfig.highSecurity.enabled = true;
         _defaultConfig = CreateConfiguration();
 
@@ -4558,6 +4567,7 @@ public class DefaultConfigurationTests
 
     [TestCase(null, null, null)]     // default basic telemetry
     [TestCase(true, null, null)]     // local enabled
+    [TestCase(null, true, null)]     // server basic telemetry on
     [TestCase(null, null, true)]     // server enabled
     public void AiMonitoring_collect_ai_false_beats_every_enabling_setting(bool? localEnabled, bool? serverBasicTelemetry, bool? serverEnabled)
     {
@@ -4615,7 +4625,7 @@ public class DefaultConfigurationTests
     [TestCase(true, false, ExpectedResult = false)] // server R false over local R true
     public bool AiMonitoringRecordContentEnabled_server_value_overrides_local_value(bool localRecordContent, bool serverRecordContent)
     {
-        SetLocalAiMonitoring(enabled: true, recordContent: localRecordContent);
+        SetLocalAiMonitoring(basicTelemetry: true, recordContent: localRecordContent);
         _serverConfig.RpmConfig.AiMonitoringRecordContentEnabled = serverRecordContent;
         _defaultConfig = CreateConfiguration();
 
@@ -4676,6 +4686,33 @@ public class DefaultConfigurationTests
         _defaultConfig = CreateConfiguration();
 
         Assert.That(_defaultConfig.AiMonitoringRecordContentEnabled, Is.False);
+    }
+
+    [Test]
+    public void AiMonitoring_local_enabled_true_with_ssc_off_values_is_active_without_content()
+    {
+        SetLocalAiMonitoring(enabled: true);
+        _serverConfig.RpmConfig.AiMonitoringBasicTelemetryEnabled = false;
+        _serverConfig.RpmConfig.AiMonitoringRecordContentEnabled = false;
+        _defaultConfig = CreateConfiguration();
+
+        NrAssert.Multiple(
+            () => Assert.That(_defaultConfig.AiMonitoringEnabled, Is.True),
+            () => Assert.That(_defaultConfig.AiMonitoringRecordContentEnabled, Is.False)
+        );
+    }
+
+    [Test]
+    public void AiMonitoring_server_enabled_true_over_local_enabled_false_is_active_without_content()
+    {
+        SetLocalAiMonitoring(enabled: false);
+        _serverConfig.RpmConfig.AiMonitoringEnabled = true;
+        _defaultConfig = CreateConfiguration();
+
+        NrAssert.Multiple(
+            () => Assert.That(_defaultConfig.AiMonitoringEnabled, Is.True),
+            () => Assert.That(_defaultConfig.AiMonitoringRecordContentEnabled, Is.False)
+        );
     }
 
     [Test]
@@ -4766,12 +4803,12 @@ public class DefaultConfigurationTests
     [Test]
     public void AiMonitoring_resolution_is_cached()
     {
-        SetLocalAiMonitoring(enabled: true);
+        SetLocalAiMonitoring(basicTelemetry: true, recordContent: true);
         _defaultConfig = CreateConfiguration();
         var firstActive = _defaultConfig.AiMonitoringEnabled;
         var firstContent = _defaultConfig.AiMonitoringRecordContentEnabled;
 
-        _localConfig.aiMonitoring.enabled = false;
+        _localConfig.aiMonitoring.basicTelemetry.enabled = false;
 
         NrAssert.Multiple(
             () => Assert.That(firstActive, Is.True),

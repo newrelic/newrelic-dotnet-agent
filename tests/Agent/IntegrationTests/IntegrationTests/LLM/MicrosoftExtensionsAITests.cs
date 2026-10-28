@@ -57,7 +57,8 @@ public abstract class MicrosoftExtensionsAITestsBase<TFixture> : NewRelicIntegra
             {
                 new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath)
                     .ForceTransactionTraces()
-                    .EnableAiMonitoring()
+                    .EnableAiMonitoringBasicTelemetry()
+                    .EnableAiMonitoringRecordContent()
                     .EnableOpenTelemetry(true)
                     .EnableOpenTelemetryTracing(true)
                     .IncludeActivitySource(_actvitySourceName)

@@ -33,7 +33,8 @@ public abstract class LlmApiTestsBase<TFixture> : NewRelicIntegrationTest<TFixtu
             {
                 new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath)
                     .ForceTransactionTraces()
-                    .EnableAiMonitoring()
+                    .EnableAiMonitoringBasicTelemetry()
+                    .EnableAiMonitoringRecordContent()
                     .SetLogLevel("finest");
             },
             exerciseApplication: () =>

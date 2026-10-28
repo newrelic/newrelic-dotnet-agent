@@ -27,7 +27,8 @@ public abstract class LlmErrorTestsBase<TFixture> : NewRelicIntegrationTest<TFix
             {
                 new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath)
                     .ForceTransactionTraces()
-                    .EnableAiMonitoring()
+                    .EnableAiMonitoringBasicTelemetry()
+                    .EnableAiMonitoringRecordContent()
                     .SetLogLevel("finest");
             },
             exerciseApplication: () =>

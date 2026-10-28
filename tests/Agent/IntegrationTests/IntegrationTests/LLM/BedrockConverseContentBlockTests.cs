@@ -43,6 +43,7 @@ public abstract class BedrockConverseContentBlockTestsBase<TFixture> : NewRelicI
             {
                 new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath)
                     .ForceTransactionTraces()
+                    // Deliberately uses the deprecated setting: covers the backward-compat rule that a local enabled=true forces content on.
                     .EnableAiMonitoring()
                     .SetLogLevel("finest");
             },

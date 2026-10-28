@@ -64,7 +64,8 @@ public abstract class OpenAITestsBase<TFixture> : NewRelicIntegrationTest<TFixtu
             {
                 new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath)
                     .ForceTransactionTraces()
-                    .EnableAiMonitoring()
+                    .EnableAiMonitoringBasicTelemetry()
+                    .EnableAiMonitoringRecordContent()
                     .ConfigureFasterTransactionTracesHarvestCycle(10)
                     .ConfigureFasterMetricsHarvestCycle(12)
                     .SetLogLevel("finest");

@@ -50,7 +50,8 @@ public abstract class BedrockConverseTestsBase<TFixture> : NewRelicIntegrationTe
             {
                 new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath)
                     .ForceTransactionTraces()
-                    .EnableAiMonitoring()
+                    .EnableAiMonitoringBasicTelemetry()
+                    .EnableAiMonitoringRecordContent()
                     .SetLogLevel("finest");
             },
             exerciseApplication: () =>

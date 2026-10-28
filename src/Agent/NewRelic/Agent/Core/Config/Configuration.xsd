@@ -1926,7 +1926,7 @@ e, so remove that element to use this mapping.
                                         <xs:annotation>
                                             <xs:documentation>
                                                 Controls whether or not AI monitoring will include the content of the chat and embedding messages.
-                                                Has no default. When unset, the behavior follows the AI monitoring rules.
+                                                Has no default. When unset, content is recorded only if the deprecated aiMonitoring enabled attribute resolves to true locally (the NEW_RELIC_AI_MONITORING_ENABLED environment variable overrides this file). A server-side value overrides this setting.
                                             </xs:documentation>
                                         </xs:annotation>
                                     </xs:attribute>
@@ -1944,7 +1944,7 @@ e, so remove that element to use this mapping.
                                         <xs:annotation>
                                             <xs:documentation>
                                                 Controls whether or not basic telemetry is collected for AI library calls.
-                                                This setting replaces ai_monitoring.enabled.
+                                                This setting replaces the deprecated aiMonitoring enabled attribute.
                                                 Defaults to true.
                                             </xs:documentation>
                                         </xs:annotation>
@@ -1956,7 +1956,7 @@ e, so remove that element to use this mapping.
                         <xs:attribute name="enabled" type="xs:boolean">
                             <xs:annotation>
                                 <xs:documentation>
-                                    Deprecated. Replaced by ai_monitoring.basic_telemetry.enabled.
+                                    Deprecated. Replaced by the basicTelemetry enabled attribute. Setting this to false turns off AI monitoring, even when the basicTelemetry enabled attribute is true. A server-side value can override this setting.
                                     Has no default.
                                 </xs:documentation>
                             </xs:annotation>
