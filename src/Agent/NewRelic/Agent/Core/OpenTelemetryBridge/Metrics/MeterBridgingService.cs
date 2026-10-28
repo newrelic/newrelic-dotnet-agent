@@ -399,11 +399,30 @@ public class MeterBridgingService : DisposableService, IMeterBridgingService
 
     private Func<object, IEnumerable> CreateObserveMethodInvoker(Type instrumentType)
     {
-        var observeMethod = instrumentType.GetMethod("Observe", BindingFlags.NonPublic | BindingFlags.Instance, null, Type.EmptyTypes, null);
+        // Mirrors the runtime's callback dispatch: .NET 11's Observe() handles only
+        // Func<IEnumerable<Measurement<T>>>, so invoke the stored callback directly.
+        var callbackField = instrumentType.GetField("_callback", BindingFlags.NonPublic | BindingFlags.Instance);
+        var valueType = instrumentType.GetGenericArguments()[0];
+        var measurementType = instrumentType.Assembly.GetType("System.Diagnostics.Metrics.Measurement`1").MakeGenericType(valueType);
+        var valueFuncType = typeof(Func<>).MakeGenericType(valueType);
+        var measurementFuncType = typeof(Func<>).MakeGenericType(measurementType);
+        var measurementsFuncType = typeof(Func<>).MakeGenericType(typeof(IEnumerable<>).MakeGenericType(measurementType));
+
         var param = Expression.Parameter(typeof(object), "instrument");
-        var typed = Expression.Convert(param, instrumentType);
-        var call = Expression.Call(typed, observeMethod);
-        return Expression.Lambda<Func<object, IEnumerable>>(Expression.Convert(call, typeof(IEnumerable)), param).Compile();
+        var callback = Expression.Variable(typeof(object), "callback");
+        var body = Expression.Block(
+            new[] { callback },
+            Expression.Assign(callback, Expression.Field(Expression.Convert(param, instrumentType), callbackField)),
+            Expression.Condition(
+                Expression.TypeIs(callback, valueFuncType),
+                Expression.NewArrayInit(measurementType, Expression.New(measurementType.GetConstructor(new[] { valueType }), Expression.Invoke(Expression.Convert(callback, valueFuncType)))),
+                Expression.Condition(
+                    Expression.TypeIs(callback, measurementFuncType),
+                    Expression.NewArrayInit(measurementType, Expression.Invoke(Expression.Convert(callback, measurementFuncType))),
+                    Expression.Invoke(Expression.Convert(callback, measurementsFuncType)),
+                    typeof(IEnumerable)),
+                typeof(IEnumerable)));
+        return Expression.Lambda<Func<object, IEnumerable>>(body, param).Compile();
     }
 
     private Func<object, Meter, ObservableInstrumentCacheData, Instrument> CreateCallbackAndBridgedObservableInstrumentAction(Type instrumentType)

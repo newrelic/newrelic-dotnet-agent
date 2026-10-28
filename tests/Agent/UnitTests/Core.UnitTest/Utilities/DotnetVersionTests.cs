@@ -17,6 +17,7 @@ public class DotnetVersionTests
     [TestCase(DotnetCoreVersion.net8, ExpectedResult = false)]
     [TestCase(DotnetCoreVersion.net9, ExpectedResult = false)]
     [TestCase(DotnetCoreVersion.net10, ExpectedResult = false)]
+    [TestCase(DotnetCoreVersion.net11, ExpectedResult = false)]
     [TestCase(DotnetCoreVersion.Other, ExpectedResult = false)]
     public bool IsUnsupportedDotnetCoreVersion(DotnetCoreVersion version)
     {

@@ -36,6 +36,7 @@ public enum DotnetCoreVersion
     net8,
     net9,
     net10,
+    net11,
     Other
 }
 
@@ -102,6 +103,11 @@ public static class DotnetVersion
         if (envVer.Major == 3 && envVer.Minor == 1)
         {
             return DotnetCoreVersion.netcoreapp31;
+        }
+
+        if (envVer.Major == 11)
+        {
+            return DotnetCoreVersion.net11;
         }
 
         if (envVer.Major == 10)
