@@ -234,7 +234,7 @@ public class MySqlConnectorExerciser
     {
         var dates = new List<string>();
         using (var connection = new MySqlConnection(MySqlTestConfiguration.MySqlConnectionString))
-        using (var command = new MySqlCommand("/* dialect */ SELECT `_date` FROM dates WHERE `_date` LIKE '2%' AND TRUE ORDER BY `_date` DESC LIMIT 1", connection))
+        using (var command = new MySqlCommand("/* dialect */ SELECT `_date` FROM dates WHERE `_date` LIKE '2%' -- it's a dash comment\nAND TRUE # it's a hash comment\nORDER BY `_date` DESC LIMIT 1", connection))
         {
             connection.Open();
             using (var reader = command.ExecuteReader())

@@ -62,7 +62,7 @@ public abstract class MySqlObfuscationDialectTestsBase<TFixture> : NewRelicInteg
             new Assertions.ExpectedSqlTrace
             {
                 TransactionName = expectedTransactionName,
-                Sql = "? SELECT `_date` FROM dates WHERE `_date` LIKE ? AND ? ORDER BY `_date` DESC LIMIT ?",
+                Sql = "? SELECT `_date` FROM dates WHERE `_date` LIKE ? ?\nAND ? ?\nORDER BY `_date` DESC LIMIT ?",
                 DatastoreMetricName = "Datastore/statement/MySQL/dates/select",
             }
         };

@@ -226,8 +226,9 @@ public static class SqlLiteralScanner
     /// <summary>
     /// True when the character at i starts text that must mask the rest of the query, because the server reads it as SQL
     /// (or the dialect is unknown) and a quote in it could desync the scan if it were masked only to the end of the line:
-    /// a Postgres # (an operator, never a comment), a # followed by whitespace or the end in the Default dialect, or a
-    /// MySQL -- that is not followed by whitespace (not a comment, so 5--1 is arithmetic).
+    /// a Postgres # (an operator, never a comment), a # followed by whitespace or the end in the Default dialect, a
+    /// dollar-quote opener ($$ or $tag$) in the Default dialect, or a MySQL -- that is not followed by whitespace (not a
+    /// comment, so 5--1 is arithmetic).
     /// </summary>
     private static bool MasksRestOfQuery(string sql, int i, char ch, char next, SqlDialectFeatures features)
     {
@@ -235,6 +236,11 @@ public static class SqlLiteralScanner
         {
             return Has(features, SqlDialectFeatures.HashMasksRestOfQuery)
                    || (Has(features, SqlDialectFeatures.HashWhitespaceMasksRestOfQuery) && IsWhiteSpaceOrEnd(sql, i + 1));
+        }
+
+        if (ch == '$')
+        {
+            return Has(features, SqlDialectFeatures.DollarQuoteMasksRestOfQuery) && DollarTagEnd(sql, i) != Unterminated;
         }
 
         return ch == '-' && next == '-' && Has(features, SqlDialectFeatures.DashDashRequiresWhitespace) && !IsAsciiSpaceOrControlOrEnd(sql, i + 2);

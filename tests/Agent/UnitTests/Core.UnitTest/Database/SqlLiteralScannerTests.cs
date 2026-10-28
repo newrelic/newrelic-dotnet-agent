@@ -190,6 +190,15 @@ public class SqlLiteralScannerTests
     [TestCase("SELECT * FROM ##g WHERE id = 5", Def, "SELECT * FROM ##g WHERE id = ?")]
     [TestCase("x = 1 #", Def, "x = ? ?")]
     [TestCase("x = 1 #\tit's", Def, "x = ? ?")]
+    // Default: a dollar-quote opener ($$ or $tag$) masks the rest of the query; $name and $1 parameters and V$VIEW names are ordinary text.
+    [TestCase("SELECT $$Jane Doe secret$$ FROM t", Def, "SELECT ?")]
+    [TestCase("SELECT $tag$it's secret$tag$, 'x' FROM t", Def, "SELECT ?")]
+    [TestCase("SELECT $$never closed", Def, "SELECT ?")]
+    [TestCase("a = 'it''s' AND b = $$x$$", Def, "a = ? AND b = ?")]
+    [TestCase("WHERE city = $city AND type = 'hotel'", Def, "WHERE city = $city AND type = ?")]
+    [TestCase("WHERE id = $1 AND b = 'x'", Def, "WHERE id = $? AND b = ?")]
+    [TestCase("SELECT * FROM V$SESSION WHERE sid = 5", Def, "SELECT * FROM V$SESSION WHERE sid = ?")]
+    [TestCase("x = $", Def, "x = $")]
     [TestCase("SELECT * FROM #t # x = 1", Ms, "SELECT * FROM #t # x = ?")]
     public void Obfuscate_Dialects(string sql, SqlDialectFeatures features, string expected)
     {

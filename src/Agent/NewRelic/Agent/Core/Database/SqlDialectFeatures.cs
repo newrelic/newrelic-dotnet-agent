@@ -71,6 +71,12 @@ public enum SqlDialectFeatures
     /// it desyncing the scan.
     /// </summary>
     DashDashRequiresWhitespace = 1 << 12,
+
+    /// <summary>
+    /// A dollar-quote opener ($$ or $tag$) masks the rest of the query. For an unknown dialect, where it may open a
+    /// Postgres, Redshift or Snowflake string literal. Any other $ is ordinary text, so $name and $1 parameters are kept.
+    /// </summary>
+    DollarQuoteMasksRestOfQuery = 1 << 13,
 }
 
 public static class SqlDialects
@@ -105,13 +111,16 @@ public static class SqlDialects
     // Every other vendor: the dialect is unknown, so mask everything any dialect could treat as a literal. # is never an
     // end-of-line comment, because that would swallow SQL Server temp-table names (#t, ##g) reached via ODBC/OLE DB/Other;
     // those are kept as ordinary text. A # followed by whitespace or the end of the query cannot be a temp table and may be
-    // a MySQL or Oracle comment, so it masks the rest of the query.
+    // a MySQL or Oracle comment, so it masks the rest of the query. A $$ or $tag$ may open a dollar-quoted string, so it
+    // masks the rest of the query too; full dollar quoting is not used because a $name parameter (Couchbase N1QL) would
+    // then read as an unterminated tag and mask the whole statement.
     public const SqlDialectFeatures Default =
         SqlDialectFeatures.BacktickIdentifiers |
         SqlDialectFeatures.BackslashEscapes |
         SqlDialectFeatures.UuidLiterals |
         SqlDialectFeatures.BooleanLiterals |
-        SqlDialectFeatures.HashWhitespaceMasksRestOfQuery;
+        SqlDialectFeatures.HashWhitespaceMasksRestOfQuery |
+        SqlDialectFeatures.DollarQuoteMasksRestOfQuery;
 
     public static SqlDialectFeatures ForVendor(DatastoreVendor vendor)
     {

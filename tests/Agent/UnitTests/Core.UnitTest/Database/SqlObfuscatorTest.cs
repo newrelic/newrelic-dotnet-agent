@@ -305,6 +305,12 @@ public class SqlObfuscatorTest
     [TestCase(DatastoreVendor.MySQL, "SELECT `c` FROM t WHERE a = \"b\" # c", "SELECT `c` FROM t WHERE a = ? ?")]
     [TestCase(DatastoreVendor.Oracle, "SELECT \"C\" FROM t WHERE a = q'[b]'", "SELECT \"C\" FROM t WHERE a = ?")]
     [TestCase(DatastoreVendor.MSSQL, "SELECT * FROM #t WHERE a = 'b' -- c", "SELECT * FROM #t WHERE a = ? ?")]
+    // Matches the MySqlObfuscationDialectTests unbounded integration test.
+    [TestCase(DatastoreVendor.MySQL,
+              "/* dialect */ SELECT `_date` FROM dates WHERE `_date` LIKE '2%' -- it's a dash comment\nAND TRUE # it's a hash comment\nORDER BY `_date` DESC LIMIT 1",
+              "? SELECT `_date` FROM dates WHERE `_date` LIKE ? ?\nAND ? ?\nORDER BY `_date` DESC LIMIT ?")]
+    [TestCase(DatastoreVendor.ODBC, "SELECT $$Jane Doe secret$$ FROM t", "SELECT ?")]
+    [TestCase(DatastoreVendor.Couchbase, "SELECT * FROM `b` WHERE city = $city AND n = 'x'", "SELECT * FROM `b` WHERE city = $city AND n = ?")]
     public void GetObfuscatedSql_UsesVendorDialect(DatastoreVendor vendor, string sql, string expected)
     {
         Assert.That(obfuscator.GetObfuscatedSql(sql, vendor), Is.EqualTo(expected));
