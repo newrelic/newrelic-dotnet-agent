@@ -165,4 +165,13 @@ public class SupportabilityHelpersTests
 
         Assert.That(exceptionMessage == expectedExceptionMessage, message: exceptionMessage);
     }
+
+    [TestCase("OpenAI", "2.1.0.0", true, "DotNet/ML/OpenAI/2.1.0.0")]
+    [TestCase("OpenAI", "2.1.0.0", false, "DotNet/ML/OpenAI/2.1.0.0/Basic")]
+    [TestCase("Bedrock", "3.7.0.0", true, "DotNet/ML/Bedrock/3.7.0.0")]
+    [TestCase("Bedrock", "3.7.0.0", false, "DotNet/ML/Bedrock/3.7.0.0/Basic")]
+    public void GetLlmLibraryVersionMetricName_AppendsBasicOnlyWhenContentNotRecorded(string vendor, string version, bool contentRecorded, string expected)
+    {
+        Assert.That(SupportabilityHelpers.GetLlmLibraryVersionMetricName(vendor, version, contentRecorded), Is.EqualTo(expected));
+    }
 }

@@ -14,6 +14,12 @@ public static class SupportabilityHelpers
 
     private static readonly ConcurrentDictionary<string, object> _seenModels = new();
 
+    // Content-recording state selects the metric: the /Basic suffix marks AI monitoring without recorded content.
+    public static string GetLlmLibraryVersionMetricName(string vendorName, string version, bool contentRecorded)
+    {
+        return contentRecorded ? $"DotNet/ML/{vendorName}/{version}" : $"DotNet/ML/{vendorName}/{version}/Basic";
+    }
+
     public static void CreateModelIdSupportabilityMetricsForOpenAi(string model, IAgent agent)
     {
         if (string.IsNullOrWhiteSpace(model))

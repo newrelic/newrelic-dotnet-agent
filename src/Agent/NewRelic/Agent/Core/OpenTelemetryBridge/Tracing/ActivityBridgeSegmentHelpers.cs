@@ -854,7 +854,7 @@ public static class ActivityBridgeSegmentHelpers
     private static void RecordLlmMetrics(IAgent agent, string vendorName, string version, string model)
     {
         // required per spec
-        agent.RecordSupportabilityMetric($"DotNet/ML/{vendorName}/{version}");
+        agent.RecordSupportabilityMetric(SupportabilityHelpers.GetLlmLibraryVersionMetricName(vendorName, version, agent.Configuration.AiMonitoringRecordContentEnabled));
 
         SupportabilityHelpers.CreateModelIdSupportabilityMetricsForOpenAi(model, agent); // prepend vendor name to model id
 

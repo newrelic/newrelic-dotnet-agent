@@ -27,7 +27,8 @@ public abstract class LlmAccountDisabledTestsBase<TFixture> : NewRelicIntegratio
             {
                 new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath)
                     .ForceTransactionTraces()
-                    .EnableAiMonitoring(true) // must be true to test override.
+                    // Explicit local enable, to prove the account setting overrides it.
+                    .EnableAiMonitoringBasicTelemetry()
                     .SetLogLevel("finest");
             },
             exerciseApplication: () =>

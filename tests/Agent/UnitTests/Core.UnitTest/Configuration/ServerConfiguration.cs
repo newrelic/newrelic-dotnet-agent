@@ -118,7 +118,31 @@ public class Method_FromDeserializedReturnValue
             Assert.That(serverConfiguration.RpmConfig.AiMonitoringEnabled, Is.Null);
             Assert.That(serverConfiguration.RpmConfig.AiMonitoringStreamingEnabled, Is.Null);
             Assert.That(serverConfiguration.RpmConfig.AiMonitoringRecordContentEnabled, Is.Null);
+            Assert.That(serverConfiguration.RpmConfig.AiMonitoringBasicTelemetryEnabled, Is.Null);
         });
+    }
+
+    [TestCase(true)]
+    [TestCase(false)]
+    public void ai_monitoring_basic_telemetry_agent_config_key_deserializes_correctly(bool value)
+    {
+        var agentConfig = new Dictionary<string, object> { { "ai_monitoring.basic_telemetry.enabled", value } };
+
+        var serverConfiguration = ServerConfiguration.FromDeserializedReturnValue(
+            new Dictionary<string, object> { { "agent_run_id", 0 }, { "agent_config", agentConfig } });
+
+        Assert.That(serverConfiguration.RpmConfig.AiMonitoringBasicTelemetryEnabled, Is.EqualTo(value));
+    }
+
+    [Test]
+    public void ai_monitoring_basic_telemetry_agent_config_key_is_null_when_other_keys_present()
+    {
+        var agentConfig = new Dictionary<string, object> { { "ai_monitoring.enabled", true } };
+
+        var serverConfiguration = ServerConfiguration.FromDeserializedReturnValue(
+            new Dictionary<string, object> { { "agent_run_id", 0 }, { "agent_config", agentConfig } });
+
+        Assert.That(serverConfiguration.RpmConfig.AiMonitoringBasicTelemetryEnabled, Is.Null);
     }
 
     [Test]

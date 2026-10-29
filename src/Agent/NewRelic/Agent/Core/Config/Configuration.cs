@@ -5784,16 +5784,18 @@ namespace NewRelic.Agent.Core.Config
         
         private configurationAiMonitoringRecordContent recordContentField;
         
-        private bool enabledField;
+        private configurationAiMonitoringBasicTelemetry basicTelemetryField;
+        
+        private System.Nullable<bool> enabledField;
         
         /// <summary>
         /// configurationAiMonitoring class constructor
         /// </summary>
         public configurationAiMonitoring()
         {
+            this.basicTelemetryField = new configurationAiMonitoringBasicTelemetry();
             this.recordContentField = new configurationAiMonitoringRecordContent();
             this.streamingField = new configurationAiMonitoringStreaming();
-            this.enabledField = false;
         }
         
         public configurationAiMonitoringStreaming streaming
@@ -5820,17 +5822,51 @@ namespace NewRelic.Agent.Core.Config
             }
         }
         
+        public configurationAiMonitoringBasicTelemetry basicTelemetry
+        {
+            get
+            {
+                return this.basicTelemetryField;
+            }
+            set
+            {
+                this.basicTelemetryField = value;
+            }
+        }
+        
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        [System.ComponentModel.DefaultValueAttribute(false)]
         public bool enabled
         {
             get
             {
-                return this.enabledField;
+                if (this.enabledField.HasValue)
+                {
+                    return this.enabledField.Value;
+                }
+                else
+                {
+                    return default(bool);
+                }
             }
             set
             {
                 this.enabledField = value;
+            }
+        }
+        
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        public bool enabledSpecified
+        {
+            get
+            {
+                return this.enabledField.HasValue;
+            }
+            set
+            {
+                if (value==false)
+                {
+                    this.enabledField = null;
+                }
             }
         }
         
@@ -5894,12 +5930,68 @@ namespace NewRelic.Agent.Core.Config
     public partial class configurationAiMonitoringRecordContent
     {
         
+        private System.Nullable<bool> enabledField;
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public bool enabled
+        {
+            get
+            {
+                if (this.enabledField.HasValue)
+                {
+                    return this.enabledField.Value;
+                }
+                else
+                {
+                    return default(bool);
+                }
+            }
+            set
+            {
+                this.enabledField = value;
+            }
+        }
+        
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        public bool enabledSpecified
+        {
+            get
+            {
+                return this.enabledField.HasValue;
+            }
+            set
+            {
+                if (value==false)
+                {
+                    this.enabledField = null;
+                }
+            }
+        }
+        
+        #region Clone method
+        /// <summary>
+        /// Create a clone of this configurationAiMonitoringRecordContent object
+        /// </summary>
+        public virtual configurationAiMonitoringRecordContent Clone()
+        {
+            return ((configurationAiMonitoringRecordContent)(this.MemberwiseClone()));
+        }
+        #endregion
+    }
+    
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Xsd2Code", "3.6.0.20097")]
+    [System.SerializableAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true, Namespace="urn:newrelic-config")]
+    public partial class configurationAiMonitoringBasicTelemetry
+    {
+        
         private bool enabledField;
         
         /// <summary>
-        /// configurationAiMonitoringRecordContent class constructor
+        /// configurationAiMonitoringBasicTelemetry class constructor
         /// </summary>
-        public configurationAiMonitoringRecordContent()
+        public configurationAiMonitoringBasicTelemetry()
         {
             this.enabledField = true;
         }
@@ -5920,11 +6012,11 @@ namespace NewRelic.Agent.Core.Config
         
         #region Clone method
         /// <summary>
-        /// Create a clone of this configurationAiMonitoringRecordContent object
+        /// Create a clone of this configurationAiMonitoringBasicTelemetry object
         /// </summary>
-        public virtual configurationAiMonitoringRecordContent Clone()
+        public virtual configurationAiMonitoringBasicTelemetry Clone()
         {
-            return ((configurationAiMonitoringRecordContent)(this.MemberwiseClone()));
+            return ((configurationAiMonitoringBasicTelemetry)(this.MemberwiseClone()));
         }
         #endregion
     }

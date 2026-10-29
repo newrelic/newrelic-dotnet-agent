@@ -246,12 +246,13 @@ public class AgentListenerController : Controller
 
     [HttpGet]
     [Route("SetAiMonitoringServerConfigOnConnect")]
-    public string SetAiMonitoringServerConfigOnConnect(string enabled = null, string streaming = null, string recordContent = null, string collectAi = null)
+    public string SetAiMonitoringServerConfigOnConnect(string enabled = null, string streaming = null, string recordContent = null, string collectAi = null, string basicTelemetry = null)
     {
         var agentConfig = new Dictionary<string, object>();
         if (enabled != null) agentConfig["ai_monitoring.enabled"] = bool.Parse(enabled);
         if (streaming != null) agentConfig["ai_monitoring.streaming.enabled"] = bool.Parse(streaming);
         if (recordContent != null) agentConfig["ai_monitoring.record_content.enabled"] = bool.Parse(recordContent);
+        if (basicTelemetry != null) agentConfig["ai_monitoring.basic_telemetry.enabled"] = bool.Parse(basicTelemetry);
 
         _aiMonitoringAgentConfigOnConnect = agentConfig.Count > 0 ? agentConfig : null;
         _collectAiOnConnect = collectAi != null ? bool.Parse(collectAi) : (bool?)null;

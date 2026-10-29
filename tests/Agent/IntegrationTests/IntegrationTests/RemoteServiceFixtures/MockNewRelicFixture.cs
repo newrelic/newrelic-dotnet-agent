@@ -132,13 +132,14 @@ public class MockNewRelicFixture : RemoteApplicationFixture
         GetStringAndIgnoreResult(address);
     }
 
-    public void SetAiMonitoringServerConfigOnConnect(bool? enabled = null, bool? streaming = null, bool? recordContent = null, bool? collectAi = null)
+    public void SetAiMonitoringServerConfigOnConnect(bool? enabled = null, bool? streaming = null, bool? recordContent = null, bool? collectAi = null, bool? basicTelemetry = null)
     {
         var query = new List<string>();
         if (enabled.HasValue) query.Add($"enabled={enabled.Value.ToString().ToLower()}");
         if (streaming.HasValue) query.Add($"streaming={streaming.Value.ToString().ToLower()}");
         if (recordContent.HasValue) query.Add($"recordContent={recordContent.Value.ToString().ToLower()}");
         if (collectAi.HasValue) query.Add($"collectAi={collectAi.Value.ToString().ToLower()}");
+        if (basicTelemetry.HasValue) query.Add($"basicTelemetry={basicTelemetry.Value.ToString().ToLower()}");
 
         var queryString = query.Count > 0 ? "?" + string.Join("&", query) : string.Empty;
         var address = $"https://localhost:{MockNewRelicApplication.Port}/agent_listener/SetAiMonitoringServerConfigOnConnect{queryString}";

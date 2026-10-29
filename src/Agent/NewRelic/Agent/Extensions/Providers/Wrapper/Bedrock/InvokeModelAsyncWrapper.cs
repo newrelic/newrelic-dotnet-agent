@@ -54,7 +54,7 @@ public class InvokeModelAsyncWrapper : IWrapper
 
         // required per spec
         var version = GetOrAddLibraryVersion(instrumentedMethodCall.MethodCall.Method.Type.Assembly.ManifestModule.Assembly.FullName);
-        agent.RecordSupportabilityMetric($"DotNet/ML/{VendorName}/{version}");
+        agent.RecordSupportabilityMetric(SupportabilityHelpers.GetLlmLibraryVersionMetricName(VendorName, version, agent.Configuration.AiMonitoringRecordContentEnabled));
 
         // useful for tracking LLM usage by vendor
         agent.RecordSupportabilityMetric($"DotNet/LLM/{VendorName}-Invoke");

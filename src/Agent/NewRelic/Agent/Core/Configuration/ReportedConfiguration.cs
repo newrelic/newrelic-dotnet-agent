@@ -736,6 +736,9 @@ public class ReportedConfiguration : IConfiguration
     [JsonProperty("ai_monitoring.enabled")]
     public bool AiMonitoringEnabled => _configuration.AiMonitoringEnabled;
 
+    [JsonProperty("ai_monitoring.basic_telemetry.enabled")]
+    public bool AiMonitoringBasicTelemetryEnabled => _configuration.AiMonitoringBasicTelemetryEnabled;
+
     [JsonProperty("ai_monitoring.streaming.enabled")]
     public bool AiMonitoringStreamingEnabled => _configuration.AiMonitoringStreamingEnabled;
 

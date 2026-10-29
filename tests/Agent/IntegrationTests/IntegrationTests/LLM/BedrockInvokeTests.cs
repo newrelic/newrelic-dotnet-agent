@@ -56,7 +56,8 @@ public abstract class BedrockInvokeTestsBase<TFixture> : NewRelicIntegrationTest
             {
                 new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath)
                     .ForceTransactionTraces()
-                    .EnableAiMonitoring()
+                    .EnableAiMonitoringBasicTelemetry()
+                    .EnableAiMonitoringRecordContent()
                     .SetLogLevel("finest");
             },
             exerciseApplication: () =>
