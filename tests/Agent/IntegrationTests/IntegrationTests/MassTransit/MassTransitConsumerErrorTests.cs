@@ -23,16 +23,16 @@ public abstract class MassTransitConsumerErrorTestsBase<TFixture> : NewRelicInte
 
     private readonly TFixture _fixture;
 
-    protected MassTransitConsumerErrorTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
+    protected MassTransitConsumerErrorTestsBase(TFixture fixture, ITestOutputHelper output, bool useStartBus) : base(fixture)
     {
         _fixture = fixture;
         _fixture.SetTimeout(TimeSpan.FromMinutes(2));
         _fixture.TestLogger = output;
 
-        _fixture.AddCommand("MassTransitExerciser StartBus");
+        _fixture.AddCommand(useStartBus ? "MassTransitExerciser StartBus" : "MassTransitExerciser StartHost");
         _fixture.AddCommand("MassTransitExerciser PublishFailing failingMessageOne");
         _fixture.AddCommand("MassTransitExerciser PublishFailing failingMessageTwo");
-        _fixture.AddCommand("MassTransitExerciser StopBus");
+        _fixture.AddCommand(useStartBus ? "MassTransitExerciser StopBus" : "MassTransitExerciser StopHost");
 
         _fixture.AddActions
         (
@@ -80,36 +80,72 @@ public abstract class MassTransitConsumerErrorTestsBase<TFixture> : NewRelicInte
     }
 }
 
+// Tests using StartHost (hosted service configuration method)
 [Trait("Platform", "WindowsOnly")]
-public class MassTransitConsumerErrorTests_FW462 : MassTransitConsumerErrorTestsBase<ConsoleDynamicMethodFixtureFW462>
+public class MassTransitConsumerErrorTests_StartHost_FW462 : MassTransitConsumerErrorTestsBase<ConsoleDynamicMethodFixtureFW462>
 {
-    public MassTransitConsumerErrorTests_FW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
-        : base(fixture, output)
+    public MassTransitConsumerErrorTests_StartHost_FW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
+        : base(fixture, output, false)
     {
     }
 }
 
 [Trait("Platform", "WindowsOnly")]
-public class MassTransitConsumerErrorTests_FWLatest : MassTransitConsumerErrorTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+public class MassTransitConsumerErrorTests_StartHost_FWLatest : MassTransitConsumerErrorTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
-    public MassTransitConsumerErrorTests_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
-        : base(fixture, output)
+    public MassTransitConsumerErrorTests_StartHost_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+        : base(fixture, output, false)
     {
     }
 }
 
-public class MassTransitConsumerErrorTests_CoreOldest : MassTransitConsumerErrorTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
+public class MassTransitConsumerErrorTests_StartHost_CoreOldest : MassTransitConsumerErrorTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
 {
-    public MassTransitConsumerErrorTests_CoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
-        : base(fixture, output)
+    public MassTransitConsumerErrorTests_StartHost_CoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output, false)
     {
     }
 }
 
-public class MassTransitConsumerErrorTests_CoreLatest : MassTransitConsumerErrorTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+public class MassTransitConsumerErrorTests_StartHost_CoreLatest : MassTransitConsumerErrorTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
 {
-    public MassTransitConsumerErrorTests_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
-        : base(fixture, output)
+    public MassTransitConsumerErrorTests_StartHost_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output, false)
+    {
+    }
+}
+
+// Tests using StartBus (bus factory configuration method)
+[Trait("Platform", "WindowsOnly")]
+public class MassTransitConsumerErrorTests_StartBus_FW462 : MassTransitConsumerErrorTestsBase<ConsoleDynamicMethodFixtureFW462>
+{
+    public MassTransitConsumerErrorTests_StartBus_FW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
+        : base(fixture, output, true)
+    {
+    }
+}
+
+[Trait("Platform", "WindowsOnly")]
+public class MassTransitConsumerErrorTests_StartBus_FWLatest : MassTransitConsumerErrorTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+{
+    public MassTransitConsumerErrorTests_StartBus_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+        : base(fixture, output, true)
+    {
+    }
+}
+
+public class MassTransitConsumerErrorTests_StartBus_CoreOldest : MassTransitConsumerErrorTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
+{
+    public MassTransitConsumerErrorTests_StartBus_CoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output, true)
+    {
+    }
+}
+
+public class MassTransitConsumerErrorTests_StartBus_CoreLatest : MassTransitConsumerErrorTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+{
+    public MassTransitConsumerErrorTests_StartBus_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output, true)
     {
     }
 }
