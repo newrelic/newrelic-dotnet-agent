@@ -54,9 +54,22 @@ public class NewRelicFilter : IFilter<ConsumeContext>, IFilter<PublishContext>, 
 
         var segment = transaction.StartMessageBrokerSegment(mc, queueData.DestinationType, MessageBrokerAction.Consume, MessageBrokerVendorName, queueData.QueueName);
 
-        await next.Send(context);
-        segment.End();
-        transaction.End();
+        try
+        {
+            await next.Send(context);
+            segment.End();
+        }
+        catch (Exception ex)
+        {
+            // Record the consumer's exception and rethrow so MassTransit can still retry or fault the message.
+            transaction.NoticeError(ex);
+            segment.End(ex);
+            throw;
+        }
+        finally
+        {
+            transaction.End();
+        }
 
         IEnumerable<string> GetHeaderValue(Headers carrier, string key)
         {
@@ -92,8 +105,16 @@ public class NewRelicFilter : IFilter<ConsumeContext>, IFilter<PublishContext>, 
         InsertDistributedTraceHeaders(context.Headers, transaction);
         var segment = transaction.StartMessageBrokerSegment(mc, queueData.DestinationType, MessageBrokerAction.Produce, MessageBrokerVendorName, queueData.QueueName);
 
-        await next.Send(context);
-        segment.End();
+        try
+        {
+            await next.Send(context);
+            segment.End();
+        }
+        catch (Exception ex)
+        {
+            segment.End(ex);
+            throw;
+        }
     }
 
     public async Task Send(SendContext context, IPipe<SendContext> next)
@@ -109,8 +130,16 @@ public class NewRelicFilter : IFilter<ConsumeContext>, IFilter<PublishContext>, 
         InsertDistributedTraceHeaders(context.Headers, transaction);
         var segment = transaction.StartMessageBrokerSegment(mc, queueData.DestinationType, MessageBrokerAction.Produce, MessageBrokerVendorName, queueData.QueueName);
 
-        await next.Send(context);
-        segment.End();
+        try
+        {
+            await next.Send(context);
+            segment.End();
+        }
+        catch (Exception ex)
+        {
+            segment.End(ex);
+            throw;
+        }
     }
 
     public static void InsertDistributedTraceHeaders(SendHeaders headers, ITransaction transaction)

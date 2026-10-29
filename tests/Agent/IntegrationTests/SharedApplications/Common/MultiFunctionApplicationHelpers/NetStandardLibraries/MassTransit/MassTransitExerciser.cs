@@ -46,6 +46,7 @@ class MassTransitExerciser
             services.AddMassTransit(x =>
             {
                 x.AddConsumer<MessageConsumer>();
+                x.AddConsumer<FailingMessageConsumer>();
 
                 x.UsingInMemory((context, cfg) =>
                 {
@@ -77,6 +78,7 @@ class MassTransitExerciser
             configure.ReceiveEndpoint(System.Guid.NewGuid().ToString(), cfg =>
             {
                 cfg.Consumer<MessageConsumer>();
+                cfg.Consumer<FailingMessageConsumer>();
             });
         });
 
@@ -117,6 +119,19 @@ class MassTransitExerciser
         ConsoleMFLogger.Info($"Sent message {text}");
 
         // This sleep ensures that this transaction method is the one sampled for transaction trace data
+        Thread.Sleep(1000);
+    }
+
+    [LibraryMethod]
+    [Transaction]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+    public async Task PublishFailing(string text)
+    {
+        var message = new FailingMessage() { Text = text };
+        await _bus.Publish(message);
+        ConsoleMFLogger.Info($"Published failing message {text}");
+
+        // Gives the consumer time to throw and MassTransit time to fault the message before the next command.
         Thread.Sleep(1000);
     }
 }
