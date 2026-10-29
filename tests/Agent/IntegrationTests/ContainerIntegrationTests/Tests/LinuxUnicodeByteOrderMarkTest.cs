@@ -19,11 +19,11 @@ namespace NewRelic.Agent.ContainerIntegrationTests.Tests;
 /// </summary>
 [Trait("Architecture", "amd64")]
 [Trait("TestArea", "Core")]
-public class LinuxUnicodeByteOrderMarkTest : NewRelicIntegrationTest<LinuxUnicodeByteOrderMarkTestFixture>
+public abstract class LinuxUnicodeByteOrderMarkTest<T> : NewRelicIntegrationTest<T> where T : LinuxUnicodeByteOrderMarkTestFixture
 {
-    private readonly LinuxUnicodeByteOrderMarkTestFixture _fixture;
+    private readonly T _fixture;
 
-    public LinuxUnicodeByteOrderMarkTest(LinuxUnicodeByteOrderMarkTestFixture fixture, ITestOutputHelper output) : base(fixture)
+    protected LinuxUnicodeByteOrderMarkTest(T fixture, ITestOutputHelper output) : base(fixture)
     {
         _fixture = fixture;
         _fixture.TestLogger = output;
@@ -79,5 +79,21 @@ public class LinuxUnicodeByteOrderMarkTest : NewRelicIntegrationTest<LinuxUnicod
 
         // Check if the detected encoding has a preamble (BOM)
         return reader.CurrentEncoding.GetPreamble().Length > 0;
+    }
+}
+
+public class LinuxUnicodeByteOrderMarkTestCoreOldest : LinuxUnicodeByteOrderMarkTest<LinuxUnicodeByteOrderMarkTestFixtureCoreOldest>
+{
+    public LinuxUnicodeByteOrderMarkTestCoreOldest(LinuxUnicodeByteOrderMarkTestFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
+}
+
+public class LinuxUnicodeByteOrderMarkTestCoreLatest : LinuxUnicodeByteOrderMarkTest<LinuxUnicodeByteOrderMarkTestFixtureCoreLatest>
+{
+    public LinuxUnicodeByteOrderMarkTestCoreLatest(LinuxUnicodeByteOrderMarkTestFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
     }
 }

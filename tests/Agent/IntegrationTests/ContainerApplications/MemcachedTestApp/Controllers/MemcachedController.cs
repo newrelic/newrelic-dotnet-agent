@@ -1,7 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-#if NET10_0
+#if NET11_0
 using System;
 #endif
 using System.Collections.Generic;
@@ -41,7 +41,7 @@ public class MemcachedController : ControllerBase
         await GetAsyncGen();
         Increment();
         Decrement();
-#if NET10_0
+#if NET11_0
             await TouchAsync();
 #endif
 #pragma warning disable VSTHRD103
@@ -95,9 +95,9 @@ public class MemcachedController : ControllerBase
         var value = _blogPostService.GetRecent(2);
         await _memcachedClient.AddAsync("GetAsync", value, 600);
 #pragma warning disable CS0618 // Type or member is obsolete
-#if NET8_0
+#if NET10_0
         var posts = await _memcachedClient.GetAsync<object>("GetAsync");
-#elif NET10_0
+#elif NET11_0
             var posts = await _memcachedClient.GetAsync("GetAsync");
 #endif
 #pragma warning restore CS0618 // Type or member is obsolete
@@ -127,7 +127,7 @@ public class MemcachedController : ControllerBase
         var posts = _memcachedClient.Decrement("Decrement", 1, 1, 1);
     }
 
-#if NET10_0
+#if NET11_0
         private async Task TouchAsync()
         {
             var value = _blogPostService.GetRecent(2);

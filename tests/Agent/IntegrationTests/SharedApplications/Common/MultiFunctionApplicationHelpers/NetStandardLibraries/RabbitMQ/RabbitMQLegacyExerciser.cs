@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 // See this project's .csproj file for target framework => RabbitMQ.Client version mappings
-#if (!NET10_0)
+#if (!NET11_0)
 
-#if NET48_OR_GREATER || (NET && !NET10_0)
+#if NET48_OR_GREATER || (NET && !NET11_0)
 #define RABBIT6PLUS
 #endif
 

@@ -7,7 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-#if NET10_0_OR_GREATER
+#if NET11_0_OR_GREATER
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -18,7 +18,7 @@ using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using NewRelic.Api.Agent;
 using NServiceBus;
 using EventHandler = MultiFunctionApplicationHelpers.NetStandardLibraries.NServiceBus.Handlers.EventHandler;
-#if NET10_0_OR_GREATER
+#if NET11_0_OR_GREATER
 using IHost = Microsoft.Extensions.Hosting.IHost;
 #endif
 
@@ -36,7 +36,7 @@ class NServiceBusDriver
     // routing the command elsewhere leaves all NsbSendTests assertions unchanged.
     private const string UnconsumedDestinationQueue = "NsbSendTestsUnconsumedQueue";
 
-#if NET10_0_OR_GREATER
+#if NET11_0_OR_GREATER
     private IHost _host;
 #endif
     private IMessageSession _session;
@@ -57,7 +57,7 @@ class NServiceBusDriver
         endpointConfiguration.SendFailedMessagesTo("error");
         endpointConfiguration.EnableInstallers();
 
-#if NET8_0_OR_GREATER // serializer must be specified starting with NServiceBus 9.0.0
+#if NET10_0_OR_GREATER // serializer must be specified starting with NServiceBus 9.0.0
             endpointConfiguration.UseSerialization<XmlSerializer>();
 #endif
 
@@ -81,7 +81,7 @@ class NServiceBusDriver
                 immediate.NumberOfRetries(0);
             });
 
-#if NET10_0_OR_GREATER
+#if NET11_0_OR_GREATER
         var builder = Host.CreateApplicationBuilder();
         builder.Logging.ClearProviders();
         builder.Services.AddNServiceBusEndpoint(endpointConfiguration);
@@ -133,7 +133,7 @@ class NServiceBusDriver
     public void StopNServiceBus()
     {
         ConsoleMFLogger.Info($"Stopping NServiceBus");
-#if NET10_0_OR_GREATER
+#if NET11_0_OR_GREATER
         _host?.StopAsync().Wait();
         _host?.Dispose();
 #else

@@ -5,6 +5,7 @@ using System;
 using System.Text.Json;
 using System.Threading.Tasks;
 using NewRelic.Agent.ContainerIntegrationTests.Applications;
+using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 
 namespace NewRelic.Agent.ContainerIntegrationTests.Fixtures;
@@ -52,12 +53,21 @@ public abstract class W3CValidationTestFixtureBase : RemoteApplicationFixture
     }
 }
 
-public class W3CValidationDotNet10TestFixture : W3CValidationTestFixtureBase
+public abstract class W3CValidationTestFixture : W3CValidationTestFixtureBase
 {
     private const string Dockerfile = "W3CTestApp/Dockerfile";
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
-    private const string DistroTag = "noble"; // Ubuntu 24.04
-    private const string DotnetVersion = "10.0";
+    private const string DistroTag = ContainerApplication.UbuntuDistroTag;
 
-    public W3CValidationDotNet10TestFixture() : base(DistroTag, Architecture, Dockerfile, DotnetVersion) { }
+    protected W3CValidationTestFixture(string dotnetVersion) : base(DistroTag, Architecture, Dockerfile, dotnetVersion) { }
+}
+
+public class W3CValidationTestFixtureCoreOldest : W3CValidationTestFixture
+{
+    public W3CValidationTestFixtureCoreOldest() : base(Tfm.NetOldestVersion) { }
+}
+
+public class W3CValidationTestFixtureCoreLatest : W3CValidationTestFixture
+{
+    public W3CValidationTestFixtureCoreLatest() : base(Tfm.NetLatestVersion) { }
 }

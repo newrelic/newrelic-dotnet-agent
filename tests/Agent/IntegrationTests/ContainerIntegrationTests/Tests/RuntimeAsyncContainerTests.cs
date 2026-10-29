@@ -13,7 +13,7 @@ using Xunit;
 namespace NewRelic.Agent.ContainerIntegrationTests.Tests;
 
 /// <summary>
-/// The Linux counterpart of the host-run RuntimeAsyncTests. Runtime-async instrumentation is
+/// The Linux counterpart of the host-run RuntimeAsyncTestsBase. Runtime-async instrumentation is
 /// implemented in the native profiler, and the Linux profiler is a separate binary from the Windows
 /// one, so passing on Windows says nothing about whether the IL rewriting is correct here.
 ///
@@ -28,9 +28,9 @@ namespace NewRelic.Agent.ContainerIntegrationTests.Tests;
 /// </summary>
 [Trait("Architecture", "amd64")]
 [Trait("TestArea", "Core")]
-public class RuntimeAsyncContainerTests : NewRelicIntegrationTest<RuntimeAsyncContainerTestFixture>
+public abstract class RuntimeAsyncContainerTestsBase<TFixture> : NewRelicIntegrationTest<TFixture> where TFixture : RuntimeAsyncContainerTestFixture
 {
-    private readonly RuntimeAsyncContainerTestFixture _fixture;
+    private readonly TFixture _fixture;
 
     // Must match RuntimeAsyncUseCases.Iterations in the test application.
     private const int Iterations = 25;
@@ -47,7 +47,7 @@ public class RuntimeAsyncContainerTests : NewRelicIntegrationTest<RuntimeAsyncCo
 
     private const string ThreadIdAttributeName = "thread.id";
 
-    public RuntimeAsyncContainerTests(RuntimeAsyncContainerTestFixture fixture, ITestOutputHelper output) : base(fixture)
+    protected RuntimeAsyncContainerTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
     {
         _fixture = fixture;
         _fixture.TestLogger = output;
@@ -154,4 +154,20 @@ public class RuntimeAsyncContainerTests : NewRelicIntegrationTest<RuntimeAsyncCo
         new Assertions.ExpectedMetric { metricName = OuterSegmentName, metricScope = OuterTransactionName, CallCountAllHarvests = Iterations },
         new Assertions.ExpectedMetric { metricName = InnerSegmentName, metricScope = OuterTransactionName, CallCountAllHarvests = ExpectedNestedSegmentCount },
     };
+}
+
+public class RuntimeAsyncContainerTestsCoreOldest : RuntimeAsyncContainerTestsBase<RuntimeAsyncContainerTestFixtureCoreOldest>
+{
+    public RuntimeAsyncContainerTestsCoreOldest(RuntimeAsyncContainerTestFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
+}
+
+public class RuntimeAsyncContainerTestsCoreLatest : RuntimeAsyncContainerTestsBase<RuntimeAsyncContainerTestFixtureCoreLatest>
+{
+    public RuntimeAsyncContainerTestsCoreLatest(RuntimeAsyncContainerTestFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
 }

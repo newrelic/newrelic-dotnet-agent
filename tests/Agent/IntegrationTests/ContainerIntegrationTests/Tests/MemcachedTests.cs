@@ -86,7 +86,7 @@ public abstract class LinuxMemcachedTest<T> : NewRelicIntegrationTest<T> where T
             new() { metricName = datastoreStatementMemcachedRemove, CallCountAllHarvests = 2, metricScope = transactionName },
         };
 
-        if (_fixture.DotnetVer == "8.0") // EnyimMemcachedCore 2.x
+        if (_fixture.DotnetVer == Tfm.NetOldestVersion) // EnyimMemcachedCore 2.x
         {
             expectedMetrics.Add(new() { metricName = datastoreAll, CallCountAllHarvests = 20 });
             expectedMetrics.Add(new() { metricName = datastoreAllOther, CallCountAllHarvests = 20 });
@@ -96,7 +96,7 @@ public abstract class LinuxMemcachedTest<T> : NewRelicIntegrationTest<T> where T
             expectedMetrics.Add(new() { metricName = datastoreStatementMemcachedAdd, CallCountAllHarvests = 11 });
             expectedMetrics.Add(new() { metricName = datastoreStatementMemcachedAdd, CallCountAllHarvests = 11, metricScope = transactionName });
         }
-        else if (_fixture.DotnetVer == "10.0") // EnyimMemcachedCore 3.x
+        else if (_fixture.DotnetVer == Tfm.NetLatestVersion) // EnyimMemcachedCore 3.x
         {
             expectedMetrics.Add(new() { metricName = datastoreAll, CallCountAllHarvests = 22 });
             expectedMetrics.Add(new() { metricName = datastoreAllOther, CallCountAllHarvests = 22 });
@@ -130,9 +130,9 @@ public abstract class LinuxMemcachedTest<T> : NewRelicIntegrationTest<T> where T
 [Collection("MemcachedTests")]
 [Trait("Architecture", "amd64")]
 [Trait("TestArea", "Datastore")]
-public class MemcachedDotNet8Test : LinuxMemcachedTest<MemcachedDotNet8TestFixture>
+public class MemcachedDotNetOldestTest : LinuxMemcachedTest<MemcachedDotNetOldestTestFixture>
 {
-    public MemcachedDotNet8Test(MemcachedDotNet8TestFixture fixture, ITestOutputHelper output) : base(fixture, output)
+    public MemcachedDotNetOldestTest(MemcachedDotNetOldestTestFixture fixture, ITestOutputHelper output) : base(fixture, output)
     {
     }
 }
@@ -140,9 +140,9 @@ public class MemcachedDotNet8Test : LinuxMemcachedTest<MemcachedDotNet8TestFixtu
 [Collection("MemcachedTests")]
 [Trait("Architecture", "amd64")]
 [Trait("TestArea", "Datastore")]
-public class MemcachedDotNet10Test : LinuxMemcachedTest<MemcachedDotNet10TestFixture>
+public class MemcachedDotNetLatestTest : LinuxMemcachedTest<MemcachedDotNetLatestTestFixture>
 {
-    public MemcachedDotNet10Test(MemcachedDotNet10TestFixture fixture, ITestOutputHelper output) : base(fixture, output)
+    public MemcachedDotNetLatestTest(MemcachedDotNetLatestTestFixture fixture, ITestOutputHelper output) : base(fixture, output)
     {
     }
 }

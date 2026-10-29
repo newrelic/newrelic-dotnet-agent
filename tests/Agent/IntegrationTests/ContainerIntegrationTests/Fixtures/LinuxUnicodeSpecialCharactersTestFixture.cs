@@ -2,17 +2,18 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using NewRelic.Agent.ContainerIntegrationTests.Applications;
+using NewRelic.Agent.IntegrationTestHelpers;
 
 namespace NewRelic.Agent.ContainerIntegrationTests.Fixtures;
 
-public class LinuxUnicodeSpecialCharactersTestFixture : ContainerTestFixtureBase
+public abstract class LinuxUnicodeSpecialCharactersTestFixture : ContainerTestFixtureBase
 {
     private const string Dockerfile = "SmokeTestApp/Dockerfile";
     private const string DockerComposeServiceName = "LinuxUnicodeByteOrderMarkTestFixture";
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
-    private const string DistroTag = "noble";
+    private const string DistroTag = ContainerApplication.UbuntuDistroTag;
 
-    public LinuxUnicodeSpecialCharactersTestFixture() : base(DistroTag, Architecture, Dockerfile) { }
+    protected LinuxUnicodeSpecialCharactersTestFixture(string dotnetVersion) : base(DistroTag, Architecture, dotnetVersion, Dockerfile) { }
 
     public void CreateJpnInstrumentationXml()
     {
@@ -37,4 +38,14 @@ public class LinuxUnicodeSpecialCharactersTestFixture : ContainerTestFixtureBase
             System.IO.Path.Combine(DestinationNewRelicExtensionsDirectoryPath, "JpnInstrumentation.xml")
             , xml);
     }
+}
+
+public class LinuxUnicodeSpecialCharactersTestFixtureCoreOldest : LinuxUnicodeSpecialCharactersTestFixture
+{
+    public LinuxUnicodeSpecialCharactersTestFixtureCoreOldest() : base(Tfm.NetOldestVersion) { }
+}
+
+public class LinuxUnicodeSpecialCharactersTestFixtureCoreLatest : LinuxUnicodeSpecialCharactersTestFixture
+{
+    public LinuxUnicodeSpecialCharactersTestFixtureCoreLatest() : base(Tfm.NetLatestVersion) { }
 }

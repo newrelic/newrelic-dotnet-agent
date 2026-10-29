@@ -53,7 +53,6 @@ public abstract class AppDomainCachingTestsBase<TFixture> : NewRelicIntegrationT
                 configModifier
                     .EnableDistributedTrace()
                     .SetLogLevel("debug");
-                configModifier.DisableEventListenerSamplers(); // Required for .NET 8 to pass.
             },
             exerciseApplication: () =>
             {

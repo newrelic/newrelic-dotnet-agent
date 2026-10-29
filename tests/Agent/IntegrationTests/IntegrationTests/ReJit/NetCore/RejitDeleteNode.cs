@@ -96,17 +96,33 @@ public abstract class RejitDeleteNodeBase<TFixture> : NewRelicIntegrationTest<TF
     }
 }
 
-public class RejitDeleteNode : RejitDeleteNodeBase<AspNetCoreReJitMvcApplicationFixture>
+public class RejitDeleteNodeCoreOldest : RejitDeleteNodeBase<AspNetCoreReJitMvcApplicationFixtureCoreOldest>
 {
-    public RejitDeleteNode(AspNetCoreReJitMvcApplicationFixture fixture, ITestOutputHelper output)
+    public RejitDeleteNodeCoreOldest(AspNetCoreReJitMvcApplicationFixtureCoreOldest fixture, ITestOutputHelper output)
         : base(fixture, output)
     {
     }
 }
 
-public class RejitDeleteNodeWithTieredCompilation : RejitDeleteNodeBase<AspNetCoreReJitMvcApplicationFixtureWithTieredCompilation>
+public class RejitDeleteNodeCoreLatest : RejitDeleteNodeBase<AspNetCoreReJitMvcApplicationFixtureCoreLatest>
 {
-    public RejitDeleteNodeWithTieredCompilation(AspNetCoreReJitMvcApplicationFixtureWithTieredCompilation fixture, ITestOutputHelper output)
+    public RejitDeleteNodeCoreLatest(AspNetCoreReJitMvcApplicationFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
+}
+
+public class RejitDeleteNodeWithTieredCompilationCoreOldest : RejitDeleteNodeBase<AspNetCoreReJitMvcApplicationFixtureWithTieredCompilationCoreOldest>
+{
+    public RejitDeleteNodeWithTieredCompilationCoreOldest(AspNetCoreReJitMvcApplicationFixtureWithTieredCompilationCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
+}
+
+public class RejitDeleteNodeWithTieredCompilationCoreLatest : RejitDeleteNodeBase<AspNetCoreReJitMvcApplicationFixtureWithTieredCompilationCoreLatest>
+{
+    public RejitDeleteNodeWithTieredCompilationCoreLatest(AspNetCoreReJitMvcApplicationFixtureWithTieredCompilationCoreLatest fixture, ITestOutputHelper output)
         : base(fixture, output)
     {
     }

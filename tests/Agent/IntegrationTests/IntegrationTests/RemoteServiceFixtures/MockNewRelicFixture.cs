@@ -15,13 +15,16 @@ public class MockNewRelicFixture : RemoteApplicationFixture
 {
     private const string ApplicationDirectoryName = @"MockNewRelic";
     private const string ExecutableName = @"MockNewRelic.exe";
-    private const string TargetFramework = "net10.0";
 
     public RemoteService MockNewRelicApplication { get; set; }
 
-    public MockNewRelicFixture(RemoteApplication remoteApplication) : base(remoteApplication)
+    public MockNewRelicFixture(RemoteApplication remoteApplication) : this(remoteApplication, Tfm.NetLatest)
     {
-        MockNewRelicApplication = new RemoteService(ApplicationDirectoryName, ExecutableName, TargetFramework, ApplicationType.Bounded, true, true, true);
+    }
+
+    public MockNewRelicFixture(RemoteApplication remoteApplication, string mockTargetFramework) : base(remoteApplication)
+    {
+        MockNewRelicApplication = new RemoteService(ApplicationDirectoryName, ExecutableName, mockTargetFramework, ApplicationType.Bounded, true, true, true);
 
         Actions(
             setupConfiguration: () =>
@@ -46,7 +49,7 @@ public class MockNewRelicFixture : RemoteApplicationFixture
                 MockNewRelicApplication.CopyToRemote();
                 MockNewRelicApplication.Start(string.Empty, environmentVariables, doProfile: false);
 
-#if !NET10_0
+#if NETFRAMEWORK
                     ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
                     ServicePointManager.ServerCertificateValidationCallback = delegate
                     {

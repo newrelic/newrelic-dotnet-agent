@@ -28,14 +28,15 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures;
 // one about response bytes being dropped. Before the fix the response came back starting with
 // "</head><script ...NREUM.info..." - the first write's bytes were gone and the script had
 // been injected against the second write's <body> anchor instead.
-public class BrowserAgentAutoInjectionSplitHead : NewRelicIntegrationTest<BasicAspNetCoreRazorApplicationFixture>
+public abstract class BrowserAgentAutoInjectionSplitHeadBase<TFixture> : NewRelicIntegrationTest<TFixture>
+    where TFixture : BasicAspNetCoreRazorApplicationFixture
 {
     private const string FirstWriteContent = "<html><head>";
 
-    private readonly BasicAspNetCoreRazorApplicationFixture _fixture;
+    private readonly TFixture _fixture;
     private string _htmlContent;
 
-    public BrowserAgentAutoInjectionSplitHead(BasicAspNetCoreRazorApplicationFixture fixture, ITestOutputHelper output)
+    protected BrowserAgentAutoInjectionSplitHeadBase(TFixture fixture, ITestOutputHelper output)
         : base(fixture)
     {
         _fixture = fixture;
@@ -96,5 +97,21 @@ public class BrowserAgentAutoInjectionSplitHead : NewRelicIntegrationTest<BasicA
         // Verify that the browser injecting stream wrapper didn't catch an exception and disable itself.
         var agentDisabledLogLine = _fixture.AgentLog.TryGetLogLine(AgentLogBase.ErrorLogLinePrefixRegex + "Unexpected exception. Browser injection will be disabled. *?");
         Assert.Null(agentDisabledLogLine);
+    }
+}
+
+public class BrowserAgentAutoInjectionSplitHeadCoreOldest : BrowserAgentAutoInjectionSplitHeadBase<BasicAspNetCoreRazorApplicationFixtureCoreOldest>
+{
+    public BrowserAgentAutoInjectionSplitHeadCoreOldest(BasicAspNetCoreRazorApplicationFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
+}
+
+public class BrowserAgentAutoInjectionSplitHeadCoreLatest : BrowserAgentAutoInjectionSplitHeadBase<BasicAspNetCoreRazorApplicationFixtureCoreLatest>
+{
+    public BrowserAgentAutoInjectionSplitHeadCoreLatest(BasicAspNetCoreRazorApplicationFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
     }
 }

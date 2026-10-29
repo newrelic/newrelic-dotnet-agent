@@ -44,7 +44,7 @@ jobs:
         with:
           solution-path: ${{ github.workspace }}\tests\Agent\IntegrationTests\IntegrationTests.sln
           search-paths: Applications SharedApplications
-          skip-projects: AzureFunctionApplication AzureFunctionInProcApplication
+          skip-projects: AzureFunctionApplication
           x86-projects: ConsoleMultiFunctionApplicationCore
           artifact-name: integrationtests
 
@@ -81,7 +81,7 @@ jobs:
 
     env:
       integration_tests_shared_project: ${{ github.workspace }}/tests/Agent/IntegrationTests/Shared
-      integration_tests_path: ${{ github.workspace }}/tests/Agent/IntegrationTests/IntegrationTests/bin/Release/net10.0
+      integration_tests_path: ${{ github.workspace }}/tests/Agent/IntegrationTests/IntegrationTests/bin/Release/net11.0
       # Make this variable true to enable extra data-gathering and logging to help troubleshoot test failures, at the cost of additional time and resources
       enhanced_logging: false
       NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY: 1
@@ -192,6 +192,12 @@ jobs:
         with:
           dotnet-version: '10.0.x'
           dotnet-quality: 'ga'
+
+      - name: Install .NET 11 Preview SDK
+        uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7 # v5.2.0
+        with:
+          dotnet-version: '11.0.x'
+          dotnet-quality: 'preview'
 
       - name: Run Integration Tests
         run: |
@@ -375,7 +381,7 @@ jobs:
       fail-fast: false
     env:
       integration_tests_shared_project: ${{ github.workspace }}/tests/Agent/IntegrationTests/Shared
-      integration_tests_path: ${{ github.workspace }}/tests/Agent/IntegrationTests/IntegrationTests/bin/Release/net10.0
+      integration_tests_path: ${{ github.workspace }}/tests/Agent/IntegrationTests/IntegrationTests/bin/Release/net11.0
       test_results_path: ${{ github.workspace }}/tests/TestResults
       NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY: 1
       NR_DOTNET_TEST_PREBUILT_APPS: 1
@@ -424,10 +430,14 @@ jobs:
       - name: Install .NET SDKs and runtimes
         uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
-          dotnet-version: |
-            8.0.x
-            10.0.x
+          dotnet-version: '10.0.x'
           dotnet-quality: 'ga'
+
+      - name: Install .NET 11 Preview SDK
+        uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7 # v5.2.0
+        with:
+          dotnet-version: '11.0.x'
+          dotnet-quality: 'preview'
 
       - name: Discover Linux-eligible tests
         id: discover

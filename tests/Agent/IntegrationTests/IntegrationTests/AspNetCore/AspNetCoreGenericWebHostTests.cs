@@ -12,13 +12,14 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.AspNetCore;
 
-public class AspNetCoreGenericWebHostTests : NewRelicIntegrationTest<RemoteServiceFixtures.AspNetCoreFeaturesFixture>
+public abstract class AspNetCoreGenericWebHostTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
+    where TFixture : RemoteServiceFixtures.AspNetCoreFeaturesFixture
 {
-    private readonly RemoteServiceFixtures.AspNetCoreFeaturesFixture _fixture;
+    private readonly TFixture _fixture;
 
     private const int ExpectedTransactionCount = 2;
 
-    public AspNetCoreGenericWebHostTests(RemoteServiceFixtures.AspNetCoreFeaturesFixture fixture, ITestOutputHelper output)
+    protected AspNetCoreGenericWebHostTestsBase(TFixture fixture, ITestOutputHelper output)
         : base(fixture)
     {
         _fixture = fixture;
@@ -128,4 +129,20 @@ public class AspNetCoreGenericWebHostTests : NewRelicIntegrationTest<RemoteServi
         new Assertions.ExpectedMetric { metricName = @"DotNet/HomeController/ThrowException", metricScope = @"WebTransaction/MVC/Home/ThrowException", CallCountAllHarvests = 1 },
         new Assertions.ExpectedMetric { metricName = @"DotNet/Middleware Pipeline", metricScope = @"WebTransaction/MVC/Home/ThrowException", CallCountAllHarvests = 1 }
     };
+}
+
+public class AspNetCoreGenericWebHostTestsCoreOldest : AspNetCoreGenericWebHostTestsBase<RemoteServiceFixtures.AspNetCoreFeaturesFixtureCoreOldest>
+{
+    public AspNetCoreGenericWebHostTestsCoreOldest(RemoteServiceFixtures.AspNetCoreFeaturesFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
+}
+
+public class AspNetCoreGenericWebHostTestsCoreLatest : AspNetCoreGenericWebHostTestsBase<RemoteServiceFixtures.AspNetCoreFeaturesFixtureCoreLatest>
+{
+    public AspNetCoreGenericWebHostTestsCoreLatest(RemoteServiceFixtures.AspNetCoreFeaturesFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
 }

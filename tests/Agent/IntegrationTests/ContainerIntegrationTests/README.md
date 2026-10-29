@@ -16,7 +16,7 @@ If your test just needs *any* ASP.NET Core app with the agent attached — e.g. 
        private const string Dockerfile = "SmokeTestApp/Dockerfile";
        private const string DockerComposeServiceName = "LinuxUnicodeLogfileTestApp";
        private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
-       private const string DistroTag = "noble";
+       private const string DistroTag = ContainerApplication.UbuntuDistroTag;
 
        public LinuxUnicodeLogFileTestFixture() : base(DistroTag, Architecture, Dockerfile)
        {
@@ -96,7 +96,7 @@ Add a new folder under `tests/Agent/IntegrationTests/ContainerApplications/<NewA
 
 Add a `Dockerfile` in the new app folder. Copy an existing one (e.g. `MemcachedTestApp/Dockerfile`) as a starting point — it needs to build the app, install/copy the New Relic agent home directory mount point, and set `CORECLR_ENABLE_PROFILING` / `CORECLR_PROFILER` / `CORECLR_NEWRELIC_HOME` / `CORECLR_PROFILER_PATH` / `NEW_RELIC_LOG_DIRECTORY` as `SmokeTestApp/Dockerfile` does.
 
-Only glibc-based distro images are exercised for functional tests by default — the CI build only produces glibc agent-home artifacts (`newrelichome_{x64,arm64}_coreclr_linux`), which get bind-mounted into every distro's container regardless of libc, so an Alpine (musl) container silently runs a mismatched agent binary. **Target Ubuntu ("noble")** for new functional coverage; only use Alpine if you are specifically validating musl support.
+Only glibc-based distro images are exercised for functional tests by default — the CI build only produces glibc agent-home artifacts (`newrelichome_{x64,arm64}_coreclr_linux`), which get bind-mounted into every distro's container regardless of libc, so an Alpine (musl) container silently runs a mismatched agent binary. **Target Ubuntu (`ContainerApplication.UbuntuDistroTag`)** for new functional coverage; only use Alpine if you are specifically validating musl support.
 
 ### 3. Add a docker-compose file
 

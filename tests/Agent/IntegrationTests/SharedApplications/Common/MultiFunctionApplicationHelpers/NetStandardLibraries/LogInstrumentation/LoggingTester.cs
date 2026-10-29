@@ -6,7 +6,7 @@
 #define MEL
 #endif
 
-#if NET10_0 || NET481_OR_GREATER
+#if NET11_0 || NET481_OR_GREATER
 #define MFALATEST
 #endif
 

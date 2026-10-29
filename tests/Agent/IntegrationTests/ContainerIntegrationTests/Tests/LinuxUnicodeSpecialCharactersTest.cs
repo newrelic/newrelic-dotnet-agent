@@ -16,11 +16,11 @@ namespace NewRelic.Agent.ContainerIntegrationTests.Tests;
 /// </summary>
 [Trait("Architecture", "amd64")]
 [Trait("TestArea", "Core")]
-public class LinuxUnicodeSpecialCharactersTest : NewRelicIntegrationTest<LinuxUnicodeSpecialCharactersTestFixture>
+public abstract class LinuxUnicodeSpecialCharactersTest<T> : NewRelicIntegrationTest<T> where T : LinuxUnicodeSpecialCharactersTestFixture
 {
-    private readonly LinuxUnicodeSpecialCharactersTestFixture _fixture;
+    private readonly T _fixture;
 
-    public LinuxUnicodeSpecialCharactersTest(LinuxUnicodeSpecialCharactersTestFixture fixture, ITestOutputHelper output) : base(fixture)
+    protected LinuxUnicodeSpecialCharactersTest(T fixture, ITestOutputHelper output) : base(fixture)
     {
         _fixture = fixture;
         _fixture.TestLogger = output;
@@ -56,5 +56,21 @@ public class LinuxUnicodeSpecialCharactersTest : NewRelicIntegrationTest<LinuxUn
 
         Assert.Contains(actualMetrics, m => m.MetricSpec.Name.Equals("WebTransaction/MVC/WeatherForecast/Get"));
         Assert.Contains(actualMetrics, m => m.MetricSpec.Name.Equals("DotNet/ContainerizedAspNetCoreApp.Controllers.WeatherForecastController/何かをする"));
+    }
+}
+
+public class LinuxUnicodeSpecialCharactersTestCoreOldest : LinuxUnicodeSpecialCharactersTest<LinuxUnicodeSpecialCharactersTestFixtureCoreOldest>
+{
+    public LinuxUnicodeSpecialCharactersTestCoreOldest(LinuxUnicodeSpecialCharactersTestFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
+}
+
+public class LinuxUnicodeSpecialCharactersTestCoreLatest : LinuxUnicodeSpecialCharactersTest<LinuxUnicodeSpecialCharactersTestFixtureCoreLatest>
+{
+    public LinuxUnicodeSpecialCharactersTestCoreLatest(LinuxUnicodeSpecialCharactersTestFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
     }
 }

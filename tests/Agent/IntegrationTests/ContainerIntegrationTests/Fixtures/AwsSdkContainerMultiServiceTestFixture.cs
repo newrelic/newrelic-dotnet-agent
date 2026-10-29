@@ -2,18 +2,19 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using NewRelic.Agent.ContainerIntegrationTests.Applications;
+using NewRelic.Agent.IntegrationTestHelpers;
 
 namespace NewRelic.Agent.ContainerIntegrationTests.Fixtures;
 
-public class AwsSdkContainerMultiServiceTestFixture : AwsSdkContainerTestFixtureBase
+public abstract class AwsSdkContainerMultiServiceTestFixture : AwsSdkContainerTestFixtureBase
 {
     private const string Dockerfile = "AwsSdkTestApp/Dockerfile";
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
-    private const string DistroTag = "jammy";
+    private const string DistroTag = ContainerApplication.UbuntuDistroTag;
 
     private readonly string BaseUrl;
 
-    public AwsSdkContainerMultiServiceTestFixture() : base(DistroTag, Architecture, Dockerfile)
+    protected AwsSdkContainerMultiServiceTestFixture(string dotnetVersion) : base(DistroTag, Architecture, dotnetVersion, Dockerfile)
     {
         BaseUrl = $"http://localhost:{Port}/awssdkmultiservice";
     }
@@ -22,4 +23,14 @@ public class AwsSdkContainerMultiServiceTestFixture : AwsSdkContainerTestFixture
     {
         GetAndAssertStatusCode($"{BaseUrl}/CallMultipleServicesAsync?tableName={tableName}&queueName={queueName}&bookName={bookName}", System.Net.HttpStatusCode.OK);
     }
+}
+
+public class AwsSdkContainerMultiServiceTestFixtureCoreOldest : AwsSdkContainerMultiServiceTestFixture
+{
+    public AwsSdkContainerMultiServiceTestFixtureCoreOldest() : base(Tfm.NetOldestVersion) { }
+}
+
+public class AwsSdkContainerMultiServiceTestFixtureCoreLatest : AwsSdkContainerMultiServiceTestFixture
+{
+    public AwsSdkContainerMultiServiceTestFixtureCoreLatest() : base(Tfm.NetLatestVersion) { }
 }

@@ -2,18 +2,19 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using NewRelic.Agent.ContainerIntegrationTests.Applications;
+using NewRelic.Agent.IntegrationTestHelpers;
 
 namespace NewRelic.Agent.ContainerIntegrationTests.Fixtures;
 
-public class AwsSdkContainerDynamoDBTestFixture : AwsSdkContainerTestFixtureBase
+public abstract class AwsSdkContainerDynamoDBTestFixture : AwsSdkContainerTestFixtureBase
 {
     private const string Dockerfile = "AwsSdkTestApp/Dockerfile";
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
-    private const string DistroTag = "jammy";
+    private const string DistroTag = ContainerApplication.UbuntuDistroTag;
 
     private readonly string BaseUrl;
 
-    public AwsSdkContainerDynamoDBTestFixture() : base(DistroTag, Architecture, Dockerfile)
+    protected AwsSdkContainerDynamoDBTestFixture(string dotnetVersion) : base(DistroTag, Architecture, dotnetVersion, Dockerfile)
     {
         BaseUrl = $"http://localhost:{Port}/awssdkdynamodb";
     }
@@ -53,4 +54,14 @@ public class AwsSdkContainerDynamoDBTestFixture : AwsSdkContainerTestFixtureBase
         GetAndAssertStatusCode($"{BaseUrl}/ScanAsync?tableName={tableName}", System.Net.HttpStatusCode.OK);
     }
 
+}
+
+public class AwsSdkContainerDynamoDBTestFixtureCoreOldest : AwsSdkContainerDynamoDBTestFixture
+{
+    public AwsSdkContainerDynamoDBTestFixtureCoreOldest() : base(Tfm.NetOldestVersion) { }
+}
+
+public class AwsSdkContainerDynamoDBTestFixtureCoreLatest : AwsSdkContainerDynamoDBTestFixture
+{
+    public AwsSdkContainerDynamoDBTestFixtureCoreLatest() : base(Tfm.NetLatestVersion) { }
 }

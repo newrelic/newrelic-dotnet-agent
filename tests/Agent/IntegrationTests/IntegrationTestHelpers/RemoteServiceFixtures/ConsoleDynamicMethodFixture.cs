@@ -79,42 +79,24 @@ public abstract class ConsoleDynamicMethodFixtureFWSpecificVersion : ConsoleDyna
     }
 }
 
-public class ConsoleDynamicMethodFixtureCore80 : ConsoleDynamicMethodFixtureCoreSpecificVersion
-{
-    public ConsoleDynamicMethodFixtureCore80() : base("net8.0")
-    {
-    }
-}
-
-public class ConsoleDynamicMethodFixtureCore100 : ConsoleDynamicMethodFixtureCoreSpecificVersion
-{
-    public ConsoleDynamicMethodFixtureCore100() : base("net10.0")
-    {
-    }
-}
-
 /// <summary>
 /// Use this fixture to test against the oldest supported .NET version.
-/// If you need to test against a feature that belongs to a specific .net core version, then consider
-/// using one of the existing specific version fixtures, or create a new specific version.
-/// When testing newer .net core preview releases, this targetFramework version should be updated.
+/// Update <see cref="Tfm.NetOldest"/> when the minimum supported version changes.
 /// </summary>
-public class ConsoleDynamicMethodFixtureCoreOldest : ConsoleDynamicMethodFixtureCore80
+public class ConsoleDynamicMethodFixtureCoreOldest : ConsoleDynamicMethodFixtureCoreSpecificVersion
 {
-    public ConsoleDynamicMethodFixtureCoreOldest()
+    public ConsoleDynamicMethodFixtureCoreOldest() : base(Tfm.NetOldest)
     {
     }
 }
 
 /// <summary>
-/// Use this fixture if you don't care about which .net core version the test application should use.
-/// If you need to test against a feature that belongs to a specific .net core version, then consider
-/// using one of the existing specific version fixtures, or create a new specific version.
-/// When testing newer .net core preview releases, this targetFramework version should be updated.
+/// Use this fixture when you don't care about a specific .NET version, or want the latest preview.
+/// Update <see cref="Tfm.NetLatest"/> when moving to a new generation.
 /// </summary>
-public class ConsoleDynamicMethodFixtureCoreLatest : ConsoleDynamicMethodFixtureCore100
+public class ConsoleDynamicMethodFixtureCoreLatest : ConsoleDynamicMethodFixtureCoreSpecificVersion
 {
-    public ConsoleDynamicMethodFixtureCoreLatest()
+    public ConsoleDynamicMethodFixtureCoreLatest() : base(Tfm.NetLatest)
     {
     }
 }
@@ -172,7 +154,7 @@ public abstract class ConsoleDynamicMethodFixtureCoreSpecificVersion : ConsoleDy
 /// </summary>
 public class ConsoleDynamicMethodFixtureCoreLatestX86 : ConsoleDynamicMethodFixtureCoreSpecificVersion
 {
-    public ConsoleDynamicMethodFixtureCoreLatestX86() : base("net10.0", "x86")
+    public ConsoleDynamicMethodFixtureCoreLatestX86() : base(Tfm.NetLatest, "x86")
     {
     }
 }
@@ -231,7 +213,7 @@ public abstract class ConsoleDynamicMethodFixture : RemoteApplicationFixture
         }
         catch (System.IO.IOException)
         {
-            // Starting in .NET 8, writes to a closed pipe throw an IO exception. So we'll just eat it and continue.
+            // Starting in .NET 8+, writes to a closed pipe throw an IO exception. So we'll just eat it and continue.
         }
 
         base.ShutdownRemoteApplication();

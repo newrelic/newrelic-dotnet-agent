@@ -12,11 +12,12 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.Errors;
 
-public class ExpectedErrorTests : NewRelicIntegrationTest<RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture>
+public abstract class ExpectedErrorTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
+    where TFixture : RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture
 {
-    private readonly RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture _fixture;
+    private readonly TFixture _fixture;
 
-    public ExpectedErrorTests(RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture fixture, ITestOutputHelper output)
+    protected ExpectedErrorTestsBase(TFixture fixture, ITestOutputHelper output)
         : base(fixture)
     {
         _fixture = fixture;
@@ -103,5 +104,21 @@ public class ExpectedErrorTests : NewRelicIntegrationTest<RemoteServiceFixtures.
         var spanEvents = _fixture.AgentLog.GetSpanEvents().ToList();
         var errorSpanEvents = spanEvents.Where(se => se.AgentAttributes.ContainsKey("error.expected"));
         Assert.True(errorSpanEvents.Count() > 0);
+    }
+}
+
+public class ExpectedErrorTestsCoreOldest : ExpectedErrorTestsBase<RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixtureCoreOldest>
+{
+    public ExpectedErrorTestsCoreOldest(RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
+}
+
+public class ExpectedErrorTestsCoreLatest : ExpectedErrorTestsBase<RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixtureCoreLatest>
+{
+    public ExpectedErrorTestsCoreLatest(RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
     }
 }

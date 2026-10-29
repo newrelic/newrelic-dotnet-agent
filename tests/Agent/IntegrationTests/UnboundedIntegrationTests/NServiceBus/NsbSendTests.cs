@@ -35,7 +35,6 @@ public abstract class NsbSendTestsBase<TFixture> : NewRelicIntegrationTest<TFixt
                 var configModifier = new NewRelicConfigModifier(configPath);
                 configModifier.ForceTransactionTraces();
                 configModifier.SetLogLevel("finest");
-                configModifier.DisableEventListenerSamplers(); // Required for .NET 8 to pass.
                 configModifier.ConfigureFasterMetricsHarvestCycle(10);
                 configModifier.ConfigureFasterTransactionTracesHarvestCycle(10);
             },

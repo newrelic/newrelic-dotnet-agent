@@ -13,17 +13,15 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 public class AzureFuncTool : RemoteService
 {
     private readonly bool _enableAzureFunctionMode;
-    private readonly bool _inProc;
 
     private StringBuilder _stdOutStringBuilder = new();
     private StringBuilder _stdErrStringBuilder = new();
     private bool _outputCapturedAfterShutdown;
 
-    public AzureFuncTool(string applicationDirectoryName, string executableName, string targetFramework, ApplicationType applicationType, bool createsPidFile = true, bool isCoreApp = false, bool publishApp = false, bool enableAzureFunctionMode = true, bool inProc = false)
+    public AzureFuncTool(string applicationDirectoryName, string executableName, string targetFramework, ApplicationType applicationType, bool createsPidFile = true, bool isCoreApp = false, bool publishApp = false, bool enableAzureFunctionMode = true)
         : base(applicationDirectoryName, executableName, targetFramework, applicationType, createsPidFile, isCoreApp, publishApp)
     {
         _enableAzureFunctionMode = enableAzureFunctionMode;
-        _inProc = inProc;
 
         CaptureStandardOutput = false; // we implement our own output capture here, so don't use the base class implementation
     }
@@ -63,10 +61,7 @@ public class AzureFuncTool : RemoteService
             startInfo.Environment.Add("NEW_RELIC_AZURE_FUNCTION_MODE_ENABLED", _enableAzureFunctionMode.ToString());
 
         // environment variables needed by azure function instrumentation
-        startInfo.Environment.Add("FUNCTIONS_WORKER_RUNTIME", _inProc ? "dotnet" : "dotnet-isolated");
-        if (_inProc)
-            startInfo.Environment.Add("FUNCTIONS_INPROC_NET8_ENABLED", "1");
-
+        startInfo.Environment.Add("FUNCTIONS_WORKER_RUNTIME", "dotnet-isolated");
         startInfo.Environment.Add("FUNCTIONS_EXTENSION_VERSION", "~4");
         startInfo.Environment.Add("WEBSITE_RESOURCE_GROUP", "my_resource_group");
         startInfo.Environment.Add("REGION_NAME", "my_azure_region");

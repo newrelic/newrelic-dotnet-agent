@@ -9,7 +9,7 @@ using NewRelic.Testing.Assertions;
 
 namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 
-public class AspNetCoreDistTraceRequestChainFixture : RemoteApplicationFixture
+public abstract class AspNetCoreDistTraceRequestChainFixture : RemoteApplicationFixture
 {
     private const string ApplicationDirectoryName = @"AspNetCoreDistTracingApplication";
     private const string ExecutableName = ApplicationDirectoryName + ".exe";
@@ -19,22 +19,25 @@ public class AspNetCoreDistTraceRequestChainFixture : RemoteApplicationFixture
 
     public bool ExcludeNewRelicHeader = false;
 
+    private readonly string _targetFramework;
     private AgentLogFile _firstCallAppAgentLog;
     private AgentLogFile _secondCallAppAgentLog;
 
     public AgentLogFile FirstCallAppAgentLog => _firstCallAppAgentLog ?? (_firstCallAppAgentLog = new AgentLogFile(FirstCallApplication.DefaultLogFileDirectoryPath, TestLogger, string.Empty, Timing.TimeToWaitForLog));
     public AgentLogFile SecondCallAppAgentLog => _secondCallAppAgentLog ?? (_secondCallAppAgentLog = new AgentLogFile(SecondCallApplication.DefaultLogFileDirectoryPath, TestLogger, string.Empty, Timing.TimeToWaitForLog));
 
-    public AspNetCoreDistTraceRequestChainFixture()
+    protected AspNetCoreDistTraceRequestChainFixture(string targetFramework)
         : base(new RemoteService(
             ApplicationDirectoryName,
             ExecutableName,
-            "net10.0",
+            targetFramework,
             ApplicationType.Bounded,
             true,
             true,
             true))
     {
+        _targetFramework = targetFramework;
+
         Actions(setupConfiguration: () =>
         {
             var configModifier = new NewRelicConfigModifier(DestinationNewRelicConfigFilePath);
@@ -80,7 +83,7 @@ public class AspNetCoreDistTraceRequestChainFixture : RemoteApplicationFixture
         var service = new RemoteService(
             ApplicationDirectoryName,
             ExecutableName,
-            "net10.0",
+            _targetFramework,
             ApplicationType.Bounded,
             true,
             true,
@@ -144,5 +147,19 @@ public class AspNetCoreDistTraceRequestChainFixture : RemoteApplicationFixture
         SecondCallApplication.Dispose();
 
         base.Dispose();
+    }
+}
+
+public class AspNetCoreDistTraceRequestChainFixtureCoreOldest : AspNetCoreDistTraceRequestChainFixture
+{
+    public AspNetCoreDistTraceRequestChainFixtureCoreOldest() : base(Tfm.NetOldest)
+    {
+    }
+}
+
+public class AspNetCoreDistTraceRequestChainFixtureCoreLatest : AspNetCoreDistTraceRequestChainFixture
+{
+    public AspNetCoreDistTraceRequestChainFixtureCoreLatest() : base(Tfm.NetLatest)
+    {
     }
 }

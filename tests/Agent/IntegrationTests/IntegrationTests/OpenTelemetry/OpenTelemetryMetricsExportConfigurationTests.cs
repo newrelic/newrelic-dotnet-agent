@@ -90,9 +90,9 @@ public class OpenTelemetryMetricsExportConfigurationInvalidIntervalLessThanTimeo
     }
 }
 
-public class OpenTelemetryMetricsExportConfigurationInvalidIntervalEqualsTimeoutTests : OpenTelemetryMetricsExportConfigurationTestsBase<OtlpMetricsWithCollectorFixtureCoreNet8>
+public class OpenTelemetryMetricsExportConfigurationInvalidIntervalEqualsTimeoutTests : OpenTelemetryMetricsExportConfigurationTestsBase<OtlpMetricsWithCollectorFixtureCoreOldest>
 {
-    public OpenTelemetryMetricsExportConfigurationInvalidIntervalEqualsTimeoutTests(OtlpMetricsWithCollectorFixtureCoreNet8 fixture, ITestOutputHelper outputHelper)
+    public OpenTelemetryMetricsExportConfigurationInvalidIntervalEqualsTimeoutTests(OtlpMetricsWithCollectorFixtureCoreOldest fixture, ITestOutputHelper outputHelper)
         : base(fixture, outputHelper)
     {
         // Setup with interval == timeout (invalid per spec REQ-012: interval must be strictly greater than timeout)

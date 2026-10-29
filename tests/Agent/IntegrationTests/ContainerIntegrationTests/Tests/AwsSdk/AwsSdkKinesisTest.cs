@@ -10,12 +10,12 @@ using Xunit;
 
 namespace NewRelic.Agent.ContainerIntegrationTests.Tests.AwsSdk;
 
-[Collection("AwsSdkTests")]
 [Trait("Architecture", "amd64")]
 [Trait("TestArea", "Aws")]
-public class AwsSdkKinesisTest : NewRelicIntegrationTest<AwsSdkContainerKinesisTestFixture>
+public abstract class AwsSdkKinesisTestBase<TFixture> : NewRelicIntegrationTest<TFixture>
+    where TFixture : AwsSdkContainerKinesisTestFixture
 {
-    private readonly AwsSdkContainerKinesisTestFixture _fixture;
+    private readonly TFixture _fixture;
 
     private readonly string _streamName = $"TestStream-{Guid.NewGuid()}";
     private readonly string _consumerName = $"TestConsumer-{Guid.NewGuid()}";
@@ -23,7 +23,7 @@ public class AwsSdkKinesisTest : NewRelicIntegrationTest<AwsSdkContainerKinesisT
 
     private const string _region = "us-west-2"; // matches AuthenticationRegion in AwsSdkKinesisExerciser
 
-    public AwsSdkKinesisTest(AwsSdkContainerKinesisTestFixture fixture, ITestOutputHelper output) : base(fixture)
+    protected AwsSdkKinesisTestBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
     {
         _fixture = fixture;
         _fixture.TestLogger = output;
@@ -129,5 +129,21 @@ public class AwsSdkKinesisTest : NewRelicIntegrationTest<AwsSdkContainerKinesisT
 
             () => Assertions.MetricsExist(expectedMetrics, metrics)
             );
+    }
+}
+
+[Collection("AwsSdkTests")]
+public class AwsSdkKinesisTestCoreOldest : AwsSdkKinesisTestBase<AwsSdkContainerKinesisTestFixtureCoreOldest>
+{
+    public AwsSdkKinesisTestCoreOldest(AwsSdkContainerKinesisTestFixtureCoreOldest fixture, ITestOutputHelper output) : base(fixture, output)
+    {
+    }
+}
+
+[Collection("AwsSdkTests")]
+public class AwsSdkKinesisTestCoreLatest : AwsSdkKinesisTestBase<AwsSdkContainerKinesisTestFixtureCoreLatest>
+{
+    public AwsSdkKinesisTestCoreLatest(AwsSdkContainerKinesisTestFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)
+    {
     }
 }

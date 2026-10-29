@@ -14,13 +14,14 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.CodeLevelMetrics;
 
-public class NetCoreCustomInstrumentationCodeAttributeTests : NewRelicIntegrationTest<NetCoreAsyncTestsFixture>
+public abstract class NetCoreCustomInstrumentationCodeAttributeTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
+    where TFixture : NetCoreAsyncTestsFixture
 {
-    private readonly NetCoreAsyncTestsFixture _fixture;
+    private readonly TFixture _fixture;
 
     private const string AsyncUseCasesNamespace = "NetCoreAsyncApplication.AsyncUseCases";
 
-    public NetCoreCustomInstrumentationCodeAttributeTests(NetCoreAsyncTestsFixture fixture, ITestOutputHelper output) : base(fixture)
+    protected NetCoreCustomInstrumentationCodeAttributeTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
     {
         _fixture = fixture;
         _fixture.TestLogger = output;
@@ -84,4 +85,20 @@ public class NetCoreCustomInstrumentationCodeAttributeTests : NewRelicIntegratio
         { "code.namespace", AsyncUseCasesNamespace },
         { "code.function", "CustomMethodAsync1" }
     };
+}
+
+public class NetCoreCustomInstrumentationCodeAttributeTestsCoreOldest : NetCoreCustomInstrumentationCodeAttributeTestsBase<NetCoreAsyncTestsFixtureCoreOldest>
+{
+    public NetCoreCustomInstrumentationCodeAttributeTestsCoreOldest(NetCoreAsyncTestsFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
+}
+
+public class NetCoreCustomInstrumentationCodeAttributeTestsCoreLatest : NetCoreCustomInstrumentationCodeAttributeTestsBase<NetCoreAsyncTestsFixtureCoreLatest>
+{
+    public NetCoreCustomInstrumentationCodeAttributeTestsCoreLatest(NetCoreAsyncTestsFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
 }

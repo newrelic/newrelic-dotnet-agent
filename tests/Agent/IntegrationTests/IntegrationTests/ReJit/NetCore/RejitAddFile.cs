@@ -95,25 +95,49 @@ public abstract class RejitAddFileBase<TFixture> : NewRelicIntegrationTest<TFixt
     }
 }
 
-public class RejitAddFileWithFileWatcherEnabled : RejitAddFileBase<AspNetCoreReJitMvcApplicationFixture>
+public class RejitAddFileWithFileWatcherEnabledCoreOldest : RejitAddFileBase<AspNetCoreReJitMvcApplicationFixtureCoreOldest>
 {
-    public RejitAddFileWithFileWatcherEnabled(AspNetCoreReJitMvcApplicationFixture fixture, ITestOutputHelper output)
+    public RejitAddFileWithFileWatcherEnabledCoreOldest(AspNetCoreReJitMvcApplicationFixtureCoreOldest fixture, ITestOutputHelper output)
         : base(fixture, output, false)
     {
     }
 }
 
-public class RejitAddFileWithFileWatcherDisabled : RejitAddFileBase<AspNetCoreReJitMvcApplicationFixture>
+public class RejitAddFileWithFileWatcherEnabledCoreLatest : RejitAddFileBase<AspNetCoreReJitMvcApplicationFixtureCoreLatest>
 {
-    public RejitAddFileWithFileWatcherDisabled(AspNetCoreReJitMvcApplicationFixture fixture, ITestOutputHelper output)
+    public RejitAddFileWithFileWatcherEnabledCoreLatest(AspNetCoreReJitMvcApplicationFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output, false)
+    {
+    }
+}
+
+public class RejitAddFileWithFileWatcherDisabledCoreOldest : RejitAddFileBase<AspNetCoreReJitMvcApplicationFixtureCoreOldest>
+{
+    public RejitAddFileWithFileWatcherDisabledCoreOldest(AspNetCoreReJitMvcApplicationFixtureCoreOldest fixture, ITestOutputHelper output)
         : base(fixture, output, true)
     {
     }
 }
 
-public class RejitAddFileWithTieredCompilation : RejitAddFileBase<AspNetCoreReJitMvcApplicationFixtureWithTieredCompilation>
+public class RejitAddFileWithFileWatcherDisabledCoreLatest : RejitAddFileBase<AspNetCoreReJitMvcApplicationFixtureCoreLatest>
 {
-    public RejitAddFileWithTieredCompilation(AspNetCoreReJitMvcApplicationFixtureWithTieredCompilation fixture, ITestOutputHelper output)
+    public RejitAddFileWithFileWatcherDisabledCoreLatest(AspNetCoreReJitMvcApplicationFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output, true)
+    {
+    }
+}
+
+public class RejitAddFileWithTieredCompilationCoreOldest : RejitAddFileBase<AspNetCoreReJitMvcApplicationFixtureWithTieredCompilationCoreOldest>
+{
+    public RejitAddFileWithTieredCompilationCoreOldest(AspNetCoreReJitMvcApplicationFixtureWithTieredCompilationCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output, false)
+    {
+    }
+}
+
+public class RejitAddFileWithTieredCompilationCoreLatest : RejitAddFileBase<AspNetCoreReJitMvcApplicationFixtureWithTieredCompilationCoreLatest>
+{
+    public RejitAddFileWithTieredCompilationCoreLatest(AspNetCoreReJitMvcApplicationFixtureWithTieredCompilationCoreLatest fixture, ITestOutputHelper output)
         : base(fixture, output, false)
     {
     }

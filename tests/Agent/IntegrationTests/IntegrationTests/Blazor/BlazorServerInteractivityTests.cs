@@ -10,11 +10,11 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.Blazor;
 
-public class BlazorServerInteractivityTests : NewRelicIntegrationTest<RemoteServiceFixtures.BlazorSignalRApplicationFixture>
+public abstract class BlazorServerInteractivityTestsBase<TFixture> : NewRelicIntegrationTest<TFixture> where TFixture : RemoteServiceFixtures.BlazorSignalRApplicationFixture
 {
-    private readonly RemoteServiceFixtures.BlazorSignalRApplicationFixture _fixture;
+    private readonly TFixture _fixture;
 
-    public BlazorServerInteractivityTests(RemoteServiceFixtures.BlazorSignalRApplicationFixture fixture, ITestOutputHelper output)
+    protected BlazorServerInteractivityTestsBase(TFixture fixture, ITestOutputHelper output)
         : base(fixture)
     {
         _fixture = fixture;
@@ -68,5 +68,21 @@ public class BlazorServerInteractivityTests : NewRelicIntegrationTest<RemoteServ
             () => Assert.Empty(sendEchoMetrics),
             () => Assert.NotNull(webSocketLogLine)
         );
+    }
+}
+
+public class BlazorServerInteractivityTestsCoreOldest : BlazorServerInteractivityTestsBase<RemoteServiceFixtures.BlazorSignalRApplicationFixtureCoreOldest>
+{
+    public BlazorServerInteractivityTestsCoreOldest(RemoteServiceFixtures.BlazorSignalRApplicationFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
+}
+
+public class BlazorServerInteractivityTestsCoreLatest : BlazorServerInteractivityTestsBase<RemoteServiceFixtures.BlazorSignalRApplicationFixtureCoreLatest>
+{
+    public BlazorServerInteractivityTestsCoreLatest(RemoteServiceFixtures.BlazorSignalRApplicationFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
     }
 }

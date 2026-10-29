@@ -27,12 +27,13 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures;
 // body, and ResponseCompressionBodyOnWriteWrapper separately wraps the compression stream - so
 // the compressed variant covers the multi-write path through that second instance, which no
 // existing test did. The latch lives in HttpContext.Items so both instances observe it.
-public abstract class BrowserAgentAutoInjectionLargeHeadBase : NewRelicIntegrationTest<BasicAspNetCoreRazorApplicationFixture>
+public abstract class BrowserAgentAutoInjectionLargeHeadBase<TFixture> : NewRelicIntegrationTest<TFixture>
+    where TFixture : BasicAspNetCoreRazorApplicationFixture
 {
-    private readonly BasicAspNetCoreRazorApplicationFixture _fixture;
+    private readonly TFixture _fixture;
     private string _htmlContent;
 
-    protected BrowserAgentAutoInjectionLargeHeadBase(BasicAspNetCoreRazorApplicationFixture fixture, ITestOutputHelper output, bool enableResponseCompression)
+    protected BrowserAgentAutoInjectionLargeHeadBase(TFixture fixture, ITestOutputHelper output, bool enableResponseCompression)
         : base(fixture)
     {
         _fixture = fixture;
@@ -133,17 +134,33 @@ public abstract class BrowserAgentAutoInjectionLargeHeadBase : NewRelicIntegrati
     }
 }
 
-public class BrowserAgentAutoInjectionLargeHeadUnCompressed : BrowserAgentAutoInjectionLargeHeadBase
+public class BrowserAgentAutoInjectionLargeHeadUnCompressedCoreOldest : BrowserAgentAutoInjectionLargeHeadBase<BasicAspNetCoreRazorApplicationFixtureCoreOldest>
 {
-    public BrowserAgentAutoInjectionLargeHeadUnCompressed(BasicAspNetCoreRazorApplicationFixture fixture, ITestOutputHelper output)
+    public BrowserAgentAutoInjectionLargeHeadUnCompressedCoreOldest(BasicAspNetCoreRazorApplicationFixtureCoreOldest fixture, ITestOutputHelper output)
         : base(fixture, output, false)
     {
     }
 }
 
-public class BrowserAgentAutoInjectionLargeHeadCompressed : BrowserAgentAutoInjectionLargeHeadBase
+public class BrowserAgentAutoInjectionLargeHeadUnCompressedCoreLatest : BrowserAgentAutoInjectionLargeHeadBase<BasicAspNetCoreRazorApplicationFixtureCoreLatest>
 {
-    public BrowserAgentAutoInjectionLargeHeadCompressed(BasicAspNetCoreRazorApplicationFixture fixture, ITestOutputHelper output)
+    public BrowserAgentAutoInjectionLargeHeadUnCompressedCoreLatest(BasicAspNetCoreRazorApplicationFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output, false)
+    {
+    }
+}
+
+public class BrowserAgentAutoInjectionLargeHeadCompressedCoreOldest : BrowserAgentAutoInjectionLargeHeadBase<BasicAspNetCoreRazorApplicationFixtureCoreOldest>
+{
+    public BrowserAgentAutoInjectionLargeHeadCompressedCoreOldest(BasicAspNetCoreRazorApplicationFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output, true)
+    {
+    }
+}
+
+public class BrowserAgentAutoInjectionLargeHeadCompressedCoreLatest : BrowserAgentAutoInjectionLargeHeadBase<BasicAspNetCoreRazorApplicationFixtureCoreLatest>
+{
+    public BrowserAgentAutoInjectionLargeHeadCompressedCoreLatest(BasicAspNetCoreRazorApplicationFixtureCoreLatest fixture, ITestOutputHelper output)
         : base(fixture, output, true)
     {
     }

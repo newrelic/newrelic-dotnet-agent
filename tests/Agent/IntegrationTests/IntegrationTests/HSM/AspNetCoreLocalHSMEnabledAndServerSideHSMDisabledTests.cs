@@ -7,14 +7,15 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.HSM;
 
-public class AspNetCoreLocalHSMEnabledAndServerSideHSMDisabledTests : NewRelicIntegrationTest<RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture>
+public abstract class AspNetCoreLocalHSMEnabledAndServerSideHSMDisabledTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
+    where TFixture : RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture
 {
     private const string QueryStringParameterValue = @"my thing";
 
 
-    private readonly RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture _fixture;
+    private readonly TFixture _fixture;
 
-    public AspNetCoreLocalHSMEnabledAndServerSideHSMDisabledTests(RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture fixture, ITestOutputHelper output)
+    protected AspNetCoreLocalHSMEnabledAndServerSideHSMDisabledTestsBase(TFixture fixture, ITestOutputHelper output)
         : base(fixture)
     {
         _fixture = fixture;
@@ -49,5 +50,21 @@ public class AspNetCoreLocalHSMEnabledAndServerSideHSMDisabledTests : NewRelicIn
         // 12/14/23 - the response status changed from "Gone" to "Conflict". If this test fails in the future, be alert for it possibly changing back.
         var notConnectedLogLine = _fixture.AgentLog.TryGetLogLine(AgentLogBase.ErrorResponseLogLinePrefixRegex + "Received HTTP status code Conflict *?");
         Assert.NotNull(notConnectedLogLine);
+    }
+}
+
+public class AspNetCoreLocalHSMEnabledAndServerSideHSMDisabledTestsCoreOldest : AspNetCoreLocalHSMEnabledAndServerSideHSMDisabledTestsBase<RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixtureCoreOldest>
+{
+    public AspNetCoreLocalHSMEnabledAndServerSideHSMDisabledTestsCoreOldest(RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
+}
+
+public class AspNetCoreLocalHSMEnabledAndServerSideHSMDisabledTestsCoreLatest : AspNetCoreLocalHSMEnabledAndServerSideHSMDisabledTestsBase<RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixtureCoreLatest>
+{
+    public AspNetCoreLocalHSMEnabledAndServerSideHSMDisabledTestsCoreLatest(RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
     }
 }

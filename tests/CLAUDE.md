@@ -249,7 +249,7 @@ How the Linux-agent container tests actually wire up (rediscovered often -- capt
 - **glibc vs musl:** `build.ps1 -Platform linux` and the `homefolders` CI artifact only carry the **glibc**
   `.so` (`newrelichome_{x64,arm64}_coreclr_linux`); `CopyNewRelicHomeCoreClrLinuxDirectoryToRemote` copies that
   same glibc home for **every** distro fixture including Alpine (the separate musl profiler artifacts from
-  `build_profiler.yml` are not wired into `homefolders`). Target **glibc distros (Ubuntu "noble")** for new
+  `build_profiler.yml` are not wired into `homefolders`). Target **glibc distros (Ubuntu, `ContainerApplication.UbuntuDistroTag`)** for new
   functional tests; avoid Alpine unless specifically validating musl.
 ### Container tests: Distro vs TestArea traits
 
@@ -260,7 +260,18 @@ How the Linux-agent container tests actually wire up (rediscovered often -- capt
 
 **A new functional container test class must get a `TestArea` trait, never `Distro`.** Reuse an existing `TestArea` value where it fits. Adding a **new** `TestArea` value requires adding a matching matrix `include:` entry in `linux_container_tests.yml` (filter `Architecture=<arch>&TestArea=<value>`) -- nothing checks this for you, so a class whose trait no matrix entry asks for is silently never run.
 
-Both `Distro` and `TestArea` traits may be declared on an **abstract base class** and inherited by concrete subclasses (e.g. `AwsSdkSQSTestBase` carries `TestArea=Aws`; its two concrete subclasses inherit it without redeclaring). Only concrete classes need a selector; abstract bases never need one. Own traits win over inherited ones.
+Both `Distro` and `TestArea` traits may be declared on an **abstract base class** and inherited by concrete subclasses (e.g. `AwsSdkSQSTestBase` carries `TestArea=Aws`; its concrete subclasses inherit it without redeclaring). Only concrete classes need a selector; abstract bases never need one. Own traits win over inherited ones.
+
+### Container tests: target .NET versions
+
+- **Smoke tests** (the `Distro` fan-out in `LinuxContainerTests`) target **only the current LTS**: `Tfm.NetLtsVersion`.
+- **Every other container test** targets **both `Tfm.NetOldestVersion` and `Tfm.NetLatestVersion`**, unless there is an explicit reason not to. Write that reason in a comment on the fixture.
+- **Shape:** an abstract fixture with a `dotnetVersion` ctor parameter, plus `...CoreOldest` / `...CoreLatest` subclasses. Then a generic abstract test base carrying the traits, plus `...CoreOldest` / `...CoreLatest` test classes. Template: `Fixtures/RuntimeAsyncContainerTestFixture.cs` + `Tests/RuntimeAsyncContainerTests.cs`.
+- A functional test never borrows a smoke fixture. A smoke fixture is pinned to LTS.
+- The app csproj targets both TFMs. Its Dockerfile selects one from `APP_DOTNET_VERSION` (`--framework net${APP_DOTNET_VERSION}` plus `-p:TargetFramework`/`-p:TargetFrameworks`). `ContainerApplication` sets that variable from the fixture's version. Redeclare the `ARG` in each Dockerfile stage that uses it.
+- `[Collection]` is not inherited. Put it on each concrete class.
+- `SmokeTestApp/Dockerfile.amazon` and `Dockerfile.fedora` use private ACR base images tagged per .NET version (`amazonlinux-aspnet:<ver>`, `fedora-aspnet:<ver>`). A new version needs those images built first: `ContainerApplications/CustomBaseContainerBuild/README.md`.
+- Never hardcode a version literal in a fixture. Use the `Tfm` constants.
 
 ## Performance tests
 

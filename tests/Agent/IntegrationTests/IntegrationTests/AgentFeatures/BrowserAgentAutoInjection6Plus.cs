@@ -9,15 +9,16 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.AgentFeatures;
 
-public abstract class BrowserAgentAutoInjection6PlusBase : NewRelicIntegrationTest<BasicAspNetCoreRazorApplicationFixture>
+public abstract class BrowserAgentAutoInjection6PlusBase<TFixture> : NewRelicIntegrationTest<TFixture>
+    where TFixture : BasicAspNetCoreRazorApplicationFixture
 {
-    private readonly BasicAspNetCoreRazorApplicationFixture _fixture;
+    private readonly TFixture _fixture;
     private string _htmlContent;
     private string _staticContent;
     private string _fooContent;
     private bool _browserInjectionEnabled;
 
-    protected BrowserAgentAutoInjection6PlusBase(BasicAspNetCoreRazorApplicationFixture fixture,
+    protected BrowserAgentAutoInjection6PlusBase(TFixture fixture,
         ITestOutputHelper output, bool enableBrowserInjection, bool enableResponseCompression, string loaderType = "rum")
         : base(fixture)
     {
@@ -93,49 +94,97 @@ public abstract class BrowserAgentAutoInjection6PlusBase : NewRelicIntegrationTe
     }
 }
 
-public class BrowserAgentAutoInjection6PlusRumUnCompressed : BrowserAgentAutoInjection6PlusBase
+public class BrowserAgentAutoInjection6PlusRumUnCompressedCoreOldest : BrowserAgentAutoInjection6PlusBase<BasicAspNetCoreRazorApplicationFixtureCoreOldest>
 {
-    public BrowserAgentAutoInjection6PlusRumUnCompressed(BasicAspNetCoreRazorApplicationFixture fixture, ITestOutputHelper output)
+    public BrowserAgentAutoInjection6PlusRumUnCompressedCoreOldest(BasicAspNetCoreRazorApplicationFixtureCoreOldest fixture, ITestOutputHelper output)
         : base(fixture, output, true, false)
     {
     }
 }
 
-public class BrowserAgentAutoInjection6PlusRumCompressed : BrowserAgentAutoInjection6PlusBase
+public class BrowserAgentAutoInjection6PlusRumUnCompressedCoreLatest : BrowserAgentAutoInjection6PlusBase<BasicAspNetCoreRazorApplicationFixtureCoreLatest>
 {
-    public BrowserAgentAutoInjection6PlusRumCompressed(BasicAspNetCoreRazorApplicationFixture fixture, ITestOutputHelper output)
+    public BrowserAgentAutoInjection6PlusRumUnCompressedCoreLatest(BasicAspNetCoreRazorApplicationFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output, true, false)
+    {
+    }
+}
+
+public class BrowserAgentAutoInjection6PlusRumCompressedCoreOldest : BrowserAgentAutoInjection6PlusBase<BasicAspNetCoreRazorApplicationFixtureCoreOldest>
+{
+    public BrowserAgentAutoInjection6PlusRumCompressedCoreOldest(BasicAspNetCoreRazorApplicationFixtureCoreOldest fixture, ITestOutputHelper output)
         : base(fixture, output, true, true)
     {
     }
 }
 
-public class BrowserAgentAutoInjection6PlusInjectionDisabledRumUnCompressed : BrowserAgentAutoInjection6PlusBase
+public class BrowserAgentAutoInjection6PlusRumCompressedCoreLatest : BrowserAgentAutoInjection6PlusBase<BasicAspNetCoreRazorApplicationFixtureCoreLatest>
 {
-    public BrowserAgentAutoInjection6PlusInjectionDisabledRumUnCompressed(BasicAspNetCoreRazorApplicationFixture fixture, ITestOutputHelper output)
+    public BrowserAgentAutoInjection6PlusRumCompressedCoreLatest(BasicAspNetCoreRazorApplicationFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output, true, true)
+    {
+    }
+}
+
+public class BrowserAgentAutoInjection6PlusInjectionDisabledRumUnCompressedCoreOldest : BrowserAgentAutoInjection6PlusBase<BasicAspNetCoreRazorApplicationFixtureCoreOldest>
+{
+    public BrowserAgentAutoInjection6PlusInjectionDisabledRumUnCompressedCoreOldest(BasicAspNetCoreRazorApplicationFixtureCoreOldest fixture, ITestOutputHelper output)
         : base(fixture, output, true, false)
     {
     }
 }
 
-public class BrowserAgentAutoInjection6PlusInjectionDisabledRumCompressed : BrowserAgentAutoInjection6PlusBase
+public class BrowserAgentAutoInjection6PlusInjectionDisabledRumUnCompressedCoreLatest : BrowserAgentAutoInjection6PlusBase<BasicAspNetCoreRazorApplicationFixtureCoreLatest>
 {
-    public BrowserAgentAutoInjection6PlusInjectionDisabledRumCompressed(BasicAspNetCoreRazorApplicationFixture fixture, ITestOutputHelper output)
+    public BrowserAgentAutoInjection6PlusInjectionDisabledRumUnCompressedCoreLatest(BasicAspNetCoreRazorApplicationFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output, true, false)
+    {
+    }
+}
+
+public class BrowserAgentAutoInjection6PlusInjectionDisabledRumCompressedCoreOldest : BrowserAgentAutoInjection6PlusBase<BasicAspNetCoreRazorApplicationFixtureCoreOldest>
+{
+    public BrowserAgentAutoInjection6PlusInjectionDisabledRumCompressedCoreOldest(BasicAspNetCoreRazorApplicationFixtureCoreOldest fixture, ITestOutputHelper output)
         : base(fixture, output, false, true)
     {
     }
 }
 
-public class BrowserAgentAutoInjection6PlusSpa : BrowserAgentAutoInjection6PlusBase
+public class BrowserAgentAutoInjection6PlusInjectionDisabledRumCompressedCoreLatest : BrowserAgentAutoInjection6PlusBase<BasicAspNetCoreRazorApplicationFixtureCoreLatest>
 {
-    public BrowserAgentAutoInjection6PlusSpa(BasicAspNetCoreRazorApplicationFixture fixture, ITestOutputHelper output)
+    public BrowserAgentAutoInjection6PlusInjectionDisabledRumCompressedCoreLatest(BasicAspNetCoreRazorApplicationFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output, false, true)
+    {
+    }
+}
+
+public class BrowserAgentAutoInjection6PlusSpaCoreOldest : BrowserAgentAutoInjection6PlusBase<BasicAspNetCoreRazorApplicationFixtureCoreOldest>
+{
+    public BrowserAgentAutoInjection6PlusSpaCoreOldest(BasicAspNetCoreRazorApplicationFixtureCoreOldest fixture, ITestOutputHelper output)
         : base(fixture, output, true, true, "spa")
     {
     }
 }
 
-public class BrowserAgentAutoInjection6PlusFull : BrowserAgentAutoInjection6PlusBase
+public class BrowserAgentAutoInjection6PlusSpaCoreLatest : BrowserAgentAutoInjection6PlusBase<BasicAspNetCoreRazorApplicationFixtureCoreLatest>
 {
-    public BrowserAgentAutoInjection6PlusFull(BasicAspNetCoreRazorApplicationFixture fixture, ITestOutputHelper output)
+    public BrowserAgentAutoInjection6PlusSpaCoreLatest(BasicAspNetCoreRazorApplicationFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output, true, true, "spa")
+    {
+    }
+}
+
+public class BrowserAgentAutoInjection6PlusFullCoreOldest : BrowserAgentAutoInjection6PlusBase<BasicAspNetCoreRazorApplicationFixtureCoreOldest>
+{
+    public BrowserAgentAutoInjection6PlusFullCoreOldest(BasicAspNetCoreRazorApplicationFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output, true, true, "full")
+    {
+    }
+}
+
+public class BrowserAgentAutoInjection6PlusFullCoreLatest : BrowserAgentAutoInjection6PlusBase<BasicAspNetCoreRazorApplicationFixtureCoreLatest>
+{
+    public BrowserAgentAutoInjection6PlusFullCoreLatest(BasicAspNetCoreRazorApplicationFixtureCoreLatest fixture, ITestOutputHelper output)
         : base(fixture, output, true, true, "full")
     {
     }

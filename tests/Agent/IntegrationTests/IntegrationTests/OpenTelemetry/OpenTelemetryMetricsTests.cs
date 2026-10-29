@@ -136,16 +136,16 @@ public abstract class OpenTelemetryMetricsTestsBase<TFixture> : NewRelicIntegrat
     }
 }
 
-// NET10 test targets DiagnosticSource v10.x
+// NET11 test targets DiagnosticSource v10.x
 public class OpenTelemetryMetricsTestsCoreLatest : OpenTelemetryMetricsTestsBase<OtlpMetricsWithCollectorFixtureCoreLatest>
 {
     public OpenTelemetryMetricsTestsCoreLatest(OtlpMetricsWithCollectorFixtureCoreLatest fixture, ITestOutputHelper outputHelper) : base(fixture, outputHelper) { }
 }
 
-// Net8 test targets DiagnosticSource v8.x
-public class OpenTelemetryMetricsTestsCoreNet8 : OpenTelemetryMetricsTestsBase<OtlpMetricsWithCollectorFixtureCoreNet8>
+// Net10 test targets DiagnosticSource v8.x
+public class OpenTelemetryMetricsTestsCoreOldest : OpenTelemetryMetricsTestsBase<OtlpMetricsWithCollectorFixtureCoreOldest>
 {
-    public OpenTelemetryMetricsTestsCoreNet8(OtlpMetricsWithCollectorFixtureCoreNet8 fixture, ITestOutputHelper outputHelper) : base(fixture, outputHelper) { }
+    public OpenTelemetryMetricsTestsCoreOldest(OtlpMetricsWithCollectorFixtureCoreOldest fixture, ITestOutputHelper outputHelper) : base(fixture, outputHelper) { }
 }
 
 // Net472 test targets DiagnosticSource v8.x

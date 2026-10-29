@@ -4,18 +4,19 @@
 
 using System.Net;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
+using NewRelic.Agent.IntegrationTestHelpers;
 
 namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 
-public class AspNetCoreFeaturesFixture : RemoteApplicationFixture
+public abstract class AspNetCoreFeaturesFixture : RemoteApplicationFixture
 {
     private const string ApplicationDirectoryName = @"AspNetCoreFeatures";
     private const string ExecutableName = @"AspNetCoreFeatures.exe";
-    public AspNetCoreFeaturesFixture() :
+    protected AspNetCoreFeaturesFixture(string targetFramework) :
         base(new RemoteService(
             ApplicationDirectoryName,
             ExecutableName,
-            targetFramework: "net10.0",
+            targetFramework: targetFramework,
             ApplicationType.Bounded,
             true,
             true,
@@ -57,5 +58,19 @@ public class AspNetCoreFeaturesFixture : RemoteApplicationFixture
     {
         var address = $"http://{DestinationServerName}:{Port}/InterfaceDefaults/GetWithoutAttributes";
         GetStringAndAssertContains(address, "Done");
+    }
+}
+
+public class AspNetCoreFeaturesFixtureCoreOldest : AspNetCoreFeaturesFixture
+{
+    public AspNetCoreFeaturesFixtureCoreOldest() : base(Tfm.NetOldest)
+    {
+    }
+}
+
+public class AspNetCoreFeaturesFixtureCoreLatest : AspNetCoreFeaturesFixture
+{
+    public AspNetCoreFeaturesFixtureCoreLatest() : base(Tfm.NetLatest)
+    {
     }
 }

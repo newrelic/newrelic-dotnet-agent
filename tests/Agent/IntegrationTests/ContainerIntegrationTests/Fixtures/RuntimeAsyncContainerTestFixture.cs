@@ -4,6 +4,7 @@
 using System;
 using System.Threading.Tasks;
 using NewRelic.Agent.ContainerIntegrationTests.Applications;
+using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 
 namespace NewRelic.Agent.ContainerIntegrationTests.Fixtures;
@@ -16,19 +17,18 @@ namespace NewRelic.Agent.ContainerIntegrationTests.Fixtures;
 /// SetAdditionalEnvironmentVariable lands a variable in the `docker compose up` host process only,
 /// and compose forwards it into the container solely when a compose file names it via ${VAR}.
 /// </summary>
-public class RuntimeAsyncContainerTestFixture : RemoteApplicationFixture
+public abstract class RuntimeAsyncContainerTestFixture : RemoteApplicationFixture
 {
     private const string Dockerfile = "RuntimeAsyncTestApp/Dockerfile";
     private const string ComposeFile = "docker-compose-runtimeasync.yml";
     private const string ServiceName = "runtimeasynctestapp";
-    private const string DotnetVersion = "10.0";
-    private const string DistroTag = "noble"; // Ubuntu 24.04 -- glibc, which is what the homefolders artifact ships
+    private const string DistroTag = ContainerApplication.UbuntuDistroTag; // glibc, which is what the homefolders artifact ships
     private const ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
 
     protected override int MaxTries => 1;
 
-    public RuntimeAsyncContainerTestFixture()
-        : base(new ContainerApplication(DistroTag, Architecture, DotnetVersion, Dockerfile, ComposeFile, ServiceName))
+    protected RuntimeAsyncContainerTestFixture(string dotnetVersion)
+        : base(new ContainerApplication(DistroTag, Architecture, dotnetVersion, Dockerfile, ComposeFile, ServiceName))
     {
     }
 
@@ -48,4 +48,14 @@ public class RuntimeAsyncContainerTestFixture : RemoteApplicationFixture
     {
         Task.Delay(TimeSpan.FromSeconds(seconds)).GetAwaiter().GetResult();
     }
+}
+
+public class RuntimeAsyncContainerTestFixtureCoreOldest : RuntimeAsyncContainerTestFixture
+{
+    public RuntimeAsyncContainerTestFixtureCoreOldest() : base(Tfm.NetOldestVersion) { }
+}
+
+public class RuntimeAsyncContainerTestFixtureCoreLatest : RuntimeAsyncContainerTestFixture
+{
+    public RuntimeAsyncContainerTestFixtureCoreLatest() : base(Tfm.NetLatestVersion) { }
 }

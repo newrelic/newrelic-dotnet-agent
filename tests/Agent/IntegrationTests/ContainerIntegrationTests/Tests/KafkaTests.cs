@@ -408,9 +408,9 @@ public abstract class LinuxKafkaTest<T> : NewRelicIntegrationTest<T> where T : K
 [Collection("KafkaTests")]
 [Trait("Architecture", "amd64")]
 [Trait("TestArea", "Messaging")]
-public class KafkaDotNet8Test : LinuxKafkaTest<KafkaDotNet8TestFixture>
+public class KafkaDotNetOldestTest : LinuxKafkaTest<KafkaDotNetOldestTestFixture>
 {
-    public KafkaDotNet8Test(KafkaDotNet8TestFixture fixture, ITestOutputHelper output) : base(fixture, output)
+    public KafkaDotNetOldestTest(KafkaDotNetOldestTestFixture fixture, ITestOutputHelper output) : base(fixture, output)
     {
     }
 }
@@ -418,23 +418,20 @@ public class KafkaDotNet8Test : LinuxKafkaTest<KafkaDotNet8TestFixture>
 [Collection("KafkaTests")]
 [Trait("Architecture", "amd64")]
 [Trait("TestArea", "Messaging")]
-public class KafkaDotNet10Test : LinuxKafkaTest<KafkaDotNet10TestFixture>
+public class KafkaDotNetLatestTest : LinuxKafkaTest<KafkaDotNetLatestTestFixture>
 {
-    public KafkaDotNet10Test(KafkaDotNet10TestFixture fixture, ITestOutputHelper output) : base(fixture, output)
+    public KafkaDotNetLatestTest(KafkaDotNetLatestTestFixture fixture, ITestOutputHelper output) : base(fixture, output)
     {
     }
 }
 
-[Collection("KafkaTests")]
-[Trait("Architecture", "amd64")]
-[Trait("TestArea", "Messaging")]
-public class KafkaClusterMetricsEnabledTest : NewRelicIntegrationTest<KafkaClusterMetricsEnabledTestFixture>
+public abstract class KafkaClusterMetricsEnabledTestBase<TFixture> : NewRelicIntegrationTest<TFixture> where TFixture : KafkaClusterMetricsEnabledTestFixture
 {
     private const string ExpectedClusterId = "MkU3OEVBNTcwNTJENDM2Qg";
 
-    private readonly KafkaClusterMetricsEnabledTestFixture _fixture;
+    private readonly TFixture _fixture;
 
-    public KafkaClusterMetricsEnabledTest(KafkaClusterMetricsEnabledTestFixture fixture, ITestOutputHelper output) : base(fixture)
+    protected KafkaClusterMetricsEnabledTestBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
     {
         _fixture = fixture;
         _fixture.TestLogger = output;
@@ -524,5 +521,25 @@ public class KafkaClusterMetricsEnabledTest : NewRelicIntegrationTest<KafkaClust
     {
         var match = Regex.Match(metricName, @"^MessageBroker/Kafka/Cluster/([^/]+)/");
         return match.Success ? match.Groups[1].Value : null;
+    }
+}
+
+[Collection("KafkaTests")]
+[Trait("Architecture", "amd64")]
+[Trait("TestArea", "Messaging")]
+public class KafkaClusterMetricsEnabledTestCoreOldest : KafkaClusterMetricsEnabledTestBase<KafkaClusterMetricsEnabledTestFixtureCoreOldest>
+{
+    public KafkaClusterMetricsEnabledTestCoreOldest(KafkaClusterMetricsEnabledTestFixtureCoreOldest fixture, ITestOutputHelper output) : base(fixture, output)
+    {
+    }
+}
+
+[Collection("KafkaTests")]
+[Trait("Architecture", "amd64")]
+[Trait("TestArea", "Messaging")]
+public class KafkaClusterMetricsEnabledTestCoreLatest : KafkaClusterMetricsEnabledTestBase<KafkaClusterMetricsEnabledTestFixtureCoreLatest>
+{
+    public KafkaClusterMetricsEnabledTestCoreLatest(KafkaClusterMetricsEnabledTestFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)
+    {
     }
 }

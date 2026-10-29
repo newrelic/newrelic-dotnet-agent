@@ -10,11 +10,11 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.Blazor;
 
-public class BlazorServerLongPollingInteractivityTests : NewRelicIntegrationTest<RemoteServiceFixtures.BlazorSignalRLongPollingApplicationFixture>
+public abstract class BlazorServerLongPollingInteractivityTestsBase<TFixture> : NewRelicIntegrationTest<TFixture> where TFixture : RemoteServiceFixtures.BlazorSignalRLongPollingApplicationFixture
 {
-    private readonly RemoteServiceFixtures.BlazorSignalRLongPollingApplicationFixture _fixture;
+    private readonly TFixture _fixture;
 
-    public BlazorServerLongPollingInteractivityTests(RemoteServiceFixtures.BlazorSignalRLongPollingApplicationFixture fixture, ITestOutputHelper output)
+    protected BlazorServerLongPollingInteractivityTestsBase(TFixture fixture, ITestOutputHelper output)
         : base(fixture)
     {
         _fixture = fixture;
@@ -65,5 +65,21 @@ public class BlazorServerLongPollingInteractivityTests : NewRelicIntegrationTest
             () => Assert.NotNull(signalRLogLine),
             () => Assert.Null(webSocketLogLine)
         );
+    }
+}
+
+public class BlazorServerLongPollingInteractivityTestsCoreOldest : BlazorServerLongPollingInteractivityTestsBase<RemoteServiceFixtures.BlazorSignalRLongPollingApplicationFixtureCoreOldest>
+{
+    public BlazorServerLongPollingInteractivityTestsCoreOldest(RemoteServiceFixtures.BlazorSignalRLongPollingApplicationFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
+}
+
+public class BlazorServerLongPollingInteractivityTestsCoreLatest : BlazorServerLongPollingInteractivityTestsBase<RemoteServiceFixtures.BlazorSignalRLongPollingApplicationFixtureCoreLatest>
+{
+    public BlazorServerLongPollingInteractivityTestsCoreLatest(RemoteServiceFixtures.BlazorSignalRLongPollingApplicationFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
     }
 }

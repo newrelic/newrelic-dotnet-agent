@@ -93,17 +93,33 @@ public abstract class RejitChangeAttributeValueBase<TFixture> : NewRelicIntegrat
     }
 }
 
-public class RejitChangeAttributeValue : RejitChangeAttributeValueBase<AspNetCoreReJitMvcApplicationFixture>
+public class RejitChangeAttributeValueCoreOldest : RejitChangeAttributeValueBase<AspNetCoreReJitMvcApplicationFixtureCoreOldest>
 {
-    public RejitChangeAttributeValue(AspNetCoreReJitMvcApplicationFixture fixture, ITestOutputHelper output)
+    public RejitChangeAttributeValueCoreOldest(AspNetCoreReJitMvcApplicationFixtureCoreOldest fixture, ITestOutputHelper output)
         : base(fixture, output)
     {
     }
 }
 
-public class RejitChangeAttributeValueWithTieredCompilation : RejitChangeAttributeValueBase<AspNetCoreReJitMvcApplicationFixtureWithTieredCompilation>
+public class RejitChangeAttributeValueCoreLatest : RejitChangeAttributeValueBase<AspNetCoreReJitMvcApplicationFixtureCoreLatest>
 {
-    public RejitChangeAttributeValueWithTieredCompilation(AspNetCoreReJitMvcApplicationFixtureWithTieredCompilation fixture, ITestOutputHelper output)
+    public RejitChangeAttributeValueCoreLatest(AspNetCoreReJitMvcApplicationFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
+}
+
+public class RejitChangeAttributeValueWithTieredCompilationCoreOldest : RejitChangeAttributeValueBase<AspNetCoreReJitMvcApplicationFixtureWithTieredCompilationCoreOldest>
+{
+    public RejitChangeAttributeValueWithTieredCompilationCoreOldest(AspNetCoreReJitMvcApplicationFixtureWithTieredCompilationCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output)
+    {
+    }
+}
+
+public class RejitChangeAttributeValueWithTieredCompilationCoreLatest : RejitChangeAttributeValueBase<AspNetCoreReJitMvcApplicationFixtureWithTieredCompilationCoreLatest>
+{
+    public RejitChangeAttributeValueWithTieredCompilationCoreLatest(AspNetCoreReJitMvcApplicationFixtureWithTieredCompilationCoreLatest fixture, ITestOutputHelper output)
         : base(fixture, output)
     {
     }

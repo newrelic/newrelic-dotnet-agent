@@ -22,14 +22,6 @@ public abstract class EnvironmentTests<T> : NewRelicIntegrationTest<T> where T :
         _fixture.TestLogger = output;
         _fixture.Actions
         (
-            setupConfiguration: () =>
-            {
-                var configPath = fixture.DestinationNewRelicConfigFilePath;
-                var configModifier = new NewRelicConfigModifier(configPath);
-
-                configModifier.DisableEventListenerSamplers(); // Required for .NET 8 to pass.
-
-            },
             exerciseApplication: ExerciseApplication
         );
         _fixture.Initialize();
@@ -91,13 +83,25 @@ public class EnvironmentFrameworkTests : EnvironmentTests<RemoteServiceFixtures.
     protected override void ExerciseApplication() => _fixture.Get();
 }
 
-public class EnvironmentCoreTests : EnvironmentTests<RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture>
+public abstract class EnvironmentCoreTestsBase<TFixture> : EnvironmentTests<TFixture> where TFixture : RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture
 {
-    public EnvironmentCoreTests(RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture fixture, ITestOutputHelper output)
+    protected EnvironmentCoreTestsBase(TFixture fixture, ITestOutputHelper output)
         : base(fixture, output) { }
 
     protected override string ExpectedNrConfig => Utilities.IsLinux ? @"/newrelichome/newrelic.config" : @"\newrelichome\newrelic.config";
     protected override string ExpectedAppConfig => Utilities.IsLinux ? @"/AspNetCoreMvcBasicRequestsApplication/appsettings.json" : @"\AspNetCoreMvcBasicRequestsApplication\appsettings.json";
 
     protected override void ExerciseApplication() => _fixture.Get();
+}
+
+public class EnvironmentCoreTestsCoreOldest : EnvironmentCoreTestsBase<RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixtureCoreOldest>
+{
+    public EnvironmentCoreTestsCoreOldest(RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixtureCoreOldest fixture, ITestOutputHelper output)
+        : base(fixture, output) { }
+}
+
+public class EnvironmentCoreTestsCoreLatest : EnvironmentCoreTestsBase<RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixtureCoreLatest>
+{
+    public EnvironmentCoreTestsCoreLatest(RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output) { }
 }
