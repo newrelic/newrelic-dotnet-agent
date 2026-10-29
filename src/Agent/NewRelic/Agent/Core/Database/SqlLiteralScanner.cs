@@ -46,16 +46,15 @@ public static class SqlLiteralScanner
         var length = sql.Length;
         var i = startIndex;
 
-        // Branch order matters: the Postgres # mask before comments, comments before strings, quotes before $ handling,
-        // UUIDs before numbers and identifiers, unary minus before numbers. Reordering can desync the scan or leak part
-        // of a literal.
+        // Branch order matters: the rest-of-query masks before comments, comments before strings, Oracle q-quotes before
+        // other quotes, quotes before $ handling, UUIDs before numbers and identifiers, unary minus before numbers.
+        // Reordering can desync the scan or leak part of a literal.
         while (i < length)
         {
             var ch = sql[i];
             var next = i + 1 < length ? sql[i + 1] : '\0';
 
-            // Postgres has no # comment, so a # masks the rest of the query: a string opened after it could span lines and desync the scan.
-            if (ch == '#' && Has(features, SqlDialectFeatures.HashMasksRestOfQuery))
+            if (MasksRestOfQuery(sql, i, ch, next, features))
             {
                 AppendCapped(sb, '?', maxLength);
                 i = length;
@@ -79,7 +78,8 @@ public static class SqlLiteralScanner
                     return FullyObfuscatedWithPrefix(prefix, maxLength);
                 }
 
-                // Postgres block comments nest, so a second opener before the first closer makes the extent ambiguous: mask the rest.
+                // Block comments nest in some dialects (Postgres, SQL Server) and not in others, so a second opener before the
+                // first closer makes the comment's extent ambiguous: mask the rest rather than risk exposing text read as SQL.
                 var nested = sql.IndexOf("/*", i + 2, close - i - 1, StringComparison.Ordinal);
                 AppendCapped(sb, '?', maxLength);
                 i = nested >= 0 ? length : close + 2;
@@ -91,10 +91,18 @@ public static class SqlLiteralScanner
                 return FullyObfuscatedWithPrefix(prefix, maxLength);
             }
 
+            // Oracle alternative quoting: q'[...]', nq'!...!' and friends
+            if (Has(features, SqlDialectFeatures.OracleQuotedStrings) && TryMatchOracleQuote(sql, i, out var oracleQuoteEnd))
+            {
+                AppendCapped(sb, '?', maxLength);
+                i = oracleQuoteEnd;
+                continue;
+            }
+
             // String literals
             if (ch == '\'' || (ch == '"' && !Has(features, SqlDialectFeatures.DoubleQuotedIdentifiers)))
             {
-                i = SkipQuoted(sql, i, Has(features, SqlDialectFeatures.BackslashEscapes));
+                i = SkipQuoted(sql, i, Has(features, SqlDialectFeatures.BackslashEscapes), ch);
                 if (i == Unterminated)
                 {
                     return FullyObfuscatedWithPrefix(prefix, maxLength);
@@ -105,9 +113,12 @@ public static class SqlLiteralScanner
             }
 
             // Quoted identifiers are kept verbatim
-            if (ch == '"')
+            if (ch == '"'
+                || (ch == '`' && Has(features, SqlDialectFeatures.BacktickIdentifiers))
+                || (ch == '[' && Has(features, SqlDialectFeatures.BracketIdentifiers)))
             {
-                var end = SkipQuoted(sql, i, false);
+                // A doubled closing character is an escaped one: "" in "x", `` in `x`, ]] in [x]
+                var end = SkipQuoted(sql, i, false, ch == '[' ? ']' : ch);
                 if (end == Unterminated)
                 {
                     return FullyObfuscatedWithPrefix(prefix, maxLength);
@@ -142,7 +153,7 @@ public static class SqlLiteralScanner
             }
 
             // Numbers, including a unary minus but never a binary one
-            if (ch == '-' && StartsNumber(sql, i + 1) && IsUnaryMinusPosition(sb, prefixLength))
+            if (ch == '-' && StartsNumber(sql, i + 1) && IsUnaryMinusPosition(sb, prefixLength, Has(features, SqlDialectFeatures.HashInIdentifiers)))
             {
                 AppendCapped(sb, '?', maxLength);
                 i = SkipNumber(sql, i + 1);
@@ -161,7 +172,8 @@ public static class SqlLiteralScanner
             {
                 var start = i;
                 var dollarInIdentifiers = Has(features, SqlDialectFeatures.DollarQuotedStrings);
-                while (i < length && IsIdentifierChar(sql[i], dollarInIdentifiers))
+                var hashInIdentifiers = Has(features, SqlDialectFeatures.HashInIdentifiers);
+                while (i < length && IsIdentifierChar(sql[i], dollarInIdentifiers || hashInIdentifiers, hashInIdentifiers))
                 {
                     i++;
                 }
@@ -211,6 +223,43 @@ public static class SqlLiteralScanner
         }
     }
 
+    /// <summary>
+    /// True when the character at i starts text that must mask the rest of the query, because the server reads it as SQL
+    /// (or the dialect is unknown) and a quote in it could desync the scan if it were masked only to the end of the line:
+    /// a Postgres # (an operator, never a comment), a # followed by whitespace or the end in the Default dialect, a
+    /// dollar-quote opener ($$ or $tag$) in the Default dialect, or a MySQL -- that is not followed by whitespace (not a
+    /// comment, so 5--1 is arithmetic).
+    /// </summary>
+    private static bool MasksRestOfQuery(string sql, int i, char ch, char next, SqlDialectFeatures features)
+    {
+        if (ch == '#')
+        {
+            return Has(features, SqlDialectFeatures.HashMasksRestOfQuery)
+                   || (Has(features, SqlDialectFeatures.HashWhitespaceMasksRestOfQuery) && IsWhiteSpaceOrEnd(sql, i + 1));
+        }
+
+        if (ch == '$')
+        {
+            return Has(features, SqlDialectFeatures.DollarQuoteMasksRestOfQuery) && DollarTagEnd(sql, i) != Unterminated;
+        }
+
+        return ch == '-' && next == '-' && Has(features, SqlDialectFeatures.DashDashRequiresWhitespace) && !IsAsciiSpaceOrControlOrEnd(sql, i + 2);
+    }
+
+    private static bool IsWhiteSpaceOrEnd(string sql, int i)
+    {
+        return i >= sql.Length || char.IsWhiteSpace(sql[i]);
+    }
+
+    /// <summary>
+    /// MySQL ends its -- marker only with an ASCII space or control character. A Unicode space such as NBSP is not one,
+    /// so the server reads the text after it as SQL.
+    /// </summary>
+    private static bool IsAsciiSpaceOrControlOrEnd(string sql, int i)
+    {
+        return i >= sql.Length || sql[i] <= ' ';
+    }
+
     private static bool Has(SqlDialectFeatures features, SqlDialectFeatures feature) => (features & feature) != 0;
 
     private static int EndOfLine(string sql, int i)
@@ -227,9 +276,8 @@ public static class SqlLiteralScanner
     /// Returns the index just past the closing quote, sql.Length when an ambiguous backslash escape forces the rest
     /// of the query to be consumed, or Unterminated. A doubled quote is an escaped quote.
     /// </summary>
-    private static int SkipQuoted(string sql, int start, bool backslashEscapes)
+    private static int SkipQuoted(string sql, int start, bool backslashEscapes, char quote)
     {
-        var quote = sql[start];
         for (var i = start + 1; i < sql.Length; i++)
         {
             var ch = sql[i];
@@ -266,7 +314,7 @@ public static class SqlLiteralScanner
 
         if (i < sql.Length && (char.IsLetter(sql[i]) || sql[i] == '_'))
         {
-            while (i < sql.Length && IsIdentifierChar(sql[i], false))
+            while (i < sql.Length && IsIdentifierChar(sql[i], false, false))
             {
                 i++;
             }
@@ -321,7 +369,7 @@ public static class SqlLiteralScanner
             i++;
         }
 
-        if (i < sql.Length && IsIdentifierChar(sql[i], false))
+        if (i < sql.Length && IsIdentifierChar(sql[i], false, false))
         {
             return false;
         }
@@ -360,8 +408,9 @@ public static class SqlLiteralScanner
             }
         }
 
-        // Postgres 15+ rejects junk after a numeric literal, so trailing letters, digits and underscores (1_000, 0b1010, 0o17, 0xFF) belong to the literal.
-        while (i < sql.Length && IsIdentifierChar(sql[i], false))
+        // Trailing letters, digits and underscores (1_000, 0b1010, 0o17, 0xFF, 3.14food) are masked with the literal: keeping
+        // them as an identifier could expose part of a value, and several dialects reject such junk after a number anyway.
+        while (i < sql.Length && IsIdentifierChar(sql[i], false, false))
         {
             i++;
         }
@@ -371,10 +420,11 @@ public static class SqlLiteralScanner
 
     /// <summary>
     /// A minus is unary (part of a negative literal) unless it follows an operand. Only output written after the verbatim
-    /// prefix (from outputStart) is considered, so a prefix never changes how the SQL after it is read. Once the output is
-    /// capped the answer only decides how the number is consumed, never how quotes are read, so the scan stays in step.
+    /// prefix (from outputStart) is considered, so a prefix never changes how the SQL after it is read. When # is legal in
+    /// identifiers (Oracle EMP#), a trailing # also ends an operand. Once the output is capped the answer only decides how
+    /// the number is consumed, never how quotes are read, so the scan stays in step.
     /// </summary>
-    private static bool IsUnaryMinusPosition(StringBuilder output, int outputStart)
+    private static bool IsUnaryMinusPosition(StringBuilder output, int outputStart, bool hashInIdentifiers)
     {
         for (var i = output.Length - 1; i >= outputStart; i--)
         {
@@ -384,15 +434,72 @@ public static class SqlLiteralScanner
                 continue;
             }
 
-            return !(char.IsLetterOrDigit(ch) || ch == '_' || ch == '?' || ch == ')' || ch == '"' || ch == ']' || ch == '`' || ch == '$');
+            return !(char.IsLetterOrDigit(ch) || ch == '_' || ch == '?' || ch == ')' || ch == '"' || ch == ']' || ch == '`' || ch == '$'
+                     || (hashInIdentifiers && ch == '#'));
         }
 
         return true;
     }
 
-    private static bool IsIdentifierChar(char ch, bool dollarAllowed)
+    private static bool IsIdentifierChar(char ch, bool dollarAllowed, bool hashAllowed)
     {
-        return char.IsLetterOrDigit(ch) || ch == '_' || (dollarAllowed && ch == '$');
+        return char.IsLetterOrDigit(ch) || ch == '_' || (dollarAllowed && ch == '$') || (hashAllowed && ch == '#');
+    }
+
+    /// <summary>
+    /// Matches an Oracle alternative-quoted string: [n]q'&lt;d&gt;...&lt;closer&gt;' where d is any character other than
+    /// whitespace or a quote. The brackets [ { &lt; ( close with ] } &gt; ); any other d closes with itself. An
+    /// unclosed literal consumes the rest of the query. Returns the index just past the literal.
+    /// </summary>
+    private static bool TryMatchOracleQuote(string sql, int start, out int end)
+    {
+        end = start;
+        var q = start;
+        if (sql[q] == 'n' || sql[q] == 'N')
+        {
+            q++;
+        }
+
+        // q must be followed by ' and a delimiter
+        if (q + 2 >= sql.Length || (sql[q] != 'q' && sql[q] != 'Q') || sql[q + 1] != '\'')
+        {
+            return false;
+        }
+
+        var delimiter = sql[q + 2];
+        if (char.IsWhiteSpace(delimiter) || delimiter == '\'')
+        {
+            return false;
+        }
+
+        // The literal ends at the first closing delimiter that is followed by a quote. Each IndexOf resumes past the previous
+        // hit, so the search stays linear.
+        var closer = OracleClosingDelimiter(delimiter);
+        var close = sql.IndexOf(closer, q + 3);
+        while (close >= 0 && !(close + 1 < sql.Length && sql[close + 1] == '\''))
+        {
+            close = sql.IndexOf(closer, close + 1);
+        }
+
+        end = close < 0 ? sql.Length : close + 2;
+        return true;
+    }
+
+    private static char OracleClosingDelimiter(char opening)
+    {
+        switch (opening)
+        {
+            case '[':
+                return ']';
+            case '{':
+                return '}';
+            case '<':
+                return '>';
+            case '(':
+                return ')';
+            default:
+                return opening;
+        }
     }
 
     private static bool IsHexDigit(char ch)

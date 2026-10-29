@@ -153,6 +153,22 @@ public class OracleExerciser : IDisposable
         }
     }
 
+    [LibraryMethod]
+    [Transaction]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+    public void DialectQuery()
+    {
+        using var connection = new OracleConnection(OracleConfiguration.OracleConnectionString);
+        connection.Open();
+
+        using var command = new OracleCommand("/* dialect */ SELECT \"DEGREE\" FROM user_tables WHERE ROWNUM <= 1 AND TABLE_NAME <> q'[it's]'", connection);
+        using var reader = command.ExecuteReader();
+        while (reader.Read())
+        {
+            ConsoleMFLogger.Info(reader.GetString(reader.GetOrdinal("DEGREE")));
+        }
+    }
+
     private void CreateTable()
     {
         DropTableIfExists();

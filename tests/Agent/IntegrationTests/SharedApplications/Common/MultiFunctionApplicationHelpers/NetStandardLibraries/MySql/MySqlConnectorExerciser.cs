@@ -227,6 +227,28 @@ public class MySqlConnectorExerciser
         });
     }
 
+    [LibraryMethod]
+    [Transaction]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+    public void DialectQuery()
+    {
+        var dates = new List<string>();
+        using (var connection = new MySqlConnection(MySqlTestConfiguration.MySqlConnectionString))
+        using (var command = new MySqlCommand("/* dialect */ SELECT `_date` FROM dates WHERE `_date` LIKE '2%' -- it's a dash comment\nAND TRUE # it's a hash comment\nORDER BY `_date` DESC LIMIT 1", connection))
+        {
+            connection.Open();
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    dates.Add(reader.GetString(reader.GetOrdinal("_date")));
+                }
+            }
+        }
+
+        ConsoleMFLogger.Info(string.Join(",", dates));
+    }
+
     private const string Query = "SELECT _date FROM dates WHERE _date LIKE '2%' ORDER BY _date DESC LIMIT 1";
     private const string QueryWithDelay = "SELECT SLEEP(2), _date FROM dates WHERE _date LIKE '2%' ORDER BY _date DESC LIMIT 1";
 

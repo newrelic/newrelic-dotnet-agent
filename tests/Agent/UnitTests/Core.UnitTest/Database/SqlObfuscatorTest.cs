@@ -61,7 +61,7 @@ public class SqlObfuscatorTest
     [Test]
     public void verify_GetObfuscatedSql_replaces_id_with_questionmark_having_multi_parameters()
     {
-        Assert.That(obfuscator.GetObfuscatedSql("Select * from users where ssn = 433871122 and True"), Is.EqualTo("Select * from users where ssn = ? and True"));
+        Assert.That(obfuscator.GetObfuscatedSql("Select * from users where ssn = 433871122 and True"), Is.EqualTo("Select * from users where ssn = ? and ?")); // spec rule: booleans
     }
 
     [Test]
@@ -73,7 +73,7 @@ public class SqlObfuscatorTest
     [Test]
     public void verify_GetObfuscatedSql_replaces_decimal_no_remainder_with_questionmark_having_multi_parameters()
     {
-        Assert.That(obfuscator.GetObfuscatedSql("Select * from users where number = 3. and True"), Is.EqualTo("Select * from users where number = ? and True"));
+        Assert.That(obfuscator.GetObfuscatedSql("Select * from users where number = 3. and True"), Is.EqualTo("Select * from users where number = ? and ?")); // spec rule: booleans
     }
 
     [Test]
@@ -85,7 +85,7 @@ public class SqlObfuscatorTest
     [Test]
     public void verify_GetObfuscatedSql_replaces_decimal_with_questionmark_having_multi_parameters()
     {
-        Assert.That(obfuscator.GetObfuscatedSql("Select * from users where number = 3.14159 and True"), Is.EqualTo("Select * from users where number = ? and True"));
+        Assert.That(obfuscator.GetObfuscatedSql("Select * from users where number = 3.14159 and True"), Is.EqualTo("Select * from users where number = ? and ?")); // spec rule: booleans
     }
 
     [Test]
@@ -97,7 +97,7 @@ public class SqlObfuscatorTest
     [Test]
     public void verify_GetObfuscatedSql_replaces_string_with_int_and_ticks_with_questionmark_having_multi_parameters()
     {
-        Assert.That(obfuscator.GetObfuscatedSql("Select * from users where number = 3.14food'' and True"), Is.EqualTo("Select * from users where number = ?food? and True"));
+        Assert.That(obfuscator.GetObfuscatedSql("Select * from users where number = 3.14food'' and True"), Is.EqualTo("Select * from users where number = ?? and ?")); // spec rules: booleans; a numeric literal swallows trailing identifier chars (3.14food -> ?), then '' -> ?
 
     }
 
@@ -118,7 +118,7 @@ public class SqlObfuscatorTest
     [Test]
     public void verify_GetObfuscatedSql_replaces_multi_string_with_escapes_with_questionmarks()
     {
-        Assert.That(obfuscator.GetObfuscatedSql("Select * from users where name = 'dude''fude'\"bube\""), Is.EqualTo("Select * from users where name = ???"));
+        Assert.That(obfuscator.GetObfuscatedSql("Select * from users where name = 'dude''fude'\"bube\""), Is.EqualTo("Select * from users where name = ??")); // spec rule: string_with_twin_single_quotes
 
     }
 
@@ -175,7 +175,7 @@ public class SqlObfuscatorTest
     public void TestObfuscationFromGibberish()
     {
         string stim = "qrx *().<'\"mumblefrob";  // That's an unterminated single quoted string.
-        Assert.That(obfuscator.GetObfuscatedSql(stim), Is.EqualTo("qrx *().<?"));
+        Assert.That(obfuscator.GetObfuscatedSql(stim), Is.EqualTo("?")); // spec rule: malformed/unterminated_single_quoted_string
     }
 
     [Test]
@@ -241,6 +241,7 @@ public class SqlObfuscatorTest
 
     [TestCase(DatastoreVendor.Postgres)]
     [TestCase(DatastoreVendor.MSSQL)]
+    [TestCase(DatastoreVendor.Other)]
     public void GetObfuscatedSql_TruncatesTo16384(DatastoreVendor vendor)
     {
         var sql = "SELECT " + new string('a', 20000);
@@ -274,36 +275,88 @@ public class SqlObfuscatorTest
         Assert.That(result, Does.StartWith(MetadataComment + "SELECT aaa"));
     }
 
-    [Test]
-    public void GetObfuscatedSql_Postgres_MasksBodyWhenUnterminatedPastTheLimit()
+    [TestCase(DatastoreVendor.Postgres)]
+    [TestCase(DatastoreVendor.MySQL)]
+    public void GetObfuscatedSql_MasksBodyWhenUnterminatedPastTheLimit(DatastoreVendor vendor)
     {
         var body = "SELECT " + new string('a', 20000) + " WHERE b = 'x";
-        Assert.That(obfuscator.GetObfuscatedSql(body, DatastoreVendor.Postgres), Is.EqualTo("?"));
-        Assert.That(obfuscator.GetObfuscatedSql(MetadataComment + body, DatastoreVendor.Postgres), Is.EqualTo(MetadataComment + "?"));
+        Assert.That(obfuscator.GetObfuscatedSql(body, vendor), Is.EqualTo("?"));
+        Assert.That(obfuscator.GetObfuscatedSql(MetadataComment + body, vendor), Is.EqualTo(MetadataComment + "?"));
     }
 
-    [Test]
-    public void GetObfuscatedSql_NonPostgres_TruncatesLikeMain()
+    [TestCase(DatastoreVendor.Postgres)]
+    [TestCase(DatastoreVendor.MySQL)]
+    public void GetObfuscatedSql_TruncatesAtTheLimit(DatastoreVendor vendor)
     {
         var sql = "SELECT " + string.Concat(Enumerable.Repeat("1, ", 10000));
         var expected = ("SELECT " + string.Concat(Enumerable.Repeat("?, ", 10000))).Substring(0, 16384);
-        Assert.That(obfuscator.GetObfuscatedSql(sql, DatastoreVendor.MySQL), Is.EqualTo(expected));
+        Assert.That(obfuscator.GetObfuscatedSql(sql, vendor), Is.EqualTo(expected));
     }
 
-    [TestCase(DatastoreVendor.Other, "/*nr_service_guid=\"a\"b\"*/SELECT 1", "/*nr_service_guid=?b?")]
-    [TestCase(DatastoreVendor.Other, "/*nr_other=\"x\"*/SELECT 1", "/*nr_other=?*/SELECT ?")]
+    [TestCase(DatastoreVendor.Other, "/*nr_service_guid=\"a\"b\"*/SELECT 1", "?SELECT ?")]
+    [TestCase(DatastoreVendor.Other, "/*nr_other=\"x\"*/SELECT 1", "?SELECT ?")]
     [TestCase(DatastoreVendor.Postgres, "/*nr_other=\"x\"*/SELECT 1", "?SELECT ?")]
     public void GetObfuscatedSql_DoesNotKeepLookAlikeComments(DatastoreVendor vendor, string sql, string expected)
     {
         Assert.That(obfuscator.GetObfuscatedSql(sql, vendor), Is.EqualTo(expected));
     }
 
-    [TestCase(DatastoreVendor.Other, "\"dude\" and dob = '10/31/1955' -- c", "? and dob = ? -- c")]
-    [TestCase(DatastoreVendor.MySQL, "\"dude\" and dob = '10/31/1955' -- c", "? and dob = ? -- c")]
-    [TestCase(DatastoreVendor.Oracle, "\"dude\" and dob = '10/31/1955' -- c", "? and dob = ? -- c")]
-    public void GetObfuscatedSql_NonPostgres_KeepsLegacyBehavior(DatastoreVendor vendor, string sql, string expected)
+    [TestCase(DatastoreVendor.Other, "\"dude\" and dob = '10/31/1955' -- c", "? and dob = ? ?")]
+    [TestCase(DatastoreVendor.MySQL, "SELECT `c` FROM t WHERE a = \"b\" # c", "SELECT `c` FROM t WHERE a = ? ?")]
+    [TestCase(DatastoreVendor.Oracle, "SELECT \"C\" FROM t WHERE a = q'[b]'", "SELECT \"C\" FROM t WHERE a = ?")]
+    [TestCase(DatastoreVendor.MSSQL, "SELECT * FROM #t WHERE a = 'b' -- c", "SELECT * FROM #t WHERE a = ? ?")]
+    // Matches the MySqlObfuscationDialectTests unbounded integration test.
+    [TestCase(DatastoreVendor.MySQL,
+              "/* dialect */ SELECT `_date` FROM dates WHERE `_date` LIKE '2%' -- it's a dash comment\nAND TRUE # it's a hash comment\nORDER BY `_date` DESC LIMIT 1",
+              "? SELECT `_date` FROM dates WHERE `_date` LIKE ? ?\nAND ? ?\nORDER BY `_date` DESC LIMIT ?")]
+    [TestCase(DatastoreVendor.ODBC, "SELECT $$Jane Doe secret$$ FROM t", "SELECT ?")]
+    [TestCase(DatastoreVendor.Couchbase, "SELECT * FROM `b` WHERE city = $city AND n = 'x'", "SELECT * FROM `b` WHERE city = $city AND n = ?")]
+    public void GetObfuscatedSql_UsesVendorDialect(DatastoreVendor vendor, string sql, string expected)
     {
         Assert.That(obfuscator.GetObfuscatedSql(sql, vendor), Is.EqualTo(expected));
+    }
+
+    // SHOWPLAN_ALL child rows start with a tree prefix ("  |--", "       |    |--") that is kept verbatim; the -- in it is not a comment.
+    [TestCase("  |--Clustered Index Scan(OBJECT:([NewRelic].[dbo].[TeamMembers].[PK]), WHERE:([FirstName]=N'John'))",
+              "  |--Clustered Index Scan(OBJECT:([NewRelic].[dbo].[TeamMembers].[PK]), WHERE:([FirstName]=N?))")]
+    [TestCase("       |    |--Compute Scalar(DEFINE:([Expr1]=(1)))", "       |    |--Compute Scalar(DEFINE:([Expr1]=(?)))")]
+    [TestCase("\t|--Top(TOP EXPRESSION:((10)))", "\t|--Top(TOP EXPRESSION:((?)))")]
+    [TestCase("  |--Filter(WHERE:([a]='x')) -- tail", "  |--Filter(WHERE:([a]=?)) ?")]
+    [TestCase("|--", "|--")]
+    // Root rows have no prefix and are obfuscated as ordinary SQL
+    [TestCase("SELECT * FROM t WHERE a = 'b' -- c", "SELECT * FROM t WHERE a = ? ?")]
+    [TestCase("--x", "?")]
+    [TestCase("  --x", "  ?")]
+    [TestCase("  |-x", "  |-x")]
+    [TestCase("  |ab", "  |ab")]
+    [TestCase("  |", "  |")]
+    [TestCase("|-", "|-")]
+    [TestCase("", "")]
+    public void GetObfuscatedExplainPlanValue_MsSql_KeepsShowPlanTreePrefix(string value, string expected)
+    {
+        Assert.That(obfuscator.GetObfuscatedExplainPlanValue(value, DatastoreVendor.MSSQL), Is.EqualTo(expected));
+    }
+
+    [Test]
+    public void GetObfuscatedExplainPlanValue_Null_ReturnsNull()
+    {
+        Assert.That(obfuscator.GetObfuscatedExplainPlanValue(null, DatastoreVendor.MSSQL), Is.Null);
+    }
+
+    [TestCase("  |--Clustered Index Scan(WHERE:([FirstName]=N'John'))")]
+    [TestCase("SELECT * FROM t WHERE a = 'b' -- c")]
+    public void GetObfuscatedExplainPlanValue_RawObfuscator_ReturnsValueUnchanged(string value)
+    {
+        var raw = SqlObfuscator.GetSqlObfuscator("raw");
+        Assert.That(raw.GetObfuscatedExplainPlanValue(value, DatastoreVendor.MSSQL), Is.EqualTo(value));
+    }
+
+    [TestCase("  |--Clustered Index Scan(WHERE:([FirstName]=N'John'))")]
+    [TestCase("SELECT * FROM t WHERE a = 'b'")]
+    public void GetObfuscatedExplainPlanValue_OffObfuscator_ReturnsNull(string value)
+    {
+        var off = SqlObfuscator.GetSqlObfuscator("off");
+        Assert.That(off.GetObfuscatedExplainPlanValue(value, DatastoreVendor.MSSQL), Is.Null);
     }
 
 }

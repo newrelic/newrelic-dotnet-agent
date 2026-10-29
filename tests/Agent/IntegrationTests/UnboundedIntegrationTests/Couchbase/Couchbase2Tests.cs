@@ -118,7 +118,7 @@ public abstract class Couchbase2TestsBase<TFixture> : NewRelicIntegrationTest<TF
             new Assertions.ExpectedSqlTrace
             {
                 TransactionName = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Couchbase.Couchbase2Exerciser/BucketQuery",
-                Sql = "SELECT t.* FROM ? t LIMIT ?",
+                Sql = "SELECT t.* FROM `travel-sample` t LIMIT ?",
                 DatastoreMetricName = $"Datastore/statement/Couchbase/travel-sample/Query"
             }
         };
