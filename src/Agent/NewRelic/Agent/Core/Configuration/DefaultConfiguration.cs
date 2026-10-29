@@ -1953,19 +1953,19 @@ public class DefaultConfiguration : IConfiguration
 
     public bool AiMonitoringRecordContentEnabled => AiMonitoringState.RecordContent;
 
-    public bool AiMonitoringBasicTelemetryEnabled =>
-        ServerOverrides(_serverConfiguration.RpmConfig.AiMonitoringBasicTelemetryEnabled,
-            EnvironmentOverrides(_localConfiguration.aiMonitoring.basicTelemetry.enabled, "NEW_RELIC_AI_MONITORING_BASIC_TELEMETRY_ENABLED"));
+    public bool AiMonitoringBasicTelemetryEnabled => AiMonitoringState.BasicTelemetry;
 
     private sealed class AiMonitoringResolvedState
     {
         public readonly bool Active;
         public readonly bool RecordContent;
+        public readonly bool BasicTelemetry;
 
-        public AiMonitoringResolvedState(bool active, bool recordContent)
+        public AiMonitoringResolvedState(bool active, bool recordContent, bool basicTelemetry)
         {
             Active = active;
             RecordContent = recordContent;
+            BasicTelemetry = basicTelemetry;
         }
     }
 
@@ -1974,10 +1974,14 @@ public class DefaultConfiguration : IConfiguration
 
     private AiMonitoringResolvedState ResolveAiMonitoringState()
     {
+        // Raw value: HSM and collect_ai do not gate it, so the reported setting shows what was configured.
+        var basicTelemetry = ServerOverrides(_serverConfiguration.RpmConfig.AiMonitoringBasicTelemetryEnabled,
+            EnvironmentOverrides(_localConfiguration.aiMonitoring.basicTelemetry.enabled, "NEW_RELIC_AI_MONITORING_BASIC_TELEMETRY_ENABLED"));
+
         // HSM disables AIM (defense-in-depth; connect-service also strips the keys server-side).
         if (HighSecurityModeEnabled || _serverConfiguration.AICollectionEnabled == false)
         {
-            return new AiMonitoringResolvedState(false, false);
+            return new AiMonitoringResolvedState(false, false, basicTelemetry);
         }
 
         var localEnabled = EnvironmentOverrides(
@@ -1985,9 +1989,9 @@ public class DefaultConfiguration : IConfiguration
             "NEW_RELIC_AI_MONITORING_ENABLED");
         var enabled = _serverConfiguration.RpmConfig.AiMonitoringEnabled ?? localEnabled;
 
-        if (enabled == false || (enabled == null && !AiMonitoringBasicTelemetryEnabled))
+        if (enabled == false || (enabled == null && !basicTelemetry))
         {
-            return new AiMonitoringResolvedState(false, false);
+            return new AiMonitoringResolvedState(false, false, basicTelemetry);
         }
 
         // Content is forced on only when enabled=true was set locally and record_content is still unset.
@@ -1996,7 +2000,7 @@ public class DefaultConfiguration : IConfiguration
             "NEW_RELIC_AI_MONITORING_RECORD_CONTENT_ENABLED");
         var recordContent = _serverConfiguration.RpmConfig.AiMonitoringRecordContentEnabled ?? localRecordContent ?? (localEnabled == true);
 
-        return new AiMonitoringResolvedState(true, recordContent);
+        return new AiMonitoringResolvedState(true, recordContent, basicTelemetry);
     }
 
     public Func<string, string, int> LlmTokenCountingCallback => _runTimeConfiguration.LlmTokenCountingCallback;
