@@ -157,6 +157,11 @@ runs:
     - name: Run performance tests
       shell: bash
       working-directory: ${{ env.PERF_TEST_DIR }}
+      env:
+        # run-perf-test.py reads these when --license-key / --collector-host are
+        # absent, which keeps the key out of the script text and the command line.
+        NEW_RELIC_LICENSE_KEY: ${{ inputs.license-key }}
+        NEW_RELIC_HOST: ${{ inputs.collector-host }}
       run: |
         EXTRA_ENV_ARGS=()
         IFS=';' read -ra ENV_PAIRS <<< "${{ inputs.agent-env }}"
@@ -174,8 +179,6 @@ runs:
           --locust-users    "${{ inputs.locust-users }}" \
           --locust-spawn-rate "${{ inputs.locust-spawn-rate }}" \
           --dotnet-version  "${{ inputs.dotnet-version }}" \
-          --license-key     "${{ inputs.license-key }}" \
-          --collector-host  "${{ inputs.collector-host }}" \
           --enabled-tasks   "${{ inputs.enabled-tasks }}" \
           "${EXTRA_ENV_ARGS[@]}"
 
