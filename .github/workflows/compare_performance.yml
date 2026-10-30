@@ -8,8 +8,13 @@ name: Compare Performance
 # recent successful scheduled all_solutions.yml build (today's nightly build).
 #
 # Required secrets (when any agent run is included):
-#   PERF_TEST_ACCOUNT  - New Relic license key and collector host separated by a
-#                        comma.  Example: XXXXXXXXXXXX,collector.newrelic.com
+#   PERF_TEST_LICENSE_KEY    - New Relic license key for the perf test account.
+#   PERF_TEST_COLLECTOR_HOST - New Relic collector host, e.g. collector.newrelic.com
+#
+# Pass each secret straight to the step that uses it. Never derive either value
+# into a job output: only the exact secret value is masked, so a substring or
+# derived value is printed in clear wherever it appears, including the `with:`
+# inputs the runner echoes for every action step.
 #
 # The 'agent' input for each run accepts:
 #   ""            - Latest published release (github_release, no version pin)
@@ -203,13 +208,10 @@ jobs:
       locust_spawn_rate:   ${{ steps.inputs.outputs.locust_spawn_rate }}
       dotnet_version:      ${{ steps.inputs.outputs.dotnet_version }}
       enabled_tasks:       ${{ steps.inputs.outputs.enabled_tasks }}
-      license_key:         ${{ steps.inputs.outputs.license_key }}
-      collector_host:      ${{ steps.inputs.outputs.collector_host }}
     steps:
       - name: Resolve inputs
         id: inputs
         env:
-          PERF_TEST_ACCOUNT: ${{ secrets.PERF_TEST_ACCOUNT }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Parse an agent string into agent_source / agent_version / build_run_id
@@ -296,8 +298,6 @@ jobs:
             echo "dotnet_version=${{ inputs.dotnet_version }}"     >> "$GITHUB_OUTPUT"
             echo "enabled_tasks=${{ inputs.enabled_tasks }}"       >> "$GITHUB_OUTPUT"
           fi
-          echo "license_key=${PERF_TEST_ACCOUNT%%,*}"   >> "$GITHUB_OUTPUT"
-          echo "collector_host=${PERF_TEST_ACCOUNT##*,}" >> "$GITHUB_OUTPUT"
 
   # ---------------------------------------------------------------------------
   # Parallel test runs
@@ -358,8 +358,8 @@ jobs:
           locust-spawn-rate: ${{ needs.resolve-inputs.outputs.locust_spawn_rate }}
           dotnet-version:    ${{ needs.resolve-inputs.outputs.dotnet_version }}
           enabled-tasks:     ${{ needs.resolve-inputs.outputs.enabled_tasks }}
-          license-key:       ${{ needs.resolve-inputs.outputs.license_key }}
-          collector-host:    ${{ needs.resolve-inputs.outputs.collector_host }}
+          license-key:       ${{ secrets.PERF_TEST_LICENSE_KEY }}
+          collector-host:    ${{ secrets.PERF_TEST_COLLECTOR_HOST }}
           github-token:      ${{ secrets.GITHUB_TOKEN }}
 
   run-2:
@@ -392,8 +392,8 @@ jobs:
           locust-spawn-rate: ${{ needs.resolve-inputs.outputs.locust_spawn_rate }}
           dotnet-version:    ${{ needs.resolve-inputs.outputs.dotnet_version }}
           enabled-tasks:     ${{ needs.resolve-inputs.outputs.enabled_tasks }}
-          license-key:       ${{ needs.resolve-inputs.outputs.license_key }}
-          collector-host:    ${{ needs.resolve-inputs.outputs.collector_host }}
+          license-key:       ${{ secrets.PERF_TEST_LICENSE_KEY }}
+          collector-host:    ${{ secrets.PERF_TEST_COLLECTOR_HOST }}
           github-token:      ${{ secrets.GITHUB_TOKEN }}
 
   run-3:
@@ -426,8 +426,8 @@ jobs:
           locust-spawn-rate: ${{ needs.resolve-inputs.outputs.locust_spawn_rate }}
           dotnet-version:    ${{ needs.resolve-inputs.outputs.dotnet_version }}
           enabled-tasks:     ${{ needs.resolve-inputs.outputs.enabled_tasks }}
-          license-key:       ${{ needs.resolve-inputs.outputs.license_key }}
-          collector-host:    ${{ needs.resolve-inputs.outputs.collector_host }}
+          license-key:       ${{ secrets.PERF_TEST_LICENSE_KEY }}
+          collector-host:    ${{ secrets.PERF_TEST_COLLECTOR_HOST }}
           github-token:      ${{ secrets.GITHUB_TOKEN }}
 
   run-4:
@@ -460,8 +460,8 @@ jobs:
           locust-spawn-rate: ${{ needs.resolve-inputs.outputs.locust_spawn_rate }}
           dotnet-version:    ${{ needs.resolve-inputs.outputs.dotnet_version }}
           enabled-tasks:     ${{ needs.resolve-inputs.outputs.enabled_tasks }}
-          license-key:       ${{ needs.resolve-inputs.outputs.license_key }}
-          collector-host:    ${{ needs.resolve-inputs.outputs.collector_host }}
+          license-key:       ${{ secrets.PERF_TEST_LICENSE_KEY }}
+          collector-host:    ${{ secrets.PERF_TEST_COLLECTOR_HOST }}
           github-token:      ${{ secrets.GITHUB_TOKEN }}
 
   # ---------------------------------------------------------------------------

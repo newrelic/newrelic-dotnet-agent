@@ -187,15 +187,18 @@ Trigger from **Actions → Compare Performance → Run workflow**. Configurable 
 
 Run 1 always executes. Runs 2–4 are opt-in. A no-agent baseline is included by default.
 
-### Required secret
+### Required secrets
 
-When any agent run is included, the `PERF_TEST_ACCOUNT` secret must be set on the repository:
+When any agent run is included, two secrets must be set on the repository:
 
-```
-PERF_TEST_ACCOUNT=<license_key>,<collector_host>
-```
+| Secret | Value |
+|---|---|
+| `PERF_TEST_LICENSE_KEY` | New Relic license key for the perf test account |
+| `PERF_TEST_COLLECTOR_HOST` | New Relic collector host, e.g. `collector.newrelic.com` |
 
-Example: `XXXXXXXXXXXX,collector.newrelic.com`
+Each agent run passes them straight to the `run-perf-test` action. Do not
+derive either value into a job output: GitHub masks only the exact secret
+value, so a derived or partial value is printed in clear in the run log.
 
 ## Design Decisions
 
