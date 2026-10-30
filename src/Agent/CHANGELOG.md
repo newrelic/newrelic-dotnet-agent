@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.58.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.57.0...v10.58.0) (2026-10-30)
+
+
+### Notice
+
+* LLM instrumentation is now enabled by default and sends `Llm*` custom events, spans, and metrics (without message content) unless configured otherwise. To opt out, add `<aiMonitoring><basicTelemetry enabled="false" /></aiMonitoring>` to `newrelic.config`, or set the `NEW_RELIC_AI_MONITORING_BASIC_TELEMETRY_ENABLED` environment variable to `false`. The `enabled` attribute on `<aiMonitoring>` and the `NEW_RELIC_AI_MONITORING_ENABLED` environment variable are deprecated and will be removed in a future major release, but setting either one to `false` also opts out. ([0b65f33](https://github.com/newrelic/newrelic-dotnet-agent/commit/0b65f338448a6a6213a1db59c4a55844cb4c63af))
+
+
+### New features
+
+* Enable AI basic telemetry by default ([#3913](https://github.com/newrelic/newrelic-dotnet-agent/issues/3913)) ([0b65f33](https://github.com/newrelic/newrelic-dotnet-agent/commit/0b65f338448a6a6213a1db59c4a55844cb4c63af))
+
+
+### Fixes
+
+* Apply spec-compliant SQL obfuscation to MySQL, Oracle, SQL Server and other datastores. ([#3914](https://github.com/newrelic/newrelic-dotnet-agent/issues/3914)) ([2ddbcd4](https://github.com/newrelic/newrelic-dotnet-agent/commit/2ddbcd4a335402a9cbd69834daa8a69d5e328ec8))
+* End MassTransit consume transactions when the consumer throws ([#3915](https://github.com/newrelic/newrelic-dotnet-agent/issues/3915)) ([2202417](https://github.com/newrelic/newrelic-dotnet-agent/commit/2202417b326a7ddc99b03f1c8eb0ba6ab5e11a52))
+* Preserve Postgres double-quoted identifiers and apply spec-compliant SQL obfuscation for Postgres. ([#3903](https://github.com/newrelic/newrelic-dotnet-agent/issues/3903)) ([7edfdc6](https://github.com/newrelic/newrelic-dotnet-agent/commit/7edfdc623721816c7e30e285a3820791c57a93e6))
+
 ## [10.57.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.56.0...v10.57.0) (2026-10-26)
 
 
