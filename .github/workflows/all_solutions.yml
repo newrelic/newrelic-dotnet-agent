@@ -114,21 +114,26 @@ jobs:
 
       # Signing and MSI build are skipped for the Dependabot dispatch (see note above the jobs).
       # The build and homefolders artifact above are all the test suites need.
-      - name: Convert Code Signing Certificate Into File
-        id: write_cert
-        if: env.skip_signing != 'true'
-        run: |
-          $filePath = '${{ github.workspace }}\newrelic_code_sign_cert.pfx'
-          $bytes = [Convert]::FromBase64String('${{ secrets.SIGNING_CERT }}')
-          [IO.File]::WriteAllBytes($filePath, $bytes)
-          echo "filePath=$filePath" >> $env:GITHUB_OUTPUT
-        shell: powershell
-
+      # Imported in-process so the passphrase never reaches a command line. The PFX lives in
+      # RUNNER_TEMP only for the import; signtool /a then picks the cert from CurrentUser\My.
       - name: Install Code Signing Certificate
+        id: install_cert
         if: env.skip_signing != 'true'
+        env:
+          SIGNING_CERT: ${{ secrets.SIGNING_CERT }}
+          CERT_PASSPHRASE: ${{ secrets.CERT_PASSPHRASE }}
         run: |
-          Write-Host "certutil.exe -f -user -p <passphrase> -importPFX ${{ steps.write_cert.outputs.filePath }} NoRoot"
-          certutil.exe -f -user -p ${{ secrets.CERT_PASSPHRASE }} -importPFX ${{ steps.write_cert.outputs.filePath }} NoRoot
+          $filePath = Join-Path $env:RUNNER_TEMP 'newrelic_code_sign_cert.pfx'
+          try {
+            [IO.File]::WriteAllBytes($filePath, [Convert]::FromBase64String($env:SIGNING_CERT))
+            $password = ConvertTo-SecureString $env:CERT_PASSPHRASE -AsPlainText -Force
+            $imported = Import-PfxCertificate -FilePath $filePath -CertStoreLocation Cert:\CurrentUser\My -Password $password
+          }
+          finally {
+            Remove-Item $filePath -Force -ErrorAction SilentlyContinue
+          }
+          Write-Host "Imported $(@($imported).Count) certificate(s) into Cert:\CurrentUser\My"
+          echo "thumbprints=$((@($imported) | ForEach-Object Thumbprint) -join ',')" >> $env:GITHUB_OUTPUT
         shell: powershell
 
 
@@ -157,6 +162,16 @@ jobs:
           name: msi-build-folder-artifacts
           path: ${{ github.workspace }}\src\_build
           if-no-files-found: error
+
+      - name: Remove Code Signing Certificate
+        if: always() && steps.install_cert.outputs.thumbprints != ''
+        env:
+          THUMBPRINTS: ${{ steps.install_cert.outputs.thumbprints }}
+        run: |
+          foreach ($thumbprint in $env:THUMBPRINTS -split ',') {
+            Remove-Item -Path "Cert:\CurrentUser\My\$thumbprint" -DeleteKey -ErrorAction SilentlyContinue
+          }
+        shell: powershell
 
   run-linux-container-tests:
     name: Run Linux Container Tests
@@ -237,23 +252,23 @@ jobs:
           name: homefolders
           path: src/Agent
 
-      - name: Convert GPG Private Key Into File
-        id: write_gpgkey
+      # Outside the workspace; build/Linux/docker-compose.yml mounts GPG_KEYS_DIR read-only at /keys.
+      - name: Write GPG Private Key
+        env:
+          NEW_GPG_KEY: ${{ secrets.NEW_GPG_KEY }}
         run: |
-          filePath="/tmp/private_gpg_key.gpg"
-          echo "${{ secrets.NEW_GPG_KEY }}" | base64 -d > $filePath
-          echo "filePath=$filePath" >> $GITHUB_OUTPUT
-        shell: bash
-
-      - name: Copy GPG Key to keys
-        run: |
-          mkdir ${{ github.workspace }}/build/Linux/keys
-          cp -f ${{ steps.write_gpgkey.outputs.filePath }} ${{ github.workspace }}/build/Linux/keys/private_gpg_key.gpg
+          mkdir -p -m 700 "$RUNNER_TEMP/gpg-keys"
+          printf '%s' "$NEW_GPG_KEY" | base64 -d > "$RUNNER_TEMP/gpg-keys/private_gpg_key.gpg"
         shell: bash
 
       - name: Build RPM
+        env:
+          # Passed to the container by name (build/Linux/docker-compose.yml), not on the command line.
+          GPG_KEY_PASSPHRASE: ${{ secrets.NEW_GPG_KEY_PASSPHRASE }}
+          BUILD_AGENT_VERSION: ${{ needs.build-fullagent-msi.outputs.agentVersion }}
         run: |
-          agentVersion=${{ needs.build-fullagent-msi.outputs.agentVersion }}
+          export GPG_KEYS_DIR="$RUNNER_TEMP/gpg-keys"
+          agentVersion="$BUILD_AGENT_VERSION"
 
           if [[ "$agentVersion" =~ [0-9]+\.[0-9]+\.[0-9]+\.[0-9]+ ]]; then
             major=$(echo $agentVersion | cut -d'.' -f1)
@@ -265,7 +280,7 @@ jobs:
 
           cd ${{ github.workspace }}/build/Linux
           docker compose build build_rpm
-          docker compose run -e AGENT_VERSION=$agentVersion -e GPG_KEY=/keys/private_gpg_key.gpg -e GPG_KEY_PASSPHRASE=${{ secrets.NEW_GPG_KEY_PASSPHRASE }} build_rpm
+          docker compose run -e AGENT_VERSION="$agentVersion" -e GPG_KEY=/keys/private_gpg_key.gpg build_rpm
         shell: bash
 
       - name: Archive RPM Package Artifacts
@@ -274,6 +289,11 @@ jobs:
           name: rpm-build-artifacts
           path: ${{ github.workspace }}/src/_build/CoreArtifacts
           if-no-files-found: error
+
+      - name: Remove GPG Private Key
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/gpg-keys"
+        shell: bash
 
   create-package-deb:
     needs: build-fullagent-msi
@@ -309,8 +329,10 @@ jobs:
           path: src/_build
 
       - name: Build Debian Package
+        env:
+          BUILD_AGENT_VERSION: ${{ needs.build-fullagent-msi.outputs.agentVersion }}
         run: |
-          agentVersion=${{ needs.build-fullagent-msi.outputs.agentVersion }}
+          agentVersion="$BUILD_AGENT_VERSION"
 
           if [[ "$agentVersion" =~ [0-9]+\.[0-9]+\.[0-9]+\.[0-9]+ ]]; then
             major=$(echo $agentVersion | cut -d'.' -f1)
@@ -322,7 +344,7 @@ jobs:
 
           cd ${{ github.workspace }}/build/Linux
           docker compose build build_deb
-          docker compose run -e AGENT_VERSION=$agentVersion build_deb
+          docker compose run -e AGENT_VERSION="$agentVersion" build_deb
         shell: bash
 
       - name: Archive Debian Package Artifacts

@@ -1,11 +1,27 @@
 services:
-    deploy_packages: 
+    deploy_packages:
         build: .
     # This was necessary to be able to debug using strace
     #    security_opt:
     #        - seccomp:unconfined
         command: bash -c "/data/deploy.bash"
         working_dir: /data
-        env_file:
-            - docker.env
-        
+        # Name-only entries take their values from the shell running `docker compose`,
+        # so credentials are never written to disk. Unset variables stay unset.
+        environment:
+            - AGENT_VERSION
+            - ACTION
+            - S3_BUCKET
+            - AWS_ACCESS_KEY_ID
+            - AWS_SECRET_ACCESS_KEY
+            - AWS_SESSION_TOKEN
+            - AWS_DEFAULT_REGION
+            - AWS_DEFAULT_OUTPUT
+            - NEW_PRIVATE_KEY_PASSPHRASE
+            - OLD_KEY_ID
+            - NEW_KEY_ID
+            - OLD_PRIVATE_KEY=/keys/old-private-key.gpg
+            - NEW_PRIVATE_KEY=/keys/new-private-key.gpg
+        # Signing keys are mounted at run time so they never become part of the image.
+        volumes:
+            - ${GPG_KEYS_DIR:-./keys}:/keys:ro

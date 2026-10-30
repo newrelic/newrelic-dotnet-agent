@@ -414,9 +414,11 @@ jobs:
           Copy-Item -Path "${{ github.workspace }}/build/Packaging/NugetProfiler/readme.md" -Destination "${{ github.workspace }}/_workingDir"
 
       - name: Pack Profiler NuGet Package
+        env:
+          PACKAGE_VERSION: ${{ steps.agentVersion.outputs.version }}
         run: |
           New-Item "${{ github.workspace }}/_workingDir/NugetProfiler" -Type "directory"
-          nuget pack ${{ github.workspace }}/build/Packaging/NugetProfiler/NewRelic.Profiler.nuspec -BasePath ${{ github.workspace }}/_workingDir -OutputDirectory ${{ github.workspace }}/_workingDir/NugetProfiler -Version ${{ steps.agentVersion.outputs.version }} -Verbosity detailed
+          nuget pack ${{ github.workspace }}/build/Packaging/NugetProfiler/NewRelic.Profiler.nuspec -BasePath ${{ github.workspace }}/_workingDir -OutputDirectory ${{ github.workspace }}/_workingDir/NugetProfiler -Version "$env:PACKAGE_VERSION" -Verbosity detailed
         shell: powershell
 
       # Get a short-lived NuGet API key
@@ -427,11 +429,13 @@ jobs:
           user: ${{ secrets.NUGET_TRUSTED_PUBLISH_POLICY_USER }}
 
       - name: Deploy Profiler Package to Nuget
+        env:
+          NUGET_API_KEY: ${{ steps.login.outputs.NUGET_API_KEY }}
         run: |
           $packageName = Get-ChildItem ${{ github.workspace }}/_workingDir/NugetProfiler/NewRelic.Agent.Internal.Profiler.*.nupkg -Name
           $packagePath = Convert-Path ${{ github.workspace }}//_workingDir/NugetProfiler/$packageName
           $version = $packageName.TrimStart('NewRelic.Agent.Internal.Profiler').TrimStart('.').TrimEnd('.nupkg')
-          dotnet nuget push $packagePath --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" --source ${{ env.nuget_source }}
+          dotnet nuget push $packagePath --api-key "$env:NUGET_API_KEY" --source ${{ env.nuget_source }}
         shell: powershell
 
   update-nuget-reference:
@@ -456,11 +460,13 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Update Profiler Package Reference to Latest Version
+        env:
+          PACKAGE_VERSION: ${{ needs.package-and-deploy.outputs.package_version }}
         run: |
           cat ${{ github.workspace }}/src/Agent/NewRelic/Home/Home.csproj | \
           xmlstarlet edit --pf --omit-decl \
           --update "//PackageReference[@Include='NewRelic.Agent.Internal.Profiler']/@Version" \
-          --value "${{ needs.package-and-deploy.outputs.package_version }}" > ${{ github.workspace }}/src/Agent/NewRelic/Home/_temp &&
+          --value "$PACKAGE_VERSION" > ${{ github.workspace }}/src/Agent/NewRelic/Home/_temp &&
           cat ${{ github.workspace }}/src/Agent/NewRelic/Home/_temp > ${{ github.workspace }}/src/Agent/NewRelic/Home/Home.csproj &&
           rm -f ${{ github.workspace }}/src/Agent/NewRelic/Home/_temp
 

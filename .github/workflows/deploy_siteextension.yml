@@ -47,14 +47,17 @@ jobs:
           user: ${{ secrets.NUGET_TRUSTED_PUBLISH_POLICY_USER }}
 
       - name: Deploy New Relic Azure Site Extension to Nuget
+        env:
+          DEPLOY: ${{ inputs.deploy }}
+          NUGET_API_KEY: ${{ steps.login.outputs.NUGET_API_KEY }}
         run: |
           $packageName = Get-ChildItem ${{ github.workspace }}\build\BuildArtifacts\AzureSiteExtension\NewRelic.Azure.WebSites.Extension.*.nupkg -Name
           $packagePath = Convert-Path ${{ github.workspace }}\build\BuildArtifacts\AzureSiteExtension\$packageName
-          if ("${{ inputs.deploy }}" -eq "true") {
-            dotnet nuget push $packagePath --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" --source ${{ env.nuget_source }}
+          if ($env:DEPLOY -eq "true") {
+            dotnet nuget push $packagePath --api-key "$env:NUGET_API_KEY" --source ${{ env.nuget_source }}
           }
           else {
-            Write-Host "Input:deploy was not true (${{ inputs.deploy }}).  The following deploy command was not run:"
+            Write-Host "Input:deploy was not true ($env:DEPLOY).  The following deploy command was not run:"
             Write-Host "dotnet nuget push $packagePath --source ${{ env.nuget_source }}"
           }
         shell: powershell

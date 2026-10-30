@@ -5,8 +5,9 @@ set -e # Halt the build script on any error
 function sign_rpm {
     rpm_file="$1"
 
-    # create a passphrase file
+    # create a passphrase file, removed on any exit so a failed signing step can't leave it behind
     tmp_passphrase_file=$(mktemp)
+    trap 'rm -f "$tmp_passphrase_file"' EXIT
     echo "$GPG_KEY_PASSPHRASE" > "$tmp_passphrase_file" && chmod 400 "$tmp_passphrase_file"
 
     # import the private gpg key

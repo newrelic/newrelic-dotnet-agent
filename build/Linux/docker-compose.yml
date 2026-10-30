@@ -10,16 +10,19 @@ services:
             - ./build/common:/common
         working_dir: /data
 
-    build_rpm: 
+    build_rpm:
         build: ./build/rpm
         command: bash -c "dos2unix /rpm/build.sh && chmod 777 /rpm/build.sh && /rpm/build.sh"
-        volumes: 
+        # Name-only: the value comes from the calling shell, so it never appears on a command line.
+        environment:
+            - GPG_KEY_PASSPHRASE
+        volumes:
             - ../../src/_build/CoreArtifacts:/release
             - ../../src/Agent:/data
             - ../../src/Agent/Miscellaneous:/docs
             - ./build/rpm:/rpm
             - ./build/common:/common
-            - ./keys:/keys
+            - ${GPG_KEYS_DIR:-./keys}:/keys:ro
         working_dir: /data
 
     test_debian:
