@@ -6,8 +6,8 @@
     <PackageVersion Include="Google.Protobuf" Version="3.36.2" />
     <PackageVersion Include="Grpc" Version="2.46.6" />
     <PackageVersion Include="Grpc.Core" Version="2.46.6" />
-    <PackageVersion Include="Grpc.Net.Client" Version="2.84.0" />
-    <PackageVersion Include="Grpc.Tools" Version="2.84.0" />
+    <PackageVersion Include="Grpc.Net.Client" Version="2.85.0" />
+    <PackageVersion Include="Grpc.Tools" Version="2.85.0" />
     <PackageVersion Include="ILRepack" Version="2.0.48" />
     <PackageVersion Include="JustMock" Version="2026.3.811.528" />
     <PackageVersion Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.3" />
@@ -42,7 +42,7 @@
     <PackageVersion Include="System.Collections.Immutable" Version="8.0.0" />
     <PackageVersion Include="System.Configuration.ConfigurationManager" Version="8.0.0" />
     <PackageVersion Include="System.Data.SqlClient" Version="4.8.6" />
-    <PackageVersion Include="System.Diagnostics.DiagnosticSource" Version="10.0.13" />
+    <PackageVersion Include="System.Diagnostics.DiagnosticSource" Version="10.0.14" />
     <PackageVersion Include="System.Reflection.Emit.Lightweight" Version="4.7.0" />
     <PackageVersion Include="System.Threading.Tasks.Extensions" Version="4.6.3" />
     <PackageVersion Include="System.ValueTuple" Version="4.6.2" />
