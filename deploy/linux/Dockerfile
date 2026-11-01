@@ -1,4 +1,4 @@
-FROM debian:stable-20260918@sha256:2bf225230f05881b6a36d20f484088f408c9a1309edc730c0bf01f15e635d411
+FROM debian:stable-20261027@sha256:23ef8ad09b87c0dbee73f1f962ee78a6515842480a4444a2e5275912d4cad8e4
 
 RUN apt-get update && apt-get install -y \
     apt-utils \
