@@ -40,7 +40,7 @@ runs:
         dotnet-quality: 'ga'
 
     - name: Install .NET 11 Preview SDK
-      uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7 # v5.2.0
+      uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
       with:
         dotnet-version: '11.0.x'
         dotnet-quality: 'preview'
@@ -180,7 +180,7 @@ runs:
       shell: powershell
 
     - name: Archive Artifacts
-      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
       with:
         name: ${{ inputs.artifact-name }}
         path: |
