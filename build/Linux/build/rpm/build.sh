@@ -83,11 +83,19 @@ cp /common/run.sh .
 cp /docs/core-agent-readme.md ./README.md
 
 dos2unix *.x* extensions/*.x* *.sh
+chmod +x *.sh
 
 # agentinfo.json
 cp /rpm/agentinfo.json .
 
 popd
+
+# ship the profile.d script as a package file so rpm removes it on erase
+mkdir -p "${TARBALL_ROOT}/etc/profile.d"
+cp /common/${PACKAGE_NAME}-path.sh "${TARBALL_ROOT}/etc/profile.d"
+dos2unix "${TARBALL_ROOT}"/etc/profile.d/*.sh
+chmod 644 "${TARBALL_ROOT}"/etc/profile.d/*.sh
+
 tar -zcvf "./SOURCES/${PACKAGE_NAME}-${AGENT_VERSION}.tar.gz" "${TARBALL_ROOT}"
 
 # create RPM package(s)

@@ -45,6 +45,13 @@ cp /common/run.sh .
 cp /docs/core-agent-readme.md ./README.md
 
 dos2unix *.x* extensions/*.x* *.sh
+chmod +x *.sh
+
+# ship the profile.d script as a package file (a conffile) so dpkg removes it on purge
+mkdir -p ${INSTALL_ROOT}/etc/profile.d
+cp /common/${PACKAGE_NAME}-path.sh ${INSTALL_ROOT}/etc/profile.d
+dos2unix ${INSTALL_ROOT}/etc/profile.d/*.sh
+chmod 644 ${INSTALL_ROOT}/etc/profile.d/*.sh
 
 cp /deb/control ${INSTALL_ROOT}/DEBIAN
 cp /deb/postinst ${INSTALL_ROOT}/DEBIAN

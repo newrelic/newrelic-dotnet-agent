@@ -1,1 +1,2 @@
 /usr/local/newrelic-dotnet-agent/newrelic.config
+/etc/profile.d/newrelic-dotnet-agent-path.sh
