@@ -92,7 +92,7 @@ popd
 
 # ship the profile.d script as a package file so rpm removes it on erase
 mkdir -p "${TARBALL_ROOT}/etc/profile.d"
-cp /common/${PACKAGE_NAME}-path.sh "${TARBALL_ROOT}/etc/profile.d"
+cp /common/profile.d/${PACKAGE_NAME}-path.sh "${TARBALL_ROOT}/etc/profile.d"
 dos2unix "${TARBALL_ROOT}"/etc/profile.d/*.sh
 chmod 644 "${TARBALL_ROOT}"/etc/profile.d/*.sh
 
