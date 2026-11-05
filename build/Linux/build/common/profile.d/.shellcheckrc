@@ -1,0 +1,4 @@
+# Files in /etc/profile.d are sourced by the login shell, so they carry no shebang.
+# The installed file must stay byte-identical to the one older packages generated,
+# or upgrades hit a conffile prompt (deb) or an .rpmorig copy (rpm).
+shell=sh
