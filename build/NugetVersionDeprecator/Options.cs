@@ -13,9 +13,9 @@ public class Options
     [Option('c', "config", Default = "config.yml", Required = true, HelpText = "Path to the configuration file.")]
     public required string ConfigurationPath { get; set; }
 
-    [Option('g', "github-token", Required = false, HelpText = "The Github token to use when creating new issues. Not required in Test mode")]
+    [Option('g', "github-token", Required = false, HelpText = "The Github token to use when creating new issues. Not required in Test mode. Defaults to the GITHUB_TOKEN environment variable.")]
     public string GithubToken { get; set; }
 
-    [Option('a', "api-key", Required = true, HelpText = "The NewRelic API Key for executing NerdGraph queries")]
+    [Option('a', "api-key", Required = false, HelpText = "The NewRelic API Key for executing NerdGraph queries. Defaults to the NEW_RELIC_API_KEY environment variable.")]
     public string ApiKey { get; set; }
 }

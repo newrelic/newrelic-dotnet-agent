@@ -1,3 +1,4 @@
+# no longer used; kept so a stale local copy holding credentials can't be committed
 docker.env
 # old tarball method of adding signing keys to the container
 gpg.tar.bz2

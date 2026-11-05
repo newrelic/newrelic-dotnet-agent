@@ -202,6 +202,20 @@ internal class Program
 
     static void ValidateOptions(Options opts)
     {
+        // Environment fallbacks let CI keep credentials off the process command line.
+        if (string.IsNullOrEmpty(opts.GithubToken))
+        {
+            opts.GithubToken = Environment.GetEnvironmentVariable("GITHUB_TOKEN") ?? string.Empty;
+        }
+        if (string.IsNullOrEmpty(opts.ApiKey))
+        {
+            opts.ApiKey = Environment.GetEnvironmentVariable("NEW_RELIC_API_KEY") ?? string.Empty;
+        }
+
+        if (string.IsNullOrEmpty(opts.ApiKey))
+        {
+            ExitWithError(ExitCode.BadArguments, "A New Relic API key is required: pass --api-key or set NEW_RELIC_API_KEY.");
+        }
         if (!opts.TestMode && string.IsNullOrEmpty(opts.GithubToken))
         {
             ExitWithError(ExitCode.BadArguments, "Github token is required when not in Test mode.");

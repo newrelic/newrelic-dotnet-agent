@@ -277,11 +277,19 @@ jobs:
       - name: Build and Run NugetDeprecator
         run: |
           dotnet publish --configuration Release --output "$PUBLISH_PATH" "$BUILD_PATH"
-          "$PUBLISH_PATH/NugetVersionDeprecator" -c $PUBLISH_PATH/config.yml --github-token  ${{ secrets.GITHUB_TOKEN }} --api-key ${{ secrets.NEW_RELIC_API_KEY_PRODUCTION }} ${{ inputs.test_mode && '--test-mode' || '' }}
+          # The tool reads GITHUB_TOKEN and NEW_RELIC_API_KEY from the environment.
+          args=(-c "$PUBLISH_PATH/config.yml")
+          if [ "$TEST_MODE" == "true" ]; then
+            args+=(--test-mode)
+          fi
+          "$PUBLISH_PATH/NugetVersionDeprecator" "${args[@]}"
         shell: bash
         env:
           BUILD_PATH: ${{ github.workspace }}/build/NugetVersionDeprecator/NugetVersionDeprecator.csproj
           PUBLISH_PATH: ${{ github.workspace }}/publish
+          TEST_MODE: ${{ inputs.test_mode }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NEW_RELIC_API_KEY: ${{ secrets.NEW_RELIC_API_KEY_PRODUCTION }}
 
   release-tags:
     if: ${{ inputs.test_mode == false }} # only run if not in test mode

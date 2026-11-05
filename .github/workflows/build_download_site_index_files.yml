@@ -62,10 +62,13 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       - name: Update index.html files in AWS S3 bucket
         env:
-          BUCKET_NAME: ${{ secrets.BUCKET_NAME }}        
+          BUCKET_NAME: ${{ secrets.BUCKET_NAME }}
+          DRY_RUN: ${{ inputs.dry-run }}
+          PREFIX: ${{ inputs.prefix }}
         run: |
-          if [ ${{ inputs.dry-run }} = true ]; then
-            /opt/nr/bin/s3-indexer -bucket ${BUCKET_NAME:5} -prefix "${{ inputs.prefix }}"
+          # BUCKET_NAME is "s3://<bucket>"; s3-indexer wants the bare bucket name.
+          if [ "$DRY_RUN" = true ]; then
+            /opt/nr/bin/s3-indexer -bucket "${BUCKET_NAME:5}" -prefix "$PREFIX"
           else
-            /opt/nr/bin/s3-indexer -bucket ${BUCKET_NAME:5} -prefix "${{ inputs.prefix }}" -upload
+            /opt/nr/bin/s3-indexer -bucket "${BUCKET_NAME:5}" -prefix "$PREFIX" -upload
           fi

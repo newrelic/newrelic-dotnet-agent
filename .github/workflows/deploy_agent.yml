@@ -137,22 +137,40 @@ jobs:
 
       - name: Set Output Release Version and Build Run ID
         id: step2
+        env:
+          GET_VERSION_AUTOMATICALLY: ${{ inputs.get-version-automatically }}
+          DETECTED_RELEASE_VERSION: ${{ steps.step1.outputs.release_version }}
+          DETECTED_WORKFLOW_RUN_ID: ${{ steps.step1.outputs.workflow_run_id }}
+          OVERRIDE_AGENT_VERSION: ${{ inputs.agent_version }}
+          OVERRIDE_RUN_ID: ${{ inputs.run_id }}
         run: |
-          if [ "${{ inputs.get-version-automatically}}" = "true" ]; then
-            echo "release_version=${{steps.step1.outputs.release_version}}" >> "$GITHUB_OUTPUT"
-            echo "workflow_run_id=${{steps.step1.outputs.workflow_run_id}}" >> "$GITHUB_OUTPUT"
+          if [ "$GET_VERSION_AUTOMATICALLY" = "true" ]; then
+            RELEASE_VERSION="$DETECTED_RELEASE_VERSION"
+            WORKFLOW_RUN_ID="$DETECTED_WORKFLOW_RUN_ID"
           else
-            if [[ -z "${{inputs.agent_version}}" ]]; then
+            if [[ -z "$OVERRIDE_AGENT_VERSION" ]]; then
               echo "::error::Agent Version not specified."
               exit 1
             fi
-            if [[ -z "${{inputs.run_id}}" ]]; then
+            if [[ -z "$OVERRIDE_RUN_ID" ]]; then
               echo "::error::Run ID not specified."
               exit 1
             fi
-            echo "release_version=${{inputs.agent_version}}" >> "$GITHUB_OUTPUT"
-            echo "workflow_run_id=${{inputs.run_id}}" >> "$GITHUB_OUTPUT"
+            RELEASE_VERSION="$OVERRIDE_AGENT_VERSION"
+            WORKFLOW_RUN_ID="$OVERRIDE_RUN_ID"
           fi
+
+          # Every later job uses these two values, so only well-formed ones may leave this job.
+          if [[ ! "$RELEASE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Agent version must look like '10.0.0'."
+            exit 1
+          fi
+          if [[ ! "$WORKFLOW_RUN_ID" =~ ^[0-9]+$ ]]; then
+            echo "::error::Run ID must be numeric."
+            exit 1
+          fi
+          echo "release_version=$RELEASE_VERSION" >> "$GITHUB_OUTPUT"
+          echo "workflow_run_id=$WORKFLOW_RUN_ID" >> "$GITHUB_OUTPUT"
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -212,36 +230,43 @@ jobs:
         shell: powershell
 
       - name: Deploy latest_release to Download Site
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: us-west-2
+          BUCKET_NAME: ${{ secrets.BUCKET_NAME }}
+          DEPLOY: ${{ inputs.deploy }}
         run: |
-          $Env:AWS_ACCESS_KEY_ID="${{ secrets.AWS_ACCESS_KEY_ID }}"
-          $Env:AWS_SECRET_ACCESS_KEY="${{ secrets.AWS_SECRET_ACCESS_KEY }}"
-          $Env:AWS_DEFAULT_REGION="us-west-2"
           New-Item -ItemType directory -Path .\latest_release -Force
           Copy-Item .\working_dir\* .\latest_release\ -Force -Recurse
           cd .\latest_release
-          if ("${{ inputs.deploy }}" -eq "true") {
-            aws s3 sync . ${{ secrets.BUCKET_NAME }}/dot_net_agent/latest_release/ --include "*" --exclude ".DS_Store" --delete
+          if ($env:DEPLOY -eq "true") {
+            aws s3 sync . "$env:BUCKET_NAME/dot_net_agent/latest_release/" --include "*" --exclude ".DS_Store" --delete
           }
           else {
             Write-Host "Input:deploy was not true.  The following deploy command was not run:"
-            Write-Host "aws s3 sync . ${{ secrets.BUCKET_NAME }}/dot_net_agent/latest_release/ --include `"*`" --exclude `".DS_Store`" --delete"
+            Write-Host "aws s3 sync . <BUCKET_NAME>/dot_net_agent/latest_release/ --include `"*`" --exclude `".DS_Store`" --delete"
           }
         shell: pwsh
 
       - name: Deploy previous_release to Download Site
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: us-west-2
+          BUCKET_NAME: ${{ secrets.BUCKET_NAME }}
+          DEPLOY: ${{ inputs.deploy }}
+          RELEASE_VERSION: ${{ needs.get-release-info.outputs.release_version }}
         run: |
-          $Env:AWS_ACCESS_KEY_ID="${{ secrets.AWS_ACCESS_KEY_ID }}"
-          $Env:AWS_SECRET_ACCESS_KEY="${{ secrets.AWS_SECRET_ACCESS_KEY }}"
-          $Env:AWS_DEFAULT_REGION="us-west-2"
-          New-Item -ItemType directory -Path .\previous_releases\${{ needs.get-release-info.outputs.release_version }} -Force
-          Copy-Item .\working_dir\* ".\previous_releases\${{ needs.get-release-info.outputs.release_version }}\" -Force -Recurse
-          cd .\previous_releases\${{ needs.get-release-info.outputs.release_version }}
-          if ("${{ inputs.deploy }}" -eq "true") {
-            aws s3 sync . ${{ secrets.BUCKET_NAME }}/dot_net_agent/previous_releases/${{ needs.get-release-info.outputs.release_version }}/ --include "*" --exclude ".DS_Store" --delete
+          New-Item -ItemType directory -Path ".\previous_releases\$env:RELEASE_VERSION" -Force
+          Copy-Item .\working_dir\* ".\previous_releases\$env:RELEASE_VERSION\" -Force -Recurse
+          cd ".\previous_releases\$env:RELEASE_VERSION"
+          if ($env:DEPLOY -eq "true") {
+            aws s3 sync . "$env:BUCKET_NAME/dot_net_agent/previous_releases/$env:RELEASE_VERSION/" --include "*" --exclude ".DS_Store" --delete
           }
           else {
             Write-Host "Input:deploy was not true.  The following deploy command was not run:"
-            Write-Host "aws s3 sync . ${{ secrets.BUCKET_NAME }}/dot_net_agent/previous_releases/${{ needs.get-release-info.outputs.release_version }}/ --include `"*`" --exclude `".DS_Store`" --delete"
+            Write-Host "aws s3 sync . <BUCKET_NAME>/dot_net_agent/previous_releases/$env:RELEASE_VERSION/ --include `"*`" --exclude `".DS_Store`" --delete"
           }
         shell: pwsh
 
@@ -285,12 +310,15 @@ jobs:
           user: ${{ secrets.NUGET_TRUSTED_PUBLISH_POLICY_USER }}
 
       - name: Deploy Agent to Nuget
+        env:
+          DEPLOY: ${{ inputs.deploy }}
+          NUGET_API_KEY: ${{ steps.login.outputs.NUGET_API_KEY }}
         run: |
           $packageName = Get-ChildItem ${{ github.workspace }}\working_dir\NugetAgent\NewRelic.Agent.*.nupkg -Name
           $packagePath = Convert-Path ${{ github.workspace }}\working_dir\NugetAgent\$packageName
           $version = $packageName.TrimStart('NewRelic.Agent').TrimStart('.').TrimEnd('.nupkg')
-          if ("${{ inputs.deploy }}" -eq "true") {
-            dotnet nuget push $packagePath --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" --source ${{ env.nuget_source }}
+          if ($env:DEPLOY -eq "true") {
+            dotnet nuget push $packagePath --api-key "$env:NUGET_API_KEY" --source ${{ env.nuget_source }}
           }
           else {
             Write-Host "Input:deploy was not true.  The following deploy command was not run:"
@@ -299,12 +327,15 @@ jobs:
         shell: powershell
 
       - name: Deploy Agent API to Nuget
+        env:
+          DEPLOY: ${{ inputs.deploy }}
+          NUGET_API_KEY: ${{ steps.login.outputs.NUGET_API_KEY }}
         run: |
           $packageName = Get-ChildItem ${{ github.workspace }}\working_dir\NugetAgentApi\NewRelic.Agent.Api.*.nupkg -Name
           $packagePath = Convert-Path ${{ github.workspace }}\working_dir\NugetAgentApi\$packageName
           $version = $packageName.TrimStart('NewRelic.Agent.Api').TrimStart('.').TrimEnd('.nupkg')
-          if ("${{ inputs.deploy }}" -eq "true") {
-            dotnet nuget push $packagePath --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" --source ${{ env.nuget_source }}
+          if ($env:DEPLOY -eq "true") {
+            dotnet nuget push $packagePath --api-key "$env:NUGET_API_KEY" --source ${{ env.nuget_source }}
           }
           else {
             Write-Host "Input:deploy was not true.  The following deploy command was not run:"
@@ -313,12 +344,15 @@ jobs:
         shell: powershell
 
       - name: Deploy Azure Cloud Services to Nuget
+        env:
+          DEPLOY: ${{ inputs.deploy }}
+          NUGET_API_KEY: ${{ steps.login.outputs.NUGET_API_KEY }}
         run: |
           $packageName = Get-ChildItem ${{ github.workspace }}\working_dir\NugetAzureCloudServices\NewRelicWindowsAzure.*.nupkg -Name
           $packagePath = Convert-Path ${{ github.workspace }}\working_dir\NugetAzureCloudServices\$packageName
           $version = $packageName.TrimStart('NewRelicWindowsAzure').TrimStart('.').TrimEnd('.nupkg')
-          if ("${{ inputs.deploy }}" -eq "true") {
-            dotnet nuget push $packagePath --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" --source ${{ env.nuget_source }}
+          if ($env:DEPLOY -eq "true") {
+            dotnet nuget push $packagePath --api-key "$env:NUGET_API_KEY" --source ${{ env.nuget_source }}
           }
           else {
             Write-Host "Input:deploy was not true.  The following deploy command was not run:"
@@ -327,12 +361,15 @@ jobs:
         shell: powershell
 
       - name: Deploy Azure WebSites-x64 to Nuget
+        env:
+          DEPLOY: ${{ inputs.deploy }}
+          NUGET_API_KEY: ${{ steps.login.outputs.NUGET_API_KEY }}
         run: |
           $packageName = Get-ChildItem ${{ github.workspace }}\working_dir\NugetAzureWebSites-x64\NewRelic.Azure.WebSites.*.nupkg -Name
           $packagePath = Convert-Path ${{ github.workspace }}\working_dir\NugetAzureWebSites-x64\$packageName
           $version = $packageName.TrimStart('NewRelic.Azure.WebSites.x').TrimStart('.').TrimEnd('.nupkg')
-          if ("${{ inputs.deploy }}" -eq "true") {
-            dotnet nuget push $packagePath --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" --source ${{ env.nuget_source }}
+          if ($env:DEPLOY -eq "true") {
+            dotnet nuget push $packagePath --api-key "$env:NUGET_API_KEY" --source ${{ env.nuget_source }}
           }
           else {
             Write-Host "Input:deploy was not true.  The following deploy command was not run:"
@@ -341,12 +378,15 @@ jobs:
         shell: powershell
 
       - name: Deploy Azure WebSites-x86 to Nuget
+        env:
+          DEPLOY: ${{ inputs.deploy }}
+          NUGET_API_KEY: ${{ steps.login.outputs.NUGET_API_KEY }}
         run: |
           $packageName = Get-ChildItem ${{ github.workspace }}\working_dir\NugetAzureWebSites-x86\NewRelic.Azure.WebSites.*.nupkg -Name
           $packagePath = Convert-Path ${{ github.workspace }}\working_dir\NugetAzureWebSites-x86\$packageName
           $version = $packageName.TrimStart('NewRelic.Azure.WebSites.x').TrimStart('.').TrimEnd('.nupkg')
-          if ("${{ inputs.deploy }}" -eq "true") {
-            dotnet nuget push $packagePath --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" --source ${{ env.nuget_source }}
+          if ($env:DEPLOY -eq "true") {
+            dotnet nuget push $packagePath --api-key "$env:NUGET_API_KEY" --source ${{ env.nuget_source }}
           }
           else {
             Write-Host "Input:deploy was not true.  The following deploy command was not run:"
@@ -380,25 +420,22 @@ jobs:
           name: deploy-artifacts
           path: ${{ github.workspace }}/
 
-      - name: Get GPG Keys
-        id: write_gpgkeys
+      # Outside the workspace and the image build context; deploy/linux/docker-compose.yml
+      # mounts GPG_KEYS_DIR read-only at /keys, so the keys never become part of the image.
+      - name: Write GPG Keys
+        env:
+          OLD_GPG_KEY: ${{ secrets.OLD_GPG_KEY }}
+          NEW_GPG_KEY: ${{ secrets.NEW_GPG_KEY }}
         run: |
-          # old signing key
-          old_key_file="/tmp/old-secret-key.gpg"
-          echo "${{ secrets.OLD_GPG_KEY }}" | base64 -d > $old_key_file
-          echo "old_key_file=$old_key_file" >> $GITHUB_OUTPUT
-          # new signing key
-          new_key_file="/tmp/new-secret-key.gpg"
-          echo "${{ secrets.NEW_GPG_KEY }}" | base64 -d > $new_key_file
-          echo "new_key_file=$new_key_file" >> $GITHUB_OUTPUT
+          mkdir -p -m 700 "$RUNNER_TEMP/gpg-keys"
+          printf '%s' "$OLD_GPG_KEY" | base64 -d > "$RUNNER_TEMP/gpg-keys/old-private-key.gpg"
+          printf '%s' "$NEW_GPG_KEY" | base64 -d > "$RUNNER_TEMP/gpg-keys/new-private-key.gpg"
         shell: bash
 
-      - name: Move Artifacts and GPG Keys to Staging Location
+      - name: Move Artifacts to Staging Location
         run: |
           cp LinuxRpm/*.rpm ${{ github.workspace }}/deploy/linux/packages
           cp LinuxDeb/*.deb ${{ github.workspace }}/deploy/linux/packages
-          cp -f ${{ steps.write_gpgkeys.outputs.old_key_file }} ${{ github.workspace }}/deploy/linux/deploy_scripts/old-private-key.gpg
-          cp -f ${{ steps.write_gpgkeys.outputs.new_key_file }} ${{ github.workspace }}/deploy/linux/deploy_scripts/new-private-key.gpg
         shell: bash
 
       # Test repository only.  Production keeps its static keys because we cannot
@@ -413,55 +450,54 @@ jobs:
           role-duration-seconds: 3600
           aws-region: us-west-2
 
-      - name: Prepare docker.env
+      # deploy/linux/docker-compose.yml passes every value below to the container by name,
+      # so nothing is written to disk or placed on a command line.
+      - name: Build and Run Container
+        env:
+          AGENT_VERSION: ${{ needs.get-release-info.outputs.release_version }}
+          ACTION: release
+          DEPLOY: ${{ inputs.deploy }}
+          DEPLOY_TO_PRODUCTION: ${{ inputs.linux-deploy-to-production }}
+          # Distinct names: the test-repo branch reads AWS_* exported by the role assumption above.
+          PROD_MAIN_S3: ${{ secrets.PROD_MAIN_S3 }}
+          LINUX_AWS_ACCESS_KEY_ID: ${{ secrets.LINUX_AWS_ACCESS_KEY_ID }}
+          LINUX_AWS_SECRET_ACCESS_KEY: ${{ secrets.LINUX_AWS_SECRET_ACCESS_KEY }}
+          TEST_S3_BUCKET: ${{ secrets.TEST_S3_BUCKET }}
+          NEW_PRIVATE_KEY_PASSPHRASE: ${{ secrets.NEW_GPG_KEY_PASSPHRASE }}
+          OLD_KEY_ID: ${{ secrets.OLD_GPG_KEY_ID }}
+          NEW_KEY_ID: ${{ secrets.NEW_GPG_KEY_ID }}
         run: |
-          # Confirm that the version is in the proper format.
-          IFS='.' read -ra agent_version_array <<< "${{ needs.get-release-info.outputs.release_version }}"
-          agent_version_count=${#agent_version_array[@]}
-          if [ $agent_version_count -ne 3 ] ; then
-            echo "::error Supplied agent version from Workflow (${{ needs.get-release-info.outputs.release_version }}) is malformed.  It needs to be like '10.0.0'."
+          # get-release-info already validates this; checked again because a malformed version here
+          # would publish to the wrong repository path.
+          if [[ ! "$AGENT_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] ; then
+            echo "::error::Supplied agent version from Workflow ($AGENT_VERSION) is malformed.  It needs to be like '10.0.0'."
             exit 1
-          else
-            AGENT_VERSION=${{ needs.get-release-info.outputs.release_version }}
           fi
 
-          # Build the docker.env
-          cd ${{ github.workspace }}/deploy/linux/
-          touch docker.env
-          echo "AGENT_VERSION=$AGENT_VERSION" >> docker.env
-          echo "ACTION=release" >> docker.env
-          if [ "${{ inputs.linux-deploy-to-production }}" == "true" ] ; then
+          if [ "$DEPLOY_TO_PRODUCTION" == "true" ] ; then
             # We're actually deploying to production (apt.newrelic.com and yum.newrelic.com)
-            echo "S3_BUCKET=${{ secrets.PROD_MAIN_S3 }}" >> docker.env
-            echo "AWS_ACCESS_KEY_ID=${{ secrets.LINUX_AWS_ACCESS_KEY_ID }}" >> docker.env
-            echo "AWS_SECRET_ACCESS_KEY=${{ secrets.LINUX_AWS_SECRET_ACCESS_KEY }}" >> docker.env
+            export S3_BUCKET="$PROD_MAIN_S3"
+            export AWS_ACCESS_KEY_ID="$LINUX_AWS_ACCESS_KEY_ID"
+            export AWS_SECRET_ACCESS_KEY="$LINUX_AWS_SECRET_ACCESS_KEY"
+            # Static keys only: a stray session token would invalidate them.
+            unset AWS_SESSION_TOKEN
           else
             # Deploy to the test bucket that mirrors apt/yum.newrelic.com, using the
-            # short-lived credentials exported by the step above.  The session token
-            # is required: an assumed role is three values, not two.
+            # short-lived credentials exported by the role assumption above.  The session
+            # token is required: an assumed role is three values, not two.
             if [ -z "$AWS_SESSION_TOKEN" ] ; then
-              echo "::error AWS_SESSION_TOKEN is empty - role assumption did not run or failed."
+              echo "::error::AWS_SESSION_TOKEN is empty - role assumption did not run or failed."
               exit 1
             fi
-            echo "S3_BUCKET=${{ secrets.TEST_S3_BUCKET }}" >> docker.env
-            echo "AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID" >> docker.env
-            echo "AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY" >> docker.env
-            echo "AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN" >> docker.env
+            export S3_BUCKET="$TEST_S3_BUCKET"
           fi
-          echo "OLD_PRIVATE_KEY=/data/deploy_scripts/old-private-key.gpg" >> docker.env
-          echo "NEW_PRIVATE_KEY=/data/deploy_scripts/new-private-key.gpg" >> docker.env
-          echo "NEW_PRIVATE_KEY_PASSPHRASE=${{ secrets.NEW_GPG_KEY_PASSPHRASE }}" >> docker.env
-          echo "OLD_KEY_ID=${{ secrets.OLD_GPG_KEY_ID }}" >> docker.env
-          echo "NEW_KEY_ID=${{ secrets.NEW_GPG_KEY_ID }}" >> docker.env
-        shell: bash
+          export GPG_KEYS_DIR="$RUNNER_TEMP/gpg-keys"
 
-      - name: Build and Run Container
-        run: |
           cd ${{ github.workspace }}/deploy/linux/
           find . -name "*.bash" |xargs chmod a+x
           find . -type f |xargs dos2unix
           docker compose build
-          if [ "${{ inputs.deploy }}" == "true" ] ; then
+          if [ "$DEPLOY" == "true" ] ; then
             docker compose run deploy_packages
           else
             echo "Input:deploy was not true.  The following deploy command was not run:"
@@ -475,11 +511,18 @@ jobs:
         # Deploy YUM repository definitions to the targeted repository (production or test, based on the 'linux-deploy-to-production' input).
         # The definitions are .repo files in ./build/Linux/yum directory at the root of the agent source tree.
         # The files just have to be copied to the <TARGET_S3_BUCKET>/dot_net_agent/yum directory, potentially overriding existing files.
+        env:
+          # Distinct names: the test-repo branch reads AWS_* exported by the role assumption above.
+          LINUX_AWS_ACCESS_KEY_ID: ${{ secrets.LINUX_AWS_ACCESS_KEY_ID }}
+          LINUX_AWS_SECRET_ACCESS_KEY: ${{ secrets.LINUX_AWS_SECRET_ACCESS_KEY }}
+          PROD_MAIN_S3: ${{ secrets.PROD_MAIN_S3 }}
+          TEST_S3_BUCKET: ${{ secrets.TEST_S3_BUCKET }}
+          DEPLOY_TO_PRODUCTION: ${{ inputs.linux-deploy-to-production }}
         run: |
-          if [ "${{ inputs.linux-deploy-to-production }}" == "true" ] ; then
-            export AWS_ACCESS_KEY_ID="${{ secrets.LINUX_AWS_ACCESS_KEY_ID }}"
-            export AWS_SECRET_ACCESS_KEY="${{ secrets.LINUX_AWS_SECRET_ACCESS_KEY }}"
-            TARGET_S3_BUCKET="${{ secrets.PROD_MAIN_S3 }}"
+          if [ "$DEPLOY_TO_PRODUCTION" == "true" ] ; then
+            export AWS_ACCESS_KEY_ID="$LINUX_AWS_ACCESS_KEY_ID"
+            export AWS_SECRET_ACCESS_KEY="$LINUX_AWS_SECRET_ACCESS_KEY"
+            TARGET_S3_BUCKET="$PROD_MAIN_S3"
           else
             # Test repository - the short-lived credentials from the role assumed
             # earlier in this job (AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY/AWS_SESSION_TOKEN)
@@ -488,7 +531,7 @@ jobs:
               echo "::error::AWS_SESSION_TOKEN is empty - role assumption did not run or failed."
               exit 1
             fi
-            TARGET_S3_BUCKET="${{ secrets.TEST_S3_BUCKET }}"
+            TARGET_S3_BUCKET="$TEST_S3_BUCKET"
           fi
 
           YUM_DIR="${{ github.workspace }}/build/Linux/yum"
@@ -499,15 +542,30 @@ jobs:
       - name: Clear Fastly cache
         continue-on-error: true
         if: ${{ inputs.deploy && inputs.linux-deploy-to-production && success() }}
+        env:
+          FASTLY_TOKEN: ${{ secrets.FASTLY_TOKEN }}
+          FASTLY_URL: ${{ secrets.FASTLY_URL }}
         run: |
-          curl -i -X POST -H 'Fastly-Key:${{ secrets.FASTLY_TOKEN }}' ${{ secrets.FASTLY_URL }}
+          # curl reads the URL and header from stdin, so neither appears on its command line.
+          printf 'url = "%s"\nheader = "Fastly-Key: %s"\n' "$FASTLY_URL" "$FASTLY_TOKEN" \
+            | curl -i -X POST --config -
         shell: bash
 
       - name: Clear Cloudflare cache
         continue-on-error: true
         if: ${{ inputs.deploy && inputs.linux-deploy-to-production && success() }}
+        env:
+          CLOUDFLARE_CACHE_URL: ${{ secrets.CLOUDFLARE_CACHE_URL }}
+          CLOUDFLARE_CACHE_TOKEN: ${{ secrets.CLOUDFLARE_CACHE_TOKEN }}
         run: |
-          curl ${{ secrets.CLOUDFLARE_CACHE_URL }} -H 'Content-Type: application/json' -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_CACHE_TOKEN }}" -d '{"purge_everything": true}'
+          # curl reads the URL and auth header from stdin, so neither appears on its command line.
+          printf 'url = "%s"\nheader = "Authorization: Bearer %s"\n' "$CLOUDFLARE_CACHE_URL" "$CLOUDFLARE_CACHE_TOKEN" \
+            | curl --config - -H 'Content-Type: application/json' -d '{"purge_everything": true}'
+        shell: bash
+
+      - name: Remove GPG Keys
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/gpg-keys"
         shell: bash
 
   publish-release-notes:

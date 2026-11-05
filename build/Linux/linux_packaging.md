@@ -10,7 +10,9 @@ The Linux CoreCLR agent can be packaged into .rpm (for Red Hat/Centos/Oracle/SUS
 
 Optional: sign the .rpm
 
-1. `docker compose run -e GPG_KEY=/keys/private_gpg_key.gpg -e GPG_KEY_PASSPHRASE=passphrase build_rpm`
+1. Put the private key at `build/Linux/keys/private_gpg_key.gpg`, or set `GPG_KEYS_DIR` to the folder that holds it. The folder is mounted read-only at `/keys`.
+2. Set the passphrase in the environment, e.g. `$env:GPG_KEY_PASSPHRASE = Read-Host -MaskInput` (PowerShell 7). `docker-compose.yml` passes it to the container by name, so it stays off the command line.
+3. `docker compose run -e GPG_KEY=/keys/private_gpg_key.gpg build_rpm`
 
 You can do ad hoc testing inside containers using the `test_debian` and/or `test_rockylinux` services and `bash`.
 
