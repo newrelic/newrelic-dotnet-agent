@@ -606,9 +606,7 @@ jobs:
     with:
       agent_version: ${{ needs.get-release-info.outputs.release_version }}
       run_id: ${{ needs.get-release-info.outputs.workflow_run_id }}
-    # BOT_EMAIL isn't passed: the called job reads it from the "release" environment.
-    secrets:
-      DOTNET_AGENT_GH_TOKEN: ${{ secrets.DOTNET_AGENT_GH_TOKEN }}
+    # No secrets passed: the called job reads them from the "release" environment.
 
   post-deploy:
     permissions:
@@ -622,9 +620,7 @@ jobs:
     with:
       agent_version: ${{ needs.get-release-info.outputs.release_version }}
       wait_for_apt_and_yum: true
-    # NEW_RELIC_API_KEY_PRODUCTION isn't passed: the called job reads it from the "release" environment.
-    secrets:
-      DOTNET_AGENT_GH_TOKEN: ${{ secrets.DOTNET_AGENT_GH_TOKEN }}
+    # No secrets passed: the called jobs read them from the "release" environment.
 
   agent-metadata:
       permissions:
