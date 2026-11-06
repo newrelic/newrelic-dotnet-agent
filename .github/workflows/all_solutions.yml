@@ -38,15 +38,9 @@ env:
   tools_path: ${{ github.workspace }}\build\Tools
   DOTNET_NOLOGO: true
 
-  # Dependabot Full CI Dispatch relaunches this workflow via workflow_dispatch against a
-  # dependabot/* branch. Those runs need the build and the test suites, not a signed MSI or
-  # signed Linux packages, so everything that touches signing material is skipped for them --
-  # keeping the signing cert and GPG key off a runner that just executed build logic from a
-  # package version nobody has reviewed. Steps gate on `env.skip_signing != 'true'`; the
-  # packaging jobs gate on build-fullagent-msi's skipSigning output, since job-level `if`
-  # cannot see `env`. Never true for a pull_request run: ref_name is <pr>/merge there.
-  skip_signing: ${{ github.event_name == 'workflow_dispatch' && startsWith(github.ref_name, 'dependabot/') }}
-
+# This workflow holds no signing material: it builds every package unsigned, to validate
+# packaging on each PR. Signed, deployable artifacts come only from release_build.yml,
+# whose signing jobs run in the protected "release" environment.
 jobs:
   check-modified-files:
     name: Check if source files were modified, skip remaining jobs if not
@@ -93,13 +87,8 @@ jobs:
     # run this job if source files were modified, or if triggered by a release, a manual execution or schedule
     if: (github.event_name == 'workflow_dispatch' || github.actor != 'dependabot[bot]') && (needs.check-modified-files.outputs.source-files-changed == 'true' || github.event.release || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule')
 
-    env:
-      msi_solution_path: ${{ github.workspace }}\src\Agent\MsiInstaller\MsiInstaller.sln
-
     outputs:
       agentVersion: ${{ steps.build-agent.outputs.agent-version }}
-      # Re-exported so the packaging jobs can gate on it: job-level `if` cannot read `env`.
-      skipSigning: ${{ env.skip_signing }}
 
     steps:
       - name: Checkout
@@ -112,66 +101,10 @@ jobs:
         id: build-agent
         uses: ./.github/actions/build-agent
 
-      # Signing and MSI build are skipped for the Dependabot dispatch (see note above the jobs).
-      # The build and homefolders artifact above are all the test suites need.
-      # Imported in-process so the passphrase never reaches a command line. The PFX lives in
-      # RUNNER_TEMP only for the import; signtool /a then picks the cert from CurrentUser\My.
-      - name: Install Code Signing Certificate
-        id: install_cert
-        if: env.skip_signing != 'true'
-        env:
-          SIGNING_CERT: ${{ secrets.SIGNING_CERT }}
-          CERT_PASSPHRASE: ${{ secrets.CERT_PASSPHRASE }}
-        run: |
-          $filePath = Join-Path $env:RUNNER_TEMP 'newrelic_code_sign_cert.pfx'
-          try {
-            [IO.File]::WriteAllBytes($filePath, [Convert]::FromBase64String($env:SIGNING_CERT))
-            $password = ConvertTo-SecureString $env:CERT_PASSPHRASE -AsPlainText -Force
-            $imported = Import-PfxCertificate -FilePath $filePath -CertStoreLocation Cert:\CurrentUser\My -Password $password
-          }
-          finally {
-            Remove-Item $filePath -Force -ErrorAction SilentlyContinue
-          }
-          Write-Host "Imported $(@($imported).Count) certificate(s) into Cert:\CurrentUser\My"
-          echo "thumbprints=$((@($imported) | ForEach-Object Thumbprint) -join ',')" >> $env:GITHUB_OUTPUT
-        shell: powershell
-
-
-      - name: Add msbuild to PATH (required for MsiInstaller build)
-        if: env.skip_signing != 'true'
-        uses: microsoft/setup-msbuild@30375c66a4eea26614e0d39710365f22f8b0af57 # v3.0.0
-
-      - name: Build MsiInstaller.sln x86
-        if: env.skip_signing != 'true'
-        run: |
-          Write-Host "MSBuild.exe -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true -p:Platform=x86 ${{ env.msi_solution_path }}"
-          MSBuild.exe -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true -p:Platform=x86 ${{ env.msi_solution_path }}
-        shell: powershell
-
-      - name: Build MsiInstaller.sln x64
-        if: env.skip_signing != 'true'
-        run: |
-          Write-Host "MSBuild.exe -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true -p:Platform=x64 ${{ env.msi_solution_path }}"
-          MSBuild.exe -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true -p:Platform=x64 ${{ env.msi_solution_path }}
-        shell: powershell
-
-      - name: Archive msi _build Artifacts
-        if: env.skip_signing != 'true'
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+      - name: Build MSI installers (unsigned)
+        uses: ./.github/actions/build-msi
         with:
-          name: msi-build-folder-artifacts
-          path: ${{ github.workspace }}\src\_build
-          if-no-files-found: error
-
-      - name: Remove Code Signing Certificate
-        if: always() && steps.install_cert.outputs.thumbprints != ''
-        env:
-          THUMBPRINTS: ${{ steps.install_cert.outputs.thumbprints }}
-        run: |
-          foreach ($thumbprint in $env:THUMBPRINTS -split ',') {
-            Remove-Item -Path "Cert:\CurrentUser\My\$thumbprint" -DeleteKey -ErrorAction SilentlyContinue
-          }
-        shell: powershell
+          sign: 'false'
 
   run-linux-container-tests:
     name: Run Linux Container Tests
@@ -225,10 +158,6 @@ jobs:
     runs-on: ubuntu-22.04
     permissions:
       contents: read
-    # Skipped for the Dependabot dispatch: signs with NEW_GPG_KEY, and needs an MSI artifact
-    # that run does not produce. Compared against 'false' so an unresolved output skips this
-    # job rather than running it with the signing key.
-    if: needs.build-fullagent-msi.outputs.skipSigning == 'false'
 
     steps:
       - name: Harden Runner
@@ -240,60 +169,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Download msi _build Artifacts
-        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+      - name: Build RPM (unsigned)
+        uses: ./.github/actions/build-linux-package
         with:
-          name: msi-build-folder-artifacts
-          path: src/_build
-
-      - name: Download Agent Home Folders
-        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
-        with:
-          name: homefolders
-          path: src/Agent
-
-      # Outside the workspace; build/Linux/docker-compose.yml mounts GPG_KEYS_DIR read-only at /keys.
-      - name: Write GPG Private Key
-        env:
-          NEW_GPG_KEY: ${{ secrets.NEW_GPG_KEY }}
-        run: |
-          mkdir -p -m 700 "$RUNNER_TEMP/gpg-keys"
-          printf '%s' "$NEW_GPG_KEY" | base64 -d > "$RUNNER_TEMP/gpg-keys/private_gpg_key.gpg"
-        shell: bash
-
-      - name: Build RPM
-        env:
-          # Passed to the container by name (build/Linux/docker-compose.yml), not on the command line.
-          GPG_KEY_PASSPHRASE: ${{ secrets.NEW_GPG_KEY_PASSPHRASE }}
-          BUILD_AGENT_VERSION: ${{ needs.build-fullagent-msi.outputs.agentVersion }}
-        run: |
-          export GPG_KEYS_DIR="$RUNNER_TEMP/gpg-keys"
-          agentVersion="$BUILD_AGENT_VERSION"
-
-          if [[ "$agentVersion" =~ [0-9]+\.[0-9]+\.[0-9]+\.[0-9]+ ]]; then
-            major=$(echo $agentVersion | cut -d'.' -f1)
-            minor=$(echo $agentVersion | cut -d'.' -f2)
-            patch=$(echo $agentVersion | cut -d'.' -f3)
-            agentVersion="${major}.${minor}.${patch}"
-            echo "agentVersion is simplified to $agentVersion"
-          fi
-
-          cd ${{ github.workspace }}/build/Linux
-          docker compose build build_rpm
-          docker compose run -e AGENT_VERSION="$agentVersion" -e GPG_KEY=/keys/private_gpg_key.gpg build_rpm
-        shell: bash
-
-      - name: Archive RPM Package Artifacts
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: rpm-build-artifacts
-          path: ${{ github.workspace }}/src/_build/CoreArtifacts
-          if-no-files-found: error
-
-      - name: Remove GPG Private Key
-        if: always()
-        run: rm -rf "$RUNNER_TEMP/gpg-keys"
-        shell: bash
+          package: rpm
+          agent-version: ${{ needs.build-fullagent-msi.outputs.agentVersion }}
 
   create-package-deb:
     needs: build-fullagent-msi
@@ -301,10 +181,6 @@ jobs:
     runs-on: ubuntu-22.04
     permissions:
       contents: read
-    # Skipped for the Dependabot dispatch: signs with NEW_GPG_KEY, and needs an MSI artifact
-    # that run does not produce. Compared against 'false' so an unresolved output skips this
-    # job rather than running it with the signing key.
-    if: needs.build-fullagent-msi.outputs.skipSigning == 'false'
 
     steps:
       - name: Harden Runner
@@ -316,102 +192,32 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Download Agent Home Folders
-        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+      - name: Build Debian package
+        uses: ./.github/actions/build-linux-package
         with:
-          name: homefolders
-          path: src/Agent
+          package: deb
+          agent-version: ${{ needs.build-fullagent-msi.outputs.agentVersion }}
 
-      - name: Download msi _build Artifacts
-        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
-        with:
-          name: msi-build-folder-artifacts
-          path: src/_build
-
-      - name: Build Debian Package
-        env:
-          BUILD_AGENT_VERSION: ${{ needs.build-fullagent-msi.outputs.agentVersion }}
-        run: |
-          agentVersion="$BUILD_AGENT_VERSION"
-
-          if [[ "$agentVersion" =~ [0-9]+\.[0-9]+\.[0-9]+\.[0-9]+ ]]; then
-            major=$(echo $agentVersion | cut -d'.' -f1)
-            minor=$(echo $agentVersion | cut -d'.' -f2)
-            patch=$(echo $agentVersion | cut -d'.' -f3)
-            agentVersion="${major}.${minor}.${patch}"
-            echo "agentVersion is simplified to $agentVersion"
-          fi
-
-          cd ${{ github.workspace }}/build/Linux
-          docker compose build build_deb
-          docker compose run -e AGENT_VERSION="$agentVersion" build_deb
-        shell: bash
-
-      - name: Archive Debian Package Artifacts
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: debian-build-artifacts
-          path: ${{ github.workspace }}/src/_build/CoreArtifacts
-          if-no-files-found: error
-
+  # Validates packaging only: the MSIs are unsigned, so these deploy-artifacts are never deployed
+  # (deploy_agent.yml accepts artifacts from release_build.yml runs only).
   run-artifactbuilder:
     needs: [create-package-rpm, create-package-deb]
     name: Run ArtifactBuilder
     runs-on: windows-2022
     permissions:
       contents: read
-    # No explicit gate needed: both packaging jobs it needs are skipped for the Dependabot
-    # dispatch, which skips this job with them.
 
     steps:
-      - name: Install latest .NET 10 SDK
-        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
-        with:
-          dotnet-version: '10.0.x'
-          dotnet-quality: 'ga'
-  
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           filter: blob:none
 
-      - name: Download Agent Home Folders
-        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
-        with:
-          name: homefolders
-          path: src/Agent
-
-      - name: Download msi _build Artifacts
-        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
-        with:
-          name: msi-build-folder-artifacts
-          path: src/_build
-
-      - name: Download Debian _build Artifacts
-        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
-        with:
-          name: debian-build-artifacts
-          path: src/_build/CoreArtifacts
-
-      - name: Download RPM _build Artifacts
-        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
-        with:
-          name: rpm-build-artifacts
-          path: src/_build/CoreArtifacts
-
       - name: Run ArtifactBuilder
-        run: |
-          ${{ github.workspace }}\build\package.ps1 -configuration Release -IncludeDownloadSite
-        shell: powershell
-
-      - name: Archive Deploy Artifacts
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        uses: ./.github/actions/run-artifactbuilder
         with:
-          name: deploy-artifacts
-          path: |
-            ${{ github.workspace }}\build\BuildArtifacts
-          if-no-files-found: error
+          verify-msi-signature: 'false'
 
   # This job is necessary in order for us to have a branch protection rule for tests with a matrix
   # if any of the matrix tests fail, this job fails and the branch protection rule keeps the PR from merging
@@ -703,9 +509,8 @@ jobs:
             exit 0
           fi
 
-          # Anything that is not a clean outcome is a failure. The packaging and
-          # ArtifactBuilder jobs are skipped for Dependabot runs by design
-          # (env.skip_signing), and skipped is a clean outcome.
+          # Anything that is not a clean outcome is a failure. Jobs skipped by
+          # their own conditions (e.g. the payload aggregation jobs) are a clean outcome.
           if grep -vqxE 'success|skipped|neutral' <<<"$conclusions"; then
             state=failure
           else

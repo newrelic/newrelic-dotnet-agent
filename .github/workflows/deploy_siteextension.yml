@@ -23,6 +23,7 @@ jobs:
   deploy-nuget:
     name: Deploy to NuGet
     runs-on: windows-2022
+    environment: release
     permissions:
       id-token: write #enable GitHub OIDC token issuance for this job
 

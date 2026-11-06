@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       agent_version:
-        description: 'Agent Version to validate.  Needs to match the version from the Release Workflow (all_solutions.yml). Format: X.X.X'
+        description: 'Agent Version to validate.  Needs to match the version from the Release Build workflow (release_build.yml). Format: X.X.X'
         required: true
         type: string
       wait_for_apt_and_yum:
@@ -19,7 +19,7 @@ on:
   workflow_call:
     inputs:
       agent_version:
-        description: 'Agent Version to validate.  Needs to match the version from the Release Workflow (all_solutions.yml). Format: X.X.X'
+        description: 'Agent Version to validate.  Needs to match the version from the Release Build workflow (release_build.yml). Format: X.X.X'
         required: true
         type: string
       wait_for_apt_and_yum:
@@ -31,7 +31,12 @@ on:
         type: boolean
         default: false
         required: false
-    
+    secrets:
+      NEW_RELIC_API_KEY_PRODUCTION:
+        required: true
+      DOTNET_AGENT_GH_TOKEN:
+        required: true
+
 permissions:
   contents: read
   packages: read

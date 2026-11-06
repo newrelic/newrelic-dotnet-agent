@@ -1,0 +1,41 @@
+name: Build MSI Installers
+description: >
+  Builds MsiInstaller.sln for x86 and x64 and uploads src/_build as the
+  "msi-build-folder-artifacts" artifact. Requires a completed build-agent run
+  in the same job. When sign is 'true' the caller must first install the code
+  signing certificate into Cert:\CurrentUser\My; only release_build.yml does that.
+
+inputs:
+  sign:
+    description: "'true' to Authenticode-sign the MSIs, 'false' to build them unsigned."
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Add msbuild to PATH
+      uses: microsoft/setup-msbuild@30375c66a4eea26614e0d39710365f22f8b0af57 # v3.0.0
+
+    - name: Build MsiInstaller.sln x86 and x64
+      env:
+        MSI_SOLUTION_PATH: ${{ github.workspace }}\src\Agent\MsiInstaller\MsiInstaller.sln
+        SIGN: ${{ inputs.sign }}
+      run: |
+        if ($env:SIGN -ne 'true' -and $env:SIGN -ne 'false') {
+          Write-Host "::error::sign must be 'true' or 'false'."
+          exit 1
+        }
+        $skipSigning = if ($env:SIGN -eq 'true') { 'false' } else { 'true' }
+        foreach ($platform in 'x86', 'x64') {
+          Write-Host "MSBuild.exe -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true -p:Platform=$platform -p:SkipSigning=$skipSigning $env:MSI_SOLUTION_PATH"
+          MSBuild.exe -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true -p:Platform=$platform -p:SkipSigning=$skipSigning $env:MSI_SOLUTION_PATH
+          if ($LastExitCode -ne 0) { exit $LastExitCode }
+        }
+      shell: powershell
+
+    - name: Archive msi _build Artifacts
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+      with:
+        name: msi-build-folder-artifacts
+        path: ${{ github.workspace }}\src\_build
+        if-no-files-found: error

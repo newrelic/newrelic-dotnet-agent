@@ -8,19 +8,24 @@ on:
         required: true
         type: string
       run_id:
-        description: 'Run ID of the Release Workflow (all_solutions.yml) that was triggered by creating a Release in GitHub.  ID can be found in URL for run.'
+        description: 'Run ID of the Release Build workflow (release_build.yml) that was triggered by creating a Release in GitHub.  ID can be found in URL for run.'
         required: true
         type: string
   workflow_call:
     inputs:
       agent_version:
-        description: 'Agent Version to deploy.  Needs to match the version from the Release Workflow (all_solutions.yml). Format: X.X.X'
+        description: 'Agent Version to deploy.  Needs to match the version from the Release Build workflow (release_build.yml). Format: X.X.X'
         required: true
         type: string
       run_id:
-        description: 'Run ID of the Release Workflow (all_solutions.yml) that was triggered by creating a Release in GitHub.  ID can be found in URL for run.'
+        description: 'Run ID of the Release Build workflow (release_build.yml) that was triggered by creating a Release in GitHub.  ID can be found in URL for run.'
         required: true
         type: string
+    secrets:
+      DOTNET_AGENT_GH_TOKEN:
+        required: true
+      BOT_EMAIL:
+        required: true
 
 permissions:
   contents: read
