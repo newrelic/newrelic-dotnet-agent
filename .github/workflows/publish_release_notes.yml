@@ -21,10 +21,10 @@ on:
         description: 'Run ID of the Release Build workflow (release_build.yml) that was triggered by creating a Release in GitHub.  ID can be found in URL for run.'
         required: true
         type: string
+    # BOT_EMAIL is a secret of the "release" environment, read directly by the publish-release-notes
+    # job. It is not a workflow_call secret: environment secrets cannot be passed in from a caller.
     secrets:
       DOTNET_AGENT_GH_TOKEN:
-        required: true
-      BOT_EMAIL:
         required: true
 
 permissions:
@@ -38,6 +38,7 @@ jobs:
   publish-release-notes:
     name: Create and Publish Release Notes
     runs-on: ubuntu-latest
+    environment: release
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3

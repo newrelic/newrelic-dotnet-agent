@@ -31,9 +31,10 @@ on:
         type: boolean
         default: false
         required: false
+    # NEW_RELIC_API_KEY_PRODUCTION is a secret of the "release" environment, read directly by the
+    # report-deprecated-nuget-packages job. It is not a workflow_call secret: environment secrets
+    # cannot be passed in from a caller.
     secrets:
-      NEW_RELIC_API_KEY_PRODUCTION:
-        required: true
       DOTNET_AGENT_GH_TOKEN:
         required: true
 
@@ -258,6 +259,7 @@ jobs:
   report-deprecated-nuget-packages:
     name: Report Deprecated NuGet Packages
     runs-on: ubuntu-latest
+    environment: release
     permissions:
       issues: write
       
