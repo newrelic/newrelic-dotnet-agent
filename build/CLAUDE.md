@@ -101,6 +101,21 @@ PR. Releases are driven by **release-please**: conventional commits bump
 the version, regenerate `CHANGELOG.md`, open a release PR; merging tags
 and publishes artifacts.
 
+**Signed vs. unsigned builds.** `all_solutions.yml` builds every package
+(MSI, deb, rpm, ArtifactBuilder output) **unsigned** on each PR, to validate
+packaging. Only `release_build.yml`, triggered by a published release, signs:
+its MSI and RPM jobs run in the protected `release` GitHub environment, which
+holds the signing material, accepts only `main` and `v*` tags, and needs a
+second team member's approval. `deploy_agent.yml` deploys only the artifacts
+of a successful `release_build.yml` run, and its credentialed jobs run in the
+same environment.
+
+The switches behind the unsigned build: `-p:SkipSigning=true` on
+`MsiInstaller.sln`, `NR_SKIP_MSI_SIGNATURE_CHECK=true` for ArtifactBuilder,
+and no `GPG_KEY` for the RPM. The shared steps are the composite actions
+`build-msi`, `build-linux-package` and `run-artifactbuilder` under
+`.github/actions/`, so both workflows package the same way.
+
 ## Building the profiler locally
 
 Script: `src/Agent/NewRelic/Profiler/build/build.ps1 -Platform <x64|x86|windows|linux|all> -Configuration <Debug|Release>`
@@ -138,7 +153,9 @@ a package built from that branch. "Profiler CI green" is not "PR ready".
 
 1. `gh workflow run build_profiler.yml --ref <work-branch> -f deploy=true`.
    Use the work branch, never `main`. This is a routine step and needs no
-   release coordination.
+   release coordination, but the publish job runs in the `profiler-nuget`
+   environment, so another team member must approve it in the run's UI
+   (you cannot approve your own run).
 2. The `update-nuget-reference` job opens a PR from
    `profiler-nuget-updates/<work-branch>` that bumps
    `src/Agent/NewRelic/Home/Home.csproj`. Check that it targets the work
@@ -179,6 +196,7 @@ re-run step 1.
 ## Code signing
 
 Windows profiler DLL and MSI are Authenticode-signed; Linux RPMs are
-GPG-signed. Production keys live in the secret vault and are only
-available to CI. `build/keys/` is present for local work but its contents
+GPG-signed. Production keys live in the secret vault and, in CI, only in the
+`release` GitHub environment (see Signed vs. unsigned builds above). To build
+the MSI locally without a certificate, pass `-p:SkipSigning=true`. `build/keys/` is present for local work but its contents
 are gitignored.

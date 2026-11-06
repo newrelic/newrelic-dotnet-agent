@@ -12,7 +12,7 @@ on:
        description: 'OVERRIDE: Agent Version to deploy. Format: X.X.X - ignored unless "Automatically determine..." is unchecked'
        required: false
       run_id:
-         description: 'OVERRIDE: Run ID of the all_solutions.yml workflow that was triggered by creating a Release in GitHub.  ID can be found in URL for run. Ignored unless "Automatically determine..." is unchecked'
+         description: 'OVERRIDE: Run ID of a successful release_build.yml run (any other run is rejected).  ID can be found in URL for run. Ignored unless "Automatically determine..." is unchecked'
          required: false
       deploy:
         type: boolean
@@ -50,10 +50,12 @@ on:
         required: true
         default: true
 
+# Every job that holds a production credential runs in the protected "release" environment
+# (main and v* tags only; a second team member must approve). id-token: write is granted only
+# to the jobs that exchange an OIDC token.
 permissions:
   contents: read
   packages: read
-  id-token: write
 
 env:
   DOTNET_NOLOGO: true
@@ -125,10 +127,18 @@ jobs:
 
           echo "release_version=$RELEASE_VERSION" >> "$GITHUB_OUTPUT"
 
-          # get the run id of the most recent successful run of the all_solutions workflow triggered by a release event, against the given commit sha
-          WORKFLOW_RUN_ID=$(gh run list --commit $COMMIT_SHA --workflow all_solutions.yml --event release --status success --limit 1 --json databaseId,status --jq ".[0] | .databaseId")
-          if [[ -z "$WORKFLOW_RUN_ID" ]]; then
+          # The full test suite runs in all_solutions on the release event; require it to have passed.
+          TEST_RUN_ID=$(gh run list --commit $COMMIT_SHA --workflow all_solutions.yml --event release --status success --limit 1 --json databaseId --jq ".[0] | .databaseId")
+          if [[ -z "$TEST_RUN_ID" ]]; then
             echo "::error::Could not find a successful all_solutions workflow run for the Release event against commit SHA $COMMIT_SHA. Use manual overrides to continue."
+            exit 1
+          fi
+          echo "Found passing test run id: $TEST_RUN_ID"
+
+          # The signed artifacts come from the release_build workflow run for the same release event and commit.
+          WORKFLOW_RUN_ID=$(gh run list --commit $COMMIT_SHA --workflow release_build.yml --event release --status success --limit 1 --json databaseId --jq ".[0] | .databaseId")
+          if [[ -z "$WORKFLOW_RUN_ID" ]]; then
+            echo "::error::Could not find a successful release_build workflow run for the Release event against commit SHA $COMMIT_SHA. Use manual overrides to continue."
             exit 1
           fi
 
@@ -143,6 +153,7 @@ jobs:
           DETECTED_WORKFLOW_RUN_ID: ${{ steps.step1.outputs.workflow_run_id }}
           OVERRIDE_AGENT_VERSION: ${{ inputs.agent_version }}
           OVERRIDE_RUN_ID: ${{ inputs.run_id }}
+          REPO: ${{ github.repository }}
         run: |
           if [ "$GET_VERSION_AUTOMATICALLY" = "true" ]; then
             RELEASE_VERSION="$DETECTED_RELEASE_VERSION"
@@ -167,6 +178,18 @@ jobs:
           fi
           if [[ ! "$WORKFLOW_RUN_ID" =~ ^[0-9]+$ ]]; then
             echo "::error::Run ID must be numeric."
+            exit 1
+          fi
+
+          # Only signed release_build output may be deployed; all_solutions builds the same packages unsigned.
+          RUN_INFO=$(gh api "repos/$REPO/actions/runs/$WORKFLOW_RUN_ID" --jq '[.path, .conclusion] | @tsv')
+          read -r RUN_PATH RUN_CONCLUSION <<< "$RUN_INFO"
+          if [ "${RUN_PATH%@*}" != ".github/workflows/release_build.yml" ]; then
+            echo "::error::Run $WORKFLOW_RUN_ID is not a release_build.yml run (it is '$RUN_PATH')."
+            exit 1
+          fi
+          if [ "$RUN_CONCLUSION" != "success" ]; then
+            echo "::error::release_build.yml run $WORKFLOW_RUN_ID did not succeed (conclusion '$RUN_CONCLUSION')."
             exit 1
           fi
           echo "release_version=$RELEASE_VERSION" >> "$GITHUB_OUTPUT"
@@ -206,6 +229,7 @@ jobs:
     if: ${{ inputs.downloadsite }}
     name: Deploy MSI to Download Site
     runs-on: windows-2022
+    environment: release
 
     steps:
       - name: Download Deploy Artifacts
@@ -282,13 +306,14 @@ jobs:
       prefix: ${{ matrix.prefix }}
       aws-region: "us-east-1"
       dry-run: false
-    secrets: inherit
+    # No secrets passed: the called job reads the bucket credentials from the "release" environment.
 
   deploy-nuget:
     needs: get-external-artifacts
     if: ${{ inputs.nuget }}
     name: Deploy Agent to NuGet
     runs-on: windows-2022
+    environment: release
     permissions:
       id-token: write #enable GitHub OIDC token issuance for this job
 
@@ -399,6 +424,11 @@ jobs:
     if: ${{ inputs.linux }}
     name: Deploy Linux to APT and YUM
     runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      contents: read
+      packages: read
+      id-token: write # the test-repository deploy assumes an AWS role
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
@@ -576,7 +606,9 @@ jobs:
     with:
       agent_version: ${{ needs.get-release-info.outputs.release_version }}
       run_id: ${{ needs.get-release-info.outputs.workflow_run_id }}
-    secrets: inherit
+    # BOT_EMAIL isn't passed: the called job reads it from the "release" environment.
+    secrets:
+      DOTNET_AGENT_GH_TOKEN: ${{ secrets.DOTNET_AGENT_GH_TOKEN }}
 
   post-deploy:
     permissions:
@@ -590,7 +622,9 @@ jobs:
     with:
       agent_version: ${{ needs.get-release-info.outputs.release_version }}
       wait_for_apt_and_yum: true
-    secrets: inherit
+    # NEW_RELIC_API_KEY_PRODUCTION isn't passed: the called job reads it from the "release" environment.
+    secrets:
+      DOTNET_AGENT_GH_TOKEN: ${{ secrets.DOTNET_AGENT_GH_TOKEN }}
 
   agent-metadata:
       permissions:
@@ -601,4 +635,9 @@ jobs:
       uses: newrelic/newrelic-dotnet-agent/.github/workflows/agent_metadata.yml@main
       with:
           version: v${{ needs.get-release-info.outputs.release_version }}
-      secrets: inherit
+      # Repo- and org-level, not in the "release" environment: environment secrets cannot pass through
+      # workflow_call, and agent_metadata.yml's job calls a workflow in another repository.
+      secrets:
+          FC_SYS_ID_CLIENT_ID: ${{ secrets.FC_SYS_ID_CLIENT_ID }}
+          FC_SYS_ID_PR_KEY: ${{ secrets.FC_SYS_ID_PR_KEY }}
+          AGENT_METADATA_ACTION_LICENSE_KEY: ${{ secrets.AGENT_METADATA_ACTION_LICENSE_KEY }}

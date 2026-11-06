@@ -418,6 +418,13 @@ class MsiInstaller : Artifact
 
     private void ValidateCodeSigningCertificate(string msiPath)
     {
+        // Set only by CI builds that package unsigned MSIs for validation; release_build.yml never sets it.
+        if (Environment.GetEnvironmentVariable("NR_SKIP_MSI_SIGNATURE_CHECK") == "true")
+        {
+            Console.WriteLine($"Warning: NR_SKIP_MSI_SIGNATURE_CHECK is set; not verifying the signature of {msiPath}. This output must not be deployed.");
+            return;
+        }
+
         if (!SecurityHelpers.VerifyEmbeddedSignature(msiPath, out var errorMessage))
             throw new PackagingException($"Code signing certificate is not valid. {errorMessage}");
     }

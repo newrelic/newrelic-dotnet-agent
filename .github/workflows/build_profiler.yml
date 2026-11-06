@@ -20,9 +20,10 @@ on:
         default: false
         type: boolean
 
+# id-token: write is granted only to package-and-deploy, which runs in the protected
+# "profiler-nuget" environment; pull_request and push runs cannot mint a NuGet key.
 permissions:
   contents: read
-  id-token: write
 
 # only allow one instance of this workflow to be running per PR or branch, cancels any that are already running
 concurrency:
@@ -356,6 +357,8 @@ jobs:
     if: ${{ inputs.deploy }}
     name: Package and Deploy Profiler NuGet
     runs-on: windows-2025-vs2026
+    # Any branch may publish, but a second team member must approve (see build/CLAUDE.md).
+    environment: profiler-nuget
     permissions:
       id-token: write
 

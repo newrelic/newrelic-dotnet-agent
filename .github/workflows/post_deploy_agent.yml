@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       agent_version:
-        description: 'Agent Version to validate.  Needs to match the version from the Release Workflow (all_solutions.yml). Format: X.X.X'
+        description: 'Agent Version to validate.  Needs to match the version from the Release Build workflow (release_build.yml). Format: X.X.X'
         required: true
         type: string
       wait_for_apt_and_yum:
@@ -19,7 +19,7 @@ on:
   workflow_call:
     inputs:
       agent_version:
-        description: 'Agent Version to validate.  Needs to match the version from the Release Workflow (all_solutions.yml). Format: X.X.X'
+        description: 'Agent Version to validate.  Needs to match the version from the Release Build workflow (release_build.yml). Format: X.X.X'
         required: true
         type: string
       wait_for_apt_and_yum:
@@ -31,7 +31,13 @@ on:
         type: boolean
         default: false
         required: false
-    
+    # NEW_RELIC_API_KEY_PRODUCTION is a secret of the "release" environment, read directly by the
+    # report-deprecated-nuget-packages job. It is not a workflow_call secret: environment secrets
+    # cannot be passed in from a caller.
+    secrets:
+      DOTNET_AGENT_GH_TOKEN:
+        required: true
+
 permissions:
   contents: read
   packages: read
@@ -253,6 +259,7 @@ jobs:
   report-deprecated-nuget-packages:
     name: Report Deprecated NuGet Packages
     runs-on: ubuntu-latest
+    environment: release
     permissions:
       issues: write
       
