@@ -31,12 +31,9 @@ on:
         type: boolean
         default: false
         required: false
-    # NEW_RELIC_API_KEY_PRODUCTION is a secret of the "release" environment, read directly by the
-    # report-deprecated-nuget-packages job. It is not a workflow_call secret: environment secrets
-    # cannot be passed in from a caller.
-    secrets:
-      DOTNET_AGENT_GH_TOKEN:
-        required: true
+    # NEW_RELIC_API_KEY_PRODUCTION and DOTNET_AGENT_GH_TOKEN are secrets of the "release"
+    # environment, read directly by the report-deprecated-nuget-packages and release-tags jobs.
+    # They are not workflow_call secrets: environment secrets cannot be passed in from a caller.
 
 permissions:
   contents: read
@@ -302,6 +299,7 @@ jobs:
     if: ${{ inputs.test_mode == false }} # only run if not in test mode
     name: Create release tags
     runs-on: ubuntu-latest
+    environment: release
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3

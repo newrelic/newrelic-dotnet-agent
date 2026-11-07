@@ -28,6 +28,10 @@ jobs:
   run-dotty:
     name: Check for core technology package updates
     runs-on: ubuntu-latest
+    # DOTNET_AGENT_GH_TOKEN lives in release-automation, which accepts only main. Test mode never
+    # uses the token (no PR, issues or Slack message), so test-mode runs from any branch skip the
+    # environment and run without it.
+    environment: ${{ (github.ref == 'refs/heads/main' && inputs.testMode != true) && 'release-automation' || '' }}
     permissions:
       contents: write
       pull-requests: write

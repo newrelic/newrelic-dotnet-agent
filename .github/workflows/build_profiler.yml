@@ -446,6 +446,8 @@ jobs:
     runs-on: ubuntu-22.04
     needs: package-and-deploy
     if: ${{ inputs.deploy }}
+    # DOTNET_AGENT_GH_TOKEN, which opens the reference-bump PR, lives in this environment.
+    environment: profiler-nuget
     permissions:
       pull-requests: write
 

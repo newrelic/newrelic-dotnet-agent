@@ -116,6 +116,29 @@ and no `GPG_KEY` for the RPM. The shared steps are the composite actions
 `build-msi`, `build-linux-package` and `run-artifactbuilder` under
 `.github/actions/`, so both workflows package the same way.
 
+**The bot token (`DOTNET_AGENT_GH_TOKEN`)** is not a repository secret. It
+lives in three environments: `release-automation` (`main` only, no
+reviewers) for `release-please.yml` and `dotty.yml`; `release` for the
+release-notes and release-tags jobs of a deploy; `profiler-nuget` for the
+profiler's reference-bump PR. A workflow run from any other branch can't
+read it.
+
+**Testing a change to a workflow that uses the token** (or to the tool it
+runs), since a branch run gets no token:
+1. Test the logic without writing anything. Dotty: dispatch from your
+   branch with `testMode` (it then skips the environment). release-please:
+   run its CLI locally with `--dry-run` and `--target-branch=<your branch>`
+   and a read-only token of your own. Deploys: `deploy=false`; post-deploy:
+   `test_mode`.
+2. To see real writes, point the workflow at a sandbox repository with a
+   token scoped only to that sandbox.
+3. If it must hit the real target, run the tool locally with your own
+   short-lived, fine-grained token, or merge and verify on `main` (dry run
+   or test mode first).
+4. Last resort: an admin temporarily adds your branch to the environment's
+   branch rule and removes it afterwards. While it's there, anyone who can
+   push to that branch can read the token.
+
 ## Building the profiler locally
 
 Script: `src/Agent/NewRelic/Profiler/build/build.ps1 -Platform <x64|x86|windows|linux|all> -Configuration <Debug|Release>`
@@ -156,7 +179,8 @@ a package built from that branch. "Profiler CI green" is not "PR ready".
    release coordination, but the publish job runs in the `profiler-nuget`
    environment, so another team member must approve it in the run's UI
    (you cannot approve your own run).
-2. The `update-nuget-reference` job opens a PR from
+2. The `update-nuget-reference` job, which also runs in `profiler-nuget` and
+   so needs a second approval once the publish finishes, opens a PR from
    `profiler-nuget-updates/<work-branch>` that bumps
    `src/Agent/NewRelic/Home/Home.csproj`. Check that it targets the work
    branch, then merge it into the work branch.

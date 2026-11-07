@@ -21,11 +21,9 @@ on:
         description: 'Run ID of the Release Build workflow (release_build.yml) that was triggered by creating a Release in GitHub.  ID can be found in URL for run.'
         required: true
         type: string
-    # BOT_EMAIL is a secret of the "release" environment, read directly by the publish-release-notes
-    # job. It is not a workflow_call secret: environment secrets cannot be passed in from a caller.
-    secrets:
-      DOTNET_AGENT_GH_TOKEN:
-        required: true
+    # BOT_EMAIL and DOTNET_AGENT_GH_TOKEN are secrets of the "release" environment, read directly by
+    # the publish-release-notes job. They are not workflow_call secrets: environment secrets cannot
+    # be passed in from a caller.
 
 permissions:
   contents: read
