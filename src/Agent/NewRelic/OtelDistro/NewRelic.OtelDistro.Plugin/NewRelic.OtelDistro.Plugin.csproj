@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net462</TargetFrameworks>
+    <AssemblyName>NewRelic.OtelDistro.Plugin</AssemblyName>
+    <RootNamespace>NewRelic.OtelDistro.Plugin</RootNamespace>
+    <Description>OpenTelemetry .NET auto-instrumentation plugin that starts New Relic Core without the NR profiler (S4 prototype).</Description>
+    <!-- Prototype build output stays under this project's bin/obj; it must never be copied into a newrelichome_* directory. -->
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="OpenTelemetry.AutoInstrumentation.PluginApi" />
+    <PackageReference Include="OpenTelemetry" />
+    <!-- AddOtlpExporter lives here; it is otherwise only a transitive dependency. Version (1.20.1) is pinned
+         centrally in Directory.Packages.props and matches the OTLP exporter the OTel auto-instrumentation home ships. -->
+    <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <!-- Core's OutputPath (see Core.csproj). ILRepack writes the merged, internalized assembly to <TargetFramework>-ILRepacked next to it. -->
+    <CoreBuildOutputDir>$(MSBuildThisFileDirectory)..\..\..\..\_build\$(Platform)-$(Configuration)\NewRelic.Agent.Core\</CoreBuildOutputDir>
+    <CoreRepackedDir Condition="'$(TargetFramework)' == 'net462'">$(CoreBuildOutputDir)net462-ILRepacked\</CoreRepackedDir>
+    <CoreRepackedDir Condition="'$(TargetFramework)' != 'net462'">$(CoreBuildOutputDir)netstandard2.0-ILRepacked\</CoreRepackedDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Core is referenced for build ordering only (ReferenceOutputAssembly=false). The plugin compiles against the ILRepacked
+         NewRelic.Agent.Core.dll, the same assembly that is deployed from the agent home directory at run time, so Core's
+         internalized dependencies (e.g. its DiagnosticSource copy) are not in scope. Private=false: nothing is copied next to the plugin. -->
+    <ProjectReference Include="..\..\Agent\Core\Core.csproj" ReferenceOutputAssembly="false" />
+    <!-- Core's public API (IAgentApi, IAgent) lives in NewRelic.Agent.Extensions, which is not merged into Core; it is deployed from the agent home too. -->
+    <ProjectReference Include="..\..\Agent\Extensions\NewRelic.Agent.Extensions\NewRelic.Agent.Extensions.csproj" Private="false" />
+    <Reference Include="NewRelic.Agent.Core" HintPath="$(CoreRepackedDir)NewRelic.Agent.Core.dll" Private="false" />
+  </ItemGroup>
+
+</Project>

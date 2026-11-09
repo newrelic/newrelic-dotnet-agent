@@ -31,12 +31,20 @@ public class WrapperMap : IWrapperMap
     private readonly List<IWrapper> _nonDefaultWrappers;
     private readonly TrackedWrapper _noOpTrackedWrapper;
 
+    /// <summary>
+    /// The number of non-null, non-default, non-no-op wrappers passed into the constructor, before the built-in
+    /// wrappers are added. Read once at start-up by distro mode; agent mode never reads it.
+    /// </summary>
+    public int ExtensionWrapperCount { get; }
+
     public WrapperMap(IEnumerable<IWrapper> wrappers, IDefaultWrapper defaultWrapper, INoOpWrapper noOpWrapper)
     {
         _nonDefaultWrappers = wrappers
             .Where(wrapper => wrapper != null)
             .Where(wrapper => !(wrapper is IDefaultWrapper) && !(wrapper is INoOpWrapper))
             .ToList();
+
+        ExtensionWrapperCount = _nonDefaultWrappers.Count;
 
         _nonDefaultWrappers.Add(new AttachToAsyncWrapper());
         _nonDefaultWrappers.Add(new DetachWrapper());

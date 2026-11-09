@@ -67,6 +67,67 @@ public class DefaultConfigurationTests
         });
     }
 
+    // F88: in agent mode, OpenTelemetry metrics being on automatically disables the EventListener-based samplers
+    // (GCSamplerNetCore, ThreadStatsSampler) to avoid conflicting with agent mode's hidden OTel SDK Meter bridge
+    // EventListener. Distro mode never registers that bridge, so its result must stay true. Agent mode's result
+    // (including the one-time log line) must be unaffected by distro mode's existence.
+    [TestCase(false, false, ExpectedResult = true)]  // agent mode, metrics off: unaffected
+    [TestCase(false, true, ExpectedResult = false)]  // agent mode, metrics on: forced off (existing behavior)
+    [TestCase(true, false, ExpectedResult = true)]   // distro mode, metrics off: unaffected
+    [TestCase(true, true, ExpectedResult = true)]    // distro mode, metrics on: NOT forced off
+    public bool EventListenerSamplersEnabledRespectsDistroMode(bool distroModeEnabled, bool openTelemetryMetricsEnabled)
+    {
+        Mock.Arrange(() => _bootstrapConfiguration.DistroModeEnabled).Returns(distroModeEnabled);
+        _localConfig.openTelemetry.enabled = openTelemetryMetricsEnabled;
+        _localConfig.openTelemetry.metrics.enabled = openTelemetryMetricsEnabled;
+
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        defaultConfig.EventListenerSamplersEnabled = true;
+
+        return defaultConfig.EventListenerSamplersEnabled;
+    }
+
+    [Test]
+    public void EventListenerSamplersEnabledAgentMode_LogsDisabledMessageOnlyOnce()
+    {
+        Mock.Arrange(() => _bootstrapConfiguration.DistroModeEnabled).Returns(false);
+        _localConfig.openTelemetry.enabled = true;
+        _localConfig.openTelemetry.metrics.enabled = true;
+
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        defaultConfig.EventListenerSamplersEnabled = true;
+
+        // First read flips field to false and (would) log once; subsequent reads must not flip or log again.
+        var first = defaultConfig.EventListenerSamplersEnabled;
+        var second = defaultConfig.EventListenerSamplersEnabled;
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(first, Is.False);
+            Assert.That(second, Is.False);
+        });
+    }
+
+    [Test]
+    public void EventListenerSamplersEnabledDistroMode_NeverFlipsFieldOff()
+    {
+        Mock.Arrange(() => _bootstrapConfiguration.DistroModeEnabled).Returns(true);
+        _localConfig.openTelemetry.enabled = true;
+        _localConfig.openTelemetry.metrics.enabled = true;
+
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+        defaultConfig.EventListenerSamplersEnabled = true;
+
+        var first = defaultConfig.EventListenerSamplersEnabled;
+        var second = defaultConfig.EventListenerSamplersEnabled;
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(first, Is.True);
+            Assert.That(second, Is.True);
+        });
+    }
+
     [TestCase(null, true, ExpectedResult = true)]
     [TestCase(null, false, ExpectedResult = false)]
     [TestCase(true, true, ExpectedResult = true)]

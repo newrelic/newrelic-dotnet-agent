@@ -82,7 +82,10 @@ public static class ConfigurationLoader
     /// it is only available after the ConfigurationLoader.Initialize method has been called. If this property is
     /// accessed before the Initialize method has been called, it will return a default bootstrap configuration.
     /// </summary>
-    public static IBootstrapConfiguration BootstrapConfig { get; private set; } = BootstrapConfiguration.GetDefault();
+    // internal (not private): OtelDistro.DistroAgentManager.AdaptBootstrapConfig wraps this in
+    // OtelDistro.DistroBootstrapConfiguration when distro mode is running, since ConfigurationService reads this
+    // static directly rather than through DI.
+    public static IBootstrapConfiguration BootstrapConfig { get; internal set; } = BootstrapConfiguration.GetDefault();
 
     /// <summary>
     /// Reads an application setting from the web configuration associated with the current virtual path,

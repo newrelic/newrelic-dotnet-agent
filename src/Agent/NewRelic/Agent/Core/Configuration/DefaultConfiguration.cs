@@ -3055,13 +3055,16 @@ public class DefaultConfiguration : IConfiguration
 
     /// <summary>
     /// Controls whether EventListener-based samplers (GCSamplerNetCore, ThreadStatsSampler) are enabled.
-    /// Automatically returns false when OpenTelemetry metrics are enabled to prevent EventListener conflicts.
+    /// In agent mode, automatically returns false when OpenTelemetry metrics are enabled, to prevent conflicting
+    /// with agent mode's hidden OTel SDK Meter bridge EventListener (F28/F67). Distro mode never registers that
+    /// hidden SDK bridge (<see cref="IBootstrapConfiguration.DistroModeEnabled"/>), so there is nothing for this
+    /// to protect against there -- distro mode's OpenTelemetry metrics setting never forces these samplers off.
     /// </summary>
     public bool EventListenerSamplersEnabled
     {
         get
         {
-            if (OpenTelemetryMetricsEnabled)
+            if (OpenTelemetryMetricsEnabled && !_bootstrapConfiguration.DistroModeEnabled)
             {
                 if (field && !_hasLoggedEventListenerSamplersDisabled)
                 {

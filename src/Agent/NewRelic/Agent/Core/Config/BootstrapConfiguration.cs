@@ -29,6 +29,16 @@ public interface IBootstrapConfiguration
     bool AgentControlEnabled { get; }
     string HealthDeliveryLocation { get; }
     int HealthFrequency { get; }
+
+    /// <summary>
+    /// True when running as the OTel distro (<see cref="OtelDistro.DistroAgentManager"/>) rather than agent mode
+    /// (<see cref="AgentManager"/>). Never set from local config -- it reflects which <c>AgentManagerBase</c>
+    /// subclass is running, not anything a customer configures. <see cref="BootstrapConfiguration"/> always
+    /// returns false here; <see cref="OtelDistro.DistroBootstrapConfiguration"/> is the only implementation that
+    /// returns true, and <see cref="OtelDistro.DistroAgentManager"/>'s <c>AdaptBootstrapConfig</c> is what wraps
+    /// the loaded bootstrap config in it.
+    /// </summary>
+    bool DistroModeEnabled { get; }
 }
 
 /// <summary>
@@ -88,6 +98,11 @@ public class BootstrapConfiguration : IBootstrapConfiguration
         _agentEnabledValueFromLocalConfig = localConfiguration.agentEnabled;
         _agentEnabledWithProvenance = null;
     }
+
+    // Local config never carries this: distro mode is a property of which AgentManagerBase subclass is running,
+    // not something read from newrelic.config. OtelDistro.DistroAgentManager.AdaptBootstrapConfig wraps this
+    // instance in OtelDistro.DistroBootstrapConfiguration when distro mode is running.
+    public bool DistroModeEnabled => false;
 
     /// <summary>
     /// This helper method is meant to define a set of default values useful for the unit tests, and a fallback in case

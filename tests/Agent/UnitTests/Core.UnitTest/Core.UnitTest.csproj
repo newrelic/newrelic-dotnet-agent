@@ -162,6 +162,9 @@
     <None Include="..\..\..\..\src\Agent\NewRelic\Agent\Core\Config\Configuration.xsd" Link="Configuration.xsd">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="..\..\..\..\src\Agent\NewRelic\OtelDistro\NewRelic.OtelDistro.Plugin\newrelic.config" Link="OtelDistro\newrelic.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />

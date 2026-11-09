@@ -40,7 +40,16 @@ public class BootstrapConfigurationTests
             Assert.That(config.AgentControlEnabled, Is.False);
             Assert.That(config.HealthDeliveryLocation, Is.Null);
             Assert.That(config.HealthFrequency, Is.EqualTo(5));
+            Assert.That(config.DistroModeEnabled, Is.False);
         });
+    }
+
+    [Test]
+    public void DistroModeEnabled_IsAlwaysFalse()
+    {
+        var config = CreateBootstrapConfiguration();
+
+        Assert.That(config.DistroModeEnabled, Is.False);
     }
 
     [Test]

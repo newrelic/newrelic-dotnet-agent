@@ -238,6 +238,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hangfire", "src\Agent\NewRelic\Agent\Extensions\Providers\Wrapper\Hangfire\Hangfire.csproj", "{5011E41D-F7CB-454B-A7D0-0C3C3E655030}"
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AssemblyModifier", "src\Agent\NewRelic\AssemblyModifier\AssemblyModifier.csproj", "{36C4B766-2A2F-CACB-CB91-0FC5C2E69773}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NewRelic.OtelDistro.Plugin", "src\Agent\NewRelic\OtelDistro\NewRelic.OtelDistro.Plugin\NewRelic.OtelDistro.Plugin.csproj", "{3FC1B586-6F74-4EE2-AF47-FAE68AFCAEAE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -500,6 +502,10 @@ Global
 		{36C4B766-2A2F-CACB-CB91-0FC5C2E69773}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{36C4B766-2A2F-CACB-CB91-0FC5C2E69773}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{36C4B766-2A2F-CACB-CB91-0FC5C2E69773}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3FC1B586-6F74-4EE2-AF47-FAE68AFCAEAE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3FC1B586-6F74-4EE2-AF47-FAE68AFCAEAE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3FC1B586-6F74-4EE2-AF47-FAE68AFCAEAE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3FC1B586-6F74-4EE2-AF47-FAE68AFCAEAE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

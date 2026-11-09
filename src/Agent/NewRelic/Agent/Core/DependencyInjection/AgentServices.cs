@@ -71,6 +71,21 @@ public static class AgentServices
     /// <param name="serverlessModeEnabled"></param>
     /// <param name="gcSamplerV2Enabled"></param>
     public static void RegisterServices(IContainer container, bool serverlessModeEnabled, bool gcSamplerV2Enabled)
+        => RegisterServices(container, serverlessModeEnabled, gcSamplerV2Enabled, distroModeEnabled: false);
+
+    /// <summary>
+    /// Registers all of the services needed for the agent to run.
+    /// </summary>
+    /// <param name="container"></param>
+    /// <param name="serverlessModeEnabled"></param>
+    /// <param name="gcSamplerV2Enabled"></param>
+    /// <param name="distroModeEnabled">
+    /// True when the agent core is hosted by the OpenTelemetry distro rather than the profiler. Registers
+    /// <see cref="NoOpNativeMethods"/> in place of the platform native methods and skips the OpenTelemetry
+    /// metrics bridge registrations. Callers never pass this together with <paramref name="serverlessModeEnabled"/>;
+    /// if both are true, distro mode wins for the native methods and bridge registrations (no assertion is made).
+    /// </param>
+    public static void RegisterServices(IContainer container, bool serverlessModeEnabled, bool gcSamplerV2Enabled, bool distroModeEnabled)
     {
         // we register this factory instead of just loading the storage contexts here because deferring the logic gives us a logger
         container.RegisterFactory<IEnumerable<IContextStorageFactory>>(ExtensionsLoader.LoadContextStorageFactories);
@@ -233,7 +248,11 @@ public static class AgentServices
         container.Register<IDatabaseStatementParser, DatabaseStatementParser>();
         container.Register<ITraceMetadataFactory, TraceMetadataFactory>();
 
-        if (AgentInstallConfiguration.IsWindows)
+        if (distroModeEnabled)
+        {
+            container.Register<INativeMethods, NoOpNativeMethods>();
+        }
+        else if (AgentInstallConfiguration.IsWindows)
         {
             container.Register<INativeMethods, WindowsNativeMethods>();
         }
@@ -249,7 +268,7 @@ public static class AgentServices
         container.Register<ActivityBridge, ActivityBridge>();
         container.Register<NewRelicActivitySourceProxy, NewRelicActivitySourceProxy>();
 
-        if (!serverlessModeEnabled)
+        if (!serverlessModeEnabled && !distroModeEnabled)
         {
             container.Register<IAssemblyProvider, AppDomainAssemblyProvider>();
             container.Register<IMeterListenerWrapper, DynamicMeterListenerWrapper>();
@@ -266,6 +285,19 @@ public static class AgentServices
     /// Starts all of the services needed by resolving them.
     /// </summary>
     public static void StartServices(IContainer container, bool serverlessModeEnabled, bool gcSamplerV2Enabled)
+        => StartServices(container, serverlessModeEnabled, gcSamplerV2Enabled, distroModeEnabled: false);
+
+    /// <summary>
+    /// Starts all of the services needed by resolving them.
+    /// </summary>
+    /// <param name="container"></param>
+    /// <param name="serverlessModeEnabled"></param>
+    /// <param name="gcSamplerV2Enabled"></param>
+    /// <param name="distroModeEnabled">
+    /// True when the container was registered in distro mode; the OpenTelemetry metrics bridge is then not
+    /// resolved because it was never registered. Callers never pass this together with serverless mode.
+    /// </param>
+    public static void StartServices(IContainer container, bool serverlessModeEnabled, bool gcSamplerV2Enabled, bool distroModeEnabled)
     {
         if (!serverlessModeEnabled)
             container.Resolve<AssemblyResolutionService>();
@@ -293,7 +325,8 @@ public static class AgentServices
             container.Resolve<ConfigurationTracker>();
             container.Resolve<LiveInstrumentationServerConfigurationListener>();
             container.Resolve<UpdatedLoadedModulesService>();
-            container.Resolve<MeterListenerBridge>();
+            if (!distroModeEnabled)
+                container.Resolve<MeterListenerBridge>();
         }
     }
 }

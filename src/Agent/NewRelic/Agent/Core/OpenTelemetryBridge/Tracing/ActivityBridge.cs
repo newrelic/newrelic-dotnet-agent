@@ -266,7 +266,7 @@ public class ActivityBridge : IDisposable
     }
 
 
-    private static void CreateActivityTraceFlagsSetter(Type activityType)
+    internal static void CreateActivityTraceFlagsSetter(Type activityType)
     {
         if (_activityTraceFlagsSetter != null)
         {
@@ -447,7 +447,7 @@ public class ActivityBridge : IDisposable
         }
     }
 
-    private static void ActivityStarted(object originalActivity, IAgent agent)
+    internal static void ActivityStarted(object originalActivity, IAgent agent)
     {
         try
         {
@@ -459,7 +459,7 @@ public class ActivityBridge : IDisposable
         }
     }
 
-    private static void ActivityStopped(object originalActivity, IAgent agent, IErrorService errorService)
+    internal static void ActivityStopped(object originalActivity, IAgent agent, IErrorService errorService)
     {
         try
         {

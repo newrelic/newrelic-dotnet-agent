@@ -64,6 +64,8 @@ public class CompositeTestAgent : IDisposable
 
     public List<CustomEventWireModel> CustomEvents { get; } = new List<CustomEventWireModel>();
 
+    public List<LogEventWireModel> LogEvents { get; } = new List<LogEventWireModel>();
+
     public List<TransactionTraceWireModel> TransactionTraces { get; } = new List<TransactionTraceWireModel>();
 
     public List<TransactionEventWireModel> TransactionEvents { get; } = new List<TransactionEventWireModel>();
@@ -116,6 +118,7 @@ public class CompositeTestAgent : IDisposable
     {
         Metrics.Clear();
         CustomEvents.Clear();
+        LogEvents.Clear();
         TransactionTraces.Clear();
         TransactionEvents.Clear();
         ErrorTraces.Clear();
@@ -253,6 +256,16 @@ public class CompositeTestAgent : IDisposable
                 .Returns(SaveDataAndReturnSuccess(Metrics));
             Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<IEnumerable<CustomEventWireModel>>(), Arg.IsAny<string>()))
                 .Returns(SaveDataAndReturnSuccess(CustomEvents));
+            Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<LogEventWireModelCollection>(), Arg.IsAny<string>()))
+                .Returns<LogEventWireModelCollection>(collection =>
+                {
+                    if (collection?.LoggingEvents != null)
+                    {
+                        LogEvents.AddRange(collection.LoggingEvents);
+                    }
+
+                    return DataTransportResponseStatus.RequestSuccessful;
+                });
             Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<IEnumerable<TransactionTraceWireModel>>(), Arg.IsAny<string>()))
                 .Returns(SaveDataAndReturnSuccess(TransactionTraces));
             Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<TransactionEventWireModel>>(), Arg.IsAny<string>()))
