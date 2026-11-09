@@ -45,7 +45,6 @@ fi
 rm -f $NEWRELIC_HOME/extensions/NewRelic.Providers.Wrapper.Logging.Instrumentation.xml 2> /dev/null
 rm -f $NEWRELIC_HOME/extensions/NewRelic.Providers.Wrapper.Logging.dll 2> /dev/null
 
-echo "export CORECLR_NEWRELIC_HOME=${NEWRELIC_HOME}" > /etc/profile.d/${PACKAGE_NAME}-path.sh
 source /etc/profile.d/${PACKAGE_NAME}-path.sh
 
 chmod o+w $NEWRELIC_HOME/logs
