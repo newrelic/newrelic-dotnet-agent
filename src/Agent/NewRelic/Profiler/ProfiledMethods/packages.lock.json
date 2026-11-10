@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "dependencies": {
+    ".NETFramework,Version=v4.8": {
+      "NewRelic.Agent.Api": {
+        "type": "Direct",
+        "requested": "[4.2.185, )",
+        "resolved": "4.2.185",
+        "contentHash": "+MFti93L5I0wwi4sNwf0D/wGJ7RaiQ6HnzHje4zoLmfXa748n0K2E/yDwMaN5Z65MFOYnCiwwwKI3jpfFTp8DQ=="
+      },
+      "NUnit": {
+        "type": "Direct",
+        "requested": "[2.6.3, )",
+        "resolved": "2.6.3",
+        "contentHash": "zGYW/N4U8H1Y6Xr6aGQZgaDtfpRJSlbx7A9Fg3WNUV3EKEUe1LwjnHw9NH81GVWYzKlOBLZmFp/q90YJwT2vzQ=="
+      },
+      "System.Collections.Concurrent": {
+        "type": "Direct",
+        "requested": "[4.3.0, )",
+        "resolved": "4.3.0",
+        "contentHash": "ztl69Xp0Y/UXCL+3v3tEU+lIy+bvjKNUmopn1wep/a291pVPK7dxBd6T7WnlQqRog+d1a/hSsgRsmFnIBKTPLQ=="
+      }
+    }
+  }
+}

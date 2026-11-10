@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "dependencies": {
+    ".NETFramework,Version=v4.8": {
+      "CommandLineParser": {
+        "type": "Direct",
+        "requested": "[1.9.71, )",
+        "resolved": "1.9.71",
+        "contentHash": "zm4qHiMcFsxrZ4JqrSmqQVNkaZrKHlMih7mQJrd+GB617QBUxdmg3v1yFHxKfrcjY+UbwBuFq9W8Um8HEomuXg=="
+      }
+    },
+    ".NETFramework,Version=v4.8/win-x86": {}
+  }
+}
