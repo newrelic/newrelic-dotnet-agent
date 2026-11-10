@@ -5,6 +5,7 @@ name: Release Build
 # which accepts only main and v* tags and requires a second team member's approval.
 # deploy_agent.yml deploys the "deploy-artifacts" of a successful run of this workflow.
 # all_solutions.yml builds the same packages unsigned on every PR, through the same actions.
+# The run-artifactbuilder job also attests the download-site files (build provenance).
 on:
   release:
     types: [published]
@@ -150,6 +151,9 @@ jobs:
     runs-on: windows-2022
     permissions:
       contents: read
+      id-token: write # Sigstore signing certificate for the attestations
+      attestations: write
+      artifact-metadata: write
 
     steps:
       - name: Checkout
@@ -163,3 +167,17 @@ jobs:
         uses: ./.github/actions/run-artifactbuilder
         with:
           verify-msi-signature: 'true'
+
+      # Records which workflow, commit and run built each download-site file, signed with this job's
+      # OIDC identity and logged publicly. Verify with: gh attestation verify <file> --repo newrelic/newrelic-dotnet-agent
+      # The .nupkg files are left out: nuget.org adds its repository signature, so the served package
+      # differs from what is built here.
+      - name: Attest download-site artifacts
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: |
+            build/BuildArtifacts/DownloadSite/*.msi
+            build/BuildArtifacts/DownloadSite/*.zip
+            build/BuildArtifacts/DownloadSite/*.tar.gz
+            build/BuildArtifacts/DownloadSite/*.deb
+            build/BuildArtifacts/DownloadSite/*.rpm

@@ -110,6 +110,16 @@ second team member's approval. `deploy_agent.yml` deploys only the artifacts
 of a successful `release_build.yml` run, and its credentialed jobs run in the
 same environment.
 
+**Build provenance.** `release_build.yml` attests every download-site file it
+builds (MSI, ZIP, tar.gz, deb, rpm) with `actions/attest`. Each attestation
+records the repository, workflow, commit and run that produced the file's
+SHA-256, is signed with the job's OIDC identity (no stored key), and is logged
+in Sigstore's public transparency log. The APT/YUM packages are the same files,
+so the same attestations cover them. Verify a file with
+`gh attestation verify <file> --repo newrelic/newrelic-dotnet-agent`. NuGet
+packages aren't attested: nuget.org adds a repository signature, so the
+package it serves differs from the one built.
+
 The switches behind the unsigned build: `-p:SkipSigning=true` on
 `MsiInstaller.sln`, `NR_SKIP_MSI_SIGNATURE_CHECK=true` for ArtifactBuilder,
 and no `GPG_KEY` for the RPM. The shared steps are the composite actions
