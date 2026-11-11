@@ -1,0 +1,107 @@
+name: Setup Pinned .NET SDK
+description: >
+  Installs the exact .NET SDK named in a global.json-format pin file, copies
+  that file to the workspace root for the rest of the job so the dotnet host
+  selects that SDK, and fails the job unless `dotnet --version` reports the
+  pinned version. The pin file lives outside the repository root (by default
+  .github/dotnet-sdk/global.json) so local developer builds are unaffected.
+  Reusable from other repositories: the pin file path is relative to the
+  caller's workspace, and the caller must check out its repository first.
+  Runs on Windows, Linux and macOS runners.
+
+inputs:
+  global-json-file:
+    description: >
+      Path of the pin file, relative to the workspace. It must be global.json
+      format with an exact sdk.version and a non-"latest*" rollForward
+      ("disable" is recommended), otherwise actions/setup-dotnet floats.
+    required: false
+    default: .github/dotnet-sdk/global.json
+  extra-dotnet-versions:
+    description: >
+      Optional newline-separated extra SDK versions (e.g. 10.0.x) to install
+      before the pinned SDK, for jobs that run tools or tests on an older
+      runtime. These never build: the root global.json selects the pinned SDK.
+    required: false
+    default: ''
+
+outputs:
+  dotnet-version:
+    description: The pinned .NET SDK version, confirmed by `dotnet --version`.
+    value: ${{ steps.assert.outputs.dotnet-version }}
+
+runs:
+  using: composite
+  steps:
+    - name: Read the SDK pin
+      id: pin
+      shell: pwsh
+      working-directory: ${{ github.workspace }}
+      env:
+        PIN_FILE: ${{ inputs.global-json-file }}
+      run: |
+        $pinPath = Join-Path $env:GITHUB_WORKSPACE $env:PIN_FILE
+        if (-not (Test-Path -LiteralPath $pinPath -PathType Leaf)) {
+          Write-Output "::error::SDK pin file not found: $pinPath"
+          exit 1
+        }
+        $pinPath = (Resolve-Path -LiteralPath $pinPath).Path
+        $sdk = (Get-Content -LiteralPath $pinPath -Raw | ConvertFrom-Json).sdk
+        $version = "$($sdk.version)"
+        if ($version -notmatch '^\d+\.\d+\.\d+(-[0-9A-Za-z.\-]+)?$') {
+          Write-Output "::error::$env:PIN_FILE must set sdk.version to an exact SDK version, got '$version'."
+          exit 1
+        }
+        if ("$($sdk.rollForward)" -like 'latest*') {
+          Write-Output "::error::$env:PIN_FILE sets rollForward '$($sdk.rollForward)', which makes actions/setup-dotnet install a floating version. Use 'disable'."
+          exit 1
+        }
+
+        # The root copy is what makes the host select the pinned SDK. Refuse to
+        # overwrite a root global.json that says something else.
+        $rootPath = Join-Path $env:GITHUB_WORKSPACE 'global.json'
+        if ((Test-Path -LiteralPath $rootPath) -and
+            ((Get-Content -LiteralPath $rootPath -Raw).Trim() -replace "`r`n", "`n") -ne ((Get-Content -LiteralPath $pinPath -Raw).Trim() -replace "`r`n", "`n")) {
+          Write-Output "::error::$rootPath already exists and differs from $env:PIN_FILE. Remove it or make it identical."
+          exit 1
+        }
+
+        "path=$pinPath" >> $env:GITHUB_OUTPUT
+        "version=$version" >> $env:GITHUB_OUTPUT
+        Write-Output "Pinned .NET SDK: $version (from $env:PIN_FILE)"
+
+    - name: Install extra .NET SDKs
+      if: inputs.extra-dotnet-versions != ''
+      uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
+      with:
+        dotnet-version: ${{ inputs.extra-dotnet-versions }}
+        skip-lts-prepass: true
+
+    - name: Install pinned .NET SDK
+      uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
+      with:
+        global-json-file: ${{ steps.pin.outputs.path }}
+        skip-lts-prepass: true
+
+    - name: Select and verify the pinned .NET SDK
+      id: assert
+      shell: pwsh
+      working-directory: ${{ github.workspace }}
+      env:
+        PIN_PATH: ${{ steps.pin.outputs.path }}
+        PINNED_VERSION: ${{ steps.pin.outputs.version }}
+      run: |
+        Copy-Item -LiteralPath $env:PIN_PATH -Destination (Join-Path $env:GITHUB_WORKSPACE 'global.json') -Force
+
+        Write-Output 'Installed SDKs:'
+        dotnet --list-sdks
+
+        $actual = (dotnet --version | Out-String).Trim()
+        if ($LASTEXITCODE -ne 0 -or $actual -ne $env:PINNED_VERSION) {
+          Write-Output "::error::dotnet --version reported '$actual', expected the pinned SDK $env:PINNED_VERSION."
+          exit 1
+        }
+
+        "dotnet-version=$actual" >> $env:GITHUB_OUTPUT
+        "Pinned .NET SDK **$actual** selected and verified with ``dotnet --version`` on $env:RUNNER_OS ($env:ImageOS $env:ImageVersion)." >> $env:GITHUB_STEP_SUMMARY
+        Write-Output "dotnet --version: $actual (matches the pin)"

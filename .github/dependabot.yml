@@ -27,6 +27,18 @@ updates:
         patterns:
           - "*"
 
+  # The exact .NET SDK that CI builds the agent and release artifacts with (see the
+  # setup-pinned-dotnet action). A new major SDK is a deliberate, manual bump.
+  - package-ecosystem: dotnet-sdk
+    directory: /.github/dotnet-sdk
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: "chore(deps):"
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+
   # Linux package build, deploy, and post-deploy validation images. The profiler
   # build image (/src/Agent/NewRelic/Profiler/linux) is excluded on purpose: its
   # base image fixes the shipped profiler's glibc floor -- see that dir's README.

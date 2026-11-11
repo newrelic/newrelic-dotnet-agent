@@ -96,3 +96,7 @@ build/Linux/keys
 .codegraph
 # CodeGraph skips any dir named build by default; opt the root build/ tool source back in.
 !/build/
+
+# CI copies .github/dotnet-sdk/global.json here for the job only (setup-pinned-dotnet);
+# local builds use whatever SDK is installed, so a root global.json is never committed.
+/global.json
