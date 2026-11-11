@@ -1,3 +1,11 @@
 <Project>
   <Import Project="$(MSBuildThisFileDirectory)\build\Versioning.targets" Condition="Exists('$(MSBuildThisFileDirectory)\build\Versioning.targets')" />
+
+  <!-- The SDK adds this package implicitly only where no .NET Framework targeting pack is installed (Linux),
+       so a lock file written on Windows would fail locked restore on Linux. Referencing it explicitly gives both the same graph.
+       No central PackageVersion: projects without lock files (tests) still get the implicit reference, which NuGet rejects (NU1009) if one exists. -->
+  <ItemGroup Condition="'$(RestorePackagesWithLockFile)' == 'true' and '$(TargetFrameworkIdentifier)' == '.NETFramework'">
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" VersionOverride="1.0.3" PrivateAssets="all" Condition="'$(ManagePackageVersionsCentrally)' == 'true'" />
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" Condition="'$(ManagePackageVersionsCentrally)' != 'true'" />
+  </ItemGroup>
 </Project>
