@@ -56,7 +56,8 @@ jobs:
 
       - name: Write a conflicting root global.json
         shell: pwsh
-        run: Set-Content -LiteralPath "$env:GITHUB_WORKSPACE/global.json" -Value '{ "sdk": { "version": "10.0.100" } }'
+        run: |
+          Set-Content -LiteralPath "$env:GITHUB_WORKSPACE/global.json" -Value '{ "sdk": { "version": "10.0.100" } }'
 
       - name: Action refuses a conflicting root global.json
         id: conflict
