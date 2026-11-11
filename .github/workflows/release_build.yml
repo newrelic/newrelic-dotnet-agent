@@ -27,7 +27,9 @@ jobs:
     name: Build FullAgent and signed MSIInstaller
     # Agent releases only: the Azure Site Extension release (AzureSiteExtension_v*) is built by siteextension_release.yml.
     if: github.event_name != 'release' || startsWith(github.event.release.tag_name, 'v')
-    runs-on: windows-2022
+    # VS 2026 MSBuild: build-msi runs MSBuild.exe with the pinned .NET 11 SDK selected by the
+    # CI root global.json, and that SDK needs MSBuild 18.7 or later (VS 2022 has 17.14).
+    runs-on: windows-2025-vs2026
     environment: release
     permissions:
       contents: read
