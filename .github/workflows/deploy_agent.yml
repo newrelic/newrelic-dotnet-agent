@@ -230,6 +230,10 @@ jobs:
     name: Deploy MSI to Download Site
     runs-on: windows-2022
     environment: release
+    permissions:
+      contents: read
+      packages: read
+      id-token: write # to assume the release AWS role
 
     steps:
       - name: Download Deploy Artifacts
@@ -253,11 +257,14 @@ jobs:
           Copy-Item .\working_dir\newrelic-dotnet-agent_*_arm64.tar.gz .\working_dir\newrelic-dotnet-agent_arm64.tar.gz -Force -Recurse
         shell: powershell
 
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ secrets.RELEASE_DEPLOY_ROLE_ARN }}
+          aws-region: us-west-2
+
       - name: Deploy latest_release to Download Site
         env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: us-west-2
           BUCKET_NAME: ${{ secrets.BUCKET_NAME }}
           DEPLOY: ${{ inputs.deploy }}
         run: |
@@ -273,11 +280,10 @@ jobs:
           }
         shell: pwsh
 
+      # No --delete: a published version folder is never pruned, and the release role
+      # has no delete permission under previous_releases/.
       - name: Deploy previous_release to Download Site
         env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: us-west-2
           BUCKET_NAME: ${{ secrets.BUCKET_NAME }}
           DEPLOY: ${{ inputs.deploy }}
           RELEASE_VERSION: ${{ needs.get-release-info.outputs.release_version }}
@@ -286,11 +292,11 @@ jobs:
           Copy-Item .\working_dir\* ".\previous_releases\$env:RELEASE_VERSION\" -Force -Recurse
           cd ".\previous_releases\$env:RELEASE_VERSION"
           if ($env:DEPLOY -eq "true") {
-            aws s3 sync . "$env:BUCKET_NAME/dot_net_agent/previous_releases/$env:RELEASE_VERSION/" --include "*" --exclude ".DS_Store" --delete
+            aws s3 sync . "$env:BUCKET_NAME/dot_net_agent/previous_releases/$env:RELEASE_VERSION/" --include "*" --exclude ".DS_Store"
           }
           else {
             Write-Host "Input:deploy was not true.  The following deploy command was not run:"
-            Write-Host "aws s3 sync . <BUCKET_NAME>/dot_net_agent/previous_releases/$env:RELEASE_VERSION/ --include `"*`" --exclude `".DS_Store`" --delete"
+            Write-Host "aws s3 sync . <BUCKET_NAME>/dot_net_agent/previous_releases/$env:RELEASE_VERSION/ --include `"*`" --exclude `".DS_Store`""
           }
         shell: pwsh
 
@@ -299,6 +305,10 @@ jobs:
     name: Rebuild indexes on the download site
     if: ${{ inputs.indexdownloadsite }}
     uses: ./.github/workflows/build_download_site_index_files.yml
+    permissions:
+      contents: read
+      packages: read
+      id-token: write # the called job assumes the release AWS role
     strategy:
       matrix:
         prefix: ["dot_net_agent/latest_release", "dot_net_agent/previous_releases"]
@@ -428,7 +438,7 @@ jobs:
     permissions:
       contents: read
       packages: read
-      id-token: write # the test-repository deploy assumes an AWS role
+      id-token: write # to assume the release (or test-repository) AWS role
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
@@ -468,13 +478,10 @@ jobs:
           cp LinuxDeb/*.deb ${{ github.workspace }}/deploy/linux/packages
         shell: bash
 
-      # Test repository only.  Production keeps its static keys because we cannot
-      # create a role in the account that owns the production bucket.
-      - name: Configure AWS credentials for the test repository
-        if: ${{ !inputs.linux-deploy-to-production }}
+      - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
         with:
-          role-to-assume: ${{ secrets.TEST_REPO_DEPLOY_ROLE_ARN }}
+          role-to-assume: ${{ inputs.linux-deploy-to-production && secrets.RELEASE_DEPLOY_ROLE_ARN || secrets.TEST_REPO_DEPLOY_ROLE_ARN }}
           # A full repo rebuild signs and re-syncs every index, so this needs far
           # longer than the 900s used by the test workflows.
           role-duration-seconds: 3600
@@ -488,10 +495,7 @@ jobs:
           ACTION: release
           DEPLOY: ${{ inputs.deploy }}
           DEPLOY_TO_PRODUCTION: ${{ inputs.linux-deploy-to-production }}
-          # Distinct names: the test-repo branch reads AWS_* exported by the role assumption above.
           PROD_MAIN_S3: ${{ secrets.PROD_MAIN_S3 }}
-          LINUX_AWS_ACCESS_KEY_ID: ${{ secrets.LINUX_AWS_ACCESS_KEY_ID }}
-          LINUX_AWS_SECRET_ACCESS_KEY: ${{ secrets.LINUX_AWS_SECRET_ACCESS_KEY }}
           TEST_S3_BUCKET: ${{ secrets.TEST_S3_BUCKET }}
           NEW_PRIVATE_KEY_PASSPHRASE: ${{ secrets.NEW_GPG_KEY_PASSPHRASE }}
           OLD_KEY_ID: ${{ secrets.OLD_GPG_KEY_ID }}
@@ -504,21 +508,17 @@ jobs:
             exit 1
           fi
 
+          # Both targets use the short-lived credentials exported by the role assumption
+          # above.  The session token is required: an assumed role is three values, not two.
+          if [ -z "$AWS_SESSION_TOKEN" ] ; then
+            echo "::error::AWS_SESSION_TOKEN is empty - role assumption did not run or failed."
+            exit 1
+          fi
           if [ "$DEPLOY_TO_PRODUCTION" == "true" ] ; then
             # We're actually deploying to production (apt.newrelic.com and yum.newrelic.com)
             export S3_BUCKET="$PROD_MAIN_S3"
-            export AWS_ACCESS_KEY_ID="$LINUX_AWS_ACCESS_KEY_ID"
-            export AWS_SECRET_ACCESS_KEY="$LINUX_AWS_SECRET_ACCESS_KEY"
-            # Static keys only: a stray session token would invalidate them.
-            unset AWS_SESSION_TOKEN
           else
-            # Deploy to the test bucket that mirrors apt/yum.newrelic.com, using the
-            # short-lived credentials exported by the role assumption above.  The session
-            # token is required: an assumed role is three values, not two.
-            if [ -z "$AWS_SESSION_TOKEN" ] ; then
-              echo "::error::AWS_SESSION_TOKEN is empty - role assumption did not run or failed."
-              exit 1
-            fi
+            # Deploy to the test bucket that mirrors apt/yum.newrelic.com.
             export S3_BUCKET="$TEST_S3_BUCKET"
           fi
           export GPG_KEYS_DIR="$RUNNER_TEMP/gpg-keys"
@@ -542,25 +542,20 @@ jobs:
         # The definitions are .repo files in ./build/Linux/yum directory at the root of the agent source tree.
         # The files just have to be copied to the <TARGET_S3_BUCKET>/dot_net_agent/yum directory, potentially overriding existing files.
         env:
-          # Distinct names: the test-repo branch reads AWS_* exported by the role assumption above.
-          LINUX_AWS_ACCESS_KEY_ID: ${{ secrets.LINUX_AWS_ACCESS_KEY_ID }}
-          LINUX_AWS_SECRET_ACCESS_KEY: ${{ secrets.LINUX_AWS_SECRET_ACCESS_KEY }}
           PROD_MAIN_S3: ${{ secrets.PROD_MAIN_S3 }}
           TEST_S3_BUCKET: ${{ secrets.TEST_S3_BUCKET }}
           DEPLOY_TO_PRODUCTION: ${{ inputs.linux-deploy-to-production }}
         run: |
+          # The short-lived credentials from the role assumed earlier in this job
+          # (AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY/AWS_SESSION_TOKEN) are already
+          # present in the job environment.
+          if [ -z "$AWS_SESSION_TOKEN" ] ; then
+            echo "::error::AWS_SESSION_TOKEN is empty - role assumption did not run or failed."
+            exit 1
+          fi
           if [ "$DEPLOY_TO_PRODUCTION" == "true" ] ; then
-            export AWS_ACCESS_KEY_ID="$LINUX_AWS_ACCESS_KEY_ID"
-            export AWS_SECRET_ACCESS_KEY="$LINUX_AWS_SECRET_ACCESS_KEY"
             TARGET_S3_BUCKET="$PROD_MAIN_S3"
           else
-            # Test repository - the short-lived credentials from the role assumed
-            # earlier in this job (AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY/AWS_SESSION_TOKEN)
-            # are already present in the job environment.
-            if [ -z "$AWS_SESSION_TOKEN" ] ; then
-              echo "::error::AWS_SESSION_TOKEN is empty - role assumption did not run or failed."
-              exit 1
-            fi
             TARGET_S3_BUCKET="$TEST_S3_BUCKET"
           fi
 
