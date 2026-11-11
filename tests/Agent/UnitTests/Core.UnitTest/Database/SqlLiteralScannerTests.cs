@@ -314,4 +314,127 @@ public class SqlLiteralScannerTests
     {
         Assert.That(SqlLiteralScanner.Obfuscate("abc", startIndex, "P", maxLength, Pg), Is.EqualTo(expected));
     }
+
+    [Test]
+    public void StripComments_Null_ReturnsNull()
+    {
+        Assert.That(SqlLiteralScanner.StripComments(null, Ms), Is.Null);
+    }
+
+    private static void AssertStripped(string sql, SqlDialectFeatures features, string expected)
+    {
+        var actual = SqlLiteralScanner.StripComments(sql, features);
+        Assert.Multiple(() =>
+        {
+            Assert.That(actual, Is.EqualTo(expected));
+            Assert.That(actual.Length, Is.EqualTo(sql.Length), "StripComments must never change the input's length.");
+        });
+    }
+
+    [Test]
+    public void StripComments_EndOfLineComment_RunningToEndOfString_IsBlankedPreservingLength()
+    {
+        var sql = "SELECT 1 -- note";
+        AssertStripped(sql, None, "SELECT 1 " + new string(' ', "-- note".Length));
+    }
+
+    [TestCase("a -- c\r\nb")]
+    [TestCase("a -- c\nb")]
+    [TestCase("a -- c\rb")]
+    public void StripComments_EndOfLineComment_StopsAtNewlineAndKeepsItVerbatim(string sql)
+    {
+        var commentLength = "-- c".Length;
+        var newlineAndSuffix = sql.Substring("a -- c".Length);
+        AssertStripped(sql, None, "a " + new string(' ', commentLength) + newlineAndSuffix);
+    }
+
+    [Test]
+    public void StripComments_MySqlDashDashWithoutTrailingWhitespace_MasksRestRatherThanTreatingItAsAComment()
+    {
+        // MySQL requires "--" to be followed by whitespace to be a comment ("5--1" is 5 - (-1), arithmetic, not a
+        // comment) -- so the shared MasksRestOfQuery check (also used by Obfuscate) intentionally blanks from that
+        // point on instead of either treating it as a comment or trying to correctly parse the arithmetic.
+        var sql = "5--1";
+        AssertStripped(sql, MySql, "5" + new string(' ', sql.Length - 1));
+    }
+
+    [Test]
+    public void StripComments_MySqlDashDashWithTrailingWhitespace_IsAComment()
+    {
+        var sql = "5-- 1";
+        AssertStripped(sql, MySql, "5" + new string(' ', "-- 1".Length));
+    }
+
+    [Test]
+    public void StripComments_BlockComment_IsBlankedPreservingLength()
+    {
+        var sql = "a /* c */ b";
+        AssertStripped(sql, None, "a " + new string(' ', "/* c */".Length) + " b");
+    }
+
+    [Test]
+    public void StripComments_AgentMetadataComment_IsBlankedLikeAnyOtherComment()
+    {
+        // The scanner strips every comment uniformly; keeping the agent's own metadata comment verbatim (as
+        // SqlObfuscator's GetObfuscatedSql does) is that caller's job, not the scanner's.
+        var sql = "/*nr_service_guid=\"abc\"*/SELECT 1";
+        var commentLength = "/*nr_service_guid=\"abc\"*/".Length;
+        AssertStripped(sql, Pg, new string(' ', commentLength) + "SELECT 1");
+    }
+
+    [TestCase("a /* never closed")]
+    [TestCase("a */ b")]
+    [TestCase("/* /* */ secret")]
+    [TestCase("/* a /* b */ c */ d")]
+    public void StripComments_UnterminatedOrAmbiguousBlockComment_ReturnsNull(string sql)
+    {
+        // Mirrors Obfuscate's handling of the same inputs: an unterminated comment, a stray "*/", and a nested
+        // "/*" before the first "*/" (ambiguous in dialects where block comments nest) cannot be classified with
+        // confidence, so the scanner gives up entirely rather than risk treating commented text as code.
+        Assert.That(SqlLiteralScanner.StripComments(sql, Pg), Is.Null);
+    }
+
+    [TestCase("a 'never closed")]
+    [TestCase("[a never closed")]
+    public void StripComments_UnterminatedStringOrQuotedIdentifier_ReturnsNull(string sql)
+    {
+        Assert.That(SqlLiteralScanner.StripComments(sql, Ms), Is.Null);
+    }
+
+    [Test]
+    public void StripComments_StringLiteralContainingCommentLookalikeText_IsKeptVerbatim()
+    {
+        // "--" and "/*" inside a real string literal are string content, not comments, and must survive untouched.
+        AssertStripped("x = 'a--b' AND y = '/* not */ a comment'", None,
+            "x = 'a--b' AND y = '/* not */ a comment'");
+    }
+
+    [Test]
+    public void StripComments_QuotedIdentifierContainingCommentLookalikeText_IsKeptVerbatim()
+    {
+        AssertStripped("[t /* also not a comment */] = 1", Ms, "[t /* also not a comment */] = 1");
+    }
+
+    [Test]
+    public void StripComments_DollarQuotedStringContainingCommentLookalikeText_IsKeptVerbatim()
+    {
+        AssertStripped("x = $tag$ -- not a comment $tag$ AND y", Pg, "x = $tag$ -- not a comment $tag$ AND y");
+    }
+
+    [Test]
+    public void StripComments_DefaultDialectHashFollowedByWhitespace_MasksRestOfQuery()
+    {
+        var sql = "a #  comment\nb";
+        AssertStripped(sql, Def, "a " + new string(' ', sql.Length - "a ".Length));
+    }
+
+    [Test]
+    public void StripComments_SqlServerDialect_ParameterNameCoincidentallyInATrailingComment_IsBlanked()
+    {
+        var sql = "SELECT * FROM faketable WHERE [name] = @first -- debug: filtering by @second";
+        var commentLength = "-- debug: filtering by @second".Length;
+        var expected = "SELECT * FROM faketable WHERE [name] = @first " + new string(' ', commentLength);
+
+        AssertStripped(sql, Ms, expected);
+    }
 }

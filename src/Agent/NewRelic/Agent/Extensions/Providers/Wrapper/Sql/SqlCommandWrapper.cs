@@ -120,7 +120,10 @@ public abstract class SqlCommandWrapperBase : IWrapper
         switch (vendor)
         {
             case DatastoreVendor.MSSQL:
-                agent.EnableExplainPlans(segment, () => SqlServerExplainPlanActions.AllocateResources(sqlCommand), SqlServerExplainPlanActions.GenerateExplainPlan, null);
+                agent.EnableExplainPlans(segment,
+                    () => SqlServerExplainPlanActions.AllocateResources(sqlCommand),
+                    resources => SqlServerExplainPlanActions.GenerateExplainPlan(resources, commandText => agent.DatabaseService.StripSqlComments(commandText, DatastoreVendor.MSSQL)),
+                    null);
                 break;
 
             case DatastoreVendor.MySQL:

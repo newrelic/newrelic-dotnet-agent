@@ -43,5 +43,22 @@ public class Class_DatabaseService
                 Assert.That(obfuscatedSql, Is.Not.EqualTo(unobfuscatedSql));
             });
         }
+
+        [Test]
+        public void StripSqlComments_UsesTheVendorsDialect_ToBlankOnlyComments()
+        {
+            // Delegates to SqlLiteralScanner.StripComments with the vendor's dialect -- full coverage of the
+            // scanning rules themselves lives in SqlLiteralScannerTests; this just confirms the wiring.
+            const string sql = "SELECT * FROM faketable WHERE [name] = @first -- debug: filtering by @second";
+
+            var stripped = _databaseService.StripSqlComments(sql, DatastoreVendor.MSSQL);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(stripped, Does.Not.Contain("@second"));
+                Assert.That(stripped, Does.StartWith("SELECT * FROM faketable WHERE [name] = @first "));
+                Assert.That(stripped.Length, Is.EqualTo(sql.Length));
+            });
+        }
     }
 }

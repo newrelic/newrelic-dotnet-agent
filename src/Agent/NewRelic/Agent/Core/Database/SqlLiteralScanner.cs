@@ -18,6 +18,29 @@ public static class SqlLiteralScanner
     private const int Unterminated = -1;
     private const int UuidHexDigitCount = 32;
 
+    /// <summary>
+    /// What <see cref="TryClassifyLexeme"/> found starting at a given index. Shared by Obfuscate and
+    /// <see cref="StripComments"/> so both are driven by the exact same comment/quote/ambiguity rules (branch
+    /// order, nested-block-comment handling, per-dialect backslash escapes); each method decides for itself how to
+    /// render a given kind (mask with "?", blank with spaces, or copy verbatim).
+    /// </summary>
+    private enum SqlLexemeKind
+    {
+        /// <summary>A construct the dialect reads as SQL but that this scanner cannot safely tokenize further (e.g. a
+        /// Postgres # operator, MySQL "--" not followed by whitespace). Extends to the end of the input.</summary>
+        MaskRestOfQuery,
+        EndOfLineComment,
+        BlockComment,
+        /// <summary>An unterminated or nesting-ambiguous block comment, or a stray "*/". Extends to the end of the input.</summary>
+        AmbiguousComment,
+        /// <summary>A string literal, Oracle alternative-quoted string, or dollar-quoted string -- literal content.</summary>
+        QuotedLiteral,
+        /// <summary>A double/backtick/bracket-quoted identifier -- not literal content, kept verbatim by both callers.</summary>
+        QuotedIdentifier,
+        /// <summary>An unterminated string literal or quoted identifier. Extends to the end of the input.</summary>
+        UnterminatedQuoted,
+    }
+
     public static string Obfuscate(string sql, SqlDialectFeatures features)
     {
         return Obfuscate(sql, 0, null, int.MaxValue, features);
@@ -48,102 +71,35 @@ public static class SqlLiteralScanner
 
         // Branch order matters: the rest-of-query masks before comments, comments before strings, Oracle q-quotes before
         // other quotes, quotes before $ handling, UUIDs before numbers and identifiers, unary minus before numbers.
-        // Reordering can desync the scan or leak part of a literal.
+        // Reordering can desync the scan or leak part of a literal. TryClassifyLexeme owns that order for everything
+        // through dollar-quoted strings; UUIDs, numbers and identifiers are specific to obfuscating literals, so they
+        // stay here.
         while (i < length)
         {
+            if (TryClassifyLexeme(sql, i, features, out var kind, out var end))
+            {
+                switch (kind)
+                {
+                    case SqlLexemeKind.MaskRestOfQuery:
+                    case SqlLexemeKind.EndOfLineComment:
+                    case SqlLexemeKind.BlockComment:
+                    case SqlLexemeKind.QuotedLiteral:
+                        AppendCapped(sb, '?', maxLength);
+                        i = end;
+                        continue;
+
+                    case SqlLexemeKind.QuotedIdentifier:
+                        AppendCapped(sb, sql, i, end - i, maxLength);
+                        i = end;
+                        continue;
+
+                    case SqlLexemeKind.AmbiguousComment:
+                    case SqlLexemeKind.UnterminatedQuoted:
+                        return FullyObfuscatedWithPrefix(prefix, maxLength);
+                }
+            }
+
             var ch = sql[i];
-            var next = i + 1 < length ? sql[i + 1] : '\0';
-
-            if (MasksRestOfQuery(sql, i, ch, next, features))
-            {
-                AppendCapped(sb, '?', maxLength);
-                i = length;
-                continue;
-            }
-
-            // End-of-line comments
-            if ((ch == '-' && next == '-') || (ch == '#' && Has(features, SqlDialectFeatures.HashComments)))
-            {
-                AppendCapped(sb, '?', maxLength);
-                i = EndOfLine(sql, i);
-                continue;
-            }
-
-            // Block comments
-            if (ch == '/' && next == '*')
-            {
-                var close = sql.IndexOf("*/", i + 2, StringComparison.Ordinal);
-                if (close < 0)
-                {
-                    return FullyObfuscatedWithPrefix(prefix, maxLength);
-                }
-
-                // Block comments nest in some dialects (Postgres, SQL Server) and not in others, so a second opener before the
-                // first closer makes the comment's extent ambiguous: mask the rest rather than risk exposing text read as SQL.
-                var nested = sql.IndexOf("/*", i + 2, close - i - 1, StringComparison.Ordinal);
-                AppendCapped(sb, '?', maxLength);
-                i = nested >= 0 ? length : close + 2;
-                continue;
-            }
-
-            if (ch == '*' && next == '/')
-            {
-                return FullyObfuscatedWithPrefix(prefix, maxLength);
-            }
-
-            // Oracle alternative quoting: q'[...]', nq'!...!' and friends
-            if (Has(features, SqlDialectFeatures.OracleQuotedStrings) && TryMatchOracleQuote(sql, i, out var oracleQuoteEnd))
-            {
-                AppendCapped(sb, '?', maxLength);
-                i = oracleQuoteEnd;
-                continue;
-            }
-
-            // String literals
-            if (ch == '\'' || (ch == '"' && !Has(features, SqlDialectFeatures.DoubleQuotedIdentifiers)))
-            {
-                i = SkipQuoted(sql, i, Has(features, SqlDialectFeatures.BackslashEscapes), ch);
-                if (i == Unterminated)
-                {
-                    return FullyObfuscatedWithPrefix(prefix, maxLength);
-                }
-
-                AppendCapped(sb, '?', maxLength);
-                continue;
-            }
-
-            // Quoted identifiers are kept verbatim
-            if (ch == '"'
-                || (ch == '`' && Has(features, SqlDialectFeatures.BacktickIdentifiers))
-                || (ch == '[' && Has(features, SqlDialectFeatures.BracketIdentifiers)))
-            {
-                // A doubled closing character is an escaped one: "" in "x", `` in `x`, ]] in [x]
-                var end = SkipQuoted(sql, i, false, ch == '[' ? ']' : ch);
-                if (end == Unterminated)
-                {
-                    return FullyObfuscatedWithPrefix(prefix, maxLength);
-                }
-
-                AppendCapped(sb, sql, i, end - i, maxLength);
-                i = end;
-                continue;
-            }
-
-            // Dollar-quoted strings. A $ followed by a digit is a positional parameter: the $ passes through and the digits become ?.
-            if (ch == '$' && Has(features, SqlDialectFeatures.DollarQuotedStrings) && !char.IsDigit(next))
-            {
-                var tagEnd = DollarTagEnd(sql, i);
-                if (tagEnd == Unterminated)
-                {
-                    return FullyObfuscatedWithPrefix(prefix, maxLength);
-                }
-
-                var tag = sql.Substring(i, tagEnd - i + 1);
-                var close = sql.IndexOf(tag, tagEnd + 1, StringComparison.Ordinal);
-                AppendCapped(sb, '?', maxLength);
-                i = close < 0 ? length : close + tag.Length;
-                continue;
-            }
 
             if (Has(features, SqlDialectFeatures.UuidLiterals) && TryMatchUuid(sql, i, out var uuidEnd))
             {
@@ -195,6 +151,205 @@ public static class SqlLiteralScanner
         }
 
         return sb.ToString(0, Math.Min(sb.Length, maxLength));
+    }
+
+    /// <summary>
+    /// Returns sql with every comment (--, # when HashComments is set, and /* */) replaced by same-length runs of
+    /// spaces. Everything else -- string and identifier-quoted content in particular, even when it contains text
+    /// that looks like a comment delimiter -- is returned completely untouched, so (unlike Obfuscate) this never
+    /// shortens or otherwise rewrites non-comment text and preserves character offsets throughout.
+    ///
+    /// Intended for callers that need to locate real code (e.g. to match a bound parameter's placeholder) without
+    /// being misled by comment text. It's unnecessary to handle a parameter placeholder that happens to appear
+    /// inside a comment specially -- it's simpler and less error-prone to just remove the comment first, since
+    /// comments have no effect on the explain plan.
+    ///
+    /// Returns null when the input cannot be classified with confidence -- an unterminated or ambiguous comment
+    /// (see the nested-block-comment handling in TryClassifyLexeme), or an unterminated string or quoted
+    /// identifier -- mirroring Obfuscate's policy of refusing to guess rather than risk treating code as a
+    /// comment or a comment as code.
+    /// </summary>
+    public static string StripComments(string sql, SqlDialectFeatures features)
+    {
+        if (sql == null)
+        {
+            return null;
+        }
+
+        var length = sql.Length;
+        var sb = new StringBuilder(length);
+        var i = 0;
+
+        while (i < length)
+        {
+            if (TryClassifyLexeme(sql, i, features, out var kind, out var end))
+            {
+                switch (kind)
+                {
+                    case SqlLexemeKind.MaskRestOfQuery:
+                    case SqlLexemeKind.EndOfLineComment:
+                    case SqlLexemeKind.BlockComment:
+                        AppendSpaces(sb, end - i);
+                        i = end;
+                        continue;
+
+                    case SqlLexemeKind.QuotedLiteral:
+                    case SqlLexemeKind.QuotedIdentifier:
+                        sb.Append(sql, i, end - i);
+                        i = end;
+                        continue;
+
+                    case SqlLexemeKind.AmbiguousComment:
+                    case SqlLexemeKind.UnterminatedQuoted:
+                        return null;
+                }
+            }
+
+            sb.Append(sql[i]);
+            i++;
+        }
+
+        return sb.ToString();
+    }
+
+    /// <summary>
+    /// Classifies the comment/quote/ambiguous construct (if any) starting at sql[i], shared verbatim by Obfuscate
+    /// and StripComments so both are governed by the exact same recognition rules. Returns false when sql[i] does
+    /// not start one of those constructs -- ordinary code, including the start of a number, identifier, or UUID,
+    /// none of which this shared step needs to know about (only Obfuscate treats those specially).
+    ///
+    /// Branch order matters here exactly as it did in the original single-method scanner: the rest-of-query mask
+    /// before comments, comments before strings, Oracle q-quotes before other quotes, quotes before $ handling.
+    /// Reordering can desync the scan or leak part of a literal.
+    /// </summary>
+    private static bool TryClassifyLexeme(string sql, int i, SqlDialectFeatures features, out SqlLexemeKind kind, out int end)
+    {
+        var length = sql.Length;
+        var ch = sql[i];
+        var next = i + 1 < length ? sql[i + 1] : '\0';
+
+        if (MasksRestOfQuery(sql, i, ch, next, features))
+        {
+            kind = SqlLexemeKind.MaskRestOfQuery;
+            end = length;
+            return true;
+        }
+
+        // End-of-line comments
+        if ((ch == '-' && next == '-') || (ch == '#' && Has(features, SqlDialectFeatures.HashComments)))
+        {
+            kind = SqlLexemeKind.EndOfLineComment;
+            end = EndOfLine(sql, i);
+            return true;
+        }
+
+        // Block comments
+        if (ch == '/' && next == '*')
+        {
+            var close = sql.IndexOf("*/", i + 2, StringComparison.Ordinal);
+            if (close < 0)
+            {
+                kind = SqlLexemeKind.AmbiguousComment;
+                end = length;
+                return true;
+            }
+
+            // Block comments nest in some dialects (Postgres, SQL Server) and not in others, so a second opener before the
+            // first closer makes the comment's extent ambiguous: mask the rest rather than risk exposing text read as SQL.
+            var nested = sql.IndexOf("/*", i + 2, close - i - 1, StringComparison.Ordinal);
+            if (nested >= 0)
+            {
+                kind = SqlLexemeKind.AmbiguousComment;
+                end = length;
+                return true;
+            }
+
+            kind = SqlLexemeKind.BlockComment;
+            end = close + 2;
+            return true;
+        }
+
+        if (ch == '*' && next == '/')
+        {
+            kind = SqlLexemeKind.AmbiguousComment;
+            end = length;
+            return true;
+        }
+
+        // Oracle alternative quoting: q'[...]', nq'!...!' and friends
+        if (Has(features, SqlDialectFeatures.OracleQuotedStrings) && TryMatchOracleQuote(sql, i, out var oracleQuoteEnd))
+        {
+            kind = SqlLexemeKind.QuotedLiteral;
+            end = oracleQuoteEnd;
+            return true;
+        }
+
+        // String literals
+        if (ch == '\'' || (ch == '"' && !Has(features, SqlDialectFeatures.DoubleQuotedIdentifiers)))
+        {
+            var strEnd = SkipQuoted(sql, i, Has(features, SqlDialectFeatures.BackslashEscapes), ch);
+            if (strEnd == Unterminated)
+            {
+                kind = SqlLexemeKind.UnterminatedQuoted;
+                end = length;
+                return true;
+            }
+
+            kind = SqlLexemeKind.QuotedLiteral;
+            end = strEnd;
+            return true;
+        }
+
+        // Quoted identifiers
+        if (ch == '"'
+            || (ch == '`' && Has(features, SqlDialectFeatures.BacktickIdentifiers))
+            || (ch == '[' && Has(features, SqlDialectFeatures.BracketIdentifiers)))
+        {
+            // A doubled closing character is an escaped one: "" in "x", `` in `x`, ]] in [x]
+            var idEnd = SkipQuoted(sql, i, false, ch == '[' ? ']' : ch);
+            if (idEnd == Unterminated)
+            {
+                kind = SqlLexemeKind.UnterminatedQuoted;
+                end = length;
+                return true;
+            }
+
+            kind = SqlLexemeKind.QuotedIdentifier;
+            end = idEnd;
+            return true;
+        }
+
+        // Dollar-quoted strings. A $ followed by a digit is a positional parameter, not a quote opener.
+        if (ch == '$' && Has(features, SqlDialectFeatures.DollarQuotedStrings) && !char.IsDigit(next))
+        {
+            var tagEnd = DollarTagEnd(sql, i);
+            if (tagEnd == Unterminated)
+            {
+                // Not really a comment, but the same "cannot safely say what follows" situation, so the two callers
+                // react to it exactly as they would an ambiguous comment.
+                kind = SqlLexemeKind.AmbiguousComment;
+                end = length;
+                return true;
+            }
+
+            var tag = sql.Substring(i, tagEnd - i + 1);
+            var close = sql.IndexOf(tag, tagEnd + 1, StringComparison.Ordinal);
+            kind = SqlLexemeKind.QuotedLiteral;
+            end = close < 0 ? length : close + tag.Length;
+            return true;
+        }
+
+        kind = default;
+        end = i;
+        return false;
+    }
+
+    private static void AppendSpaces(StringBuilder sb, int count)
+    {
+        for (var n = 0; n < count; n++)
+        {
+            sb.Append(' ');
+        }
     }
 
     private static string FullyObfuscatedWithPrefix(string prefix, int maxLength)

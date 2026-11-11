@@ -12,6 +12,7 @@ public class MsSqlExerciserBase
     protected const string SelectPersonByLastNameMsSql = "SELECT * FROM NewRelic.dbo.TeamMembers WHERE LastName = 'Doe'";
     protected const string SelectPersonByParameterizedFirstNameMsSql = "SELECT * FROM NewRelic.dbo.TeamMembers WHERE FirstName = @FN";
     protected const string SelectPersonByParameterizedLastNameMsSql = "SELECT * FROM NewRelic.dbo.TeamMembers WHERE LastName = @LN";
+    protected const string SelectPersonByParameterizedFirstNameWithCommentMsSql = "SELECT * FROM NewRelic.dbo.TeamMembers WHERE FirstName = @FN -- just a plain comment";
     protected const string InsertPersonMsSql = "INSERT INTO {0} (FirstName, LastName, Email) VALUES('Testy', 'McTesterson', 'testy@mctesterson.com')";
     protected const string DeletePersonMsSql = "DELETE FROM {0} WHERE Email = 'testy@mctesterson.com'";
     protected const string CountPersonMsSql = "SELECT COUNT(*) FROM {0} WITH(nolock)";

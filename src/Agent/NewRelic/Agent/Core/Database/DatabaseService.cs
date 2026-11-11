@@ -47,6 +47,24 @@ public class DatabaseService : ConfigurationBasedService, IDatabaseService
     }
 
     /// <summary>
+    /// Returns sql with every comment replaced by a same-length run of spaces, using the given vendor's dialect
+    /// rules, leaving everything else (including string-literal content that merely looks like a comment)
+    /// untouched. For callers that need to locate real code -- e.g. matching a bound parameter's own placeholder --
+    /// without being misled by comment text that happens to contain lookalike tokens.
+    ///
+    /// Returns null when the input cannot be classified with confidence (an unterminated or ambiguous comment,
+    /// or an unterminated string or quoted identifier). Callers should treat null as "do not proceed" rather
+    /// than falling back to the original sql.
+    /// </summary>
+    /// <param name="sql"></param>
+    /// <param name="vendor"></param>
+    /// <returns></returns>
+    public string StripSqlComments(string sql, DatastoreVendor vendor)
+    {
+        return SqlLiteralScanner.StripComments(sql, SqlDialects.ForVendor(vendor));
+    }
+
+    /// <summary>
     /// SQL obfuscation is expensive. It is performed when a transaction has ended in the creation of SQL traces and transaction traces.
     /// Whether we obfuscate SQL for traces depends on configuration. We reduce the number of times SQL obfuscation is performed by caching
     /// results.
