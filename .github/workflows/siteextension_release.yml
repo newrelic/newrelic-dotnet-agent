@@ -41,11 +41,9 @@ jobs:
           key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/Directory.Packages.props') }}
           restore-keys: ${{ runner.os }}-nuget-
 
-      - name: Install latest .NET 10 SDK
-        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
-        with:
-          dotnet-version: '10.0.x'
-          dotnet-quality: 'ga'
+      # ArtifactBuilder targets the pinned SDK's .NET version, so build and run it with that SDK.
+      - name: Install pinned .NET SDK
+        uses: ./.github/actions/setup-pinned-dotnet
 
       - name: Run ArtifactBuilder
         run: |

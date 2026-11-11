@@ -22,13 +22,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-2022]
+        os: [ubuntu-latest, windows-2025-vs2026]
     steps:
       - name: Harden Runner
-        if: runner.os == 'Linux'
         uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
         with:
-          disable-sudo: true
+          disable-sudo: ${{ runner.os == 'Linux' }}
           egress-policy: audit
 
       - name: Checkout

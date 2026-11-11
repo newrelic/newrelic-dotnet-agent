@@ -205,7 +205,7 @@ jobs:
   run-artifactbuilder:
     needs: [create-package-rpm, create-package-deb]
     name: Run ArtifactBuilder
-    runs-on: windows-2022
+    runs-on: windows-2025-vs2026
     permissions:
       contents: read
 

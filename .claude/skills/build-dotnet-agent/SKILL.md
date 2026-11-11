@@ -31,7 +31,7 @@ Debug is default -- never pass `-c Release`. It's slow; run in background or tee
   ```
 - **`NewRelic.Agent.Extensions.Tests`:** `dotnet test` on the csproj silently no-ops via VSTestTask -- test the built DLL instead (path in root CLAUDE.md).
 - **Profiler** (`Profiler.sln`, `src/Agent/NewRelic/Profiler/`, only when changing the profiler): build with `build.ps1`, never raw MSBuild; Debug; Linux build needs Docker Desktop.
-- **Build tools stay on latest LTS** (`net10.0`): `build/*` tools (ArtifactBuilder, Dotty, etc.) and `AssemblyModifier`. When evaluating a preview .NET, retarget agent core + tests, not the build tools.
+- **Build tools target the .NET version of the SDK CI is pinned to** (`.github/dotnet-sdk/global.json`, currently `net11.0`), not the LTS. `ArtifactBuilder` and `AssemblyModifier` (both run inside the pinned-SDK release jobs) already do. The other `build/*` tools (Dotty, NugetValidator, ReleaseNotesBuilder, ...) are still `net10.0` because their workflows install a `10.0.x` SDK; retarget one together with its workflow. When evaluating a preview .NET, retarget agent core + tests, not the build tools.
 
 ## Agent home directories
 

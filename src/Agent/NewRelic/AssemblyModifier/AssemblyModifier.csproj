@@ -3,10 +3,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <TargetFramework>net10.0</TargetFramework>
-    <!-- Run on a newer runtime when no .NET 10 runtime is installed, e.g. in CI, which installs
-         only the pinned .NET SDK (see .github/dotnet-sdk/global.json). -->
-    <RollForward>Major</RollForward>
+    <TargetFramework>net11.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
