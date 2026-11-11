@@ -8,7 +8,6 @@ namespace NewRelic.Agent.IntegrationTestHelpers;
 /// </summary>
 public static class Tfm
 {
-    // On the .NET 11 preview eval branch, NetLatest is set to net11.0, and NetOldest is set to net10.0.
     public const string NetOldest = "net10.0";
     public const string NetLatest = "net11.0";
 
