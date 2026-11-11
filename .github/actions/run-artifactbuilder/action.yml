@@ -13,12 +13,10 @@ inputs:
 runs:
   using: composite
   steps:
-    # Builds ArtifactBuilder with the exact SDK in .github/dotnet-sdk/global.json.
-    # The .NET 10 SDK only supplies the runtime ArtifactBuilder (net10.0) runs on.
+    # Installs the exact .NET SDK pinned in .github/dotnet-sdk/global.json and selects it
+    # for the rest of the job; package.ps1 builds and runs ArtifactBuilder with it.
     - name: Install pinned .NET SDK
       uses: ./.github/actions/setup-pinned-dotnet
-      with:
-        extra-dotnet-versions: '10.0.x'
 
     - name: Download Agent Home Folders
       uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2

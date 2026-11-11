@@ -37,8 +37,6 @@ jobs:
       - name: Setup pinned .NET SDK
         id: setup
         uses: ./.github/actions/setup-pinned-dotnet
-        with:
-          extra-dotnet-versions: '10.0.x'
 
       - name: Pinned SDK is selected below the workspace root too
         shell: pwsh
@@ -50,6 +48,11 @@ jobs:
           $got = (dotnet --version | Out-String).Trim()
           Write-Output "pin=$want output=$env:SETUP_VERSION dotnet --version=$got"
           if ($env:SETUP_VERSION -ne $want -or $got -ne $want) { exit 1 }
+          $sdks = @(dotnet --list-sdks)
+          if ($sdks.Count -ne 1 -or $sdks[0] -notlike "$want *") {
+            Write-Output "::error::Expected only the pinned SDK on the dotnet path, found: $($sdks -join '; ')"
+            exit 1
+          }
 
       - name: Running the action again in the same job succeeds
         uses: ./.github/actions/setup-pinned-dotnet

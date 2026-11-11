@@ -1,13 +1,14 @@
 name: Setup Pinned .NET SDK
 description: >
-  Installs the exact .NET SDK named in a global.json-format pin file, copies
-  that file to the workspace root for the rest of the job so the dotnet host
-  selects that SDK, and fails the job unless `dotnet --version` reports the
-  pinned version. The pin file lives outside the repository root (by default
-  .github/dotnet-sdk/global.json) so local developer builds are unaffected.
-  Reusable from other repositories: the pin file path is relative to the
-  caller's workspace, and the caller must check out its repository first.
-  Runs on Windows, Linux and macOS runners.
+  Installs the exact .NET SDK named in a global.json-format pin file into a
+  job-private directory (so the runner image's preinstalled SDKs and runtimes
+  are not on the dotnet path), copies the pin file to the workspace root for
+  the rest of the job so the dotnet host selects that SDK, and fails the job
+  unless `dotnet --version` reports the pinned version. The pin file lives
+  outside the repository root (by default .github/dotnet-sdk/global.json) so
+  local developer builds are unaffected. Reusable from other repositories: the
+  pin file path is relative to the caller's workspace, and the caller must
+  check out its repository first. Tested on Windows and Linux runners.
 
 inputs:
   global-json-file:
@@ -17,13 +18,6 @@ inputs:
       ("disable" is recommended), otherwise actions/setup-dotnet floats.
     required: false
     default: .github/dotnet-sdk/global.json
-  extra-dotnet-versions:
-    description: >
-      Optional newline-separated extra SDK versions (e.g. 10.0.x) to install
-      before the pinned SDK, for jobs that run tools or tests on an older
-      runtime. These never build: the root global.json selects the pinned SDK.
-    required: false
-    default: ''
 
 outputs:
   dotnet-version:
@@ -66,16 +60,16 @@ runs:
           exit 1
         }
 
+        # A job-private install directory keeps the image's preinstalled SDKs and
+        # runtimes off the dotnet path, so tools built for an older runtime must
+        # roll forward to the pinned SDK's runtime instead of using the image's.
+        # setup-dotnet installs here and points PATH and DOTNET_ROOT at it.
+        $installDir = Join-Path $env:RUNNER_TEMP 'dotnet-pinned'
+        "DOTNET_INSTALL_DIR=$installDir" >> $env:GITHUB_ENV
+
         "path=$pinPath" >> $env:GITHUB_OUTPUT
         "version=$version" >> $env:GITHUB_OUTPUT
-        Write-Output "Pinned .NET SDK: $version (from $env:PIN_FILE)"
-
-    - name: Install extra .NET SDKs
-      if: inputs.extra-dotnet-versions != ''
-      uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
-      with:
-        dotnet-version: ${{ inputs.extra-dotnet-versions }}
-        skip-lts-prepass: true
+        Write-Output "Pinned .NET SDK: $version (from $env:PIN_FILE), installing to $installDir"
 
     - name: Install pinned .NET SDK
       uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
@@ -93,8 +87,11 @@ runs:
       run: |
         Copy-Item -LiteralPath $env:PIN_PATH -Destination (Join-Path $env:GITHUB_WORKSPACE 'global.json') -Force
 
+        Write-Output "dotnet on PATH: $((Get-Command dotnet).Source)"
         Write-Output 'Installed SDKs:'
         dotnet --list-sdks
+        Write-Output 'Installed runtimes:'
+        dotnet --list-runtimes
 
         $actual = (dotnet --version | Out-String).Trim()
         if ($LASTEXITCODE -ne 0 -or $actual -ne $env:PINNED_VERSION) {
