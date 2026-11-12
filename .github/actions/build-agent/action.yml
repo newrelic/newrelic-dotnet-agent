@@ -4,6 +4,14 @@ description: >
   NewRelic.Agent.Core.dll, and uploads the six agent home directories as the
   "homefolders" artifact. The caller must check out the repository first.
 
+inputs:
+  upload-homefolders:
+    description: >
+      'false' to skip the "homefolders" upload, so the caller can sign the binaries
+      first and then upload them with ./.github/actions/upload-homefolders.
+    required: false
+    default: 'true'
+
 outputs:
   agent-version:
     description: 'FileVersion of the built NewRelic.Agent.Core.dll, e.g. 10.49.0.0'
@@ -37,15 +45,6 @@ runs:
         echo "version=$agentVersion" >> $env:GITHUB_OUTPUT
       shell: powershell
         
-    - name: Archive FullAgent Home folders
-      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-      with:
-        name: homefolders
-        path: |
-          ${{ github.workspace }}\src\Agent\newrelichome_x64
-          ${{ github.workspace }}\src\Agent\newrelichome_x64_coreclr
-          ${{ github.workspace }}\src\Agent\newrelichome_x64_coreclr_linux
-          ${{ github.workspace }}\src\Agent\newrelichome_arm64_coreclr_linux
-          ${{ github.workspace }}\src\Agent\newrelichome_x86
-          ${{ github.workspace }}\src\Agent\newrelichome_x86_coreclr
-        if-no-files-found: error
+    - name: Upload FullAgent Home folders
+      if: inputs.upload-homefolders != 'false'
+      uses: ./.github/actions/upload-homefolders

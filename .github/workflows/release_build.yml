@@ -1,7 +1,8 @@
 name: Release Build
 
-# Builds the signed, deployable agent artifacts. This is the only workflow that holds the code
-# signing certificate and the RPM GPG key: both live in the protected "release" environment,
+# Builds the signed, deployable agent artifacts: New Relic's Windows binaries and the MSIs are
+# Authenticode-signed and timestamped, the RPM is GPG-signed. This is the only workflow that holds
+# the code signing certificate and the RPM GPG key: both live in the protected "release" environment,
 # which accepts only main and v* tags and requires a second team member's approval.
 # deploy_agent.yml deploys the "deploy-artifacts" of a successful run of this workflow.
 # all_solutions.yml builds the same packages unsigned on every PR, through the same actions.
@@ -44,12 +45,16 @@ jobs:
           fetch-depth: 0
           filter: blob:none
 
+      # The home folders are uploaded only after their binaries are signed, below.
       - name: Build agent
         id: build-agent
         uses: ./.github/actions/build-agent
+        with:
+          upload-homefolders: 'false'
 
-      # Imported in-process so the passphrase never reaches a command line. The PFX lives in
-      # RUNNER_TEMP only for the import; signtool /a then picks the cert from CurrentUser\My.
+      # Imported after the FullAgent.sln build, so that build never runs with the private key in
+      # the store. Imported in-process so the passphrase never reaches a command line. The PFX
+      # lives in RUNNER_TEMP only for the import; signtool then picks the cert from CurrentUser\My.
       - name: Install Code Signing Certificate
         id: install_cert
         env:
@@ -68,6 +73,27 @@ jobs:
           Write-Host "Imported $(@($imported).Count) certificate(s) into Cert:\CurrentUser\My"
           echo "thumbprints=$((@($imported) | ForEach-Object Thumbprint) -join ',')" >> $env:GITHUB_OUTPUT
         shell: powershell
+
+      # Signs New Relic's own binaries in the home folders (and the public API assembly in
+      # src/_build) before anything packages them, so the MSI, ZIP, NuGet and Linux packages all
+      # carry signed files. See build/Scripts/Sign-AgentBinaries.ps1 for the selection.
+      - name: Sign agent binaries
+        env:
+          THUMBPRINTS: ${{ steps.install_cert.outputs.thumbprints }}
+        run: |
+          & "${{ github.workspace }}\build\Scripts\Sign-AgentBinaries.ps1" -Action Sign -CertificateThumbprints $env:THUMBPRINTS
+        shell: powershell
+
+      # Fails the job unless every selected file has a valid, timestamped signature from the release certificate.
+      - name: Verify agent binary signatures
+        env:
+          THUMBPRINTS: ${{ steps.install_cert.outputs.thumbprints }}
+        run: |
+          & "${{ github.workspace }}\build\Scripts\Sign-AgentBinaries.ps1" -Action Verify -CertificateThumbprints $env:THUMBPRINTS
+        shell: powershell
+
+      - name: Upload signed home folders
+        uses: ./.github/actions/upload-homefolders
 
       - name: Build MSI installers (signed)
         uses: ./.github/actions/build-msi

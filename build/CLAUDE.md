@@ -229,8 +229,40 @@ re-run step 1.
 
 ## Code signing
 
-Windows profiler DLL and MSI are Authenticode-signed; Linux RPMs are
-GPG-signed. Production keys live in the secret vault and, in CI, only in the
-`release` GitHub environment (see Signed vs. unsigned builds above). To build
-the MSI locally without a certificate, pass `-p:SkipSigning=true`. `build/keys/` is present for local work but its contents
-are gitignored.
+**Authenticode (release builds only).** In `release_build.yml`'s
+`build-fullagent-msi` job, after `FullAgent.sln` is built and before the MSI
+build and the `homefolders` upload,
+[Scripts/Sign-AgentBinaries.ps1](Scripts/Sign-AgentBinaries.ps1) signs New
+Relic's own Windows binaries, then verifies them:
+- every `NewRelic*.dll` / `NewRelic*.exe` in all six `src/Agent/newrelichome_*`
+  dirs: `NewRelic.Agent.Core.dll`, `NewRelic.Agent.Extensions.dll`,
+  `NewRelic.Api.Agent.dll` (.NET homes), the `NewRelic.Providers.*` extension
+  DLLs, and the Windows `NewRelic.Profiler.dll` (from the
+  `NewRelic.Agent.Internal.Profiler` package, unsigned there);
+- `src/_build/AnyCPU-Release/NewRelic.Api.Agent/{net462,netstandard2.0}/NewRelic.Api.Agent.dll`,
+  which ArtifactBuilder and the MSI take from the build output.
+
+So the MSI, ZIPs, NuGet packages, deb, rpm and tar.gz all ship signed copies.
+Any other PE file in a home dir fails the script unless it is on its
+third-party list (today only `grpc_csharp_ext.x64/x86.dll`, signed by their
+publisher). Verification fails the job unless each file has a `Valid`
+signature from the release certificate and a timestamp. The MSIs are signed
+by the `SignInstaller` target in `src/Agent/MsiInstaller/Installer/Installer.csproj`.
+
+**Timestamps.** All Authenticode signatures carry an RFC 3161 timestamp
+(`/tr http://timestamp.digicert.com /td SHA256`, the issuing CA's server), so
+they stay valid after the certificate expires. Signatures made before this
+was added have no timestamp and stop validating when the certificate does.
+
+**Not Authenticode-signed:** the Linux `libNewRelicProfiler.so` (not a PE
+file), third-party DLLs in the home dirs, the `NewRelic.Agent.Internal.Profiler`
+NuGet package's own copies of the profiler (`build_profiler.yml`), and the
+MSI's embedded custom-action DLL (covered by the MSI's signature). Linux RPMs
+are GPG-signed.
+
+Production keys live in the secret vault and, in CI, only in the `release`
+GitHub environment (see Signed vs. unsigned builds above). Unsigned builds
+skip all of this: `all_solutions.yml` never imports a certificate or runs the
+signing script, and passes `-p:SkipSigning=true` to the MSI build. Do the
+same to build the MSI locally without a certificate. `build/keys/` is present
+for local work but its contents are gitignored.

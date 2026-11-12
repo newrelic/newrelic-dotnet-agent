@@ -1,0 +1,22 @@
+name: Upload Agent Home Folders
+description: >
+  Uploads the six agent home directories under src/Agent as the "homefolders"
+  artifact, which the packaging and test jobs download. build-agent runs this
+  itself unless told not to; release_build.yml runs it after signing the
+  binaries, so every package built from the artifact carries signed files.
+
+runs:
+  using: composite
+  steps:
+    - name: Archive FullAgent Home folders
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+      with:
+        name: homefolders
+        path: |
+          ${{ github.workspace }}\src\Agent\newrelichome_x64
+          ${{ github.workspace }}\src\Agent\newrelichome_x64_coreclr
+          ${{ github.workspace }}\src\Agent\newrelichome_x64_coreclr_linux
+          ${{ github.workspace }}\src\Agent\newrelichome_arm64_coreclr_linux
+          ${{ github.workspace }}\src\Agent\newrelichome_x86
+          ${{ github.workspace }}\src\Agent\newrelichome_x86_coreclr
+        if-no-files-found: error
