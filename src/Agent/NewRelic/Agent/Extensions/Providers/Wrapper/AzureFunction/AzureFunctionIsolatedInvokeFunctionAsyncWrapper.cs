@@ -87,9 +87,12 @@ public class AzureFunctionIsolatedInvokeAsyncWrapper : IWrapper
             transaction.SetRequestMethod(functionDetails.RequestMethod);
             transaction.SetUri(functionDetails.RequestPath);
 
-            if (functionDetails.Headers?.Count != 0)
+            if (functionDetails.Headers is { Count: > 0 })
             {
                 transaction.AcceptDistributedTraceHeaders(functionDetails.Headers, GetHeaderValue, TransportType.HTTP);
+
+                var keysToCapture = agent.Configuration.AllowAllRequestHeaders ? functionDetails.Headers.Keys : Statics.DefaultCaptureHeaders;
+                transaction.SetRequestHeaders(functionDetails.Headers, keysToCapture, static (h, k) => h.TryGetValue(k, out var v) ? v?.ToString() : null);
             }
         }
         // save for later

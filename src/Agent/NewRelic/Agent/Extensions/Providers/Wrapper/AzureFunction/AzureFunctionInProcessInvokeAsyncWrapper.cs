@@ -145,9 +145,12 @@ public class AzureFunctionInProcessInvokeAsyncWrapper : IWrapper
             transaction.SetRequestMethod(requestMethod);
             transaction.SetUri(requestPath);
 
-            if (headers?.Count != 0)
+            if (headers is { Count: > 0 })
             {
                 transaction.AcceptDistributedTraceHeaders(headers, GetHeaderValueFromIDictionary, TransportType.HTTP);
+
+                var keysToCapture = agent.Configuration.AllowAllRequestHeaders ? headers.Keys : Statics.DefaultCaptureHeaders;
+                transaction.SetRequestHeaders(headers, keysToCapture, static (h, k) => h.TryGetValue(k, out var v) ? v.ToString() : null);
             }
 
             return true;
