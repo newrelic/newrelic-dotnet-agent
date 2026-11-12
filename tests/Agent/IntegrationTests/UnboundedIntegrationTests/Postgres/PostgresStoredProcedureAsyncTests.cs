@@ -39,10 +39,10 @@ public abstract class PostgresSqlStoredProcedureAsyncTestsBase<TFixture> : NewRe
                 configModifier.ForceTransactionTraces()
                     .SetLogLevel("finest");
 
-                CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "transactionTracer" }, "explainEnabled", "true");
-                CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "transactionTracer" }, "recordSql", "raw");
-                CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "transactionTracer" }, "explainThreshold", "1");
-                CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "datastoreTracer", "queryParameters" }, "enabled", "true");
+                configModifier.SetTransactionTracerExplainEnabled(true);
+                configModifier.SetTransactionTracerRecordSql("raw");
+                configModifier.ForceSqlTraces();
+                configModifier.SetDatastoreTracerQueryParametersEnabled(true);
             },
             exerciseApplication: () =>
             {

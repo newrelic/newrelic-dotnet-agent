@@ -40,10 +40,10 @@ public class MsSqlQueryParamCommentTests : NewRelicIntegrationTest<ConsoleDynami
                 configModifier.ForceTransactionTraces();
                 configModifier.SetLogLevel("finest");       //This has to stay at finest to ensure parameter check security
 
-                CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "transactionTracer" }, "explainEnabled", "true");
-                CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "transactionTracer" }, "explainThreshold", "1");
-                CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "transactionTracer" }, "recordSql", "raw");
-                CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "datastoreTracer", "queryParameters" }, "enabled", "true");
+                configModifier.SetTransactionTracerExplainEnabled(true);
+                configModifier.ForceSqlTraces();
+                configModifier.SetTransactionTracerRecordSql("raw");
+                configModifier.SetDatastoreTracerQueryParametersEnabled(true);
 
                 var instrumentationFilePath = Path.Combine(fixture.DestinationNewRelicExtensionsDirectoryPath, "NewRelic.Providers.Wrapper.Sql.Instrumentation.xml");
                 CommonUtils.SetAttributeOnTracerFactoryInNewRelicInstrumentation(instrumentationFilePath, "", "enabled", "true");
