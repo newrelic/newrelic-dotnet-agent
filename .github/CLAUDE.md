@@ -27,3 +27,8 @@ upstream release cannot change what CI runs. OpenSSF Scorecard's
   "simplify" a SHA pin back to a tag.
 - Unpinned `apt-get` and `choco` installs remain in some workflows. They are
   known gaps, not a precedent. Do not add more.
+- `.github/actions/setup-pinned-dotnet` is also used by
+  `newrelic/newrelic-logenricher-dotnet`, pinned to one of this repo's
+  commits; its Dependabot moves that pin with this repo's release tags.
+  Keep the action's inputs and outputs backward compatible. A breaking
+  change needs a matching pull request there.

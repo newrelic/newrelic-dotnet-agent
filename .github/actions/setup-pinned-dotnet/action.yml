@@ -1,3 +1,6 @@
+# Also used by newrelic/newrelic-logenricher-dotnet, pinned to a commit of this
+# repository; its Dependabot moves the pin with this repository's release tags.
+# Keep inputs and outputs backward compatible, or update that repository too.
 name: Setup Pinned .NET SDK
 description: >
   Installs the exact .NET SDK named in a global.json-format pin file into a
