@@ -354,13 +354,13 @@ public class SqlLiteralScannerTests
     }
 
     [Test]
-    public void StripComments_MySqlDashDashWithoutTrailingWhitespace_MasksRestRatherThanTreatingItAsAComment()
+    public void StripComments_MySqlDashDashWithoutTrailingWhitespace_ReturnsNull()
     {
         // MySQL requires "--" to be followed by whitespace to be a comment ("5--1" is 5 - (-1), arithmetic, not a
-        // comment) -- so the shared MasksRestOfQuery check (also used by Obfuscate) intentionally blanks from that
-        // point on instead of either treating it as a comment or trying to correctly parse the arithmetic.
-        var sql = "5--1";
-        AssertStripped(sql, MySql, "5" + new string(' ', sql.Length - 1));
+        // comment) -- so the shared MasksRestOfQuery check (also used by Obfuscate) flags this as live SQL, not a
+        // comment. Blanking live SQL with spaces would corrupt real code, so StripComments must return null rather
+        // than either treating it as a comment or trying to correctly parse the arithmetic.
+        Assert.That(SqlLiteralScanner.StripComments("5--1", MySql), Is.Null);
     }
 
     [Test]
@@ -408,6 +408,17 @@ public class SqlLiteralScannerTests
         Assert.That(SqlLiteralScanner.StripComments(sql, Ms), Is.Null);
     }
 
+    // A MaskRestOfQuery construct is live SQL the scanner cannot safely tokenize further -- not a comment -- so
+    // blanking it with spaces (as StripComments does for actual comments) would corrupt real code instead of
+    // just removing a comment. These must return null, the same as the unterminated/ambiguous cases above. The
+    // MySQL "--" and Default-dialect "#" MaskRestOfQuery cases are covered by the tests above.
+    [TestCase("data #>> '{a}' FROM t WHERE id = 5", Pg)] // Postgres # is the XOR/JSONB operator, never a comment.
+    [TestCase("SELECT $$a$$ WHERE id = 5", Def)] // Default-dialect $$ opens a dollar-quoted string, not recognized as a quote by this dialect.
+    public void StripComments_MaskRestOfQuery_ReturnsNull(string sql, SqlDialectFeatures features)
+    {
+        Assert.That(SqlLiteralScanner.StripComments(sql, features), Is.Null);
+    }
+
     [Test]
     public void StripComments_StringLiteralContainingCommentLookalikeText_IsKeptVerbatim()
     {
@@ -429,10 +440,12 @@ public class SqlLiteralScannerTests
     }
 
     [Test]
-    public void StripComments_DefaultDialectHashFollowedByWhitespace_MasksRestOfQuery()
+    public void StripComments_DefaultDialectHashFollowedByWhitespace_ReturnsNull()
     {
-        var sql = "a #  comment\nb";
-        AssertStripped(sql, Def, "a " + new string(' ', sql.Length - "a ".Length));
+        // A # followed by whitespace in the Default dialect may be a MySQL/Oracle comment, but it isn't known to
+        // be one, so MasksRestOfQuery flags it as unclassifiable live SQL rather than an actual comment. Blanking
+        // it with spaces would risk corrupting real code, so StripComments must return null instead.
+        Assert.That(SqlLiteralScanner.StripComments("a #  comment\nb", Def), Is.Null);
     }
 
     [Test]

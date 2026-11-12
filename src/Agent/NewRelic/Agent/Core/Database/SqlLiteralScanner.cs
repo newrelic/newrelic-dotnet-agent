@@ -181,9 +181,13 @@ public static class SqlLiteralScanner
     /// comments have no effect on the explain plan.
     ///
     /// Returns null when the input cannot be classified with confidence -- an unterminated or ambiguous comment
-    /// (see the nested-block-comment handling in TryClassifyLexeme), or an unterminated string or quoted
-    /// identifier -- mirroring Obfuscate's policy of refusing to guess rather than risk treating code as a
-    /// comment or a comment as code.
+    /// (see the nested-block-comment handling in TryClassifyLexeme), an unterminated string or quoted identifier,
+    /// or a construct the dialect reads as live SQL that this scanner cannot safely tokenize further (<see
+    /// cref="SqlLexemeKind.MaskRestOfQuery"/>, e.g. a Postgres # operator or a MySQL "--" not followed by
+    /// whitespace) -- mirroring Obfuscate's policy of refusing to guess rather than risk treating code as a
+    /// comment or a comment as code. Unlike Obfuscate, which may mask a MaskRestOfQuery construct and still return
+    /// a usable (over-obfuscated) string, StripComments cannot: blanking it with spaces would blank real SQL, not
+    /// a comment, so it must fail outright instead.
     /// </summary>
     public static string StripComments(string sql, SqlDialectFeatures features)
     {
@@ -202,7 +206,6 @@ public static class SqlLiteralScanner
             {
                 switch (kind)
                 {
-                    case SqlLexemeKind.MaskRestOfQuery:
                     case SqlLexemeKind.EndOfLineComment:
                     case SqlLexemeKind.BlockComment:
                         AppendSpaces(sb, end - i);
@@ -215,6 +218,7 @@ public static class SqlLiteralScanner
                         i = end;
                         continue;
 
+                    case SqlLexemeKind.MaskRestOfQuery:
                     case SqlLexemeKind.NestedComment:
                     case SqlLexemeKind.AmbiguousComment:
                     case SqlLexemeKind.UnterminatedQuoted:
