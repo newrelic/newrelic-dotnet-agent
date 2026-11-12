@@ -12,6 +12,22 @@ namespace NewRelic.Agent.Extensions.Parsing;
 
 public static class SqlServerExplainPlanActions
 {
+    private const string SqlParamPrefix = "@";
+
+    private static readonly List<string> quotableTypes = new List<string>() {
+        "String",
+        "StringFixedLength",
+        "DateTime",
+        "DateTime2",
+        "Date",
+        "Time",
+        "AnsiString",
+        "AnsiStringFixedLength",
+        "Xml",
+        "Guid",
+        "DateTimeOffset",
+    };
+
     /// <param name="resources">The cloned <see cref="IDbCommand"/> (and its cloned connection) to explain.</param>
     /// <param name="stripSqlComments">
     /// Strips comments from a SQL string (see <see cref="InlineParametersForCompileOnlyExplain"/> for why this
@@ -196,22 +212,6 @@ public static class SqlServerExplainPlanActions
         command.CommandText = sql;
         return true;
     }
-
-    private const string SqlParamPrefix = "@";
-
-    private static readonly List<string> quotableTypes = new List<string>() {
-        "String",
-        "StringFixedLength",
-        "DateTime",
-        "DateTime2",
-        "Date",
-        "Time",
-        "AnsiString",
-        "AnsiStringFixedLength",
-        "Xml",
-        "Guid",
-        "DateTimeOffset",
-    };
 
     private static string QuoteString(string str)
     {

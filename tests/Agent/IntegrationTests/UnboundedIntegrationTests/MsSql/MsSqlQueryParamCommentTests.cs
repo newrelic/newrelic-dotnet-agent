@@ -17,8 +17,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql;
 // Verifies that a SQL comment doesn't break parameter inlining or explain plan generation.
 public class MsSqlQueryParamCommentTests : NewRelicIntegrationTest<ConsoleDynamicMethodFixtureCoreLatest>
 {
-    private readonly ConsoleDynamicMethodFixtureCoreLatest _fixture;
     private const string TransactionName = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql.MicrosoftDataSqlClientExerciser/MsSqlWithParameterizedQueryAndComment";
+    private readonly ConsoleDynamicMethodFixtureCoreLatest _fixture;
 
     public MsSqlQueryParamCommentTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture)
     {
