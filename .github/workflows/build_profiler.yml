@@ -475,11 +475,8 @@ jobs:
           cat ${{ github.workspace }}/src/Agent/NewRelic/Home/_temp > ${{ github.workspace }}/src/Agent/NewRelic/Home/Home.csproj &&
           rm -f ${{ github.workspace }}/src/Agent/NewRelic/Home/_temp
 
-      - name: Install latest .NET 10 SDK
-        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
-        with:
-          dotnet-version: '10.0.x'
-          dotnet-quality: 'ga'
+      - name: Setup pinned .NET SDK
+        uses: ./.github/actions/setup-pinned-dotnet
 
       # nuget.org repository-signs the package, so the lock file's content hash must come from
       # nuget.org itself: retry until the new version is indexed there.

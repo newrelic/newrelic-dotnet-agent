@@ -17,11 +17,11 @@
       },
       "NuGet.Protocol": {
         "type": "Direct",
-        "requested": "[7.9.0, )",
-        "resolved": "7.9.0",
-        "contentHash": "Ts0qPUGJYfFHhlNSSWWrkaSG6++WqS6ry32WmQA7eNdzTc9SumyhDflITcusBYkT6pEQD5BI1UEByakciV3s0A==",
+        "requested": "[8.0.0, )",
+        "resolved": "8.0.0",
+        "contentHash": "qtjj8XVh9RxYwZWZ6TkHaOaemipLG1azASbFQLh44b3AlMoVhejbWESs1k2pUwpLoNYi5SccfujNqm/dh13zqA==",
         "dependencies": {
-          "NuGet.Packaging": "7.9.0"
+          "NuGet.Packaging": "8.0.0"
         }
       },
       "Serilog": {
@@ -41,15 +41,18 @@
       },
       "System.Formats.Asn1": {
         "type": "Direct",
-        "requested": "[10.0.14, )",
-        "resolved": "10.0.14",
-        "contentHash": "PpCyuuHlcc9Xbs/0lfGZGr3ohlYpyhj7/dA+K3DZe7NSY9WxuLXXCitUq5cVah6Ujgi4Bp8gI7x46fFy6FiTUw=="
+        "requested": "[11.0.0, )",
+        "resolved": "11.0.0",
+        "contentHash": "RSIrJ7D8gEHykZWTfS/r9tz/G5YpxIQAaFFXSLLHhVaRed+/26KvqaXvUtqqMJMlNjubAcMvf3UJ+E6ABT8AWw=="
       },
       "System.Security.Cryptography.Pkcs": {
         "type": "Direct",
-        "requested": "[10.0.14, )",
-        "resolved": "10.0.14",
-        "contentHash": "Wz+IgL2xpg8KJ4i2VWj6uz1PmZNu4Q0Ljlwd73P9Vze5NcOBtctLii3itV0PB2MpOqwqDEGfB6RCdv94A4E5yQ=="
+        "requested": "[11.0.0, )",
+        "resolved": "11.0.0",
+        "contentHash": "G8mTjSWrwaPJ2bJRbKuI4ZqdKUYcANK0KtNH3s8/va3nXiF/Pk/yhv2R17rv5PBKJO5+ZXDyhTnZXh0W9v0J8w==",
+        "dependencies": {
+          "System.Formats.Asn1": "11.0.0"
+        }
       },
       "YamlDotNet": {
         "type": "Direct",
@@ -77,41 +80,41 @@
       },
       "NuGet.Common": {
         "type": "Transitive",
-        "resolved": "7.9.0",
-        "contentHash": "OWFEzHpwvgzSaHYmWzfbyTm6oBOy/BFSFEDk73zM9jiJaxdopYZ/DrqIQogaM3F+ZGTppBJffmzu5adetEI/YA==",
+        "resolved": "8.0.0",
+        "contentHash": "mRAZBFV3VhWtsmJk2L83bnJeEnB/9uOV8KcH3saSrcsdNCw9A0dMuFd1bImQpG7xp1VoU3erZ0NdMqTJ3RB//A==",
         "dependencies": {
-          "NuGet.Frameworks": "7.9.0"
+          "NuGet.Frameworks": "8.0.0"
         }
       },
       "NuGet.Configuration": {
         "type": "Transitive",
-        "resolved": "7.9.0",
-        "contentHash": "oY9XZp+TWjOmiGmU4R4JWBRY3F4TAVo7tqPr/z7MOsFcEpdYHMryjNSscoLBxUTR3WmFmYgO0Gvu4eRbz6pzOg==",
+        "resolved": "8.0.0",
+        "contentHash": "YNG4NbWKZCr2p9gc93RjxPYIOMdREBpohENr2bOV7l+K6QoQttMz2Nq27cIXOWhDVq8TGYUMyS4ljUwtYoHkbw==",
         "dependencies": {
-          "NuGet.Common": "7.9.0",
+          "NuGet.Common": "8.0.0",
           "System.Security.Cryptography.ProtectedData": "8.0.0"
         }
       },
       "NuGet.Frameworks": {
         "type": "Transitive",
-        "resolved": "7.9.0",
-        "contentHash": "w2adPmgUafmW9ON1MzDjuHmViN0vtiPV48Dz3OE6px8BiGSqrnWHOjwFEPOEPAZx20J1c7bxp90Hxo9l4xGWtw=="
+        "resolved": "8.0.0",
+        "contentHash": "5VyDHYGLwVzctCB0ndqOBLUPKfBKtx7YVkGIGxCQja5LFLKWaeagrKbWQeO28SIkocBrF5fFkGkoZ6FwqzJvww=="
       },
       "NuGet.Packaging": {
         "type": "Transitive",
-        "resolved": "7.9.0",
-        "contentHash": "Q2jxuud5kJLV0rUzsC02iC5ts8QsQu9UVyMvF8lULY3TwHL/W/PrnQ9bQFvMR7jJkzF1uilRPI1o+7VOtc2XMg==",
+        "resolved": "8.0.0",
+        "contentHash": "QpQjswIGbPXBdKvaTYInULTwcHjwZyCA7GWVF5wqUOLWzKajRoA1NHf/f+xp0ETsDDOJqmTsKgv4GjXsxJyMZQ==",
         "dependencies": {
           "Newtonsoft.Json": "13.0.3",
-          "NuGet.Configuration": "7.9.0",
-          "NuGet.Versioning": "7.9.0",
+          "NuGet.Configuration": "8.0.0",
+          "NuGet.Versioning": "8.0.0",
           "System.Security.Cryptography.Pkcs": "8.0.1"
         }
       },
       "NuGet.Versioning": {
         "type": "Transitive",
-        "resolved": "7.9.0",
-        "contentHash": "r4sZuVpVqwSBLe4qYDrnpScqdyctlRXg0HSF5OoCGkeBc8b+o8BBYHuI/u1RoWYX78PbieijU13TBt71/Xf3lw=="
+        "resolved": "8.0.0",
+        "contentHash": "BvQniE/cRs8wpEhR3iVWMab3LUgz7QStiVVzlOairH1a7VtqA8Wwsbf4HarVYq6gjoZ2max1U4XeaG/IAdAWIw=="
       },
       "System.Configuration.ConfigurationManager": {
         "type": "Transitive",
