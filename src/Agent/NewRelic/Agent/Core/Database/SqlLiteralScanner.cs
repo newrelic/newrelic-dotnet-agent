@@ -11,8 +11,8 @@ namespace NewRelic.Agent.Core.Database;
 /// Input that cannot be tokenized safely (an unterminated string, comment or quoted identifier, or a stray comment
 /// terminator) is replaced entirely with "?", because over-obfuscating is always preferable to leaking a value. The
 /// one exception is a block comment nested before its own closing "*/" (<see cref="SqlLexemeKind.NestedComment"/>):
-/// everything up to that point was tokenized without ambiguity, so only the comment itself -- not the output already
-/// produced for it -- is masked.
+/// the output already produced before the comment started is kept, but everything from the comment onward -- not
+/// just the comment itself -- is masked, because what follows it cannot be classified with confidence.
 /// Does not use regular expressions: the input is not length-limited and must never backtrack.
 /// </summary>
 public static class SqlLiteralScanner
@@ -38,7 +38,8 @@ public static class SqlLiteralScanner
         AmbiguousComment,
         /// <summary>A block comment whose extent is ambiguous because a second "/*" appears before its first "*/" (block
         /// comments nest in some dialects and not others). Unlike <see cref="AmbiguousComment"/>, its start IS a real,
-        /// closed comment -- only how much of what follows it also belongs to the comment is unclear.</summary>
+        /// closed comment -- only how much of what follows it also belongs to the comment is unclear. Extends to the
+        /// end of the input.</summary>
         NestedComment,
         /// <summary>A string literal, Oracle alternative-quoted string, or dollar-quoted string -- literal content.</summary>
         QuotedLiteral,
@@ -101,9 +102,9 @@ public static class SqlLiteralScanner
                         continue;
 
                     case SqlLexemeKind.NestedComment:
-                        // The comment's extent past its first "*/" is ambiguous, but everything up to here was
-                        // real, already-tokenized SQL -- keep it (matching ordinary comment handling) and mask
-                        // only this ambiguous comment itself, rather than discarding output that is not in doubt.
+                        // The comment's extent past its first "*/" is ambiguous, so end == length: everything from
+                        // the comment's start to the end of the query is masked, not just the comment text itself.
+                        // Only the output already produced *before* the comment started is kept.
                         AppendCapped(sb, '?', maxLength);
                         i = end;
                         continue;

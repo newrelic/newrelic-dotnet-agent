@@ -34,6 +34,30 @@ public class SqlServerExplainPlanActionTests
     }
 
     [Test]
+    public void GenerateExplainPlanReturnsNullIfCommandCannotBeFixed()
+    {
+        // When InlineParametersForCompileOnlyExplain reports it cannot safely inline (e.g. a Binary parameter),
+        // GenerateExplainPlan must bail out before ever touching the connection -- no SET SHOWPLAN_ALL ON/OFF,
+        // no cloned command. An empty CreatedMockCommands proves that early return, not just a null result.
+        var mockConnection = new MockDbConnection();
+        var command = new MockDbCommand
+        {
+            Connection = mockConnection,
+            CommandType = CommandType.Text,
+            CommandText = "SELECT * FROM faketable WHERE [name] = @onlyParam"
+        };
+        command.Parameters.Add(new SqlParameter("@onlyParam", SqlDbType.Binary) { Value = new byte[] { 1, 2, 3 } });
+
+        var explainPlan = SqlServerExplainPlanActions.GenerateExplainPlan(command, NoOpStripComments);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(explainPlan, Is.Null);
+            Assert.That(mockConnection.CreatedMockCommands, Is.Empty, "No SET SHOWPLAN_ALL command should have been sent.");
+        });
+    }
+
+    [Test]
     public void InlineParametersForCompileOnlyExplain_StoredProcedure_LeavesCommandUntouched()
     {
         var emptyConnection = new SqlConnection("Server=falsehost;Database=fakedb;User Id=afakeuser;Password=notarealpasword;"); // not used for anything
