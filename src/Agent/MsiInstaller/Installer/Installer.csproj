@@ -31,8 +31,19 @@
     <PropertyGroup>
       <SignToolPath>%(SignToolCandidates.Identity)</SignToolPath>
     </PropertyGroup>
-    <!-- SkipSigning=true builds an unsigned MSI for PR validation; only release_build.yml produces signed, deployable MSIs. -->
-    <Exec Condition="'$(SkipSigning)' != 'true'" Command="&quot;$(SignToolPath)&quot; sign /fd SHA256 /d &quot;New Relic .NET Agent&quot; /a &quot;$(OutputPath)$(OutputName).msi&quot;" StandardOutputImportance="high" />
+    <!-- SkipSigning=true builds an unsigned MSI for PR validation; only release_build.yml produces signed, deployable MSIs.
+         The RFC 3161 timestamp (from the certificate's CA) keeps the signature valid after the certificate expires. -->
+    <PropertyGroup>
+      <SigningTimestampUrl Condition="'$(SigningTimestampUrl)' == ''">http://timestamp.digicert.com</SigningTimestampUrl>
+    </PropertyGroup>
+    <PropertyGroup>
+      <SignInstallerCommand>&quot;$(SignToolPath)&quot; sign /fd SHA256 /tr $(SigningTimestampUrl) /td SHA256 /d &quot;New Relic .NET Agent&quot; /a &quot;$(OutputPath)$(OutputName).msi&quot;</SignInstallerCommand>
+    </PropertyGroup>
+    <!-- One retry, for a transient timestamp server failure. -->
+    <Exec Condition="'$(SkipSigning)' != 'true'" Command="$(SignInstallerCommand)" StandardOutputImportance="high" ContinueOnError="true">
+      <Output TaskParameter="ExitCode" PropertyName="SignInstallerExitCode" />
+    </Exec>
+    <Exec Condition="'$(SkipSigning)' != 'true' And '$(SignInstallerExitCode)' != '0'" Command="$(SignInstallerCommand)" StandardOutputImportance="high" />
     <ReadFileVersionFromDll FilePath="$(SolutionDir)..\..\_build\AnyCPU-$(Configuration)\NewRelic.Agent.Core\net462\NewRelic.Agent.Core.dll">
       <Output PropertyName="FileVersionString" TaskParameter="FileVersionString" />
     </ReadFileVersionFromDll>
