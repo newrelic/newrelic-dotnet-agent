@@ -118,6 +118,23 @@ public class SqlServerExplainPlanActionTests
     }
 
     [Test]
+    public void InlineParametersForCompileOnlyExplain_ParameterNameWithoutAtPrefix_InlinesCorrectly()
+    {
+        // ADO.NET allows a parameter to be named with no leading "@"; the SQL text's placeholder still has one.
+        var emptyConnection = new SqlConnection("Server=falsehost;Database=fakedb;User Id=afakeuser;Password=notarealpasword;"); // not used for anything
+        var sqlCommand = new SqlCommand("SELECT * FROM faketable WHERE [name] = @onlyParam", emptyConnection);
+        sqlCommand.Parameters.Add("onlyParam", SqlDbType.NVarChar).Value = "value";
+
+        var shouldGeneratePlan = SqlServerExplainPlanActions.InlineParametersForCompileOnlyExplain(sqlCommand, NoOpStripComments);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(shouldGeneratePlan, Is.True);
+            Assert.That(sqlCommand.CommandText, Is.EqualTo("SELECT * FROM faketable WHERE [name] = 'value'"));
+        });
+    }
+
+    [Test]
     public void InlineParametersForCompileOnlyExplain_RegexMetacharacterValue_IsNotReinterpretedAsAReplacementPattern()
     {
         // "a$&b" is special in a .NET regex *replacement string* ($& re-inserts the whole match). Using the
@@ -400,6 +417,29 @@ public class SqlServerExplainPlanActionTests
 
         Assert.That(actualCreatedCommands, Is.EquivalentTo(expectedCreatedCommands),
             "SHOWPLAN should still be turned back off even though reading the explain plan results failed.");
+    }
+
+    [Test]
+    public void GenerateExplainPlan_ReadingResultsThrowsAndTurningShowplanOffAlsoThrows_OriginalExceptionStillPropagates()
+    {
+        // The finally block's own catch swallows a failure turning SHOWPLAN back off specifically so it doesn't
+        // mask the original failure -- this proves that contract holds even when both actually fail.
+        var mockConnection = new MockDbConnection
+        {
+            ThrowOnSecondCreatedCommandExecute = new InvalidOperationException("simulated failure turning SHOWPLAN off")
+        };
+        var command = new MockDbCommand
+        {
+            Connection = mockConnection,
+            CommandType = CommandType.Text,
+            CommandText = "SELECT * FROM faketable"
+        };
+
+        var mockReader = command.MockDataReader;
+        Mock.Arrange(() => mockReader.FieldCount).Throws(new InvalidOperationException("simulated failure reading explain plan results"));
+
+        Assert.That(() => SqlServerExplainPlanActions.GenerateExplainPlan(command, NoOpStripComments),
+            Throws.InvalidOperationException.With.Message.EqualTo("simulated failure reading explain plan results"));
     }
 
     [Test]
