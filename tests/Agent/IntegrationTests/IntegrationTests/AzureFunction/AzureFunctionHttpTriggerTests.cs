@@ -47,6 +47,8 @@ public abstract class AzureFunctionHttpTriggerTestsBase<TFixture> : NewRelicInte
                     .ConfigureFasterMetricsHarvestCycle(25)
                     .ConfigureFasterSpanEventsHarvestCycle(15)
                     .SetLogLevel("finest");
+                configModifier.SetAllowAllHeaders(true);
+                configModifier.AddAttributesInclude("request.headers.*");
 
                 // This is a bit of a kludge. When azure function instrumentation is disabled,
                 // the agent instruments *two* processes: the azure function host (func.exe) and the actual function app.
@@ -324,6 +326,23 @@ public abstract class AzureFunctionHttpTriggerTestsBase<TFixture> : NewRelicInte
         {
             var disabledLogLine = _fixture.AgentLog.TryGetLogLine(AgentLogBase.AzureFunctionModeDisabledLogLineRegex);
             Assert.NotNull(disabledLogLine);
+        }
+    }
+
+    [Fact]
+    public void Test_RequestHeadersCaptured()
+    {
+        Assert.SkipUnless(_fixture.AzureFunctionModeEnabled, "Request headers are captured only in Azure Function mode.");
+
+        var events = _fixture.AgentLog.GetTransactionEvents()
+            .Where(e => e?.IntrinsicAttributes?["name"]?.ToString().StartsWith("WebTransaction/AzureFunction/") == true)
+            .ToList();
+
+        Assert.NotEmpty(events);
+        foreach (var e in events)
+        {
+            Assert.Equal("test-value", e.AgentAttributes["request.headers.test-header"]);
+            Assert.True(e.AgentAttributes.ContainsKey("request.headers.host"));
         }
     }
 }

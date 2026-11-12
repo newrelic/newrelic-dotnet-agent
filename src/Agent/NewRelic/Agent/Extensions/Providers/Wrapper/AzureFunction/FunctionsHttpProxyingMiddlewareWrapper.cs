@@ -37,6 +37,12 @@ public class FunctionsHttpProxyingMiddlewareWrapper : IWrapper
                     // Only need to accept DT headers from incoming request.
                     var headers = httpContext.Request.Headers as IDictionary<string, StringValues>;
                     transaction.AcceptDistributedTraceHeaders(headers, GetHeaderValue, TransportType.HTTP);
+
+                    if (headers != null)
+                    {
+                        var keysToCapture = agent.Configuration.AllowAllRequestHeaders ? headers.Keys : Statics.DefaultCaptureHeaders;
+                        transaction.SetRequestHeaders(headers, keysToCapture, static (h, k) => h.TryGetValue(k, out var v) ? v.ToString() : null);
+                    }
                     break;
                 case "TryHandleHttpResult":
                     if (!agent.CurrentTransaction.HasHttpResponseStatusCode) // these handlers seem to get called more than once; only set the status code one time

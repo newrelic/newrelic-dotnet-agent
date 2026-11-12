@@ -97,6 +97,7 @@ public abstract class AzureFunctionApplicationFixture : RemoteApplicationFixture
     {
         return new List<KeyValuePair<string, string>>
         {
+            new KeyValuePair<string, string> ("Test-Header", "test-value"),
             new KeyValuePair<string, string> ("traceparent", $"00-{TestTraceId}-{TestTraceParent}-00"),
             new KeyValuePair<string, string> ("tracestate", $"{AccountId}@nr={Version}-{ParentType}-{AccountId}-{AppId}-{SpanId}-{TransactionId}-{Sampled}-" + Priority + $"-{Timestamp},{TestOtherVendorEntries}")
         };

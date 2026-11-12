@@ -26,4 +26,44 @@ public class DictionaryHelpersTests
             Assert.That(result["traceparent"], Is.Not.Null);
         }
     }
+
+    [Test]
+    public void Lookup_Is_Case_Insensitive()
+    {
+        var result = DictionaryHelpers.FromJson("{\"Host\":\"localhost:7071\",\"TraceParent\":\"abc\"}");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result["host"], Is.EqualTo("localhost:7071"));
+            Assert.That(result["HOST"], Is.EqualTo("localhost:7071"));
+            Assert.That(result["traceparent"], Is.EqualTo("abc"));
+            Assert.That(result.ContainsKey("TRACEPARENT"), Is.True);
+        });
+    }
+
+    [Test]
+    public void Keys_Differing_Only_By_Case_Keep_Last_Value()
+    {
+        var result = DictionaryHelpers.FromJson("{\"Host\":\"first\",\"host\":\"second\"}");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result, Has.Count.EqualTo(1));
+            Assert.That(result["HOST"], Is.EqualTo("second"));
+        });
+    }
+
+    [TestCase("null")]
+    [TestCase("")]
+    [TestCase(null)]
+    [TestCase("42")]
+    [TestCase("{not json")]
+    [TestCase("{\"Host\":\"x\",")]
+    public void Empty_Or_Invalid_Json_Returns_Empty_Dictionary(string test)
+    {
+        var result = DictionaryHelpers.FromJson(test);
+
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result, Is.Empty);
+    }
 }
