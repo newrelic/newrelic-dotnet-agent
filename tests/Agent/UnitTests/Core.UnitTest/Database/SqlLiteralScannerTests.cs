@@ -44,6 +44,11 @@ public class SqlLiteralScannerTests
     [TestCase("a */ b", None, "?")]
     [TestCase("/* /* */ secret", Pg, "?")]
     [TestCase("/* a /* b */ c */ d", Pg, "?")]
+    // Nested block comment (a second "/*" before the first "*/"): the start of the comment is still a real,
+    // closed comment, so output already produced for everything before it is kept -- only the ambiguous
+    // comment itself is masked. Unlike the unterminated/stray-terminator cases above, this one does not discard
+    // already-tokenized SQL just because what follows the comment is unclear.
+    [TestCase("SELECT name FROM users /* a /* b */ WHERE id = 5", Pg, "SELECT name FROM users ?")]
     // Single-quoted strings
     [TestCase("x = ''", None, "x = ?")]
     [TestCase("x = 'it''s'", None, "x = ?")]
@@ -386,11 +391,13 @@ public class SqlLiteralScannerTests
     [TestCase("a */ b")]
     [TestCase("/* /* */ secret")]
     [TestCase("/* a /* b */ c */ d")]
+    [TestCase("SELECT name FROM users /* a /* b */ WHERE id = 5")]
     public void StripComments_UnterminatedOrAmbiguousBlockComment_ReturnsNull(string sql)
     {
-        // Mirrors Obfuscate's handling of the same inputs: an unterminated comment, a stray "*/", and a nested
-        // "/*" before the first "*/" (ambiguous in dialects where block comments nest) cannot be classified with
-        // confidence, so the scanner gives up entirely rather than risk treating commented text as code.
+        // An unterminated comment, a stray "*/", and a nested "/*" before the first "*/" (ambiguous in dialects
+        // where block comments nest) cannot be classified with confidence, so the scanner gives up entirely
+        // rather than risk treating commented text as code -- even though Obfuscate, unlike StripComments, keeps
+        // its already-produced output for the nested case (see the Obfuscate test for the same input).
         Assert.That(SqlLiteralScanner.StripComments(sql, Pg), Is.Null);
     }
 

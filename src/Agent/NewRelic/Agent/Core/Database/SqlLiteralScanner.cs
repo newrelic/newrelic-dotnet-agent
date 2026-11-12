@@ -9,7 +9,10 @@ namespace NewRelic.Agent.Core.Database;
 /// <summary>
 /// Replaces SQL literals (strings, numbers, comments and dialect-specific literals) with "?" in a single linear pass.
 /// Input that cannot be tokenized safely (an unterminated string, comment or quoted identifier, or a stray comment
-/// terminator) is replaced entirely with "?", because over-obfuscating is always preferable to leaking a value.
+/// terminator) is replaced entirely with "?", because over-obfuscating is always preferable to leaking a value. The
+/// one exception is a block comment nested before its own closing "*/" (<see cref="SqlLexemeKind.NestedComment"/>):
+/// everything up to that point was tokenized without ambiguity, so only the comment itself -- not the output already
+/// produced for it -- is masked.
 /// Does not use regular expressions: the input is not length-limited and must never backtrack.
 /// </summary>
 public static class SqlLiteralScanner
@@ -31,8 +34,12 @@ public static class SqlLiteralScanner
         MaskRestOfQuery,
         EndOfLineComment,
         BlockComment,
-        /// <summary>An unterminated or nesting-ambiguous block comment, or a stray "*/". Extends to the end of the input.</summary>
+        /// <summary>An unterminated block comment, a stray "*/", or an unterminated dollar-quote tag. Extends to the end of the input.</summary>
         AmbiguousComment,
+        /// <summary>A block comment whose extent is ambiguous because a second "/*" appears before its first "*/" (block
+        /// comments nest in some dialects and not others). Unlike <see cref="AmbiguousComment"/>, its start IS a real,
+        /// closed comment -- only how much of what follows it also belongs to the comment is unclear.</summary>
+        NestedComment,
         /// <summary>A string literal, Oracle alternative-quoted string, or dollar-quoted string -- literal content.</summary>
         QuotedLiteral,
         /// <summary>A double/backtick/bracket-quoted identifier -- not literal content, kept verbatim by both callers.</summary>
@@ -90,6 +97,14 @@ public static class SqlLiteralScanner
 
                     case SqlLexemeKind.QuotedIdentifier:
                         AppendCapped(sb, sql, i, end - i, maxLength);
+                        i = end;
+                        continue;
+
+                    case SqlLexemeKind.NestedComment:
+                        // The comment's extent past its first "*/" is ambiguous, but everything up to here was
+                        // real, already-tokenized SQL -- keep it (matching ordinary comment handling) and mask
+                        // only this ambiguous comment itself, rather than discarding output that is not in doubt.
+                        AppendCapped(sb, '?', maxLength);
                         i = end;
                         continue;
 
@@ -199,6 +214,7 @@ public static class SqlLiteralScanner
                         i = end;
                         continue;
 
+                    case SqlLexemeKind.NestedComment:
                     case SqlLexemeKind.AmbiguousComment:
                     case SqlLexemeKind.UnterminatedQuoted:
                         return null;
@@ -259,7 +275,7 @@ public static class SqlLiteralScanner
             var nested = sql.IndexOf("/*", i + 2, close - i - 1, StringComparison.Ordinal);
             if (nested >= 0)
             {
-                kind = SqlLexemeKind.AmbiguousComment;
+                kind = SqlLexemeKind.NestedComment;
                 end = length;
                 return true;
             }
