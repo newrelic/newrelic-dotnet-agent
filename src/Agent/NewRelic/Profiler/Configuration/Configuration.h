@@ -759,6 +759,15 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
                 return 1;
             }
 
+            // The Functions host passes --functions-worker-id to every worker and never carries it itself.
+            // Check it before the app pool id match, which can also match a worker's command line.
+            bool isFunctionsWorkerId = NewRelic::Profiler::Strings::ContainsCaseInsensitive(commandLine, _X("--functions-worker-id"));
+            if (isFunctionsWorkerId)
+            {
+                LogInfo(L"Command line contains --functions-worker-id. This process will be instrumented.");
+                return 1;
+            }
+
             bool isAzureWebJobsScriptWebHost = appPoolId.length() > 0  && NewRelic::Profiler::Strings::ContainsCaseInsensitive(commandLine, appPoolId);
             if (isAzureWebJobsScriptWebHost)
             {
@@ -793,13 +802,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
                 return 0;
             }
 
-            // look for --functions-worker-id (or --worker-id, to instrument during local testing) in the command line and instrument if found
-            bool isFunctionsWorkerId = NewRelic::Profiler::Strings::ContainsCaseInsensitive(commandLine, _X("--functions-worker-id"));
-            if (isFunctionsWorkerId)
-            {
-                LogInfo(L"Command line contains --functions-worker-id. This process will be instrumented.");
-                return 1;
-            }
+            // --worker-id is checked to instrument during local testing
             bool isLocalFunctionsWorkerId = NewRelic::Profiler::Strings::ContainsCaseInsensitive(commandLine, _X("--worker-id"));
             if (isLocalFunctionsWorkerId)
             {

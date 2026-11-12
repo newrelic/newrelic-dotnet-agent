@@ -253,6 +253,40 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
             Assert::IsTrue(configuration.ShouldInstrument(L"SomeFW481FunctionApp.exe", L"", L"", L"blah blah blah --worker-id FooBarBaz blah blah blah", false));
         }
 
+        TEST_METHOD(should_instrument_isolated_azure_function_worker_when_app_pool_id_in_commandline)
+        {
+            std::wstring configurationXml(L"\
+    <?xml version=\"1.0\"?>\
+    <configuration>\
+        <log level=\"deBug\"/>\
+    </configuration>\
+");
+
+            _systemCalls->environmentVariables[L"FUNCTIONS_WORKER_RUNTIME"] = L"dotnet-isolated";
+            _systemCalls->environmentVariables[L"NEW_RELIC_AZURE_FUNCTION_MODE_ENABLED"] = L"true";
+
+            Configuration configuration(configurationXml, _missingConfig, L"", _systemCalls);
+
+            Assert::IsTrue(configuration.ShouldInstrument(L"C:\\HOME\\SITE\\WWWROOT\\HOGIA.BUSINESS.PDFMERGEFUNCTIONS.EXE", L"", L"pdfmergefunction", L"C:\\home\\site\\wwwroot\\Hogia.Business.PdfMergeFunctions.exe --host 127.0.0.1 --port 1234 --functions-worker-id abc", false));
+        }
+
+        TEST_METHOD(should_instrument_isolated_azure_function_worker_exe_ending_in_func_exe)
+        {
+            std::wstring configurationXml(L"\
+    <?xml version=\"1.0\"?>\
+    <configuration>\
+        <log level=\"deBug\"/>\
+    </configuration>\
+");
+
+            _systemCalls->environmentVariables[L"FUNCTIONS_WORKER_RUNTIME"] = L"dotnet-isolated";
+            _systemCalls->environmentVariables[L"NEW_RELIC_AZURE_FUNCTION_MODE_ENABLED"] = L"true";
+
+            Configuration configuration(configurationXml, _missingConfig, L"", _systemCalls);
+
+            Assert::IsTrue(configuration.ShouldInstrument(L"C:\\HOME\\SITE\\WWWROOT\\PDFMERGEFUNC.EXE", L"", L"", L"C:\\home\\site\\wwwroot\\PdfMergeFunc.exe --host 127.0.0.1 --port 1234 --functions-worker-id abc", false));
+        }
+
         TEST_METHOD(should_instrument_in_process_azure_function)
         {
             std::wstring configurationXml(L"\
