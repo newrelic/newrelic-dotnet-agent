@@ -159,6 +159,27 @@ public class SqlServerExplainPlanActionTests
     }
 
     [Test]
+    public void InlineParametersForCompileOnlyExplain_ParameterNameDiffersOnlyByCase_StillInlinesCorrectly()
+    {
+        // SQL Server parameter names are case-insensitive: @UserId in the command text and a parameter declared
+        // as @userid refer to the same parameter. Without case-insensitive matching, the placeholder regex
+        // wouldn't match the command text (so it would be left in place) while the parameter was still cleared,
+        // so the eventual SHOWPLAN batch would fail with "Must declare the scalar variable @UserId".
+        var emptyConnection = new SqlConnection("Server=falsehost;Database=fakedb;User Id=afakeuser;Password=notarealpasword;"); // not used for anything
+        var sqlCommand = new SqlCommand("SELECT * FROM faketable WHERE [name] = @UserId", emptyConnection);
+        sqlCommand.Parameters.Add("@userid", SqlDbType.NVarChar).Value = "value";
+
+        var shouldGeneratePlan = SqlServerExplainPlanActions.InlineParametersForCompileOnlyExplain(sqlCommand, NoOpStripComments);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(shouldGeneratePlan, Is.True);
+            Assert.That(sqlCommand.CommandText, Is.EqualTo("SELECT * FROM faketable WHERE [name] = 'value'"));
+            Assert.That(sqlCommand.Parameters, Is.Empty, "Parameters should be cleared once inlined.");
+        });
+    }
+
+    [Test]
     public void InlineParametersForCompileOnlyExplain_RegexMetacharacterValue_IsNotReinterpretedAsAReplacementPattern()
     {
         // "a$&b" is special in a .NET regex *replacement string* ($& re-inserts the whole match). Using the

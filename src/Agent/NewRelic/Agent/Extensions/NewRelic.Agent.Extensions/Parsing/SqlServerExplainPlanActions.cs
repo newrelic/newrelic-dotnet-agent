@@ -147,7 +147,9 @@ public static class SqlServerExplainPlanActions
             return true; // no params, using raw sql statement.
         }
 
-        var literalsByParamName = new Dictionary<string, string>();
+        // SQL Server parameter names are case-insensitive, so @UserId in the command text must match a parameter
+        // declared as @userid.
+        var literalsByParamName = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         foreach (object parameter in command.Parameters)
         {
             var dbParam = (IDbDataParameter)parameter;
@@ -205,8 +207,10 @@ public static class SqlServerExplainPlanActions
 
         // One combined alternation, matched in a single Regex.Replace pass -- see the method doc comment for why
         // that single pass is what actually matters here, not just the MatchEvaluator overload on its own.
+        // IgnoreCase matches SQL Server's case-insensitive parameter names; the dictionary lookup below is
+        // case-insensitive for the same reason.
         var combinedPattern = @"@\b(?:" + string.Join("|", literalsByParamName.Keys.Select(Regex.Escape)) + @")\b";
-        var sql = Regex.Replace(commentFreeCommandText, combinedPattern, match => literalsByParamName[match.Value.Substring(SqlParamPrefix.Length)]);
+        var sql = Regex.Replace(commentFreeCommandText, combinedPattern, match => literalsByParamName[match.Value.Substring(SqlParamPrefix.Length)], RegexOptions.IgnoreCase);
 
         command.Parameters.Clear();
         command.CommandText = sql;
