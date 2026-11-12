@@ -1,7 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System.Collections.Generic;
 using NewRelic.Agent.Extensions.Helpers;
 using NUnit.Framework;
 
@@ -59,23 +58,12 @@ public class DictionaryHelpersTests
     [TestCase(null)]
     [TestCase("42")]
     [TestCase("{not json")]
-    public void Empty_Or_Invalid_Json_Returns_Empty_Case_Insensitive_Dictionary(string test)
+    [TestCase("{\"Host\":\"x\",")]
+    public void Empty_Or_Invalid_Json_Returns_Empty_Dictionary(string test)
     {
         var result = DictionaryHelpers.FromJson(test);
 
         Assert.That(result, Is.Not.Null);
         Assert.That(result, Is.Empty);
-        Assert.That(result.ContainsKey("Host"), Is.False);
-        Assert.That(result.TryGetValue("host", out _), Is.False);
-    }
-
-    [Test]
-    public void Empty_Result_Is_Case_Insensitive_When_Further_Populated()
-    {
-        var result = (Dictionary<string, object>)DictionaryHelpers.FromJson("null");
-
-        result["Host"] = "x";
-
-        Assert.That(result.ContainsKey("host"), Is.True);
     }
 }

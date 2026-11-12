@@ -25,18 +25,12 @@ public static class DictionaryHelpers
 
         try
         {
-            var parsed = JsonConvert.DeserializeObject<Dictionary<string, object>>(json);
-            if (parsed != null)
-            {
-                foreach (var kvp in parsed)
-                {
-                    result[kvp.Key] = kvp.Value;
-                }
-            }
+            JsonConvert.PopulateObject(json, result);
         }
         catch
         {
-            // invalid JSON: return the empty dictionary
+            // invalid JSON: return an empty dictionary, not a partially populated one
+            result.Clear();
         }
 
         return result;

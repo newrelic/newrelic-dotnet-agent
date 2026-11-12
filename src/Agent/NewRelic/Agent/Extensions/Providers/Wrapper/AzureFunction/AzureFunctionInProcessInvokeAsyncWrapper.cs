@@ -167,7 +167,7 @@ public class AzureFunctionInProcessInvokeAsyncWrapper : IWrapper
 
     private IEnumerable<string> GetHeaderValueFromIDictionary(IDictionary<string, Microsoft.Extensions.Primitives.StringValues> headers, string key)
     {
-        var val = headers.FirstOrDefault(kvp => kvp.Key == key).Value;
+        headers.TryGetValue(key, out var val);
         return val;
     }
 
