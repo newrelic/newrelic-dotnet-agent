@@ -1,0 +1,74 @@
+name: Setup Pinned .NET SDK Check
+
+# Exercises the setup-pinned-dotnet action on Windows and Linux whenever the action
+# or the SDK pin changes. All Solutions skips its build for .github/**-only changes
+# (including Dependabot's dotnet-sdk bumps), so this is the check that runs then.
+on:
+  pull_request:
+    paths:
+      - '.github/actions/setup-pinned-dotnet/**'
+      - '.github/dotnet-sdk/**'
+      - '.github/workflows/setup_pinned_dotnet.yml'
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  setup-pinned-dotnet:
+    name: Setup pinned .NET SDK (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-2025-vs2026]
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
+        with:
+          disable-sudo: ${{ runner.os == 'Linux' }}
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup pinned .NET SDK
+        id: setup
+        uses: ./.github/actions/setup-pinned-dotnet
+
+      - name: Pinned SDK is selected below the workspace root too
+        shell: pwsh
+        working-directory: ${{ github.workspace }}/src
+        env:
+          SETUP_VERSION: ${{ steps.setup.outputs.dotnet-version }}
+        run: |
+          $want = (Get-Content -LiteralPath "$env:GITHUB_WORKSPACE/.github/dotnet-sdk/global.json" -Raw | ConvertFrom-Json).sdk.version
+          $got = (dotnet --version | Out-String).Trim()
+          Write-Output "pin=$want output=$env:SETUP_VERSION dotnet --version=$got"
+          if ($env:SETUP_VERSION -ne $want -or $got -ne $want) { exit 1 }
+          $sdks = @(dotnet --list-sdks)
+          if ($sdks.Count -ne 1 -or $sdks[0] -notlike "$want *") {
+            Write-Output "::error::Expected only the pinned SDK on the dotnet path, found: $($sdks -join '; ')"
+            exit 1
+          }
+
+      - name: Running the action again in the same job succeeds
+        uses: ./.github/actions/setup-pinned-dotnet
+
+      - name: Write a conflicting root global.json
+        shell: pwsh
+        run: |
+          Set-Content -LiteralPath "$env:GITHUB_WORKSPACE/global.json" -Value '{ "sdk": { "version": "10.0.100" } }'
+
+      - name: Action refuses a conflicting root global.json
+        id: conflict
+        continue-on-error: true
+        uses: ./.github/actions/setup-pinned-dotnet
+
+      - name: Expect the conflict to fail
+        if: steps.conflict.outcome != 'failure'
+        shell: pwsh
+        run: |
+          Write-Output "::error::setup-pinned-dotnet accepted a conflicting root global.json."
+          exit 1

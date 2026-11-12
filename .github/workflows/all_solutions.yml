@@ -74,7 +74,9 @@ jobs:
   # This builds both FullAgent and MSIInstaller since MSIInstaller requires FullAgent artifacts.
   build-fullagent-msi:
     name: Build FullAgent and MSIInstaller
-    runs-on: windows-2022
+    # VS 2026 MSBuild: build-msi runs MSBuild.exe with the pinned .NET 11 SDK selected by the
+    # CI root global.json, and that SDK needs MSBuild 18.7 or later (VS 2022 has 17.14).
+    runs-on: windows-2025-vs2026
     permissions:
       contents: read
     needs:
@@ -203,7 +205,7 @@ jobs:
   run-artifactbuilder:
     needs: [create-package-rpm, create-package-deb]
     name: Run ArtifactBuilder
-    runs-on: windows-2022
+    runs-on: windows-2025-vs2026
     permissions:
       contents: read
 

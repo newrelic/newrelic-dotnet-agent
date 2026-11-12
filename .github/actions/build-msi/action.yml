@@ -4,6 +4,8 @@ description: >
   "msi-build-folder-artifacts" artifact. Requires a completed build-agent run
   in the same job. When sign is 'true' the caller must first install the code
   signing certificate into Cert:\CurrentUser\My; only release_build.yml does that.
+  build-agent leaves the pinned .NET SDK's global.json at the workspace root, so
+  MSBuild.exe must be new enough for that SDK (VS 2026 for .NET 11).
 
 inputs:
   sign:
