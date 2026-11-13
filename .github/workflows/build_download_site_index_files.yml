@@ -1,7 +1,7 @@
 name: Build Download Site Index Files
-run-name: Indexing ${{ inputs.bucket }}/${{ inputs.prefix }} in ${{inputs.aws-region}} (dry-run=${{inputs.dry-run}}) by @${{ github.actor }}
+run-name: Indexing download site prefix /${{ inputs.prefix }} in ${{inputs.aws-region}} (dry-run=${{inputs.dry-run}}) by @${{ github.actor }}
 
-# The job assumes the release AWS role (RELEASE_DEPLOY_ROLE_ARN) over OIDC and reads BUCKET_NAME
+# The job assumes the release AWS role (RELEASE_DEPLOY_ROLE_ARN) over OIDC and reads PROD_MAIN_S3
 # ("s3://<bucket>"); both are secrets of the "release" environment, read directly by the job below.
 # They are not workflow_call secrets: environment secrets cannot be passed in from a caller.
 on:
@@ -59,13 +59,13 @@ jobs:
           role-to-assume: ${{ secrets.RELEASE_DEPLOY_ROLE_ARN }}
       - name: Update index.html files in AWS S3 bucket
         env:
-          BUCKET_NAME: ${{ secrets.BUCKET_NAME }}
+          PROD_MAIN_S3: ${{ secrets.PROD_MAIN_S3 }}
           DRY_RUN: ${{ inputs.dry-run }}
           PREFIX: ${{ inputs.prefix }}
         run: |
-          # BUCKET_NAME is "s3://<bucket>"; s3-indexer wants the bare bucket name.
+          # PROD_MAIN_S3 is "s3://<bucket>"; s3-indexer wants the bare bucket name.
           if [ "$DRY_RUN" = true ]; then
-            /opt/nr/bin/s3-indexer -bucket "${BUCKET_NAME:5}" -prefix "$PREFIX"
+            /opt/nr/bin/s3-indexer -bucket "${PROD_MAIN_S3:5}" -prefix "$PREFIX"
           else
-            /opt/nr/bin/s3-indexer -bucket "${BUCKET_NAME:5}" -prefix "$PREFIX" -upload
+            /opt/nr/bin/s3-indexer -bucket "${PROD_MAIN_S3:5}" -prefix "$PREFIX" -upload
           fi

@@ -265,18 +265,18 @@ jobs:
 
       - name: Deploy latest_release to Download Site
         env:
-          BUCKET_NAME: ${{ secrets.BUCKET_NAME }}
+          PROD_MAIN_S3: ${{ secrets.PROD_MAIN_S3 }}
           DEPLOY: ${{ inputs.deploy }}
         run: |
           New-Item -ItemType directory -Path .\latest_release -Force
           Copy-Item .\working_dir\* .\latest_release\ -Force -Recurse
           cd .\latest_release
           if ($env:DEPLOY -eq "true") {
-            aws s3 sync . "$env:BUCKET_NAME/dot_net_agent/latest_release/" --include "*" --exclude ".DS_Store" --delete
+            aws s3 sync . "$env:PROD_MAIN_S3/dot_net_agent/latest_release/" --include "*" --exclude ".DS_Store" --delete
           }
           else {
             Write-Host "Input:deploy was not true.  The following deploy command was not run:"
-            Write-Host "aws s3 sync . <BUCKET_NAME>/dot_net_agent/latest_release/ --include `"*`" --exclude `".DS_Store`" --delete"
+            Write-Host "aws s3 sync . <PROD_MAIN_S3>/dot_net_agent/latest_release/ --include `"*`" --exclude `".DS_Store`" --delete"
           }
         shell: pwsh
 
@@ -284,7 +284,7 @@ jobs:
       # has no delete permission under previous_releases/.
       - name: Deploy previous_release to Download Site
         env:
-          BUCKET_NAME: ${{ secrets.BUCKET_NAME }}
+          PROD_MAIN_S3: ${{ secrets.PROD_MAIN_S3 }}
           DEPLOY: ${{ inputs.deploy }}
           RELEASE_VERSION: ${{ needs.get-release-info.outputs.release_version }}
         run: |
@@ -292,11 +292,11 @@ jobs:
           Copy-Item .\working_dir\* ".\previous_releases\$env:RELEASE_VERSION\" -Force -Recurse
           cd ".\previous_releases\$env:RELEASE_VERSION"
           if ($env:DEPLOY -eq "true") {
-            aws s3 sync . "$env:BUCKET_NAME/dot_net_agent/previous_releases/$env:RELEASE_VERSION/" --include "*" --exclude ".DS_Store"
+            aws s3 sync . "$env:PROD_MAIN_S3/dot_net_agent/previous_releases/$env:RELEASE_VERSION/" --include "*" --exclude ".DS_Store"
           }
           else {
             Write-Host "Input:deploy was not true.  The following deploy command was not run:"
-            Write-Host "aws s3 sync . <BUCKET_NAME>/dot_net_agent/previous_releases/$env:RELEASE_VERSION/ --include `"*`" --exclude `".DS_Store`""
+            Write-Host "aws s3 sync . <PROD_MAIN_S3>/dot_net_agent/previous_releases/$env:RELEASE_VERSION/ --include `"*`" --exclude `".DS_Store`""
           }
         shell: pwsh
 
