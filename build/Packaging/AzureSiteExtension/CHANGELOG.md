@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### New Features
 ### Fixes
+* The site extension now validates the nuget.org repository signature of the agent package and stops if the signature is not valid. If it cannot get the nuget.org certificate list, it logs a warning and installs without the check. If an install fails, the site extension restores the previous agent and writes the reason to install.log.
 
 ## [1.6.0] - 2025-02-03
 ### New Features
