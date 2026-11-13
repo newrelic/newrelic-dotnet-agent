@@ -12,25 +12,21 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus;
 
 public class ResponseCompressionBodyOnWriteWrapper : IWrapper
 {
-    private static readonly Func<object, Stream> _compressionStreamFieldGetter;
-    private static readonly Action<object, Stream> _compressionStreamFieldSetter;
-    private static readonly Func<object, HttpContext> _contextFieldGetter;
-
-    static ResponseCompressionBodyOnWriteWrapper()
+    private static class LazyAccessors
     {
-        _compressionStreamFieldGetter =
+        public static readonly Func<object, Stream> CompressionStreamFieldGetter =
             VisibilityBypasser.Instance.GenerateFieldReadAccessor<Stream>("Microsoft.AspNetCore.ResponseCompression", "Microsoft.AspNetCore.ResponseCompression.ResponseCompressionBody",
                 "_compressionStream");
 
-        _compressionStreamFieldSetter =
+        public static readonly Action<object, Stream> CompressionStreamFieldSetter =
             VisibilityBypasser.Instance.GenerateFieldWriteAccessor<Stream>("Microsoft.AspNetCore.ResponseCompression", "Microsoft.AspNetCore.ResponseCompression.ResponseCompressionBody",
                 "_compressionStream");
 
-        _contextFieldGetter =
+        public static readonly Func<object, HttpContext> ContextFieldGetter =
             VisibilityBypasser.Instance.GenerateFieldReadAccessor<HttpContext>("Microsoft.AspNetCore.ResponseCompression", "Microsoft.AspNetCore.ResponseCompression.ResponseCompressionBody",
                 "_context");
-
     }
+
     public bool IsTransactionRequired => false;
 
     public CanWrapResponse CanWrap(InstrumentedMethodInfo instrumentedMethodInfo)
@@ -42,21 +38,21 @@ public class ResponseCompressionBodyOnWriteWrapper : IWrapper
     {
         return Delegates.GetDelegateFor(onSuccess: () =>
         {
-            var context = _contextFieldGetter.Invoke(instrumentedMethodCall.MethodCall.InvocationTarget);
+            var context = LazyAccessors.ContextFieldGetter.Invoke(instrumentedMethodCall.MethodCall.InvocationTarget);
 
             // only wrap the compression stream if browser injection is enabled and the request is not a gRPC request.
             if (context != null && agent.Configuration.BrowserMonitoringAutoInstrument && agent.Configuration.EnableAspNetCore6PlusBrowserInjection && context.Request?.ContentType?.ToLower() != "application/grpc")
             {
                 // Wrap _compressionStream and replace the current value with our wrapped version
                 // check whether we've already wrapped the stream so we don't do it twice
-                var currentCompressionStream = _compressionStreamFieldGetter.Invoke(instrumentedMethodCall.MethodCall.InvocationTarget);
+                var currentCompressionStream = LazyAccessors.CompressionStreamFieldGetter.Invoke(instrumentedMethodCall.MethodCall.InvocationTarget);
 
                 if (currentCompressionStream != null && currentCompressionStream.GetType() != typeof(BrowserInjectingStreamWrapper))
                 {
 
                     var responseWrapper = new BrowserInjectingStreamWrapper(agent, currentCompressionStream, context);
 
-                    _compressionStreamFieldSetter.Invoke(instrumentedMethodCall.MethodCall.InvocationTarget, responseWrapper);
+                    LazyAccessors.CompressionStreamFieldSetter.Invoke(instrumentedMethodCall.MethodCall.InvocationTarget, responseWrapper);
                 }
             }
         });
