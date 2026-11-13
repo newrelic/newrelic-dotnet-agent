@@ -9,4 +9,10 @@
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
+  <!-- Pin all NuGet dependencies (incl. transitive, with content hashes) in packages.lock.json; CI restores in locked mode.
+       tests/Directory.Build.props opts out. -->
+  <PropertyGroup>
+    <RestorePackagesWithLockFile Condition="'$(RestorePackagesWithLockFile)' == ''">true</RestorePackagesWithLockFile>
+    <RestoreLockedMode Condition="'$(RestoreLockedMode)' == '' and ('$(GITHUB_ACTIONS)' == 'true' or '$(ContinuousIntegrationBuild)' == 'true')">true</RestoreLockedMode>
+  </PropertyGroup>
 </Project>

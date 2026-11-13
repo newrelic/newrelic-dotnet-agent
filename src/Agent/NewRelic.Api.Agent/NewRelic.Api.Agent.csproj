@@ -9,6 +9,8 @@
     <OutputPath>$(RootProjectDirectory)\src\_build\$(Platform)-$(Configuration)\$(AssemblyName)\</OutputPath>
     <Nullable>enable</Nullable>
     <DisableDiagnosticTracing>true</DisableDiagnosticTracing>
+    <!-- Test apps publish with -r and the RID flows into this project's restore; list them so packages.lock.json stays valid. -->
+    <RuntimeIdentifiers>win-x64;win-x86;linux-x64;linux-arm64</RuntimeIdentifiers>
   </PropertyGroup>
 
   <ItemGroup>

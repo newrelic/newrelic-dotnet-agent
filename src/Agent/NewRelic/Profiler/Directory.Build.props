@@ -16,6 +16,9 @@
     <!-- This subtree does not chain to the root Directory.Build.props, so enable code-style
          analyzers explicitly here to keep IDE0073 copyright-header enforcement active at build. -->
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <!-- Same NuGet lock-file settings as the root Directory.Build.props, which this subtree does not import. -->
+    <RestorePackagesWithLockFile Condition="'$(RestorePackagesWithLockFile)' == ''">true</RestorePackagesWithLockFile>
+    <RestoreLockedMode Condition="'$(RestoreLockedMode)' == '' and ('$(GITHUB_ACTIONS)' == 'true' or '$(ContinuousIntegrationBuild)' == 'true')">true</RestoreLockedMode>
   </PropertyGroup>
   <!-- Pin the C++ language standard explicitly so Windows doesn't silently
        drift from the toolset default. This matches the Linux musl build
