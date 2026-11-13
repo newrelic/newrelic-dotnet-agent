@@ -10,10 +10,18 @@
 # If the agent configuration file is found, only an upgrade
 # is performed.
 
+$ProgressPreference = 'SilentlyContinue'
+
 function WriteToInstallLog($output)
 {
-	$logPath = (Split-Path -Parent $PSCommandPath) + "\install.log"
-	Write-Output "[$(Get-Date)] -- $output" | Out-File -FilePath $logPath -Append
+	try
+	{
+		$logPath = (Split-Path -Parent $PSCommandPath) + "\install.log"
+		Write-Output "[$(Get-Date)] -- $output" | Out-File -FilePath $logPath -Append
+	}
+	catch
+	{
+	}
 }
 
 function CheckIfAppIs35
@@ -56,13 +64,13 @@ function CopyDirectory ($fromDirectory, $destinationDirectory)
 			}
 			else
 			{
-				Copy-Item "$fromDirectory\$item" -Destination "$destinationDirectory" -Force
+				Copy-Item "$fromDirectory\$item" -Destination "$destinationDirectory" -Force -ErrorAction Stop
 			}
 		}
 	}
 	else
 	{
-		Copy-Item -path $fromDirectory -Destination $destinationDirectory -Force -Recurse -ErrorAction Continue
+		Copy-Item -path $fromDirectory -Destination $destinationDirectory -Force -Recurse -ErrorAction Stop
 	}
 }
 
@@ -116,17 +124,24 @@ function RestoreCustomerRelatedFiles($newRelicInstallPath, $newRelicLegacyInstal
 	}
 }
 
-function RenameExistingFilesAsSaveExtensionFiles($newRelicInstallPath)
+function RenameExistingFilesAsSaveExtensionFiles($newRelicInstallPath, $target)
 {
 	if (Test-Path -Path $newRelicInstallPath)
 	{
 		WriteToInstallLog "Rename existing Agent files to *.save files except for files in the saved_items folder."
-		$toBeRenamedItems = Get-ChildItem -Path "$newRelicInstallPath" -Recurse | Where {$_.FullName -notlike "*\saved_items*"}
+		$toBeRenamedItems = Get-ChildItem -Path "$newRelicInstallPath" -Recurse | Where-Object {$_.FullName -notlike "*\saved_items*" -and $_.Name -notlike '*.save' -and $_.Name -notlike '*.save.stale-*'}
 		foreach ($item in $toBeRenamedItems)
 		{
-			if(Test-Path $item.fullname -PathType Leaf)
+			if(Test-Path -LiteralPath $item.FullName -PathType Leaf)
 			{
-				Rename-Item $item.fullname "$($item.fullname).save" -Force
+				$saveName = "$($item.Name).save"
+				# A stale .save file that could not be deleted is renamed out of the way so the restore does not lose the previous file.
+				if (Test-Path -LiteralPath "$($item.FullName).save")
+				{
+					Rename-Item -LiteralPath "$($item.FullName).save" -NewName "$saveName.stale-$((Get-Date).ToString('yyyyMMddHHmmss'))" -Force -ErrorAction Stop
+				}
+				Rename-Item -LiteralPath $item.FullName -NewName $saveName -Force -ErrorAction Stop
+				$target.Renamed.Add($item.FullName)
 			}
 		}
 	}
@@ -138,19 +153,110 @@ function RemoveExistingSaveExtensionFiles($newRelicInstallPath)
 	if(Test-Path $newRelicInstallPath)
 	{
 		Get-ChildItem $newRelicInstallPath -Include *.save -Recurse | Remove-Item
+		Get-ChildItem $newRelicInstallPath -Include *.save.stale-* -Recurse | Remove-Item -ErrorAction SilentlyContinue
 	}
 }
 
-function InstallNewAgent($newRelicNugetContentPath, $newRelicInstallPath, $newRelicLegacyInstallPath)
+function RestoreSavedFiles($target)
+{
+	$installPath = $target.InstallPath
+	$restored = $true
+
+	if ($target.ExistedBefore -ne $true)
+	{
+		try
+		{
+			if (Test-Path -LiteralPath $installPath)
+			{
+				Remove-Item -LiteralPath $installPath -Recurse -Force -ErrorAction Stop
+			}
+			WriteToInstallLog "Removed the partial first install in $installPath."
+			return $true
+		}
+		catch
+		{
+			$err = $_.Exception.Message
+			WriteToInstallLog "Unable to remove ${installPath}: $err"
+			WriteToInstallLog "The previous agent files in $installPath could not be fully restored. Restart the app and reinstall the site extension."
+			return $false
+		}
+	}
+
+	$renamed = New-Object 'System.Collections.Generic.HashSet[string]' -ArgumentList ([System.StringComparer]::OrdinalIgnoreCase)
+	foreach ($original in $target.Renamed)
+	{
+		$null = $renamed.Add($original)
+	}
+
+	# Delete the files that the new version added. The files this run renamed are replaced in the next loop.
+	if ($target.CopyStarted -eq $true)
+	{
+		$candidates = @()
+		try
+		{
+			$candidates = @(Get-ChildItem -LiteralPath $installPath -Recurse -File -ErrorAction Stop | Where-Object { $_.FullName -notlike "*\saved_items*" -and -not $renamed.Contains($_.FullName) })
+		}
+		catch
+		{
+			$err = $_.Exception.Message
+			WriteToInstallLog "Unable to list the files in ${installPath}: $err"
+			$restored = $false
+		}
+
+		foreach ($file in $candidates)
+		{
+			$relativePath = $file.FullName.Substring($installPath.Length).TrimStart('\')
+			if (Test-Path -LiteralPath (Join-Path $target.ContentFullPath $relativePath) -PathType Leaf)
+			{
+				try
+				{
+					Remove-Item -LiteralPath $file.FullName -Force -ErrorAction Stop
+				}
+				catch
+				{
+					$err = $_.Exception.Message
+					WriteToInstallLog "Unable to delete $($file.FullName): $err"
+					$restored = $false
+				}
+			}
+		}
+	}
+
+	foreach ($original in $target.Renamed)
+	{
+		try
+		{
+			Move-Item -LiteralPath "$original.save" -Destination $original -Force -ErrorAction Stop
+		}
+		catch
+		{
+			$err = $_.Exception.Message
+			WriteToInstallLog "Unable to restore ${original}: $err"
+			$restored = $false
+		}
+	}
+
+	if ($restored)
+	{
+		WriteToInstallLog "Restored the previous agent files in $installPath."
+	}
+	else
+	{
+		WriteToInstallLog "The previous agent files in $installPath could not be fully restored. Restart the app and reinstall the site extension."
+	}
+	return $restored
+}
+
+function InstallNewAgent($newRelicNugetContentPath, $newRelicInstallPath, $newRelicLegacyInstallPath, $target)
 {
 	###Remove existing *.save files from previous upgrade###
 	RemoveExistingSaveExtensionFiles $newRelicInstallPath
-	
+
 	###Preserve existing newrelic.config and custom instrumemtation xml files###
 	SaveNewRelicConfigAndCustomInstrumentationFiles $newRelicInstallPath
 
 	###Rename all existing files as *.save files except for files in the saved_items folder.####
-	RenameExistingFilesAsSaveExtensionFiles $newRelicInstallPath
+	RenameExistingFilesAsSaveExtensionFiles $newRelicInstallPath $target
 
 	$xdoc = new-object System.Xml.XmlDocument
 	$file = resolve-path(".\" + $newRelicNugetContentPath + "\newrelic.config")
@@ -161,6 +267,7 @@ function InstallNewAgent($newRelicNugetContentPath, $newRelicInstallPath, $newRe
 	$xdoc.Save($file)
 
 	WriteToInstallLog "Copy items from $(Resolve-Path $newRelicNugetContentPath) to $newRelicInstallPath"
+	$target.CopyStarted = $true
 	CopyDirectory $newRelicNugetContentPath $newRelicInstallPath
 
 	###Restore saved newrelic.config and custom instrumemtation files###
@@ -254,7 +361,7 @@ function RemoveNewRelicInstallArtifacts($fromDirectory)
 	{
 		if (Test-Path -Path "$fromDirectory\NewRelicPackage")
 		{
-			Remove-Item -Recurse NewRelicPackage -ErrorAction Stop
+			Remove-Item -Recurse "$fromDirectory\NewRelicPackage" -ErrorAction Stop
 		}
 	}
 	catch
@@ -267,7 +374,7 @@ function RemoveNewRelicInstallArtifacts($fromDirectory)
 	{
 		if (Test-Path -Path "$fromDirectory\NewRelicCorePackage")
 		{
-			Remove-Item -Recurse NewRelicCorePackage -ErrorAction Stop
+			Remove-Item -Recurse "$fromDirectory\NewRelicCorePackage" -ErrorAction Stop
 		}
 	}
 	catch
@@ -316,8 +423,133 @@ function GetLatestPackageVersion($packageId, $maxVersion, $repoUrl)
 	return ($versions | Sort-Object { [System.Version]$_ } | Select-Object -Last 1)
 }
 
+function InvokeNuget($arguments, $logFolder)
+{
+	$stdoutFile = "$logFolder\nuget.stdout.log"
+	$stderrFile = "$logFolder\nuget.stderr.log"
+
+	# Start-Process with -NoNewWindow because running executables within Kudu can often fail with "Window title cannot be longer than 1023 characters". See: https://github.com/projectkudu/kudu/issues/2635.
+	$proc = Start-Process nuget -ArgumentList $arguments -NoNewWindow -PassThru -RedirectStandardOutput $stdoutFile -RedirectStandardError $stderrFile
+	$null = $proc.Handle
+
+	# Periodic output so a host idle timeout sees activity.
+	while (-not $proc.WaitForExit(15000))
+	{
+		[Console]::Out.WriteLine("Waiting for nuget...")
+	}
+
+	$logPath = (Split-Path -Parent $PSCommandPath) + "\install.log"
+	foreach ($file in @($stdoutFile, $stderrFile))
+	{
+		$lines = Get-Content -Path $file -ErrorAction SilentlyContinue
+		if ($lines)
+		{
+			foreach ($line in $lines)
+			{
+				[Console]::Out.WriteLine([string]$line)
+			}
+			try { $lines | Out-File -FilePath $logPath -Append } catch { }
+		}
+	}
+
+	if ($null -eq $proc.ExitCode)
+	{
+		return -1
+	}
+
+	return [int]$proc.ExitCode
+}
+
+function InvokeNugetInstall($packageName, $version, $source, $outputDirectory, $configPath)
+{
+	# nuget install skips signature validation and exits 0 when the package folder already exists.
+	if (Test-Path -Path "$outputDirectory\$packageName.$version")
+	{
+		StopInstall "$outputDirectory\$packageName.$version already exists before nuget install, so nuget would skip signature validation. The previous agent was not changed."
+	}
+
+	$arguments = "install $packageName -Version $version -Source $source -OutputDirectory `"$outputDirectory`" -NonInteractive"
+	if ($null -ne $configPath)
+	{
+		$arguments += " -ConfigFile `"$configPath`""
+	}
+
+	WriteToInstallLog "Execute Command: nuget $arguments"
+	$exitCode = InvokeNuget $arguments $outputDirectory
+	return [int]$exitCode
+}
+
+function NewSignatureValidationConfig($configPath)
+{
+	$seed = '<?xml version="1.0" encoding="utf-8"?><configuration><config><add key="signatureValidationMode" value="require" /></config></configuration>'
+
+	$logFolder = Split-Path -Parent $configPath
+
+	for ($attempt = 1; $attempt -le 2; $attempt++)
+	{
+		try
+		{
+			[System.IO.File]::WriteAllText($configPath, $seed)
+
+			$arguments = "trusted-signers add -Name nuget.org -ServiceIndex https://api.nuget.org/v3/index.json -Owners newrelic -ConfigFile `"$configPath`" -NonInteractive"
+			WriteToInstallLog "Execute Command (attempt $attempt): nuget $arguments"
+			$exitCode = InvokeNuget $arguments $logFolder
+
+			if ($exitCode -eq 0)
+			{
+				$xdoc = New-Object System.Xml.XmlDocument
+				$xdoc.Load($configPath)
+				$mode = $xdoc.SelectSingleNode("/configuration/config/add[@key='signatureValidationMode']")
+				$certificates = $xdoc.SelectNodes("/configuration/trustedSigners/repository/certificate")
+				$owners = $xdoc.SelectSingleNode("/configuration/trustedSigners/repository/owners")
+
+				$failedChecks = @()
+				if ($null -eq $mode -or $mode.GetAttribute("value") -ne "require")
+				{
+					$failedChecks += "signatureValidationMode is not require"
+				}
+				if ($certificates.Count -lt 1)
+				{
+					$failedChecks += "certificate count is $($certificates.Count)"
+				}
+				if ($null -eq $owners -or $owners.InnerText -cne "newrelic")
+				{
+					$failedChecks += "owners value is '$(if ($null -ne $owners) { $owners.InnerText })', expected 'newrelic'"
+				}
+
+				if ($failedChecks.Count -eq 0)
+				{
+					return $true
+				}
+				WriteToInstallLog "The nuget signature validation config is not valid (attempt ${attempt}): $($failedChecks -join '; ')."
+			}
+		}
+		catch
+		{
+			$err = $_.Exception.Message
+			WriteToInstallLog "Failed to create the nuget signature validation config (attempt ${attempt}): $err"
+		}
+	}
+
+	$warning = "WARNING: Unable to get the nuget.org repository certificates. The agent package signatures will not be validated."
+	WriteToInstallLog $warning
+	[Console]::Out.WriteLine($warning)
+	Remove-Item -Path $configPath -Force -ErrorAction Ignore
+	return $false
+}
+
+function StopInstall($message)
+{
+	WriteToInstallLog $message
+	cd $scriptDir
+	RemoveNewRelicInstallArtifacts $scriptDir
+	exit 1
+}
+
 try
 {
+	$scriptDir = Split-Path -Parent $PSCommandPath
+
 	WriteToInstallLog "Start executing install.ps1"
 
 	#Using Tls12
@@ -379,7 +611,7 @@ try
 		WriteToInstallLog "The environment variable NEWRELIC_LICENSE_KEY must be set. Please make sure to add it."
 	}
 
-	RemoveNewRelicInstallArtifacts "."
+	RemoveNewRelicInstallArtifacts $scriptDir
 
 	if ([System.Version]$agentVersion -ge [System.Version]"8.17.438")
 	{
@@ -409,61 +641,130 @@ try
         AddXmlElements $file $xPaths
     }
 
-	$packageNames = @($nugetPackageForFrameworkApp, $nugetPackageForCoreApp)
-	$stagingFolders = @("NewRelicPackage", "NewRelicCorePackage")
+	# For 8.17.438 and later, one package holds both the Framework and the Core content.
+	$packageName = $nugetPackageForFrameworkApp
 	$newRelicInstallPaths = @("$env:HOME\NewRelicAgent\Framework", "$env:HOME\NewRelicAgent\Core")
 	$newRelicLegacyInstallPaths = @("$env:WEBROOT_PATH\newrelic", "$env:WEBROOT_PATH\newrelic_core")
-	$newRelicNugetContentPaths = $(".\content\newrelic", ".\contentFiles\any\netstandard2.0\newrelic")
+	$newRelicNugetContentPaths = @(".\content\newrelic", ".\contentFiles\any\netstandard2.0\newrelic")
 
-	#Check to see if the old Agent is currently being used
+	$stagingFolder = "$scriptDir\NewRelicPackage"
+	$packageFolder = "$stagingFolder\$packageName.$agentVersion"
 
-	For ($i=0; $i -lt $packageNames.Count; $i++)
+	$targetCount = 2
+	if ([System.Version]$agentVersion -lt [System.Version]"8.17.438")
 	{
-		$packageName = $packageNames[$i]
-		$stagingFolder = $stagingFolders[$i]
-		$newRelicInstallPath= $newRelicInstallPaths[$i]
-		$newRelicLegacyInstallPath = $newRelicLegacyInstallPaths[$i]
-		$newRelicNugetContentPath = $newRelicNugetContentPaths[$i]
-
-		if($packageName -eq "NewRelic.Agent" -and [System.Version]$agentVersion -lt [System.Version]"8.17.438")
-		{
-			WriteToInstallLog "New Relic .NET Agent Site Extension does not install .NET Core Agent version less than 8.17.438"
-			Break
-		}
-
-		New-Item $stagingFolder -ItemType directory
-		cd $stagingFolder
-		WriteToInstallLog "Excecute Command: nuget install $packageName -Version $agentVersion -Source $nugetSource"
-
-		# Using Start-Process with the -NoNewWindow switch because running executables within Kudu can often fail with "Window title cannot be longer than 1023 characters". See: https://github.com/projectkudu/kudu/issues/2635.
-		Start-Process nuget -ArgumentList "install $packageName -Version $agentVersion -Source $nugetSource" -NoNewWindow -PassThru -Wait
-
-		if (-Not (Test-Path -Path "$packageName.$agentVersion"))
-		{
-			WriteToInstallLog "$packageName.$agentVersion folder does not exists."
-			exit 1
-		}
-
-		cd "$packageName.$agentVersion"
-
-		InstallNewAgent $newRelicNugetContentPath $newRelicInstallPath $newRelicLegacyInstallPath
-
-		CopyAgentInfo $newRelicInstallPath
-
-		RemoveDeprecatedInstrumentationFiles $newRelicInstallPath
-
-		cd ..\..
+		WriteToInstallLog "New Relic .NET Agent Site Extension does not install .NET Core Agent version less than 8.17.438"
+		$targetCount = 1
 	}
 
-	RemoveNewRelicInstallArtifacts "."
+	$installTargets = New-Object 'System.Collections.Generic.List[hashtable]'
+	for ($i = 0; $i -lt $targetCount; $i++)
+	{
+		$installTargets.Add(@{
+			InstallPath = [System.IO.Path]::GetFullPath($newRelicInstallPaths[$i])
+			LegacyInstallPath = $newRelicLegacyInstallPaths[$i]
+			ContentPath = $newRelicNugetContentPaths[$i]
+			ContentFullPath = [System.IO.Path]::GetFullPath((Join-Path $packageFolder $newRelicNugetContentPaths[$i]))
+			ExistedBefore = $false
+			CopyStarted = $false
+			Renamed = New-Object 'System.Collections.Generic.List[string]'
+		})
+	}
+
+	# Phase 1: download and validate the package. Nothing under the install paths changes here.
+	$null = New-Item $stagingFolder -ItemType directory
+
+	$signingConfigPath = "$stagingFolder\nuget.signing.config"
+	if ((NewSignatureValidationConfig $signingConfigPath) -ne $true)
+	{
+		$signingConfigPath = $null
+	}
+
+	$exitCode = InvokeNugetInstall $packageName $agentVersion $nugetSource $stagingFolder $signingConfigPath
+	if ($exitCode -ne 0)
+	{
+		StopInstall "nuget install $packageName $agentVersion failed with exit code $exitCode. The previous agent was not changed."
+	}
+
+	if (-Not (Test-Path -Path $packageFolder))
+	{
+		StopInstall "$packageName.$agentVersion folder does not exist. The previous agent was not changed."
+	}
+
+	foreach ($target in $installTargets)
+	{
+		if (-Not (Test-Path -Path "$($target.ContentFullPath)\newrelic.config"))
+		{
+			StopInstall "The package $packageName $agentVersion does not contain $($target.ContentPath)\newrelic.config. The previous agent was not changed."
+		}
+	}
+
+	# Phase 2: install into the agent folders.
+	cd $packageFolder
+
+	$startedTargets = New-Object 'System.Collections.Generic.List[hashtable]'
+	$failedTarget = $null
+
+	try
+	{
+		foreach ($target in $installTargets)
+		{
+			$failedTarget = $target
+			$target.ExistedBefore = Test-Path $target.InstallPath
+			$startedTargets.Add($target)
+
+			InstallNewAgent $target.ContentPath $target.InstallPath $target.LegacyInstallPath $target
+
+			CopyAgentInfo $target.InstallPath
+
+			RemoveDeprecatedInstrumentationFiles $target.InstallPath
+		}
+	}
+	catch
+	{
+		$err = $_.Exception.Message
+		cd $scriptDir
+
+		$allRestored = $true
+		foreach ($startedTarget in $startedTargets)
+		{
+			try
+			{
+				if ((RestoreSavedFiles $startedTarget) -ne $true)
+				{
+					$allRestored = $false
+				}
+			}
+			catch
+			{
+				$restoreErr = $_.Exception.Message
+				WriteToInstallLog "Restore of $($startedTarget.InstallPath) failed: $restoreErr"
+				$allRestored = $false
+			}
+		}
+
+		$outcome = "The previous agent was restored."
+		if (-not $allRestored)
+		{
+			$outcome = "The previous agent could not be fully restored. Restart the app and reinstall the site extension."
+		}
+		elseif (@($startedTargets | Where-Object { $_.ExistedBefore -eq $true }).Count -eq 0)
+		{
+			$outcome = "The partial install was removed."
+		}
+		StopInstall "Failed to install the agent to $($failedTarget.InstallPath): $($err.TrimEnd('.')). $outcome"
+	}
+
+	cd $scriptDir
+
+	RemoveNewRelicInstallArtifacts $scriptDir
 
 	WriteToInstallLog "End executing install.ps1."
 	WriteToInstallLog "-----------------------------"
-	exit $LASTEXITCODE
+	exit 0
 }
 catch
 {
-	$errorMessage = $_.Exception.Message
-	WriteToInstallLog $errorMessage
-	exit 1
+	$err = $_.Exception.Message
+	StopInstall $err
 }
