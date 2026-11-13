@@ -20,8 +20,15 @@ concurrency:
 
 jobs:
 
+  run-script-tests:
+    name: Test install script
+    permissions:
+      contents: read
+    uses: ./.github/workflows/siteextension_tests.yml
+
   run-artifactbuilder:
     name: Run ArtifactBuilder
+    needs: run-script-tests
     runs-on: windows-latest
 
     env:

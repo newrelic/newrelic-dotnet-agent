@@ -1,0 +1,32 @@
+name: Azure Site Extension Script Tests
+
+# Runs on PRs that change the site extension folder, and is called by
+# siteextension_release.yml before the build.
+on:
+  pull_request:
+    paths:
+      - 'build/Packaging/AzureSiteExtension/**'
+      - '.github/workflows/siteextension_tests.yml'
+  workflow_dispatch:
+  workflow_call:
+
+permissions: {}
+
+jobs:
+  run-pester-tests:
+    name: Test Azure Site Extension install script
+    runs-on: windows-2025-vs2026
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # The Windows runner image ships Pester 5.9.0 (and the 3.4.0 default), so nothing is installed.
+      # If the image drops 5.9.0, change the version here.
+      - name: Run Pester tests
+        shell: powershell
+        run: |
+          Import-Module Pester -RequiredVersion 5.9.0
+          Invoke-Pester -Path build\Packaging\AzureSiteExtension\Tests -CI -Output Detailed

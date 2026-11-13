@@ -281,6 +281,9 @@ Agent-overhead harness under `tests/Agent/PerformanceTests/` -- Python-orchestra
 
 GitHub Actions runs unit + integration tests on every PR via [`all_solutions.yml`](../.github/workflows/all_solutions.yml); coverage to Codecov.
 
+The Azure Site Extension install script has a Pester suite at `build/Packaging/AzureSiteExtension/Tests`, run by `siteextension_tests.yml` (on changes under `build/Packaging/AzureSiteExtension`, and before the release build in `siteextension_release.yml`) on Windows PowerShell 5.1 with Pester 5.9.0.
+Locally, 5.1 ships Pester 3.4.0, so run `Import-Module Pester -RequiredVersion 5.9.0` first (`Install-Module Pester -RequiredVersion 5.9.0 -Scope CurrentUser -SkipPublisherCheck` if missing), then `Invoke-Pester -Path build\Packaging\AzureSiteExtension\Tests`.
+
 ### Targeted CI runs (`targeted_tests.yml`)
 
 `all_solutions.yml` runs every test leg plus the MSI, both Linux packages, and
