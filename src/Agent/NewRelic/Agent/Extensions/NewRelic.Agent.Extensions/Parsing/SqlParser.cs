@@ -6,7 +6,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using System.Text.RegularExpressions;
-using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Agent.Extensions.Parsing;
@@ -35,7 +34,6 @@ public static class SqlParser
     private static readonly ParseStatement _statementParser;
     private static readonly ConcurrentDictionary<DatastoreVendor, ParsedSqlStatement> _nullParsedStatementStore = new ConcurrentDictionary<DatastoreVendor, ParsedSqlStatement>();
 
-    private const string SqlParamPrefix = "@";
     private const char SemiColon = ';';
 
     // Regex Phrases
@@ -375,95 +373,6 @@ public static class SqlParser
             // We drop the time string in this.model on the floor.  It may contain quotes, colons, periods, etc.
             return new ParsedSqlStatement(vendor, "time", "waitfor");
         }
-    }
-
-    /// <summary>
-    /// This method takes any parameters in the given command and plugs them back into the parameterized command text.
-    /// </summary>
-    /// <param name="command">SQL command to parse</param>
-    /// <returns>True if the plan should be executed.  False if the plan should be aborted.</returns>
-    public static bool FixParameterizedSql(IDbCommand command)
-    {
-        if (command.CommandType == CommandType.StoredProcedure)
-        {
-            return true;
-        }
-
-        if (command.Parameters.Count == 0)
-        {
-            return true; // no params, using raw sql statement.
-        }
-
-        var sql = command.CommandText;
-        foreach (object parameter in command.Parameters)
-        {
-            var dbParam = (IDbDataParameter)parameter;
-            //DebugParam(dbParam, sqlObfuscator);
-
-            // Binary: We cannot determine exactly what is in the binary so the out could be invalid for SQL.
-            // Object: Object could be almost anything so there is no easy way ToString it that just works without trying to detect all the differnt objects
-            // It is safer, less error prone, and more efficient to short-circuit on these types than to try and parse them out.
-            var type = dbParam.DbType;
-            if (type == DbType.Binary)
-            {
-                Log.Debug("Not executing explain plan since DbType is Binary.");
-                return false;
-            }
-            else if (type == DbType.Object)
-            {
-                Log.Debug("Not executing explain plan since DbType is Object.");
-                return false;
-            }
-
-            // Parameter names can be supplied with the prefix @ or without
-            // if is supplied, remove the @ to the beginning of the param name
-            // This is to deal with regex issues, see below
-            var paramName = dbParam.ParameterName;
-            if (paramName.StartsWith(SqlParamPrefix))
-            {
-                paramName = paramName.Replace(SqlParamPrefix, ""); ;
-            }
-
-            // The following should be handled by a defualt .ToString() to get the numbers as a string
-            // Byte, Decimal, Double, Int16, Int32, Int64, SByte, Single, UInt16, UInt32, UInt64, VarNumeric, Currency
-            object value = dbParam.Value;
-            if (quotableTypes.Contains(type.ToString()))  // the TypeCode for Strings is Int32 for some reason
-            {
-                value = QuoteString(value.ToString());
-            }
-            else if (type == DbType.Boolean)  // value must be type bool
-            {
-                value = ((bool)value) ? 1 : 0;
-            }
-
-            // Regex doesn't consider the @ to be a word so we have to add the @ before the word boundery match "\b"
-            // This is why we strip the @ from the param before using it in the regex.
-            sql = Regex.Replace(sql, $@"@\b{paramName}\b", value.ToString());
-        }
-
-        command.Parameters.Clear();
-        command.CommandText = sql;
-        return true;
-    }
-
-    private static readonly List<string> quotableTypes = new List<string>() {
-        "String",
-        "StringFixedLength",
-        "DateTime",
-        "DateTime2",
-        "Date",
-        "Time",
-        "AnsiString",
-        "AnsiStringFixedLength",
-        "Xml",
-        "Guid",
-        "DateTimeOffset",
-    };
-
-    private static string QuoteString(string str)
-    {
-        //All single quotes in the string are replaced by two singe quotes as sql server doesn't parse single quotes in strings. 
-        return "'" + str.Replace("'", "''") + "'";
     }
 
     private static string GetFullModel(string baseModel, string explicitModel)

@@ -49,12 +49,6 @@ public class MySqlExplainPlanActions
         using (dbCommand)
         using (dbCommand.Connection)
         {
-            var shouldGeneratePlan = SqlParser.FixParameterizedSql(dbCommand);
-            if (!shouldGeneratePlan)
-            {
-                return explainPlan;
-            }
-
             if (dbCommand.Connection.State != ConnectionState.Open)
             {
                 dbCommand.Connection.Open();

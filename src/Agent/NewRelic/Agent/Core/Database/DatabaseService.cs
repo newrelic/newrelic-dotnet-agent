@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Collections.Generic;
 using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Utilities;
@@ -44,6 +45,20 @@ public class DatabaseService : ConfigurationBasedService, IDatabaseService
         return _sqlObfuscator != SqlObfuscator.GetObfuscatingSqlObfuscator()
             ? _sqlObfuscator.GetObfuscatedSql(sql, vendor)
             : GetObfuscatedSqlFromCache(sql, vendor);
+    }
+
+    /// <summary>
+    /// Delegates to <see cref="SqlLiteralScanner.InlineParameters"/> with the given vendor's dialect -- see that
+    /// method for the full substitution and failure contract. Full coverage of the scanning/substitution rules
+    /// themselves lives in SqlLiteralScannerTests; this is just the vendor-dialect wiring.
+    /// </summary>
+    /// <param name="sql"></param>
+    /// <param name="vendor"></param>
+    /// <param name="literalsByParamName"></param>
+    /// <returns></returns>
+    public string InlineSqlParameters(string sql, DatastoreVendor vendor, IReadOnlyDictionary<string, string> literalsByParamName)
+    {
+        return SqlLiteralScanner.InlineParameters(sql, SqlDialects.ForVendor(vendor), literalsByParamName);
     }
 
     /// <summary>

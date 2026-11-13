@@ -20,6 +20,11 @@ internal class MockDbConnection : IDbConnection, ICloneable
 
     public List<IDbCommand> CreatedMockCommands { get; private set; } = new List<IDbCommand>();
 
+    // SetShowPlan always creates exactly two commands per GenerateExplainPlan call, ON then OFF, so "the second
+    // one" reliably means the OFF command -- letting a test simulate it also failing (on top of some other
+    // failure) without needing to match on its CommandText.
+    public Exception ThrowOnSecondCreatedCommandExecute { get; set; }
+
     public IDbTransaction BeginTransaction()
     {
         return null;
@@ -46,6 +51,11 @@ internal class MockDbConnection : IDbConnection, ICloneable
     public IDbCommand CreateCommand()
     {
         var command = new MockDbCommand();
+        if (CreatedMockCommands.Count == 1 && ThrowOnSecondCreatedCommandExecute != null)
+        {
+            command.ExecuteNonQueryException = ThrowOnSecondCreatedCommandExecute;
+        }
+
         CreatedMockCommands.Add(command);
 
         return command;

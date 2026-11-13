@@ -175,6 +175,37 @@ public class MicrosoftDataSqlClientExerciser : MsSqlExerciserBase
     [LibraryMethod]
     [Transaction]
     [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+    public string MsSqlWithParameterizedQueryAndComment(bool paramsWithAtSign)
+    {
+        var teamMembers = new List<string>();
+
+        using (var connection = new SqlConnection(_connectionString))
+        {
+            connection.Open();
+
+            using (var command = new SqlCommand(SelectPersonByParameterizedFirstNameWithCommentMsSql, connection))
+            {
+                command.Parameters.Add(new SqlParameter(paramsWithAtSign ? "@FN" : "FN", "O'Keefe"));
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        teamMembers.Add(reader.GetString(reader.GetOrdinal("FirstName")));
+                        if (reader.NextResult())
+                        {
+                            teamMembers.Add(reader.GetString(reader.GetOrdinal("FirstName")));
+                        }
+                    }
+                }
+            }
+        }
+
+        return string.Join(",", teamMembers);
+    }
+
+    [LibraryMethod]
+    [Transaction]
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
     public async Task<string> MsSqlAsync_WithParameterizedQuery(bool paramsWithAtSign)
     {
         var teamMembers = new List<string>();

@@ -185,6 +185,12 @@ public class NewRelicConfigModifier
             "explainThreshold", "1");
     }
 
+    public void SetDatastoreTracerQueryParametersEnabled(bool enabled)
+    {
+        CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath,
+            new[] { "configuration", "datastoreTracer", "queryParameters" }, "enabled", enabled.ToString().ToLower());
+    }
+
     public void SetTransactionTracerExplainEnabled(bool enabled)
     {
         CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "transactionTracer" },

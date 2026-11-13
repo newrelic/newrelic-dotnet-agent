@@ -23,6 +23,10 @@ internal class MockDbCommand : IDbCommand, ICloneable
 
     public IDataReader MockDataReader { get; private set; } = Mock.Create<IDataReader>();
 
+    // Settable per-command so a test can simulate ExecuteNonQuery itself failing (e.g. "SET SHOWPLAN_ALL OFF"
+    // failing after a different failure already happened), without needing a JustMock proxy for this concrete type.
+    public Exception ExecuteNonQueryException { get; set; }
+
     public MockDbCommand()
     {
         // Using a SqlCommand to create a SqlParameters instance that we can use to simplify creating test parameters.
@@ -53,6 +57,11 @@ internal class MockDbCommand : IDbCommand, ICloneable
 
     public int ExecuteNonQuery()
     {
+        if (ExecuteNonQueryException != null)
+        {
+            throw ExecuteNonQueryException;
+        }
+
         return 0;
     }
 

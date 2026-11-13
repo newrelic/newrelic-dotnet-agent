@@ -11,7 +11,31 @@ namespace NewRelic.Agent.Extensions.Parsing;
 
 public static class SqlServerExplainPlanActions
 {
-    public static ExplainPlan GenerateExplainPlan(object resources)
+    private const string SqlParamPrefix = "@";
+
+    private static readonly List<string> quotableTypes = new List<string>() {
+        "String",
+        "StringFixedLength",
+        "DateTime",
+        "DateTime2",
+        "Date",
+        "Time",
+        "AnsiString",
+        "AnsiStringFixedLength",
+        "Xml",
+        "Guid",
+        "DateTimeOffset",
+    };
+
+    /// <param name="resources">The cloned <see cref="IDbCommand"/> (and its cloned connection) to explain.</param>
+    /// <param name="inlineSqlParameters">
+    /// Inlines bound parameter values into a SQL string, protecting comment and quoted-literal/identifier spans
+    /// from substitution (see <see cref="InlineParametersForCompileOnlyExplain"/> for why this matters). Supplied
+    /// by the caller because the comment/string-literal-aware scanner that implements this lives in Core, which
+    /// this project cannot reference (Core references Extensions, never the reverse) --
+    /// <c>IAgentExperimental.DatabaseService.InlineSqlParameters</c> is the concrete implementation in practice.
+    /// </param>
+    public static ExplainPlan GenerateExplainPlan(object resources, Func<string, IReadOnlyDictionary<string, string>, string> inlineSqlParameters)
     {
         if (!(resources is IDbCommand))
         {
@@ -25,7 +49,7 @@ public static class SqlServerExplainPlanActions
         using (dbCommand)
         using (dbCommand.Connection)
         {
-            var shouldGeneratePlan = SqlParser.FixParameterizedSql(dbCommand);
+            var shouldGeneratePlan = InlineParametersForCompileOnlyExplain(dbCommand, inlineSqlParameters);
             if (!shouldGeneratePlan)
             {
                 return explainPlan;
@@ -38,29 +62,146 @@ public static class SqlServerExplainPlanActions
 
             SetShowPlan(dbCommand.Connection, true);
 
-            using (IDataReader reader = dbCommand.ExecuteReader())
+            try
             {
-                var headers = GetReaderHeaders(reader);
-                // Decide which headers should be obfuscated based on the Vendor (this is only SQL)
-                var obfuscatedHeaders = GetObfuscatedIndexes(headers);
-                explainPlan = new ExplainPlan(headers, new List<List<object>>(), obfuscatedHeaders);
-
-                var explainPlanDatas = new List<List<object>>();
-                while (reader.Read())
+                using (IDataReader reader = dbCommand.ExecuteReader())
                 {
-                    object[] values = new object[reader.FieldCount];
-                    reader.GetValues(values);
-                    explainPlanDatas.Add(values.ToList());
+                    var headers = GetReaderHeaders(reader);
+                    // Decide which headers should be obfuscated based on the Vendor (this is only SQL)
+                    var obfuscatedHeaders = GetObfuscatedIndexes(headers);
+                    explainPlan = new ExplainPlan(headers, new List<List<object>>(), obfuscatedHeaders);
+
+                    var explainPlanDatas = new List<List<object>>();
+                    while (reader.Read())
+                    {
+                        object[] values = new object[reader.FieldCount];
+                        reader.GetValues(values);
+                        explainPlanDatas.Add(values.ToList());
+                    }
+
+                    explainPlan.ExplainPlanDatas = explainPlanDatas;
+
                 }
-
-                explainPlan.ExplainPlanDatas = explainPlanDatas;
-
             }
-
-            SetShowPlan(dbCommand.Connection, false);
+            finally
+            {
+                // Always attempt to turn SHOWPLAN back off, even if ExecuteReader or reading the results
+                // failed -- otherwise the exception would leave the cloned connection's session with
+                // SHOWPLAN_ALL still ON when it's disposed. Swallow a failure here so it doesn't mask the
+                // original exception; the connection is about to be disposed either way.
+                try
+                {
+                    SetShowPlan(dbCommand.Connection, false);
+                }
+                catch
+                {
+                }
+            }
         }
 
         return explainPlan;
+    }
+
+    /// <summary>
+    /// SET SHOWPLAN_ALL ON only intercepts plain-text T-SQL batches -- it cannot see a statement submitted as an
+    /// RPC call, which is what Microsoft.Data.SqlClient / System.Data.SqlClient always does for any command that
+    /// still has bound parameters. So this method plugs the clone's parameter values back into the batch text via
+    /// <paramref name="inlineSqlParameters"/>, which protects comment and quoted-literal/identifier spans from
+    /// substitution (see <see cref="GenerateExplainPlan"/> and <c>SqlLiteralScanner.InlineParameters</c> in Core
+    /// for the full substitution and failure contract). Type-specific literal formatting (which types get quoted,
+    /// how booleans and unrecognized types are handled) stays here, unrelated to the substitution mechanism.
+    ///
+    /// Known limitations, deliberately not addressed here: numeric and date/time values are formatted with the
+    /// current thread culture (via plain .ToString()), not CultureInfo.InvariantCulture, so a non-'.'-decimal or
+    /// ambiguous-date-format culture on the agent process could produce an incorrect literal. And DbType handling
+    /// here is not an exhaustive, fail-closed switch over every DbType value -- only the types this method
+    /// explicitly recognizes get formatted; anything else falls into the naive ToString() branch below rather
+    /// than being rejected. Revisit both before relying on this for exotic parameter types or non-US-culture
+    /// agent deployments.
+    /// </summary>
+    /// <param name="command">SQL Server command to parse.</param>
+    /// <param name="inlineSqlParameters">See <see cref="GenerateExplainPlan"/>.</param>
+    /// <returns>True if the plan should be executed. False if the plan should be aborted.</returns>
+    public static bool InlineParametersForCompileOnlyExplain(IDbCommand command, Func<string, IReadOnlyDictionary<string, string>, string> inlineSqlParameters)
+    {
+        if (command.CommandType == CommandType.StoredProcedure)
+        {
+            return true;
+        }
+
+        if (command.Parameters.Count == 0)
+        {
+            return true; // no params, using raw sql statement.
+        }
+
+        // SQL Server parameter names are case-insensitive, so @UserId in the command text must match a parameter
+        // declared as @userid.
+        var literalsByParamName = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        foreach (object parameter in command.Parameters)
+        {
+            var dbParam = (IDbDataParameter)parameter;
+
+            var paramName = dbParam.ParameterName;
+            if (paramName.StartsWith(SqlParamPrefix))
+            {
+                paramName = paramName.Substring(SqlParamPrefix.Length);
+            }
+
+            string literal;
+            if (dbParam.Value == null || dbParam.Value == DBNull.Value)
+            {
+                literal = "NULL";
+            }
+            else
+            {
+                // Binary: we cannot determine exactly what is in the binary so the output could be invalid SQL.
+                // Object: could be almost anything, so there is no reliable way to ToString() it safely.
+                // It is safer, less error prone, and more efficient to short-circuit on these types than to try
+                // and parse them out.
+                var type = dbParam.DbType;
+                if (type == DbType.Binary || type == DbType.Object)
+                {
+                    return false;
+                }
+
+                if (quotableTypes.Contains(type.ToString())) // the TypeCode for Strings is Int32 for some reason
+                {
+                    literal = QuoteString(dbParam.Value.ToString());
+                }
+                else if (type == DbType.Boolean) // value must be type bool
+                {
+                    literal = ((bool)dbParam.Value) ? "1" : "0";
+                }
+                else
+                {
+                    // Known gap (see method doc comment): naive ToString() on whatever DbType this is, using
+                    // the current thread culture -- not CultureInfo.InvariantCulture. Correct for a plain-ASCII
+                    // numeric on a '.'-decimal culture; not guaranteed correct otherwise, and not an exhaustive,
+                    // fail-closed list of every DbType the way the Binary/Object skip above is.
+                    literal = dbParam.Value.ToString();
+                }
+            }
+
+            literalsByParamName[paramName] = literal;
+        }
+
+        // A null result means the command text could not be classified with confidence (or couldn't be matched
+        // safely), so there is nothing safe to proceed with.
+        var sql = inlineSqlParameters(command.CommandText, literalsByParamName);
+        if (sql == null)
+        {
+            return false;
+        }
+
+        command.Parameters.Clear();
+        command.CommandText = sql;
+        return true;
+    }
+
+    private static string QuoteString(string str)
+    {
+        //All single quotes in the string are replaced by two singe quotes as sql server doesn't parse single quotes in strings.
+        return "'" + str.Replace("'", "''") + "'";
     }
 
     public static object AllocateResources(IDbCommand command)

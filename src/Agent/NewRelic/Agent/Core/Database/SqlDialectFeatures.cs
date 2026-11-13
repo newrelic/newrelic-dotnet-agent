@@ -103,10 +103,10 @@ public static class SqlDialects
         SqlDialectFeatures.HashInIdentifiers |
         SqlDialectFeatures.BackslashEscapes;
 
-    // SQL Server: [x] is a quoted identifier, backslash is never an escape and # prefixes temp tables. Not covered by the
-    // spec's dialect list; the cross-agent mssql cases define it. 0x binary literals are already masked whole by the
-    // numeric-literal rule.
-    public const SqlDialectFeatures MsSql = SqlDialectFeatures.BracketIdentifiers;
+    // SQL Server: [x] is a quoted identifier, backslash is never an escape and # prefixes temp tables. # and $ are also
+    // legal mid-identifier (item#2, price$), not just as a temp-table prefix. Not covered by the spec's dialect list; the
+    // cross-agent mssql cases define it. 0x binary literals are already masked whole by the numeric-literal rule.
+    public const SqlDialectFeatures MsSql = SqlDialectFeatures.BracketIdentifiers | SqlDialectFeatures.HashInIdentifiers;
 
     // Every other vendor: the dialect is unknown, so mask everything any dialect could treat as a literal. # is never an
     // end-of-line comment, because that would swallow SQL Server temp-table names (#t, ##g) reached via ODBC/OLE DB/Other;

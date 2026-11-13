@@ -11,6 +11,7 @@ using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Agent.Tests.TestSerializationHelpers.Models;
 using NewRelic.Testing.Assertions;
+using Newtonsoft.Json.Linq;
 using Xunit;
 
 
@@ -140,6 +141,39 @@ public abstract class MySqlTestsBase<TFixture> : NewRelicIntegrationTest<TFixtur
             () => Assertions.SqlTraceExists(expectedSqlTraces, sqlTraces),
             () => Assertions.TransactionTraceSegmentParametersExist(expectedTransactionTraceSegmentParameters, transactionSample)
         );
+
+        // HasExplainPlan above only checks that the "explain_plan" key is present and non-null -- an agent bug
+        // that generated a present-but-empty plan for this parameterized query (the query uses "?" placeholders)
+        // would slip past that check. Walk the plan content itself and confirm it actually names the queried table.
+        var explainPlanTableNames = GetExplainPlanTableNames(sqlTraces);
+        Assert.True(explainPlanTableNames.Any(t => string.Equals(t, "dates", StringComparison.OrdinalIgnoreCase)),
+            "No explain plan row named the queried table (dates): " + string.Join(" | ", explainPlanTableNames));
+    }
+
+    private static List<string> GetExplainPlanTableNames(IEnumerable<SqlTrace> sqlTraces)
+    {
+        var tableNames = new List<string>();
+        foreach (var sqlTrace in sqlTraces)
+        {
+            if (!sqlTrace.ParameterData.TryGetValue("explain_plan", out var value) || value is not JArray explainPlan)
+            {
+                continue;
+            }
+
+            var headers = explainPlan[0].ToObject<List<string>>();
+            var tableIndex = headers.FindIndex(h => string.Equals(h, "table", StringComparison.OrdinalIgnoreCase));
+            if (tableIndex < 0)
+            {
+                continue;
+            }
+
+            foreach (var row in explainPlan[1])
+            {
+                tableNames.Add(row[tableIndex]?.ToString());
+            }
+        }
+
+        return tableNames;
     }
 }
 

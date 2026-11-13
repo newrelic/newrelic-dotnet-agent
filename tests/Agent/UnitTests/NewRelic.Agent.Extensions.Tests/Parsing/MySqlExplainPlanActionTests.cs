@@ -55,19 +55,28 @@ UPDATE value = @value + 1 FROM foo WHERE Id = @id;";
     }
 
     [Test]
-    public void GenerateExplainPlanReturnsNullIfCommandCannotBeFixed()
+    public void GenerateExplainPlanDoesNotInlineParameters_RunsAsParameterizedQuery()
     {
         var command = new MockDbCommand
         {
             Connection = new MockDbConnection(),
             CommandType = CommandType.Text,
+            CommandText = "SELECT * FROM foo WHERE Id = @id"
         };
+        command.Parameters.Add(new SqlParameter("@id", SqlDbType.Int) { Value = 42 });
 
-        command.Parameters.Add(new SqlParameter("value", SqlDbType.Binary));
+        var mockReader = command.MockDataReader;
+        Mock.Arrange(() => mockReader.FieldCount).Returns(0);
+        Mock.Arrange(() => mockReader.Read()).Returns(false);
 
         var explainPlan = MySqlExplainPlanActions.GenerateExplainPlan(command);
 
-        Assert.That(explainPlan, Is.Null);
+        NrAssert.Multiple(
+            () => Assert.That(explainPlan, Is.Not.Null, "An explain plan should be returned."),
+            () => Assert.That(command.CommandText, Is.EqualTo("EXPLAIN SELECT * FROM foo WHERE Id = @id"), "The EXPLAIN prefix should be added without altering the parameterized command text."),
+            () => Assert.That(command.Parameters, Has.Count.EqualTo(1), "The command's real parameter should remain bound, not inlined or cleared."),
+            () => Assert.That(((IDbDataParameter)command.Parameters["@id"]).Value, Is.EqualTo(42), "The parameter's value should be untouched.")
+        );
     }
 
     [Test]
