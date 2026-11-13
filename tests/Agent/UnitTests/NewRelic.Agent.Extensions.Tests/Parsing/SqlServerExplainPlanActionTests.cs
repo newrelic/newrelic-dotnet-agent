@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
+using System.Text;
 using Microsoft.SqlServer.Server;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Testing.Assertions;
@@ -17,18 +18,48 @@ namespace ParsingTests;
 [TestFixture]
 public class SqlServerExplainPlanActionTests
 {
-    // Real comment-aware stripping lives in Core (NewRelic.Agent.Core.Database.SqlLiteralScanner), which this
-    // project cannot reference -- see the class-level notes on InlineParametersForCompileOnlyExplain. None of the
-    // commands below contain a comment, so a no-op stand-in exercises these tests identically to before the
-    // parameter was added; the comment-stripping wiring itself is covered separately below.
-    private static readonly Func<string, string> NoOpStripComments = sql => sql;
+    // Real comment/quote-aware substitution lives in Core (NewRelic.Agent.Core.Database.SqlLiteralScanner),
+    // which this project cannot reference -- see the class-level notes on InlineParametersForCompileOnlyExplain.
+    // None of the commands below contain a comment or a quoted literal around a placeholder, so this fake
+    // exercises these tests just fine without reimplementing that awareness; it mirrors InlineParameters' own
+    // "ordinary code" token-matching branch (full-identifier-run, case-insensitive via the dictionary's own
+    // comparer, single left-to-right pass) closely enough to avoid double-substituting or truncating on the
+    // "@id vs @id2" and "@first's value is literally \"@second\"" tests below -- a naive sequential
+    // string.Replace per key would get both of those wrong.
+    private static string FakeInlineSqlParameters(string commandText, IReadOnlyDictionary<string, string> literalsByParamName)
+    {
+        var sb = new StringBuilder();
+        for (var i = 0; i < commandText.Length; i++)
+        {
+            if (commandText[i] == '@')
+            {
+                var start = i + 1;
+                var j = start;
+                while (j < commandText.Length && (char.IsLetterOrDigit(commandText[j]) || commandText[j] == '_'))
+                {
+                    j++;
+                }
+
+                if (j > start && literalsByParamName.TryGetValue(commandText.Substring(start, j - start), out var literal))
+                {
+                    sb.Append(literal);
+                    i = j - 1;
+                    continue;
+                }
+            }
+
+            sb.Append(commandText[i]);
+        }
+
+        return sb.ToString();
+    }
 
     [Test]
     public void GenerateExplainPlanReturnsNullIfCommandIsNotIDbCommand()
     {
         var invalidCommand = new object();
 
-        var explainPlan = SqlServerExplainPlanActions.GenerateExplainPlan(invalidCommand, NoOpStripComments);
+        var explainPlan = SqlServerExplainPlanActions.GenerateExplainPlan(invalidCommand, FakeInlineSqlParameters);
 
         Assert.That(explainPlan, Is.Null);
     }
@@ -48,7 +79,7 @@ public class SqlServerExplainPlanActionTests
         };
         command.Parameters.Add(new SqlParameter("@onlyParam", SqlDbType.Binary) { Value = new byte[] { 1, 2, 3 } });
 
-        var explainPlan = SqlServerExplainPlanActions.GenerateExplainPlan(command, NoOpStripComments);
+        var explainPlan = SqlServerExplainPlanActions.GenerateExplainPlan(command, FakeInlineSqlParameters);
 
         Assert.Multiple(() =>
         {
@@ -64,7 +95,7 @@ public class SqlServerExplainPlanActionTests
         var sqlCommand = new SqlCommand("MyProc", emptyConnection) { CommandType = CommandType.StoredProcedure };
         sqlCommand.Parameters.AddWithValue("@unused", "shouldNeverBeTouched");
 
-        var shouldGeneratePlan = SqlServerExplainPlanActions.InlineParametersForCompileOnlyExplain(sqlCommand, NoOpStripComments);
+        var shouldGeneratePlan = SqlServerExplainPlanActions.InlineParametersForCompileOnlyExplain(sqlCommand, FakeInlineSqlParameters);
 
         Assert.Multiple(() =>
         {
@@ -80,7 +111,7 @@ public class SqlServerExplainPlanActionTests
         var emptyConnection = new SqlConnection("Server=falsehost;Database=fakedb;User Id=afakeuser;Password=notarealpasword;"); // not used for anything
         var sqlCommand = new SqlCommand("SELECT * FROM faketable", emptyConnection);
 
-        var shouldGeneratePlan = SqlServerExplainPlanActions.InlineParametersForCompileOnlyExplain(sqlCommand, NoOpStripComments);
+        var shouldGeneratePlan = SqlServerExplainPlanActions.InlineParametersForCompileOnlyExplain(sqlCommand, FakeInlineSqlParameters);
 
         Assert.Multiple(() =>
         {
@@ -98,7 +129,7 @@ public class SqlServerExplainPlanActionTests
         sqlCommand.Parameters.Add("@onlyParam", dbType == DbType.Binary ? SqlDbType.Binary : SqlDbType.Structured);
         sqlCommand.Parameters["@onlyParam"].Value = dbType == DbType.Binary ? (object)new byte[] { 1, 2, 3 } : new SqlDataRecord();
 
-        var shouldGeneratePlan = SqlServerExplainPlanActions.InlineParametersForCompileOnlyExplain(sqlCommand, NoOpStripComments);
+        var shouldGeneratePlan = SqlServerExplainPlanActions.InlineParametersForCompileOnlyExplain(sqlCommand, FakeInlineSqlParameters);
 
         Assert.Multiple(() =>
         {
@@ -115,7 +146,7 @@ public class SqlServerExplainPlanActionTests
         var sqlCommand = new SqlCommand("SELECT * FROM faketable WHERE [flag] = @onlyParam", emptyConnection);
         sqlCommand.Parameters.Add("@onlyParam", SqlDbType.Bit).Value = value;
 
-        var shouldGeneratePlan = SqlServerExplainPlanActions.InlineParametersForCompileOnlyExplain(sqlCommand, NoOpStripComments);
+        var shouldGeneratePlan = SqlServerExplainPlanActions.InlineParametersForCompileOnlyExplain(sqlCommand, FakeInlineSqlParameters);
 
         Assert.Multiple(() =>
         {
@@ -132,7 +163,7 @@ public class SqlServerExplainPlanActionTests
         var sqlCommand = new SqlCommand("SELECT * FROM faketable WHERE [name] = @onlyParam", emptyConnection);
         sqlCommand.Parameters.Add("@onlyParam", SqlDbType.NVarChar).Value = "O'Brien";
 
-        var shouldGeneratePlan = SqlServerExplainPlanActions.InlineParametersForCompileOnlyExplain(sqlCommand, NoOpStripComments);
+        var shouldGeneratePlan = SqlServerExplainPlanActions.InlineParametersForCompileOnlyExplain(sqlCommand, FakeInlineSqlParameters);
 
         Assert.Multiple(() =>
         {
@@ -149,7 +180,7 @@ public class SqlServerExplainPlanActionTests
         var sqlCommand = new SqlCommand("SELECT * FROM faketable WHERE [name] = @onlyParam", emptyConnection);
         sqlCommand.Parameters.Add("onlyParam", SqlDbType.NVarChar).Value = "value";
 
-        var shouldGeneratePlan = SqlServerExplainPlanActions.InlineParametersForCompileOnlyExplain(sqlCommand, NoOpStripComments);
+        var shouldGeneratePlan = SqlServerExplainPlanActions.InlineParametersForCompileOnlyExplain(sqlCommand, FakeInlineSqlParameters);
 
         Assert.Multiple(() =>
         {
@@ -162,38 +193,20 @@ public class SqlServerExplainPlanActionTests
     public void InlineParametersForCompileOnlyExplain_ParameterNameDiffersOnlyByCase_StillInlinesCorrectly()
     {
         // SQL Server parameter names are case-insensitive: @UserId in the command text and a parameter declared
-        // as @userid refer to the same parameter. Without case-insensitive matching, the placeholder regex
+        // as @userid refer to the same parameter. Without case-insensitive matching, the substitution delegate
         // wouldn't match the command text (so it would be left in place) while the parameter was still cleared,
         // so the eventual SHOWPLAN batch would fail with "Must declare the scalar variable @UserId".
         var emptyConnection = new SqlConnection("Server=falsehost;Database=fakedb;User Id=afakeuser;Password=notarealpasword;"); // not used for anything
         var sqlCommand = new SqlCommand("SELECT * FROM faketable WHERE [name] = @UserId", emptyConnection);
         sqlCommand.Parameters.Add("@userid", SqlDbType.NVarChar).Value = "value";
 
-        var shouldGeneratePlan = SqlServerExplainPlanActions.InlineParametersForCompileOnlyExplain(sqlCommand, NoOpStripComments);
+        var shouldGeneratePlan = SqlServerExplainPlanActions.InlineParametersForCompileOnlyExplain(sqlCommand, FakeInlineSqlParameters);
 
         Assert.Multiple(() =>
         {
             Assert.That(shouldGeneratePlan, Is.True);
             Assert.That(sqlCommand.CommandText, Is.EqualTo("SELECT * FROM faketable WHERE [name] = 'value'"));
             Assert.That(sqlCommand.Parameters, Is.Empty, "Parameters should be cleared once inlined.");
-        });
-    }
-
-    [Test]
-    public void InlineParametersForCompileOnlyExplain_RegexMetacharacterValue_IsNotReinterpretedAsAReplacementPattern()
-    {
-        // "a$&b" is special in a .NET regex *replacement string* ($& re-inserts the whole match). Using the
-        // MatchEvaluator overload of Regex.Replace, rather than the string overload, must keep this literal.
-        var emptyConnection = new SqlConnection("Server=falsehost;Database=fakedb;User Id=afakeuser;Password=notarealpasword;"); // not used for anything
-        var sqlCommand = new SqlCommand("SELECT * FROM faketable WHERE [name] = @onlyParam", emptyConnection);
-        sqlCommand.Parameters.Add("@onlyParam", SqlDbType.NVarChar).Value = "a$&b";
-
-        var shouldGeneratePlan = SqlServerExplainPlanActions.InlineParametersForCompileOnlyExplain(sqlCommand, NoOpStripComments);
-
-        Assert.Multiple(() =>
-        {
-            Assert.That(shouldGeneratePlan, Is.True);
-            Assert.That(sqlCommand.CommandText, Is.EqualTo("SELECT * FROM faketable WHERE [name] = 'a$&b'"));
         });
     }
 
@@ -207,7 +220,7 @@ public class SqlServerExplainPlanActionTests
         sqlCommand.Parameters.Add("@first", SqlDbType.NVarChar).Value = "@second";
         sqlCommand.Parameters.Add("@second", SqlDbType.NVarChar).Value = "realValue";
 
-        var shouldGeneratePlan = SqlServerExplainPlanActions.InlineParametersForCompileOnlyExplain(sqlCommand, NoOpStripComments);
+        var shouldGeneratePlan = SqlServerExplainPlanActions.InlineParametersForCompileOnlyExplain(sqlCommand, FakeInlineSqlParameters);
 
         Assert.Multiple(() =>
         {
@@ -220,9 +233,9 @@ public class SqlServerExplainPlanActionTests
     [TestCase(false)]
     public void InlineParametersForCompileOnlyExplain_ParameterNameIsPrefixOfAnother_BothInlinedCorrectly(bool shorterParameterAddedFirst)
     {
-        // "@id" is a textual prefix of "@id2". The combined regex alternation's trailing \b must stop "@id" from
-        // matching inside "@id2" (or vice versa), regardless of which parameter was added -- and therefore
-        // iterated -- first when building that alternation.
+        // "@id" is a textual prefix of "@id2". The substitution delegate must consume the whole identifier run
+        // after "@" before matching, so "@id" never matches inside "@id2" (or vice versa), regardless of which
+        // parameter was added -- and therefore iterated -- first when building literalsByParamName.
         var emptyConnection = new SqlConnection("Server=falsehost;Database=fakedb;User Id=afakeuser;Password=notarealpasword;"); // not used for anything
         var sqlCommand = new SqlCommand("SELECT * FROM faketable WHERE [id] = @id AND [otherId] = @id2", emptyConnection);
 
@@ -237,7 +250,7 @@ public class SqlServerExplainPlanActionTests
             sqlCommand.Parameters.Add("@id", SqlDbType.Int).Value = 1;
         }
 
-        var shouldGeneratePlan = SqlServerExplainPlanActions.InlineParametersForCompileOnlyExplain(sqlCommand, NoOpStripComments);
+        var shouldGeneratePlan = SqlServerExplainPlanActions.InlineParametersForCompileOnlyExplain(sqlCommand, FakeInlineSqlParameters);
 
         Assert.Multiple(() =>
         {
@@ -253,7 +266,7 @@ public class SqlServerExplainPlanActionTests
         var sqlCommand = new SqlCommand("SELECT * FROM faketable WHERE [name] = @onlyParam", emptyConnection);
         sqlCommand.Parameters.Add("@onlyParam", SqlDbType.NVarChar).Value = null;
 
-        var shouldGeneratePlan = SqlServerExplainPlanActions.InlineParametersForCompileOnlyExplain(sqlCommand, NoOpStripComments);
+        var shouldGeneratePlan = SqlServerExplainPlanActions.InlineParametersForCompileOnlyExplain(sqlCommand, FakeInlineSqlParameters);
 
         Assert.Multiple(() =>
         {
@@ -269,7 +282,7 @@ public class SqlServerExplainPlanActionTests
         var sqlCommand = new SqlCommand("SELECT * FROM faketable WHERE [name] = @onlyParam", emptyConnection);
         sqlCommand.Parameters.Add("@onlyParam", SqlDbType.NVarChar).Value = DBNull.Value;
 
-        var shouldGeneratePlan = SqlServerExplainPlanActions.InlineParametersForCompileOnlyExplain(sqlCommand, NoOpStripComments);
+        var shouldGeneratePlan = SqlServerExplainPlanActions.InlineParametersForCompileOnlyExplain(sqlCommand, FakeInlineSqlParameters);
 
         Assert.Multiple(() =>
         {
@@ -279,69 +292,16 @@ public class SqlServerExplainPlanActionTests
     }
 
     [Test]
-    public void InlineParametersForCompileOnlyExplain_CallsStripSqlCommentsOnTheCommandTextBeforeMatching()
-    {
-        var emptyConnection = new SqlConnection("Server=falsehost;Database=fakedb;User Id=afakeuser;Password=notarealpasword;"); // not used for anything
-        var sqlCommand = new SqlCommand("SELECT * FROM faketable WHERE [name] = @onlyParam", emptyConnection);
-        sqlCommand.Parameters.Add("@onlyParam", SqlDbType.NVarChar).Value = "value";
-
-        string observedCommandText = null;
-        string StripComments(string sql)
-        {
-            observedCommandText = sql;
-            return sql;
-        }
-
-        SqlServerExplainPlanActions.InlineParametersForCompileOnlyExplain(sqlCommand, StripComments);
-
-        Assert.That(observedCommandText, Is.EqualTo("SELECT * FROM faketable WHERE [name] = @onlyParam"),
-            "The caller-supplied comment stripper should run against the original command text before placeholder matching.");
-    }
-
-    [Test]
-    public void InlineParametersForCompileOnlyExplain_ParameterNameCoincidentallyInsideAStrippedComment_IsNotMatched()
-    {
-        // Simulates what a real comment-aware stripper (NewRelic.Agent.Core.Database.SqlLiteralScanner.StripComments
-        // in production) would do to a "-- ... @second ..." comment: blank it out before matching. @second's own
-        // placeholder never appears in the real SQL, only in a developer comment that happens to mention its name.
-        // Comments are stripped before placeholder matching, so a parameter name that happens to appear inside a
-        // comment is never treated as a placeholder to fill in -- removing the comment first is simpler than
-        // trying to detect and skip placeholder-like text inside it.
-        var emptyConnection = new SqlConnection("Server=falsehost;Database=fakedb;User Id=afakeuser;Password=notarealpasword;"); // not used for anything
-        var sqlCommand = new SqlCommand(
-            "SELECT * FROM faketable WHERE [name] = @first -- debug: filtering by @second",
-            emptyConnection);
-        sqlCommand.Parameters.Add("@first", SqlDbType.NVarChar).Value = "benignValue";
-        sqlCommand.Parameters.Add("@second", SqlDbType.NVarChar).Value = "ignoredValue";
-
-        string StripTrailingDashDashComment(string sql)
-        {
-            var commentStart = sql.IndexOf("--", StringComparison.Ordinal);
-            return commentStart < 0 ? sql : sql.Substring(0, commentStart) + new string(' ', sql.Length - commentStart);
-        }
-
-        var shouldGeneratePlan = SqlServerExplainPlanActions.InlineParametersForCompileOnlyExplain(sqlCommand, StripTrailingDashDashComment);
-
-        Assert.Multiple(() =>
-        {
-            Assert.That(shouldGeneratePlan, Is.True);
-            Assert.That(sqlCommand.CommandText, Does.StartWith("SELECT * FROM faketable WHERE [name] = 'benignValue'"));
-            Assert.That(sqlCommand.CommandText, Does.Not.Contain("ignoredValue"),
-                "@second's value must not be inlined anywhere -- its placeholder only ever appeared inside the (now-stripped) comment.");
-        });
-    }
-
-    [Test]
-    public void InlineParametersForCompileOnlyExplain_StripSqlCommentsReturnsNull_AbortsThePlanRatherThanMatchingUntrustworthyText()
+    public void InlineParametersForCompileOnlyExplain_InlineSqlParametersReturnsNull_AbortsThePlanRatherThanMatchingUntrustworthyText()
     {
         var emptyConnection = new SqlConnection("Server=falsehost;Database=fakedb;User Id=afakeuser;Password=notarealpasword;"); // not used for anything
         var sqlCommand = new SqlCommand("SELECT * FROM faketable WHERE [name] = @onlyParam", emptyConnection);
         sqlCommand.Parameters.Add("@onlyParam", SqlDbType.NVarChar).Value = "value";
         var originalCommandText = sqlCommand.CommandText;
 
-        string StripCommentsUnableToClassify(string sql) => null;
+        string InlineSqlParametersUnableToClassify(string sql, IReadOnlyDictionary<string, string> literalsByParamName) => null;
 
-        var shouldGeneratePlan = SqlServerExplainPlanActions.InlineParametersForCompileOnlyExplain(sqlCommand, StripCommentsUnableToClassify);
+        var shouldGeneratePlan = SqlServerExplainPlanActions.InlineParametersForCompileOnlyExplain(sqlCommand, InlineSqlParametersUnableToClassify);
 
         Assert.Multiple(() =>
         {
@@ -368,7 +328,7 @@ public class SqlServerExplainPlanActionTests
         Mock.Arrange(() => mockReader.FieldCount).Returns(0);
         Mock.Arrange(() => mockReader.Read()).Returns(false);
 
-        var explainPlan = SqlServerExplainPlanActions.GenerateExplainPlan(command, NoOpStripComments);
+        var explainPlan = SqlServerExplainPlanActions.GenerateExplainPlan(command, FakeInlineSqlParameters);
 
         NrAssert.Multiple(
             () => Assert.That(explainPlan, Is.Not.Null, "An explain plan should be returned."),
@@ -414,7 +374,7 @@ public class SqlServerExplainPlanActionTests
             return values.Length;
         });
 
-        var explainPlan = SqlServerExplainPlanActions.GenerateExplainPlan(command, NoOpStripComments);
+        var explainPlan = SqlServerExplainPlanActions.GenerateExplainPlan(command, FakeInlineSqlParameters);
 
         var expectedCreatedCommands = new[]
         {
@@ -451,7 +411,7 @@ public class SqlServerExplainPlanActionTests
         var mockReader = command.MockDataReader;
         Mock.Arrange(() => mockReader.FieldCount).Throws(new InvalidOperationException("simulated failure reading explain plan results"));
 
-        Assert.That(() => SqlServerExplainPlanActions.GenerateExplainPlan(command, NoOpStripComments), Throws.InvalidOperationException);
+        Assert.That(() => SqlServerExplainPlanActions.GenerateExplainPlan(command, FakeInlineSqlParameters), Throws.InvalidOperationException);
 
         var expectedCreatedCommands = new[]
         {
@@ -483,7 +443,7 @@ public class SqlServerExplainPlanActionTests
         var mockReader = command.MockDataReader;
         Mock.Arrange(() => mockReader.FieldCount).Throws(new InvalidOperationException("simulated failure reading explain plan results"));
 
-        Assert.That(() => SqlServerExplainPlanActions.GenerateExplainPlan(command, NoOpStripComments),
+        Assert.That(() => SqlServerExplainPlanActions.GenerateExplainPlan(command, FakeInlineSqlParameters),
             Throws.InvalidOperationException.With.Message.EqualTo("simulated failure reading explain plan results"));
     }
 

@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Text.RegularExpressions;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Agent.Extensions.Parsing;
@@ -29,13 +28,14 @@ public static class SqlServerExplainPlanActions
     };
 
     /// <param name="resources">The cloned <see cref="IDbCommand"/> (and its cloned connection) to explain.</param>
-    /// <param name="stripSqlComments">
-    /// Strips comments from a SQL string (see <see cref="InlineParametersForCompileOnlyExplain"/> for why this
-    /// matters). Supplied by the caller because the comment/string-literal-aware scanner that implements this
-    /// lives in Core, which this project cannot reference (Core references Extensions, never the reverse) --
-    /// <c>IAgentExperimental.DatabaseService.StripSqlComments</c> is the concrete implementation in practice.
+    /// <param name="inlineSqlParameters">
+    /// Inlines bound parameter values into a SQL string, protecting comment and quoted-literal/identifier spans
+    /// from substitution (see <see cref="InlineParametersForCompileOnlyExplain"/> for why this matters). Supplied
+    /// by the caller because the comment/string-literal-aware scanner that implements this lives in Core, which
+    /// this project cannot reference (Core references Extensions, never the reverse) --
+    /// <c>IAgentExperimental.DatabaseService.InlineSqlParameters</c> is the concrete implementation in practice.
     /// </param>
-    public static ExplainPlan GenerateExplainPlan(object resources, Func<string, string> stripSqlComments)
+    public static ExplainPlan GenerateExplainPlan(object resources, Func<string, IReadOnlyDictionary<string, string>, string> inlineSqlParameters)
     {
         if (!(resources is IDbCommand))
         {
@@ -49,7 +49,7 @@ public static class SqlServerExplainPlanActions
         using (dbCommand)
         using (dbCommand.Connection)
         {
-            var shouldGeneratePlan = InlineParametersForCompileOnlyExplain(dbCommand, stripSqlComments);
+            var shouldGeneratePlan = InlineParametersForCompileOnlyExplain(dbCommand, inlineSqlParameters);
             if (!shouldGeneratePlan)
             {
                 return explainPlan;
@@ -105,37 +105,24 @@ public static class SqlServerExplainPlanActions
     /// <summary>
     /// SET SHOWPLAN_ALL ON only intercepts plain-text T-SQL batches -- it cannot see a statement submitted as an
     /// RPC call, which is what Microsoft.Data.SqlClient / System.Data.SqlClient always does for any command that
-    /// still has bound parameters. So this method plugs the clone's parameter values back into the batch text,
-    /// exactly as the pre-fix code once did, but using a single regex pass with a MatchEvaluator rather than
-    /// sequential text substitution:
-    ///  - A MatchEvaluator's return value is used completely literally; unlike the string overload of
-    ///    Regex.Replace, "$&amp;"/"$1"-style sequences in a parameter's value are never reinterpreted.
-    ///  - Regex.Replace scans its input exactly once, left to right, and never re-examines text it has already
-    ///    written. Matching every parameter name in one combined alternation means one parameter's inlined value
-    ///    can never be mistaken for another parameter's placeholder, because the substituted text is never
-    ///    rescanned.
-    /// Type-specific literal formatting (which types get quoted, how booleans and unrecognized types are
-    /// handled) intentionally matches the original code for now; only the substitution mechanism and null
-    /// handling have changed here.
+    /// still has bound parameters. So this method plugs the clone's parameter values back into the batch text via
+    /// <paramref name="inlineSqlParameters"/>, which protects comment and quoted-literal/identifier spans from
+    /// substitution (see <see cref="GenerateExplainPlan"/> and <c>SqlLiteralScanner.InlineParameters</c> in Core
+    /// for the full substitution and failure contract). Type-specific literal formatting (which types get quoted,
+    /// how booleans and unrecognized types are handled) stays here, unrelated to the substitution mechanism.
     ///
-    /// Known limitations, deliberately not addressed yet: numeric and date/time values are formatted with the
+    /// Known limitations, deliberately not addressed here: numeric and date/time values are formatted with the
     /// current thread culture (via plain .ToString()), not CultureInfo.InvariantCulture, so a non-'.'-decimal or
     /// ambiguous-date-format culture on the agent process could produce an incorrect literal. And DbType handling
     /// here is not an exhaustive, fail-closed switch over every DbType value -- only the types this method
     /// explicitly recognizes get formatted; anything else falls into the naive ToString() branch below rather
     /// than being rejected. Revisit both before relying on this for exotic parameter types or non-US-culture
     /// agent deployments.
-    ///
-    /// Comments are stripped from the command text (via <paramref name="stripSqlComments"/>) before the
-    /// placeholder regex runs, since placeholder-looking text inside a comment should not be treated as a
-    /// placeholder to fill in. A null result from <paramref name="stripSqlComments"/> means the command text
-    /// could not be classified with confidence, so the plan is aborted rather than matched against untrustworthy
-    /// text.
     /// </summary>
     /// <param name="command">SQL Server command to parse.</param>
-    /// <param name="stripSqlComments">See <see cref="GenerateExplainPlan"/>.</param>
+    /// <param name="inlineSqlParameters">See <see cref="GenerateExplainPlan"/>.</param>
     /// <returns>True if the plan should be executed. False if the plan should be aborted.</returns>
-    public static bool InlineParametersForCompileOnlyExplain(IDbCommand command, Func<string, string> stripSqlComments)
+    public static bool InlineParametersForCompileOnlyExplain(IDbCommand command, Func<string, IReadOnlyDictionary<string, string>, string> inlineSqlParameters)
     {
         if (command.CommandType == CommandType.StoredProcedure)
         {
@@ -198,19 +185,13 @@ public static class SqlServerExplainPlanActions
             literalsByParamName[paramName] = literal;
         }
 
-        // A null result means the we could not classify the text with confidence, so there is nothing safe to match against.
-        var commentFreeCommandText = stripSqlComments(command.CommandText);
-        if (commentFreeCommandText == null)
+        // A null result means the command text could not be classified with confidence (or couldn't be matched
+        // safely), so there is nothing safe to proceed with.
+        var sql = inlineSqlParameters(command.CommandText, literalsByParamName);
+        if (sql == null)
         {
             return false;
         }
-
-        // One combined alternation, matched in a single Regex.Replace pass -- see the method doc comment for why
-        // that single pass is what actually matters here, not just the MatchEvaluator overload on its own.
-        // IgnoreCase matches SQL Server's case-insensitive parameter names; the dictionary lookup below is
-        // case-insensitive for the same reason.
-        var combinedPattern = @"@\b(?:" + string.Join("|", literalsByParamName.Keys.Select(Regex.Escape)) + @")\b";
-        var sql = Regex.Replace(commentFreeCommandText, combinedPattern, match => literalsByParamName[match.Value.Substring(SqlParamPrefix.Length)], RegexOptions.IgnoreCase);
 
         command.Parameters.Clear();
         command.CommandText = sql;

@@ -2,15 +2,18 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Collections.Generic;
 using System.Text;
 
 namespace NewRelic.Agent.Core.Database;
 
 /// <summary>
-/// Replaces SQL literals (strings, numbers, comments and dialect-specific literals) with "?" in a single linear pass.
-/// Input that cannot be tokenized safely (an unterminated string, comment or quoted identifier, or a stray comment
-/// terminator) is replaced entirely with "?", because over-obfuscating is always preferable to leaking a value. The
-/// one exception is a block comment nested before its own closing "*/" (<see cref="SqlLexemeKind.NestedComment"/>):
+/// SQL-text scanning operations (literal obfuscation and parameter inlining) sharing one lexeme classifier so
+/// comment/quote/ambiguity handling is defined once. <see cref="Obfuscate(string, SqlDialectFeatures)"/> replaces SQL literals (strings,
+/// numbers, comments and dialect-specific literals) with "?" in a single linear pass. Input that cannot be
+/// tokenized safely (an unterminated string, comment or quoted identifier, or a stray comment terminator) is
+/// replaced entirely with "?", because over-obfuscating is always preferable to leaking a value. The one
+/// exception is a block comment nested before its own closing "*/" (<see cref="SqlLexemeKind.NestedComment"/>):
 /// the output already produced before the comment started is kept, but everything from the comment onward -- not
 /// just the comment itself -- is masked, because what follows it cannot be classified with confidence.
 /// Does not use regular expressions: the input is not length-limited and must never backtrack.
@@ -22,10 +25,10 @@ public static class SqlLiteralScanner
     private const int UuidHexDigitCount = 32;
 
     /// <summary>
-    /// What <see cref="TryClassifyLexeme"/> found starting at a given index. Shared by Obfuscate and
-    /// <see cref="StripComments"/> so both are driven by the exact same comment/quote/ambiguity rules (branch
+    /// What <see cref="TryClassifyLexeme"/> found starting at a given index. Shared by <see cref="Obfuscate(string, SqlDialectFeatures)"/> and
+    /// <see cref="InlineParameters"/> so both are driven by the exact same comment/quote/ambiguity rules (branch
     /// order, nested-block-comment handling, per-dialect backslash escapes); each method decides for itself how to
-    /// render a given kind (mask with "?", blank with spaces, or copy verbatim).
+    /// render a given kind (mask with "?", copy verbatim, or substitute a parameter value).
     /// </summary>
     private enum SqlLexemeKind
     {
@@ -140,15 +143,10 @@ public static class SqlLiteralScanner
             }
 
             // Identifiers and keywords
-            if (char.IsLetter(ch) || ch == '_')
+            if (IsIdentifierStart(ch))
             {
                 var start = i;
-                var dollarInIdentifiers = Has(features, SqlDialectFeatures.DollarQuotedStrings);
-                var hashInIdentifiers = Has(features, SqlDialectFeatures.HashInIdentifiers);
-                while (i < length && IsIdentifierChar(sql[i], dollarInIdentifiers || hashInIdentifiers, hashInIdentifiers))
-                {
-                    i++;
-                }
+                i = ScanIdentifierRun(sql, i, features);
 
                 if (Has(features, SqlDialectFeatures.BooleanLiterals) && IsBooleanLiteral(sql, start, i - start))
                 {
@@ -170,26 +168,28 @@ public static class SqlLiteralScanner
     }
 
     /// <summary>
-    /// Returns sql with every comment (--, # when HashComments is set, and /* */) replaced by same-length runs of
-    /// spaces. Everything else -- string and identifier-quoted content in particular, even when it contains text
-    /// that looks like a comment delimiter -- is returned completely untouched, so (unlike Obfuscate) this never
-    /// shortens or otherwise rewrites non-comment text and preserves character offsets throughout.
+    /// Replaces every "@paramName" token found in a code span of sql with literalsByParamName[paramName], and
+    /// returns the result. The lookup uses whatever comparer literalsByParamName was constructed with -- this
+    /// method does no case-folding of its own -- so a caller relying on SQL Server's case-insensitive parameter
+    /// names (@UserId in the text matching a parameter declared as @userid) must build that dictionary with
+    /// StringComparer.OrdinalIgnoreCase, as InlineParametersForCompileOnlyExplain does. A span classified as
+    /// QuotedLiteral or QuotedIdentifier is copied through untouched -- a placeholder-looking token inside a
+    /// string or quoted identifier is literal content, not a reference, so it is never substituted. A comment
+    /// span (EndOfLineComment/BlockComment) is also copied through untouched: comments have no effect on a SQL
+    /// Server compiled batch, so there is no need to blank them the way a comment-locating pass might.
     ///
-    /// Intended for callers that need to locate real code (e.g. to match a bound parameter's placeholder) without
-    /// being misled by comment text. It's unnecessary to handle a parameter placeholder that happens to appear
-    /// inside a comment specially -- it's simpler and less error-prone to just remove the comment first, since
-    /// comments have no effect on the explain plan.
+    /// Returns null -- refusing to guess -- only when the input cannot be classified with confidence: the same
+    /// AmbiguousComment, NestedComment, UnterminatedQuoted, and MaskRestOfQuery conditions that make Obfuscate
+    /// give up on ever returning a precise (non-fully-masked) result, because this method cannot safely tell
+    /// code from non-code past that point either.
     ///
-    /// Returns null when the input cannot be classified with confidence -- an unterminated or ambiguous comment
-    /// (see the nested-block-comment handling in TryClassifyLexeme), an unterminated string or quoted identifier,
-    /// or a construct the dialect reads as live SQL that this scanner cannot safely tokenize further (<see
-    /// cref="SqlLexemeKind.MaskRestOfQuery"/>, e.g. a Postgres # operator or a MySQL "--" not followed by
-    /// whitespace) -- mirroring Obfuscate's policy of refusing to guess rather than risk treating code as a
-    /// comment or a comment as code. Unlike Obfuscate, which may mask a MaskRestOfQuery construct and still return
-    /// a usable (over-obfuscated) string, StripComments cannot: blanking it with spaces would blank real SQL, not
-    /// a comment, so it must fail outright instead.
+    /// A key in literalsByParamName that never matches any token in sql (including a key that can never match
+    /// anything, such as an empty-named parameter) is not itself a failure: it is simply never substituted. The
+    /// caller clearing its parameters afterward can leave a dangling, now-undeclared "@name" reference in the
+    /// output in that case -- this method does not guard against that; the caller's own ExecuteReader failure path
+    /// (and the transformer's outer exception handling) already absorbs it safely if it happens.
     /// </summary>
-    public static string StripComments(string sql, SqlDialectFeatures features)
+    public static string InlineParameters(string sql, SqlDialectFeatures features, IReadOnlyDictionary<string, string> literalsByParamName)
     {
         if (sql == null)
         {
@@ -206,14 +206,10 @@ public static class SqlLiteralScanner
             {
                 switch (kind)
                 {
-                    case SqlLexemeKind.EndOfLineComment:
-                    case SqlLexemeKind.BlockComment:
-                        AppendSpaces(sb, end - i);
-                        i = end;
-                        continue;
-
                     case SqlLexemeKind.QuotedLiteral:
                     case SqlLexemeKind.QuotedIdentifier:
+                    case SqlLexemeKind.EndOfLineComment:
+                    case SqlLexemeKind.BlockComment:
                         sb.Append(sql, i, end - i);
                         i = end;
                         continue;
@@ -226,6 +222,37 @@ public static class SqlLiteralScanner
                 }
             }
 
+            // An ordinary identifier (not a parameter reference) must be consumed as a whole run here, exactly
+            // as Obfuscate's own identifier branch does, rather than one character at a time through the top of
+            // this loop -- otherwise an interior character that TryClassifyLexeme treats as special elsewhere
+            // (e.g. Oracle's standalone '#' comment starter, legal mid-identifier in "EMP#" under
+            // HashInIdentifiers) would be misclassified as starting a comment/quote instead of being recognized
+            // as part of the identifier it's actually in.
+            if (IsIdentifierStart(sql[i]))
+            {
+                var identifierStart = i;
+                i = ScanIdentifierRun(sql, i, features);
+                sb.Append(sql, identifierStart, i - identifierStart);
+                continue;
+            }
+
+            if (sql[i] == '@')
+            {
+                var start = i + 1;
+                var j = ScanIdentifierRun(sql, start, features);
+
+                if (j > start && literalsByParamName.TryGetValue(sql.Substring(start, j - start), out var literal))
+                {
+                    sb.Append(literal);
+                    i = j;
+                    continue;
+                }
+
+                sb.Append(sql, i, j - i);
+                i = j;
+                continue;
+            }
+
             sb.Append(sql[i]);
             i++;
         }
@@ -235,9 +262,9 @@ public static class SqlLiteralScanner
 
     /// <summary>
     /// Classifies the comment/quote/ambiguous construct (if any) starting at sql[i], shared verbatim by Obfuscate
-    /// and StripComments so both are governed by the exact same recognition rules. Returns false when sql[i] does
-    /// not start one of those constructs -- ordinary code, including the start of a number, identifier, or UUID,
-    /// none of which this shared step needs to know about (only Obfuscate treats those specially).
+    /// and InlineParameters so both are governed by the exact same recognition rules. Returns false when sql[i]
+    /// does not start one of those constructs -- ordinary code, including the start of a number, identifier, or
+    /// UUID, none of which this shared step needs to know about (only Obfuscate treats those specially).
     ///
     /// Branch order matters here exactly as it did in the original single-method scanner: the rest-of-query mask
     /// before comments, comments before strings, Oracle q-quotes before other quotes, quotes before $ handling.
@@ -365,14 +392,6 @@ public static class SqlLiteralScanner
         return false;
     }
 
-    private static void AppendSpaces(StringBuilder sb, int count)
-    {
-        for (var n = 0; n < count; n++)
-        {
-            sb.Append(' ');
-        }
-    }
-
     private static string FullyObfuscatedWithPrefix(string prefix, int maxLength)
     {
         var result = prefix + FullyObfuscated;
@@ -488,7 +507,7 @@ public static class SqlLiteralScanner
             return i;
         }
 
-        if (i < sql.Length && (char.IsLetter(sql[i]) || sql[i] == '_'))
+        if (i < sql.Length && IsIdentifierStart(sql[i]))
         {
             while (i < sql.Length && IsIdentifierChar(sql[i], false, false))
             {
@@ -620,6 +639,35 @@ public static class SqlLiteralScanner
     private static bool IsIdentifierChar(char ch, bool dollarAllowed, bool hashAllowed)
     {
         return char.IsLetterOrDigit(ch) || ch == '_' || (dollarAllowed && ch == '$') || (hashAllowed && ch == '#');
+    }
+
+    /// <summary>
+    /// True when ch can start an identifier: a letter or underscore, in every dialect this scanner knows about.
+    /// Unlike continuation characters, "$"/"#" never start one here -- a leading "#" (temp table) or "$" falls
+    /// through to the scanner's default single-character copy instead, and the identifier that may follow it
+    /// (e.g. the "t" in "#t") starts its own, separate run.
+    /// </summary>
+    private static bool IsIdentifierStart(char ch) => char.IsLetter(ch) || ch == '_';
+
+    /// <summary>
+    /// Returns the index just past the run of identifier characters starting at sql[start] (zero-length, i.e.
+    /// start itself, if sql[start] is not an identifier character), using the dialect's rules for whether "$"/"#"
+    /// count as identifier characters. Shared by Obfuscate's identifier branch, InlineParameters' identifier-skip
+    /// branch, and InlineParameters' "@"-token scan, so this character class stays single-sourced -- duplicating
+    /// this loop across callers is exactly how a mid-identifier "#" (e.g. Oracle's "EMP#") was once misclassified
+    /// as starting a comment in one of them but not the others.
+    /// </summary>
+    private static int ScanIdentifierRun(string sql, int start, SqlDialectFeatures features)
+    {
+        var dollarAllowed = Has(features, SqlDialectFeatures.DollarQuotedStrings);
+        var hashAllowed = Has(features, SqlDialectFeatures.HashInIdentifiers);
+        var i = start;
+        while (i < sql.Length && IsIdentifierChar(sql[i], dollarAllowed || hashAllowed, hashAllowed))
+        {
+            i++;
+        }
+
+        return i;
     }
 
     /// <summary>

@@ -122,7 +122,9 @@ public abstract class SqlCommandWrapperBase : IWrapper
             case DatastoreVendor.MSSQL:
                 agent.EnableExplainPlans(segment,
                     () => SqlServerExplainPlanActions.AllocateResources(sqlCommand),
-                    resources => SqlServerExplainPlanActions.GenerateExplainPlan(resources, commandText => agent.DatabaseService.StripSqlComments(commandText, DatastoreVendor.MSSQL)),
+                    resources => SqlServerExplainPlanActions.GenerateExplainPlan(
+                        resources,
+                        (commandText, literalsByParamName) => agent.DatabaseService.InlineSqlParameters(commandText, DatastoreVendor.MSSQL, literalsByParamName)),
                     null);
                 break;
 

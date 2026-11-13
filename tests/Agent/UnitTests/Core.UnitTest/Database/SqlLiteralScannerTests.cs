@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NUnit.Framework;
@@ -205,9 +206,19 @@ public class SqlLiteralScannerTests
     [TestCase("SELECT * FROM V$SESSION WHERE sid = 5", Def, "SELECT * FROM V$SESSION WHERE sid = ?")]
     [TestCase("x = $", Def, "x = $")]
     [TestCase("SELECT * FROM #t # x = 1", Ms, "SELECT * FROM #t # x = ?")]
+    // item#2 and price$ are legal T-SQL identifiers; HashInIdentifiers (added to SqlDialects.MsSql in this
+    // change) makes the shared identifier scan consume the whole token instead of splitting at '#'/'$'.
+    [TestCase("SELECT * FROM t WHERE item#2 = 5", Ms, "SELECT * FROM t WHERE item#2 = ?")]
+    [TestCase("SELECT * FROM t WHERE price$ = 5", Ms, "SELECT * FROM t WHERE price$ = ?")]
     public void Obfuscate_Dialects(string sql, SqlDialectFeatures features, string expected)
     {
         Assert.That(SqlLiteralScanner.Obfuscate(sql, features), Is.EqualTo(expected));
+    }
+
+    [Test]
+    public void MsSql_HasHashInIdentifiersSet()
+    {
+        Assert.That(SqlDialects.MsSql & SqlDialectFeatures.HashInIdentifiers, Is.EqualTo(SqlDialectFeatures.HashInIdentifiers));
     }
 
     [TestCase(DatastoreVendor.Postgres, SqlDialects.Postgres)]
@@ -321,140 +332,199 @@ public class SqlLiteralScannerTests
     }
 
     [Test]
-    public void StripComments_Null_ReturnsNull()
+    public void InlineParameters_Null_ReturnsNull()
     {
-        Assert.That(SqlLiteralScanner.StripComments(null, Ms), Is.Null);
+        Assert.That(SqlLiteralScanner.InlineParameters(null, Ms, new Dictionary<string, string>()), Is.Null);
     }
 
-    private static void AssertStripped(string sql, SqlDialectFeatures features, string expected)
+    [Test]
+    public void InlineParameters_HappyPath_SubstitutesMultipleParameters()
     {
-        var actual = SqlLiteralScanner.StripComments(sql, features);
+        var literals = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) { ["id"] = "42", ["name"] = "'bob'" };
+        var result = SqlLiteralScanner.InlineParameters("SELECT * FROM t WHERE id = @id AND name = @name", Ms, literals);
+        Assert.That(result, Is.EqualTo("SELECT * FROM t WHERE id = 42 AND name = 'bob'"));
+    }
+
+    [Test]
+    public void InlineParameters_CaseInsensitiveMatch_Substitutes()
+    {
+        var literals = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) { ["userid"] = "'value'" };
+        var result = SqlLiteralScanner.InlineParameters("SELECT * FROM t WHERE x = @UserId", Ms, literals);
+        Assert.That(result, Is.EqualTo("SELECT * FROM t WHERE x = 'value'"));
+    }
+
+    [Test]
+    public void InlineParameters_ParameterNameContainingHashOrDollar_RecognizedAsWholeToken()
+    {
+        // The concrete case the HashInIdentifiers dialect-flag change (SqlDialects.MsSql) exists to fix:
+        // without it, the scan would stop at '#'/'$' and look up "item"/"price" instead of "item#2"/"price$".
+        var literals = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) { ["item#2"] = "'x'", ["price$"] = "'y'" };
         Assert.Multiple(() =>
         {
-            Assert.That(actual, Is.EqualTo(expected));
-            Assert.That(actual.Length, Is.EqualTo(sql.Length), "StripComments must never change the input's length.");
+            Assert.That(SqlLiteralScanner.InlineParameters("SELECT * FROM t WHERE @item#2 = 1", Ms, literals), Is.EqualTo("SELECT * FROM t WHERE 'x' = 1"));
+            Assert.That(SqlLiteralScanner.InlineParameters("SELECT * FROM t WHERE @price$ = 1", Ms, literals), Is.EqualTo("SELECT * FROM t WHERE 'y' = 1"));
         });
     }
 
     [Test]
-    public void StripComments_EndOfLineComment_RunningToEndOfString_IsBlankedPreservingLength()
+    public void InlineParameters_OracleHashInIdentifier_DoesNotMisreadTrailingTextAsComment()
     {
-        var sql = "SELECT 1 -- note";
-        AssertStripped(sql, None, "SELECT 1 " + new string(' ', "-- note".Length));
-    }
-
-    [TestCase("a -- c\r\nb")]
-    [TestCase("a -- c\nb")]
-    [TestCase("a -- c\rb")]
-    public void StripComments_EndOfLineComment_StopsAtNewlineAndKeepsItVerbatim(string sql)
-    {
-        var commentLength = "-- c".Length;
-        var newlineAndSuffix = sql.Substring("a -- c".Length);
-        AssertStripped(sql, None, "a " + new string(' ', commentLength) + newlineAndSuffix);
+        // Oracle identifiers may contain '#' (EMP#), and Oracle also has HashComments set (a standalone '#'
+        // starts an end-of-line comment). Scanning one ordinary character at a time and re-running
+        // TryClassifyLexeme at every position -- instead of consuming a whole identifier run the way
+        // Obfuscate's own identifier branch does -- would misread the '#' inside "EMP#" as a comment opener
+        // and swallow everything after it (including "@id") as unsubstituted "comment" text.
+        var literals = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) { ["id"] = "42" };
+        var result = SqlLiteralScanner.InlineParameters("SELECT EMP# FROM t WHERE a = @id", Ora, literals);
+        Assert.That(result, Is.EqualTo("SELECT EMP# FROM t WHERE a = 42"));
     }
 
     [Test]
-    public void StripComments_MySqlDashDashWithoutTrailingWhitespace_ReturnsNull()
+    public void InlineParameters_ParameterNameIsPrefixOfAnother_BothSubstitutedCorrectly()
     {
-        // MySQL requires "--" to be followed by whitespace to be a comment ("5--1" is 5 - (-1), arithmetic, not a
-        // comment) -- so the shared MasksRestOfQuery check (also used by Obfuscate) flags this as live SQL, not a
-        // comment. Blanking live SQL with spaces would corrupt real code, so StripComments must return null rather
-        // than either treating it as a comment or trying to correctly parse the arithmetic.
-        Assert.That(SqlLiteralScanner.StripComments("5--1", MySql), Is.Null);
+        // "@id" is a textual prefix of "@id2". The scan must consume the *whole* identifier run after "@"
+        // before looking it up, so "@id2" is matched as "id2", never as "id" plus a leftover "2".
+        var literals = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) { ["id"] = "1", ["id2"] = "2" };
+        var result = SqlLiteralScanner.InlineParameters("SELECT * FROM t WHERE [id] = @id AND [otherId] = @id2", Ms, literals);
+        Assert.That(result, Is.EqualTo("SELECT * FROM t WHERE [id] = 1 AND [otherId] = 2"));
     }
 
     [Test]
-    public void StripComments_MySqlDashDashWithTrailingWhitespace_IsAComment()
+    public void InlineParameters_ValueContainingAnotherPlaceholdersText_IsNotRescannedOrSplicedTwice()
     {
-        var sql = "5-- 1";
-        AssertStripped(sql, MySql, "5" + new string(' ', "-- 1".Length));
+        // @first's value is literally the text "@second". A correct single left-to-right pass must not
+        // rescan already-written output and mistake @first's substituted value for a reference to @second.
+        var literals = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) { ["first"] = "'@second'", ["second"] = "'realValue'" };
+        var result = SqlLiteralScanner.InlineParameters("SELECT * FROM t WHERE a = @first AND b = @second", Ms, literals);
+        Assert.That(result, Is.EqualTo("SELECT * FROM t WHERE a = '@second' AND b = 'realValue'"));
+    }
+
+    [TestCase("x = 'a @id b'")]
+    [TestCase("x = \"a @id b\"")]
+    public void InlineParameters_PlaceholderLookingTokenInsideAQuotedLiteral_IsLeftUntouched(string sqlTemplate)
+    {
+        var literals = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) { ["id"] = "999" };
+        Assert.That(SqlLiteralScanner.InlineParameters(sqlTemplate, Ms, literals), Is.EqualTo(sqlTemplate));
     }
 
     [Test]
-    public void StripComments_BlockComment_IsBlankedPreservingLength()
+    public void InlineParameters_PlaceholderLookingTokenInsideABracketQuotedIdentifier_IsLeftUntouched()
     {
-        var sql = "a /* c */ b";
-        AssertStripped(sql, None, "a " + new string(' ', "/* c */".Length) + " b");
+        var literals = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) { ["id"] = "999" };
+        var sql = "SELECT [@id] FROM t";
+        Assert.That(SqlLiteralScanner.InlineParameters(sql, Ms, literals), Is.EqualTo(sql));
     }
 
     [Test]
-    public void StripComments_AgentMetadataComment_IsBlankedLikeAnyOtherComment()
+    public void InlineParameters_PlaceholderLookingTokenInsideABacktickQuotedIdentifier_IsLeftUntouched()
     {
-        // The scanner strips every comment uniformly; keeping the agent's own metadata comment verbatim (as
-        // SqlObfuscator's GetObfuscatedSql does) is that caller's job, not the scanner's.
-        var sql = "/*nr_service_guid=\"abc\"*/SELECT 1";
-        var commentLength = "/*nr_service_guid=\"abc\"*/".Length;
-        AssertStripped(sql, Pg, new string(' ', commentLength) + "SELECT 1");
-    }
-
-    [TestCase("a /* never closed")]
-    [TestCase("a */ b")]
-    [TestCase("/* /* */ secret")]
-    [TestCase("/* a /* b */ c */ d")]
-    [TestCase("SELECT name FROM users /* a /* b */ WHERE id = 5")]
-    public void StripComments_UnterminatedOrAmbiguousBlockComment_ReturnsNull(string sql)
-    {
-        // An unterminated comment, a stray "*/", and a nested "/*" before the first "*/" (ambiguous in dialects
-        // where block comments nest) cannot be classified with confidence, so the scanner gives up entirely
-        // rather than risk treating commented text as code -- even though Obfuscate, unlike StripComments, keeps
-        // its already-produced output for the nested case (see the Obfuscate test for the same input).
-        Assert.That(SqlLiteralScanner.StripComments(sql, Pg), Is.Null);
-    }
-
-    [TestCase("a 'never closed")]
-    [TestCase("[a never closed")]
-    public void StripComments_UnterminatedStringOrQuotedIdentifier_ReturnsNull(string sql)
-    {
-        Assert.That(SqlLiteralScanner.StripComments(sql, Ms), Is.Null);
-    }
-
-    // A MaskRestOfQuery construct is live SQL the scanner cannot safely tokenize further -- not a comment -- so
-    // blanking it with spaces (as StripComments does for actual comments) would corrupt real code instead of
-    // just removing a comment. These must return null, the same as the unterminated/ambiguous cases above. The
-    // MySQL "--" and Default-dialect "#" MaskRestOfQuery cases are covered by the tests above.
-    [TestCase("data #>> '{a}' FROM t WHERE id = 5", Pg)] // Postgres # is the XOR/JSONB operator, never a comment.
-    [TestCase("SELECT $$a$$ WHERE id = 5", Def)] // Default-dialect $$ opens a dollar-quoted string, not recognized as a quote by this dialect.
-    public void StripComments_MaskRestOfQuery_ReturnsNull(string sql, SqlDialectFeatures features)
-    {
-        Assert.That(SqlLiteralScanner.StripComments(sql, features), Is.Null);
+        var literals = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) { ["id"] = "999" };
+        var sql = "SELECT `@id` FROM t";
+        Assert.That(SqlLiteralScanner.InlineParameters(sql, MySql, literals), Is.EqualTo(sql));
     }
 
     [Test]
-    public void StripComments_StringLiteralContainingCommentLookalikeText_IsKeptVerbatim()
+    public void InlineParameters_QuotedLiteralContainingAnEscapedQuote_IsLeftUntouched()
     {
-        // "--" and "/*" inside a real string literal are string content, not comments, and must survive untouched.
-        AssertStripped("x = 'a--b' AND y = '/* not */ a comment'", None,
-            "x = 'a--b' AND y = '/* not */ a comment'");
+        // The doubled single quote is an escaped quote within the same literal, not a close followed by a new
+        // literal -- the whole "it''s @id" span is one QuotedLiteral, so the placeholder-looking "@id" inside it
+        // must not be substituted.
+        var literals = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) { ["id"] = "999" };
+        var sql = "x = 'it''s @id'";
+        Assert.That(SqlLiteralScanner.InlineParameters(sql, Ms, literals), Is.EqualTo(sql));
     }
 
     [Test]
-    public void StripComments_QuotedIdentifierContainingCommentLookalikeText_IsKeptVerbatim()
+    public void InlineParameters_PlaceholderLookingTokenInsideADollarQuotedString_IsLeftUntouched()
     {
-        AssertStripped("[t /* also not a comment */] = 1", Ms, "[t /* also not a comment */] = 1");
+        var literals = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) { ["id"] = "999" };
+        var sql = "x = $tag$ @id $tag$";
+        Assert.That(SqlLiteralScanner.InlineParameters(sql, Pg, literals), Is.EqualTo(sql));
+    }
+
+    [TestCase("SELECT * FROM t WHERE x = @id -- filtering by @id", "SELECT * FROM t WHERE x = 999 -- filtering by @id")]
+    [TestCase("SELECT * FROM t /* @id */ WHERE x = @id", "SELECT * FROM t /* @id */ WHERE x = 999")]
+    public void InlineParameters_PlaceholderLookingTokenInsideAComment_IsLeftUntouchedAndCommentSurvivesVerbatim(string sql, string expected)
+    {
+        // The real placeholder is substituted; the comment's own "@id" is left exactly as written, and the
+        // comment text itself survives verbatim in the output (not blanked, per the spec's "Decided" section).
+        var literals = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) { ["id"] = "999" };
+        Assert.That(SqlLiteralScanner.InlineParameters(sql, Ms, literals), Is.EqualTo(expected));
+    }
+
+    [TestCase("a /* never closed", Pg)]
+    [TestCase("/* a /* b */ c */ d", Pg)]
+    [TestCase("a */ b", Pg)] // a stray block-comment terminator with no matching opener
+    [TestCase("a 'never closed", Ms)]
+    [TestCase("[a never closed", Ms)]
+    [TestCase("data #>> '{a}' FROM t WHERE id = 5", Pg)]
+    [TestCase("SELECT $$a$$ WHERE id = 5", Def)]
+    public void InlineParameters_UnclassifiableInput_ReturnsNull(string sql, SqlDialectFeatures features)
+    {
+        Assert.That(SqlLiteralScanner.InlineParameters(sql, features, new Dictionary<string, string>()), Is.Null);
     }
 
     [Test]
-    public void StripComments_DollarQuotedStringContainingCommentLookalikeText_IsKeptVerbatim()
+    public void InlineParameters_DeclaredParameterNeverReferencedInText_SubstitutionStillSucceeds()
     {
-        AssertStripped("x = $tag$ -- not a comment $tag$ AND y", Pg, "x = $tag$ -- not a comment $tag$ AND y");
+        var literals = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) { ["unused"] = "'x'" };
+        var sql = "SELECT * FROM t";
+        Assert.That(SqlLiteralScanner.InlineParameters(sql, Ms, literals), Is.EqualTo(sql));
     }
 
     [Test]
-    public void StripComments_DefaultDialectHashFollowedByWhitespace_ReturnsNull()
+    public void InlineParameters_EmptyNamedParameter_SubstitutionStillSucceedsAndIsSimplyNeverMatched()
     {
-        // A # followed by whitespace in the Default dialect may be a MySQL/Oracle comment, but it isn't known to
-        // be one, so MasksRestOfQuery flags it as unclassifiable live SQL rather than an actual comment. Blanking
-        // it with spaces would risk corrupting real code, so StripComments must return null instead.
-        Assert.That(SqlLiteralScanner.StripComments("a #  comment\nb", Def), Is.Null);
+        // The catastrophic empty-name bug (a single empty dictionary key corrupting every other parameter in
+        // the same regex-alternation pass) cannot happen here: matching is driven by tokens actually scanned
+        // from the text, never by compiling the dictionary's keys into a pattern, so an empty key just never matches.
+        var literals = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) { [""] = "'positional'", ["id"] = "42" };
+        var result = SqlLiteralScanner.InlineParameters("SELECT * FROM t WHERE a = @id AND b = @other", Ms, literals);
+        Assert.That(result, Is.EqualTo("SELECT * FROM t WHERE a = 42 AND b = @other"));
     }
 
     [Test]
-    public void StripComments_SqlServerDialect_ParameterNameCoincidentallyInATrailingComment_IsBlanked()
+    public void InlineParameters_AtAtSystemVariable_ReproducedUnchanged()
     {
-        var sql = "SELECT * FROM faketable WHERE [name] = @first -- debug: filtering by @second";
-        var commentLength = "-- debug: filtering by @second".Length;
-        var expected = "SELECT * FROM faketable WHERE [name] = @first " + new string(' ', commentLength);
+        // No declared parameter is named "IDENTITY", so neither "@" of "@@IDENTITY" matches anything: the
+        // first "@" is followed immediately by another "@" (not an identifier character, so its run is empty
+        // and it's left as a bare "@"), and the second "@IDENTITY" simply finds no dictionary match.
+        var literals = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) { ["unrelated"] = "999" };
+        var sql = "SELECT @@IDENTITY";
+        Assert.That(SqlLiteralScanner.InlineParameters(sql, Ms, literals), Is.EqualTo(sql));
+    }
 
-        AssertStripped(sql, Ms, expected);
+    [Test]
+    public void InlineParameters_BareAtNotFollowedByIdentifierCharacter_LeftUntouched()
+    {
+        var sql = "SELECT @ FROM t";
+        Assert.That(SqlLiteralScanner.InlineParameters(sql, Ms, new Dictionary<string, string>()), Is.EqualTo(sql));
+    }
+
+    [Test]
+    public void InlineParameters_AtIsTheLastCharacterOfInput_LeftUntouched()
+    {
+        // "@" at the very end of the string has no identifier characters after it to even look at (the
+        // identifier-run scan's bound check must stop at sql.Length rather than read past it).
+        var sql = "SELECT @";
+        Assert.That(SqlLiteralScanner.InlineParameters(sql, Ms, new Dictionary<string, string>()), Is.EqualTo(sql));
+    }
+
+    [Test]
+    public void InlineParameters_NullDictionaryWithNoPlaceholderInText_DoesNotThrow()
+    {
+        // literalsByParamName is never touched unless a real "@" + identifier token is found, so sql with no
+        // such token works fine even with a null dictionary.
+        Assert.That(SqlLiteralScanner.InlineParameters("SELECT 1", Ms, null), Is.EqualTo("SELECT 1"));
+    }
+
+    [Test]
+    public void InlineParameters_NullDictionaryWithPlaceholderInText_ThrowsNullReferenceException()
+    {
+        // literalsByParamName is required once a real "@identifier" token is encountered. This documents that
+        // contract explicitly rather than leaving it an undocumented surprise -- every actual caller always
+        // builds a real dictionary (InlineParametersForCompileOnlyExplain never passes null), so this is a
+        // documentation test, not a guard this method itself needs to add.
+        Assert.That(() => SqlLiteralScanner.InlineParameters("SELECT @id", Ms, null), Throws.InstanceOf<NullReferenceException>());
     }
 }
