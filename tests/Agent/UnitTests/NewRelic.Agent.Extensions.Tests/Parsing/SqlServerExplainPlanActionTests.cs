@@ -22,10 +22,12 @@ public class SqlServerExplainPlanActionTests
     // which this project cannot reference -- see the class-level notes on InlineParametersForCompileOnlyExplain.
     // None of the commands below contain a comment or a quoted literal around a placeholder, so this fake
     // exercises these tests just fine without reimplementing that awareness; it mirrors InlineParameters' own
-    // "ordinary code" token-matching branch (full-identifier-run, case-insensitive via the dictionary's own
-    // comparer, single left-to-right pass) closely enough to avoid double-substituting or truncating on the
-    // "@id vs @id2" and "@first's value is literally \"@second\"" tests below -- a naive sequential
-    // string.Replace per key would get both of those wrong.
+    // "ordinary code" token-matching branch as closely as this project can: a full-identifier-run (including
+    // '#'/'$', which SqlDialects.MsSql's HashInIdentifiers now allows mid-identifier -- this file is MSSQL-only,
+    // so that's always the relevant character class here), case-insensitive via the dictionary's own comparer,
+    // single left-to-right pass that advances past the whole run whether or not it matched. That avoids
+    // double-substituting or truncating on the "@id vs @id2" and "@first's value is literally \"@second\""
+    // tests below -- a naive sequential string.Replace per key would get both of those wrong.
     private static string FakeInlineSqlParameters(string commandText, IReadOnlyDictionary<string, string> literalsByParamName)
     {
         var sb = new StringBuilder();
@@ -35,14 +37,22 @@ public class SqlServerExplainPlanActionTests
             {
                 var start = i + 1;
                 var j = start;
-                while (j < commandText.Length && (char.IsLetterOrDigit(commandText[j]) || commandText[j] == '_'))
+                while (j < commandText.Length && (char.IsLetterOrDigit(commandText[j]) || commandText[j] == '_' || commandText[j] == '#' || commandText[j] == '$'))
                 {
                     j++;
                 }
 
-                if (j > start && literalsByParamName.TryGetValue(commandText.Substring(start, j - start), out var literal))
+                if (j > start)
                 {
-                    sb.Append(literal);
+                    if (literalsByParamName.TryGetValue(commandText.Substring(start, j - start), out var literal))
+                    {
+                        sb.Append(literal);
+                    }
+                    else
+                    {
+                        sb.Append(commandText, i, j - i);
+                    }
+
                     i = j - 1;
                     continue;
                 }

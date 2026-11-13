@@ -59,7 +59,9 @@ public class Class_DatabaseService
             //    so a wrong dialect would wrongly substitute it.
             //  - "@item#2" is only captured as one whole token under MsSql
             //    (SqlDialectFeatures.HashInIdentifiers, added for exactly this); under Default the scan would
-            //    stop at "item", substitute that, and leave a dangling literal "#2" behind.
+            //    stop at "item" instead, which isn't a dictionary key on its own, so nothing would match and
+            //    "@item#2" would be left completely unsubstituted in the output -- still provably wrong, just
+            //    not the "substitute 'item' and leave '#2' dangling" shape the wording previously implied.
             const string sql = "SELECT * FROM faketable WHERE [name] = @first AND [@second] = 1 AND @item#2 = 2 -- debug: @second";
             var literals = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             {
