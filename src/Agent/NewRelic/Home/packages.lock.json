@@ -13,9 +13,9 @@
       },
       "NewRelic.Agent.Internal.Profiler": {
         "type": "Direct",
-        "requested": "[10.56.0.1, )",
-        "resolved": "10.56.0.1",
-        "contentHash": "MWnckhuMRegGZmXhGOwCVSTyws6W/lGzhtHCel3zr4acTYigeSqa75hnWPxTi88xq5z80LfSeOkkc6g4Nm8Arg=="
+        "requested": "[10.57.0.27, )",
+        "resolved": "10.57.0.27",
+        "contentHash": "ubNVWfmGZC2FNw1J9qJ9YHDT44HUwHQVAm6gLsOb/o5timeyQBW7N18xMf0FKH1+24TByDBvjgqjj0NCXa1mUQ=="
       },
       "Microsoft.NETCore.Platforms": {
         "type": "Transitive",
