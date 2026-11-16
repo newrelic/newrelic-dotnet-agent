@@ -20,14 +20,26 @@ concurrency:
 
 jobs:
 
+  run-script-tests:
+    name: Test install script
+    permissions:
+      contents: read
+    uses: ./.github/workflows/siteextension_tests.yml
+
   run-artifactbuilder:
     name: Run ArtifactBuilder
+    needs: run-script-tests
     runs-on: windows-latest
 
     env:
       artifacts_script_path: ${{ github.workspace }}\build
 
     steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
+        with:
+          egress-policy: audit
+
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:

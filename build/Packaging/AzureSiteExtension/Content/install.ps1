@@ -10,10 +10,18 @@
 # If the agent configuration file is found, only an upgrade
 # is performed.
 
+$ProgressPreference = 'SilentlyContinue'
+
 function WriteToInstallLog($output)
 {
-	$logPath = (Split-Path -Parent $PSCommandPath) + "\install.log"
-	Write-Output "[$(Get-Date)] -- $output" | Out-File -FilePath $logPath -Append
+	try
+	{
+		$logPath = (Split-Path -Parent $PSCommandPath) + "\install.log"
+		Write-Output "[$(Get-Date)] -- $output" | Out-File -FilePath $logPath -Append
+	}
+	catch
+	{
+	}
 }
 
 function CheckIfAppIs35
@@ -316,8 +324,108 @@ function GetLatestPackageVersion($packageId, $maxVersion, $repoUrl)
 	return ($versions | Sort-Object { [System.Version]$_ } | Select-Object -Last 1)
 }
 
+function InvokeNuget($arguments, $logFolder)
+{
+	$stdoutFile = "$logFolder\nuget.stdout.log"
+	$stderrFile = "$logFolder\nuget.stderr.log"
+
+	# Start-Process with -NoNewWindow because running executables within Kudu can often fail with "Window title cannot be longer than 1023 characters". See: https://github.com/projectkudu/kudu/issues/2635.
+	$proc = Start-Process nuget -ArgumentList $arguments -NoNewWindow -PassThru -RedirectStandardOutput $stdoutFile -RedirectStandardError $stderrFile
+	$null = $proc.Handle
+
+	# Periodic output so a host idle timeout sees activity.
+	while (-not $proc.WaitForExit(15000))
+	{
+		[Console]::Out.WriteLine("Waiting for nuget...")
+	}
+
+	$logPath = (Split-Path -Parent $PSCommandPath) + "\install.log"
+	foreach ($file in @($stdoutFile, $stderrFile))
+	{
+		$lines = Get-Content -Path $file -ErrorAction SilentlyContinue
+		if ($lines)
+		{
+			foreach ($line in $lines)
+			{
+				[Console]::Out.WriteLine([string]$line)
+			}
+			try { $lines | Out-File -FilePath $logPath -Append } catch { }
+		}
+	}
+
+	if ($null -eq $proc.ExitCode)
+	{
+		return -1
+	}
+
+	return [int]$proc.ExitCode
+}
+
+function InvokeNugetInstall($packageName, $version, $source, $outputDirectory, $configPath)
+{
+	# nuget install skips signature validation and exits 0 when the package folder already exists.
+	if (Test-Path -Path "$outputDirectory\$packageName.$version")
+	{
+		StopInstall "$outputDirectory\$packageName.$version already exists before nuget install, so nuget would skip signature validation. The previous agent was not changed."
+	}
+
+	$arguments = "install $packageName -Version $version -Source $source -OutputDirectory `"$outputDirectory`" -NonInteractive"
+	if ($null -ne $configPath)
+	{
+		$arguments += " -ConfigFile `"$configPath`""
+	}
+
+	WriteToInstallLog "Execute Command: nuget $arguments"
+	$exitCode = InvokeNuget $arguments $outputDirectory
+	return [int]$exitCode
+}
+
+function NewSignatureValidationConfig($configPath)
+{
+	$seed = '<?xml version="1.0" encoding="utf-8"?><configuration><config><add key="signatureValidationMode" value="require" /></config></configuration>'
+
+	$logFolder = Split-Path -Parent $configPath
+
+	for ($attempt = 1; $attempt -le 2; $attempt++)
+	{
+		try
+		{
+			[System.IO.File]::WriteAllText($configPath, $seed)
+
+			$arguments = "trusted-signers add -Name nuget.org -ServiceIndex https://api.nuget.org/v3/index.json -Owners newrelic -ConfigFile `"$configPath`" -NonInteractive"
+			WriteToInstallLog "Execute Command (attempt $attempt): nuget $arguments"
+			$exitCode = InvokeNuget $arguments $logFolder
+
+			if ($exitCode -eq 0)
+			{
+				return $true
+			}
+		}
+		catch
+		{
+			$err = $_.Exception.Message
+			WriteToInstallLog "Failed to create the nuget signature validation config (attempt ${attempt}): $err"
+		}
+	}
+
+	$warning = "WARNING: Unable to get the nuget.org repository certificates. The agent package signatures will not be validated."
+	WriteToInstallLog $warning
+	[Console]::Out.WriteLine($warning)
+	Remove-Item -Path $configPath -Force -ErrorAction Ignore
+	return $false
+}
+
+function StopInstall($message)
+{
+	WriteToInstallLog $message
+	RemoveNewRelicInstallArtifacts "."
+	exit 1
+}
+
 try
 {
+	$scriptDir = Split-Path -Parent $PSCommandPath
+
 	WriteToInstallLog "Start executing install.ps1"
 
 	#Using Tls12
@@ -409,51 +517,58 @@ try
         AddXmlElements $file $xPaths
     }
 
-	$packageNames = @($nugetPackageForFrameworkApp, $nugetPackageForCoreApp)
-	$stagingFolders = @("NewRelicPackage", "NewRelicCorePackage")
+	# For 8.17.438 and later, one package holds both the Framework and the Core content, so it is downloaded once.
+	$packageName = $nugetPackageForFrameworkApp
 	$newRelicInstallPaths = @("$env:HOME\NewRelicAgent\Framework", "$env:HOME\NewRelicAgent\Core")
 	$newRelicLegacyInstallPaths = @("$env:WEBROOT_PATH\newrelic", "$env:WEBROOT_PATH\newrelic_core")
 	$newRelicNugetContentPaths = $(".\content\newrelic", ".\contentFiles\any\netstandard2.0\newrelic")
 
-	#Check to see if the old Agent is currently being used
+	$stagingFolder = "$scriptDir\NewRelicPackage"
+	$packageFolder = "$stagingFolder\$packageName.$agentVersion"
 
-	For ($i=0; $i -lt $packageNames.Count; $i++)
+	$null = New-Item $stagingFolder -ItemType directory
+
+	$signingConfigPath = "$stagingFolder\nuget.signing.config"
+	if ((NewSignatureValidationConfig $signingConfigPath) -ne $true)
 	{
-		$packageName = $packageNames[$i]
-		$stagingFolder = $stagingFolders[$i]
-		$newRelicInstallPath= $newRelicInstallPaths[$i]
-		$newRelicLegacyInstallPath = $newRelicLegacyInstallPaths[$i]
-		$newRelicNugetContentPath = $newRelicNugetContentPaths[$i]
-
-		if($packageName -eq "NewRelic.Agent" -and [System.Version]$agentVersion -lt [System.Version]"8.17.438")
-		{
-			WriteToInstallLog "New Relic .NET Agent Site Extension does not install .NET Core Agent version less than 8.17.438"
-			Break
-		}
-
-		New-Item $stagingFolder -ItemType directory
-		cd $stagingFolder
-		WriteToInstallLog "Excecute Command: nuget install $packageName -Version $agentVersion -Source $nugetSource"
-
-		# Using Start-Process with the -NoNewWindow switch because running executables within Kudu can often fail with "Window title cannot be longer than 1023 characters". See: https://github.com/projectkudu/kudu/issues/2635.
-		Start-Process nuget -ArgumentList "install $packageName -Version $agentVersion -Source $nugetSource" -NoNewWindow -PassThru -Wait
-
-		if (-Not (Test-Path -Path "$packageName.$agentVersion"))
-		{
-			WriteToInstallLog "$packageName.$agentVersion folder does not exists."
-			exit 1
-		}
-
-		cd "$packageName.$agentVersion"
-
-		InstallNewAgent $newRelicNugetContentPath $newRelicInstallPath $newRelicLegacyInstallPath
-
-		CopyAgentInfo $newRelicInstallPath
-
-		RemoveDeprecatedInstrumentationFiles $newRelicInstallPath
-
-		cd ..\..
+		$signingConfigPath = $null
 	}
+
+	$exitCode = InvokeNugetInstall $packageName $agentVersion $nugetSource $stagingFolder $signingConfigPath
+	if ($exitCode -ne 0)
+	{
+		StopInstall "nuget install $packageName $agentVersion failed with exit code $exitCode. The previous agent was not changed."
+	}
+
+	if (-Not (Test-Path -Path $packageFolder))
+	{
+		StopInstall "$packageName.$agentVersion folder does not exist. The previous agent was not changed."
+	}
+
+	cd $packageFolder
+
+	# Before 8.17.438 the package has no Core content and only the Framework install runs.
+	$targetCount = $newRelicInstallPaths.Count
+	if ([System.Version]$agentVersion -lt [System.Version]"8.17.438")
+	{
+		$targetCount = 1
+	}
+
+	for ($i = 0; $i -lt $targetCount; $i++)
+	{
+		InstallNewAgent $newRelicNugetContentPaths[$i] $newRelicInstallPaths[$i] $newRelicLegacyInstallPaths[$i]
+
+		CopyAgentInfo $newRelicInstallPaths[$i]
+
+		RemoveDeprecatedInstrumentationFiles $newRelicInstallPaths[$i]
+	}
+
+	if ($targetCount -eq 1)
+	{
+		WriteToInstallLog "New Relic .NET Agent Site Extension does not install .NET Core Agent version less than 8.17.438"
+	}
+
+	cd ..\..
 
 	RemoveNewRelicInstallArtifacts "."
 

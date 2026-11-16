@@ -25,6 +25,13 @@ upstream release cannot change what CI runs. OpenSSF Scorecard's
   list only for another same-org reference that must stay on `main`.
 - Dependabot (`github-actions` ecosystem, monthly) bumps the SHA pins. Never
   "simplify" a SHA pin back to a tag.
+- **Start every job with the `step-security/harden-runner` step** whenever
+  possible. Copy the pinned SHA and the `with:` block from an existing
+  workflow (`egress-policy: audit`). Linux jobs also set `disable-sudo: true`;
+  on a matrix with Windows use `disable-sudo: ${{ runner.os == 'Linux' }}`,
+  and a Windows-only job omits the key. A job that only calls a reusable
+  workflow (`uses:`) has no steps, so the called workflow carries the step.
+  Some older jobs lack it. That is a known gap, not a precedent.
 - Unpinned `apt-get` and `choco` installs remain in some workflows. They are
   known gaps, not a precedent. Do not add more.
 - `.github/actions/setup-pinned-dotnet` is also used by
