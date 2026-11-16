@@ -18,4 +18,11 @@ public static class VersionHelpers
     {
         return new Version(version);
     }
+
+    public static bool IsMajorBump(string oldVersion, string newVersion)
+    {
+        return Version.TryParse(oldVersion, out var oldParsed)
+            && Version.TryParse(newVersion, out var newParsed)
+            && newParsed.Major > oldParsed.Major;
+    }
 }
