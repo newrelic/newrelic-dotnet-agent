@@ -13,7 +13,7 @@ namespace Dotty;
 
 public class CsprojHandler
 {
-    public static List<string> UpdatePackageReferences(string csprojPath, List<ProjectPackageInfo> packages, List<NugetVersionData> versionDatas)
+    public static List<string> UpdatePackageReferences(string csprojPath, List<ProjectPackageInfo> packages, List<NugetVersionData> versionDatas, ISet<string> majorBumps)
     {
         Log.Information("Processing {CSProj}...", csprojPath);
         var updateLog = new List<string>();
@@ -88,7 +88,11 @@ public class CsprojHandler
 
                             updatedCsProj = true;
 
-                            updateLog.Add($"- Package [{versionData.PackageName}]({versionData.Url}){(!string.IsNullOrEmpty(tfm) ? $" for {tfm}" : "")} was updated from {version} to {targetVersion}.");
+                            var isMajorBump = VersionHelpers.IsMajorBump(version, targetVersion);
+                            if (isMajorBump)
+                                majorBumps.Add($"- [{versionData.PackageName}]({versionData.Url}) {version} to {targetVersion}");
+
+                            updateLog.Add($"- {(isMajorBump ? ":warning: **MAJOR VERSION BUMP** " : "")}Package [{versionData.PackageName}]({versionData.Url}){(!string.IsNullOrEmpty(tfm) ? $" for {tfm}" : "")} was updated from {version} to {targetVersion}.");
                         }
                     }
                 }
