@@ -38,9 +38,20 @@ file name.
 
 ### Adding a release
 
-A release adds an entry for its version in a pull request, with the hashes of the files the release built (the release's
-`SHA256/checksums.md` lists them) and the unversioned copies. The monitoring reports a file with no entry as a warning after a
-day, so the entry does not need to land before the release, but it should land soon after.
+The release-notes job of a deploy (`publish_release_notes.yml`) opens a pull request that adds the release's entry, on a branch named
+`release-data/<version>`. `.github/scripts/release_data_entry.py` hashes the files the release built and deployed, checks each
+against the `SHA256/` file the build wrote for it, adds the unversioned copies the deploy makes, and refuses to overwrite a recorded
+version with different hashes. The job runs after the release notes pull request, so a failure here does not hold those up. A person
+reviews and merges the data pull request: compare the hashes with the release notes table, or download a file and run
+`gh attestation verify <file> --repo newrelic/newrelic-dotnet-agent`.
+
+The monitoring reports a file with no entry as a warning after a day, so the pull request does not need to be merged before the
+release is announced, but it should be merged soon after.
+
+If the step fails, or to rehearse it, run the workflow with `dry_run` (nothing is pushed or opened), or add the entry yourself:
+`python3 .github/scripts/release_data_entry.py --download-site <the DownloadSite folder of the release build> --version <x.y.z>
+--run-id <release_build run> --data-file release-data/download-site-hashes.json`. The script has unit tests
+(`python3 -m unittest discover -s .github/scripts -p 'test_*.py'`), which the Workflow Lint workflow runs.
 
 ### Removing files from the site
 

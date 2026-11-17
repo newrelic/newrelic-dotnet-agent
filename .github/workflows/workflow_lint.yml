@@ -30,3 +30,7 @@ jobs:
       - name: Run workflow checks
         run: python3 .github/scripts/check-workflows.py
         shell: bash
+
+      - name: Test the release data script
+        run: python3 -m unittest discover -s .github/scripts -p 'test_*.py'
+        shell: bash
