@@ -1,24 +1,6 @@
 {
  "schema": 1,
  "description": "sha256 of every installer and package in dot_net_agent/previous_releases/<version>/ on the download site. Read by the .NET Downloads Audit hash monitor. Each version lists the cross-checks that held for all its files.",
- "unverified": {
-  "10.20.1": {
-   "reason": "Not verified. The hashes in this version's release notes do not match the files on the download site, and nothing else recorded here settles which is right. Under investigation.",
-   "files": [
-    "NewRelicDotNetAgent_10.20.1_x64.msi",
-    "NewRelicDotNetAgent_10.20.1_x64.zip",
-    "NewRelicDotNetAgent_10.20.1_x86.msi",
-    "NewRelicDotNetAgent_10.20.1_x86.zip",
-    "NewRelicDotNetAgent_x64.msi",
-    "NewRelicDotNetAgent_x86.msi",
-    "newrelic-dotnet-agent-10.20.1-1.x86_64.rpm",
-    "newrelic-dotnet-agent_10.20.1_amd64.deb",
-    "newrelic-dotnet-agent_10.20.1_amd64.tar.gz",
-    "newrelic-dotnet-agent_10.20.1_arm64.deb",
-    "newrelic-dotnet-agent_10.20.1_arm64.tar.gz"
-   ]
-  }
- },
  "versions": {
   "8.17.438.0": {
    "recorded": "2026-11-16",
@@ -1620,6 +1602,34 @@
     "newrelic-dotnet-agent_10.20.0_amd64.tar.gz": "16c88cc03a54fe6a5564ebc3247975fffe77bddc171f2c34f93139cab858300d",
     "newrelic-dotnet-agent_10.20.0_arm64.deb": "c6c2e16258f25ab948515168631184e165d6bd995c8d37714113063272510d3d",
     "newrelic-dotnet-agent_10.20.0_arm64.tar.gz": "3168b6ff8e970bd986c6815beecae6c9f8a69f837712a900c97652ef2fc3c9b8"
+   }
+  },
+  "10.20.1": {
+   "recorded": "2026-11-17",
+   "source": "backfill: hashed from the download site",
+   "cross_checks": [
+    "bucket-sha256"
+   ],
+   "exceptions": [
+    {
+     "ignored": [
+      "release-notes"
+     ],
+     "reason": "The release notes listed hashes that did not match the files on the download site. The .NET agent team concluded that the files on the site are correct and the release notes were wrong. The release notes were corrected in https://github.com/newrelic/docs-website/pull/26691."
+    }
+   ],
+   "files": {
+    "NewRelicDotNetAgent_10.20.1_x64.msi": "1a4507643d0582deb528de10aebff6a0f01d4e67c6e8439d821e79a56629eaa8",
+    "NewRelicDotNetAgent_10.20.1_x64.zip": "5a7b2fd7135f0ce1b26cfdee64b7c16fc01349386ce7bdeb7b2d5b60fb647953",
+    "NewRelicDotNetAgent_10.20.1_x86.msi": "f440f58f37ed4c1e3417eeb69cdb134005b097b4ac55575dc2b3dd125a866607",
+    "NewRelicDotNetAgent_10.20.1_x86.zip": "3996e99e3a1f75d6d6040c06212bb285482e13a200798c63bda6731814f9af9f",
+    "NewRelicDotNetAgent_x64.msi": "1a4507643d0582deb528de10aebff6a0f01d4e67c6e8439d821e79a56629eaa8",
+    "NewRelicDotNetAgent_x86.msi": "f440f58f37ed4c1e3417eeb69cdb134005b097b4ac55575dc2b3dd125a866607",
+    "newrelic-dotnet-agent-10.20.1-1.x86_64.rpm": "a264987ad3ee58c8db69501ea5ed51b45f2552afb35a1349a968b58359e66257",
+    "newrelic-dotnet-agent_10.20.1_amd64.deb": "ce5d84df20da898a00c6bc8a2394f8fd535557004eafc2ff262806cca3840ae0",
+    "newrelic-dotnet-agent_10.20.1_amd64.tar.gz": "23b561f707502237155548fa19a97bb41b99c15ebe7bd4222c3612b3b6ad3b50",
+    "newrelic-dotnet-agent_10.20.1_arm64.deb": "5c4fcdbe7cca62ee3725415d62e852c5d5a716cdcd3442aafb9b95554b643d51",
+    "newrelic-dotnet-agent_10.20.1_arm64.tar.gz": "a69f5c6b109ff1674490abbac68f54b466d1ed35395159eac49169037d266a44"
    }
   },
   "10.20.2": {
