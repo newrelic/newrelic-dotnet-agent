@@ -1,6 +1,5 @@
 #!/bin/bash
 set -e # Halt the build script on any error
-set -o pipefail # A failing tar must not be hidden by the gzip it is piped to
 
 # subroutine for signing .rpm. NB: this should not be called multiple times!
 function sign_rpm {
@@ -105,9 +104,7 @@ cp /common/profile.d/${PACKAGE_NAME}-path.sh "${TARBALL_ROOT}/etc/profile.d"
 dos2unix "${TARBALL_ROOT}"/etc/profile.d/*.sh
 chmod 644 "${TARBALL_ROOT}"/etc/profile.d/*.sh
 
-find "${TARBALL_ROOT}" -exec touch -h -d "@${SOURCE_DATE_EPOCH}" {} +
-
-tar --sort=name --mtime="@${SOURCE_DATE_EPOCH}" --owner=0 --group=0 --numeric-owner -cvf - "${TARBALL_ROOT}" | gzip -n > "./SOURCES/${PACKAGE_NAME}-${AGENT_VERSION}.tar.gz"
+tar -zcvf "./SOURCES/${PACKAGE_NAME}-${AGENT_VERSION}.tar.gz" "${TARBALL_ROOT}"
 
 # create RPM package(s)
 rpmbuild -bb SPECS/${PACKAGE_NAME}.spec

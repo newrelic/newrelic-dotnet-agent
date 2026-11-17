@@ -29,9 +29,6 @@ echo "AGENT_VERSION=${AGENT_VERSION}"
 export SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:-$(date +%s)}"
 echo "SOURCE_DATE_EPOCH=${SOURCE_DATE_EPOCH}"
 
-function clamp_mtimes {
-    find "$1" -exec touch -h -d "@${SOURCE_DATE_EPOCH}" {} +
-}
 INSTALL_ROOT=/tmp/${ARCH}/${PACKAGE_NAME}
 PACKAGE_FILE_BASENAME="${PACKAGE_NAME}_${AGENT_VERSION}_$ARCH"
 
@@ -72,9 +69,8 @@ printf "\nPackage: ${PACKAGE_NAME}\nVersion: ${AGENT_VERSION}\n" >> ${INSTALL_RO
 # agentinfo.json for deb
 cp /deb/agentinfo.json .
 
-# create debian package (dpkg-deb also clamps entry and ar member times to SOURCE_DATE_EPOCH)
-clamp_mtimes ${INSTALL_ROOT}
-dpkg-deb --root-owner-group --build ${INSTALL_ROOT}
+# create debian package (dpkg-deb clamps entry and ar member times to SOURCE_DATE_EPOCH)
+dpkg-deb --build ${INSTALL_ROOT}
 cp /tmp/${ARCH}/${PACKAGE_NAME}.deb /release/${PACKAGE_FILE_BASENAME}.deb
 # create a copy of the agent that only uses the package name to make it easy to link to builds
 cp /tmp/${ARCH}/${PACKAGE_NAME}.deb /release/${PACKAGE_NAME}_${ARCH}.deb
@@ -85,9 +81,7 @@ cp /common/agentinfo.json .
 # create tar.gz archive
 cd ..
 
-clamp_mtimes ${PACKAGE_NAME}
-
-tar --sort=name --mtime="@${SOURCE_DATE_EPOCH}" --owner=0 --group=0 --numeric-owner -cvf - ${PACKAGE_NAME} | gzip -n > /release/${PACKAGE_FILE_BASENAME}.tar.gz
+tar --sort=name --mtime="@${SOURCE_DATE_EPOCH}" -zcvf /release/${PACKAGE_FILE_BASENAME}.tar.gz ${PACKAGE_NAME} || { echo "::error tar exited with code: $?"; exit 1; }
 
 if [ $? -gt 0 ] ; then
     echo "::error Docker run exited with code: $?"
