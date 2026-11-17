@@ -109,7 +109,7 @@
     <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
   </ItemGroup>
 
-  <Target Name="ILRepack" AfterTargets="Build" Condition="'$(TargetFramework)' != ''">
+  <Target Name="ILRepack" DependsOnTargets="ResolveSourceDate" AfterTargets="Build" Condition="'$(TargetFramework)' != ''">
     <ItemGroup>
       <PossibleRefsForILRepack Include="$(OutputPath)*.dll" />
     </ItemGroup>
@@ -206,7 +206,7 @@
       <AssemblyDependency>&quot;$(OutputPath)..\..\NewRelic.Agent.Extensions\$(TargetFramework)-ILRepacked&quot;</AssemblyDependency>
     </PropertyGroup>
     <Message Importance="High" Text="Executing AssemblyModifier to complete the ILRepack process" />
-    <Exec Command="$(AssemblyModifierCommand) $(AssemblyToModify) $(AssemblyDependency) --key=&quot;$(AssemblyOriginatorKeyFile)&quot;" />
+    <Exec Command="$(AssemblyModifierCommand) $(AssemblyToModify) $(AssemblyDependency) --key=&quot;$(AssemblyOriginatorKeyFile)&quot; --timestamp=$(SourceDateUnixSeconds)" />
   </Target>
 
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />

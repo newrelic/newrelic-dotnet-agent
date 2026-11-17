@@ -5,20 +5,35 @@ using Mono.Cecil;
 using Mono.Cecil.Cil;
 
 const string KeyOption = "--key=";
+const string TimestampOption = "--timestamp=";
 const string NormalizeOnlyOption = "--normalize-only";
 
 var positionalArgs = args.Where(a => !a.StartsWith("--")).ToArray();
 
 if (positionalArgs.Length == 0)
 {
-    Console.WriteLine($"Usage: <program> <assembly-path> [<search-directory>] [{KeyOption}<strong-name-key-file>] [{NormalizeOnlyOption}]");
+    Console.WriteLine($"Usage: <program> <assembly-path> [<search-directory>] [{KeyOption}<strong-name-key-file>] [{TimestampOption}<unix-seconds>] [{NormalizeOnlyOption}]");
     return 1;
 }
 
 string assemblyPath = positionalArgs[0];
 string? keyPath = args.FirstOrDefault(a => a.StartsWith(KeyOption))?[KeyOption.Length..];
 bool normalizeOnly = args.Contains(NormalizeOnlyOption);
+var timestampArg = args.FirstOrDefault(a => a.StartsWith(TimestampOption))?[TimestampOption.Length..];
 var logger = GetLogger(assemblyPath);
+
+uint? timestamp = null;
+
+if (timestampArg != null)
+{
+    if (!uint.TryParse(timestampArg, out var parsedTimestamp))
+    {
+        logger.Log($"Error: '{timestampArg}' is not a valid {TimestampOption}<unix-seconds> value");
+        return 1;
+    }
+
+    timestamp = parsedTimestamp;
+}
 
 if (!File.Exists(assemblyPath))
 {
@@ -61,9 +76,9 @@ try
         }
     }
 
-    // The merged assembly is always rewritten so that its identity depends only on its content: ILRepack stamps a random MVID,
-    // a random PE timestamp and a debug path through a randomly named temporary directory into its output.
-    var writerParameters = new WriterParameters { DeterministicMvid = true };
+    // The merged assembly is always rewritten so that its MVID is derived from its content and its PE timestamp is the
+    // source date rather than a value computed by ILRepack or Cecil.
+    var writerParameters = new WriterParameters { DeterministicMvid = true, Timestamp = timestamp };
 
     if (keyPath != null)
     {
@@ -80,7 +95,7 @@ try
     else
     {
         // Any other symbol format routes Mono.Cecil to NativePdbWriter, which faults intermittently, so drop symbols instead.
-        // This also drops the debug directory, which would otherwise carry the random ILRepack temp path and PDB id.
+        // This also drops the debug directory, so no PDB path or PDB id is embedded.
         writerParameters.SymbolWriterProvider = new DropSymbolsWriterProvider();
     }
 
