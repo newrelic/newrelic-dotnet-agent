@@ -1,5 +1,6 @@
 #!/bin/bash
 set -e # Halt the build script on any error
+set -o pipefail # A failing tar must not be hidden by the gzip it is piped to
 
 # subroutine for signing .rpm. NB: this should not be called multiple times!
 function sign_rpm {
@@ -53,6 +54,10 @@ if [ -z "$AGENT_VERSION" ]; then
     fi
 fi
 echo "AGENT_VERSION=|$AGENT_VERSION|"
+
+# Every timestamp in the output derives from this value, so two builds of one commit match.
+export SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:-$(date +%s)}"
+echo "SOURCE_DATE_EPOCH=${SOURCE_DATE_EPOCH}"
 TARGET_SYSTEM_INSTALL_PATH="/usr/local/${PACKAGE_NAME}"
 SPECFILE="/rpm/${PACKAGE_NAME}.spec"
 
@@ -61,6 +66,9 @@ mkdir -p ~/rpmbuild/{RPMS,SRPMS,BUILD,SOURCES,SPECS,tmp}
 cat <<EOF >~/.rpmmacros
 %_topdir   %(echo $HOME)/rpmbuild
 %_tmppath  %{_topdir}/tmp
+%_buildhost reproducible
+%use_source_date_epoch_as_buildtime 1
+%clamp_mtime_to_source_date_epoch 1
 EOF
 
 dos2unix ${SPECFILE} && cp ${SPECFILE} ~/rpmbuild/SPECS
@@ -97,7 +105,9 @@ cp /common/profile.d/${PACKAGE_NAME}-path.sh "${TARBALL_ROOT}/etc/profile.d"
 dos2unix "${TARBALL_ROOT}"/etc/profile.d/*.sh
 chmod 644 "${TARBALL_ROOT}"/etc/profile.d/*.sh
 
-tar -zcvf "./SOURCES/${PACKAGE_NAME}-${AGENT_VERSION}.tar.gz" "${TARBALL_ROOT}"
+find "${TARBALL_ROOT}" -exec touch -h -d "@${SOURCE_DATE_EPOCH}" {} +
+
+tar --sort=name --mtime="@${SOURCE_DATE_EPOCH}" --owner=0 --group=0 --numeric-owner -cvf - "${TARBALL_ROOT}" | gzip -n > "./SOURCES/${PACKAGE_NAME}-${AGENT_VERSION}.tar.gz"
 
 # create RPM package(s)
 rpmbuild -bb SPECS/${PACKAGE_NAME}.spec

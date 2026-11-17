@@ -72,6 +72,10 @@ runs:
           unset GPG_KEYS_DIR
         fi
 
+        # Commit time, so rebuilding one commit yields identical timestamps in the package.
+        SOURCE_DATE_EPOCH=$(git -C "${{ github.workspace }}" log -1 --format=%ct)
+        export SOURCE_DATE_EPOCH
+
         cd "${{ github.workspace }}/build/Linux"
         docker compose build "build_$PACKAGE"
         docker compose run -e AGENT_VERSION="$agentVersion" "${signArgs[@]}" "build_$PACKAGE"
