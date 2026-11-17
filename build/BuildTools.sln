@@ -19,6 +19,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CompatibilityDocs", "Compat
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CompatibilityDocs.Tests", "CompatibilityDocs.Tests\CompatibilityDocs.Tests.csproj", "{72A04E3F-CDBD-4991-9B69-69752D4AC40A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArtifactBuilder.Tests", "ArtifactBuilder.Tests\ArtifactBuilder.Tests.csproj", "{6AE62595-6A5A-4D68-B2F4-12177B0EC639}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -125,6 +127,18 @@ Global
 		{72A04E3F-CDBD-4991-9B69-69752D4AC40A}.Release|x64.Build.0 = Release|Any CPU
 		{72A04E3F-CDBD-4991-9B69-69752D4AC40A}.Release|x86.ActiveCfg = Release|Any CPU
 		{72A04E3F-CDBD-4991-9B69-69752D4AC40A}.Release|x86.Build.0 = Release|Any CPU
+		{6AE62595-6A5A-4D68-B2F4-12177B0EC639}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6AE62595-6A5A-4D68-B2F4-12177B0EC639}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6AE62595-6A5A-4D68-B2F4-12177B0EC639}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{6AE62595-6A5A-4D68-B2F4-12177B0EC639}.Debug|x64.Build.0 = Debug|Any CPU
+		{6AE62595-6A5A-4D68-B2F4-12177B0EC639}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{6AE62595-6A5A-4D68-B2F4-12177B0EC639}.Debug|x86.Build.0 = Debug|Any CPU
+		{6AE62595-6A5A-4D68-B2F4-12177B0EC639}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6AE62595-6A5A-4D68-B2F4-12177B0EC639}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6AE62595-6A5A-4D68-B2F4-12177B0EC639}.Release|x64.ActiveCfg = Release|Any CPU
+		{6AE62595-6A5A-4D68-B2F4-12177B0EC639}.Release|x64.Build.0 = Release|Any CPU
+		{6AE62595-6A5A-4D68-B2F4-12177B0EC639}.Release|x86.ActiveCfg = Release|Any CPU
+		{6AE62595-6A5A-4D68-B2F4-12177B0EC639}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
