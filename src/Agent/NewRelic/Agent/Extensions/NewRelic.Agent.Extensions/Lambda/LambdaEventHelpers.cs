@@ -250,12 +250,16 @@ public static class LambdaEventHelpers
     {
         //HTTP headers
         IDictionary<string, string> headers = webReqEvent.Headers;
-        Func<IDictionary<string, string>, string, string> headersGetter = (h, k) => h[k];
+        Func<IDictionary<string, string>, string, string> headersGetter = agent.Configuration.AllowAllRequestHeaders
+            ? (h, k) => h[k]
+            : static (h, k) => TryGetValueIgnoreCase(h, k, out var value) ? value : null;
 
         if (eventType != AwsLambdaEventType.APIGatewayHttpApiV2ProxyRequest) // v2 doesn't have MultiValueHeaders
         {
             IDictionary<string, IList<string>> multiValueHeaders = webReqEvent.MultiValueHeaders;
-            Func<IDictionary<string, IList<string>>, string, string> multiValueHeadersGetter = (h, k) => string.Join(",", h[k]);
+            Func<IDictionary<string, IList<string>>, string, string> multiValueHeadersGetter = agent.Configuration.AllowAllRequestHeaders
+                ? (h, k) => string.Join(",", h[k])
+                : static (h, k) => TryGetValueIgnoreCase(h, k, out var values) ? string.Join(",", values) : null;
 
             if (multiValueHeaders != null)
             {
@@ -294,6 +298,27 @@ public static class LambdaEventHelpers
 
         if (webReqEvent.QueryStringParameters != null)
             transaction.SetRequestParameters(webReqEvent.QueryStringParameters);
+    }
+
+    // Exact-case key first (same result as before), then the first case-insensitive match
+    private static bool TryGetValueIgnoreCase<TValue>(IDictionary<string, TValue> headers, string key, out TValue value)
+    {
+        if (headers.TryGetValue(key, out value))
+        {
+            return true;
+        }
+
+        foreach (var item in headers)
+        {
+            if (item.Key.Equals(key, StringComparison.OrdinalIgnoreCase))
+            {
+                value = item.Value;
+                return true;
+            }
+        }
+
+        value = default;
+        return false;
     }
 
     private static TransportType GetDistributedTransportType(string forwardedProto)
