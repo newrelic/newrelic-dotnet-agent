@@ -11,6 +11,11 @@ on:
         description: 'Run ID of the Release Build workflow (release_build.yml) that was triggered by creating a Release in GitHub.  ID can be found in URL for run.'
         required: true
         type: string
+      dry_run:
+        description: 'Rehearse: build the release data entry and the release notes, but push no branch and open no pull request (neither in this repository nor in docs-website).'
+        required: false
+        type: boolean
+        default: false
   workflow_call:
     inputs:
       agent_version:
@@ -21,6 +26,11 @@ on:
         description: 'Run ID of the Release Build workflow (release_build.yml) that was triggered by creating a Release in GitHub.  ID can be found in URL for run.'
         required: true
         type: string
+      dry_run:
+        description: 'Rehearse: build the release data entry and the release notes, but push no branch and open no pull request (neither in this repository nor in docs-website).'
+        required: false
+        type: boolean
+        default: false
     # BOT_EMAIL and DOTNET_AGENT_GH_TOKEN are secrets of the "release" environment, read directly by
     # the publish-release-notes job. They are not workflow_call secrets: environment secrets cannot
     # be passed in from a caller.
@@ -93,6 +103,7 @@ jobs:
           OUTPUT_PATH: ${{ github.workspace }}
 
       - name: Create branch
+        if: ${{ !inputs.dry_run }}
         uses: dmnemec/copy_file_to_another_repo_action@c93037aa10fa8893de271f19978c980d0c1a9b37 # tag v1.1.1
         env:
           API_TOKEN_GITHUB: ${{ secrets.DOTNET_AGENT_GH_TOKEN }}
@@ -107,6 +118,7 @@ jobs:
           commit_message: 'chore(.net agent): Add .NET Agent release notes for v${{ inputs.agent_version }}.'
 
       - name: Create pull request
+        if: ${{ !inputs.dry_run }}
         run: gh pr create --base "develop" --repo "$REPO" --head "$HEAD" --title "$TITLE" --body "$BODY"
         env:
           GH_TOKEN: ${{ secrets.DOTNET_AGENT_GH_TOKEN }}
@@ -114,3 +126,67 @@ jobs:
           HEAD: ${{env.branch_name}}
           TITLE: ".NET Agent Release Notes for v${{ inputs.agent_version }}"
           BODY: "This is an automated PR generated when the .NET agent is released. Please merge as soon as possible."
+
+      - name: Record the release's file hashes in release-data
+        # Adds this release's entry to release-data/download-site-hashes.json on top of main, in its own worktree (the job checked out the
+        # release tag), and opens a pull request for a person to review. The hashes come from the files release_build built and
+        # deploy_agent deployed. .github/scripts/release_data_entry.py checks each against the build's own SHA256 file and refuses to
+        # overwrite a recorded version with different hashes. A failure here fails the job after the release notes pull request exists.
+        if: ${{ !inputs.dry_run }}
+        shell: bash
+        env:
+          AGENT_VERSION: ${{ inputs.agent_version }}
+          RUN_ID: ${{ inputs.run_id }}
+          GH_TOKEN: ${{ secrets.DOTNET_AGENT_GH_TOKEN }}
+          BOT_EMAIL: ${{ secrets.BOT_EMAIL }}
+        run: |
+          set -euo pipefail
+          if [[ ! "$RUN_ID" =~ ^[0-9]+$ ]]; then echo "::error::The run ID must be a number."; exit 1; fi
+          branch="release-data/$AGENT_VERSION"
+          if git ls-remote --exit-code --heads origin "$branch" > /dev/null 2>&1; then
+            echo "::warning::The branch $branch already exists, so the release data entry was probably prepared already. Nothing was changed."
+            exit 0
+          fi
+          git fetch --no-tags origin main
+          worktree="$RUNNER_TEMP/release-data"
+          git worktree add -b "$branch" "$worktree" origin/main
+          python3 "$worktree/.github/scripts/release_data_entry.py" \
+            --download-site "$GITHUB_WORKSPACE/deploy-artifacts/DownloadSite" \
+            --version "$AGENT_VERSION" --run-id "$RUN_ID" \
+            --data-file "$worktree/release-data/download-site-hashes.json"
+          cd "$worktree"
+          if git diff --quiet -- release-data; then
+            echo "The release data already holds this release. No pull request needed."
+            exit 0
+          fi
+          git config user.name 'dotnet-agent-team-bot'
+          git config user.email "$BOT_EMAIL"
+          git add release-data/download-site-hashes.json
+          git commit -m "chore: Add release data for v$AGENT_VERSION"
+          # Push with the bot token. The checkout left the read-only workflow token in the git config for github.com; reset that header.
+          git -c http.https://github.com/.extraheader= push "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "$branch"
+          cat > "$RUNNER_TEMP/release-data-pr.md" <<EOF
+          This is an automated pull request, opened by the release-notes step of the deploy for v$AGENT_VERSION.
+
+          It adds the SHA-256 of every installer and package that release_build run $RUN_ID built and the deploy put on the download site, plus the unversioned copies the deploy makes (for example \`NewRelicDotNetAgent_x64.msi\`). Each hash was checked against the \`SHA256/\` file the build wrote for it. The download-site monitoring warns if a file stays on the site for a day without an entry, so please review and merge this soon.
+
+          To check the hashes independently of the build: compare them with the table in the release notes pull request in docs-website (branch \`dotnet-release-${AGENT_VERSION//./-}\`), or download a file from the site and run \`gh attestation verify <file> --repo $GITHUB_REPOSITORY\`.
+          EOF
+          gh pr create --repo "$GITHUB_REPOSITORY" --base main --head "$branch" \
+            --title "chore: Add release data for v$AGENT_VERSION" --body-file "$RUNNER_TEMP/release-data-pr.md"
+
+      - name: Rehearse the release data entry (dry run)
+        if: ${{ inputs.dry_run }}
+        shell: bash
+        env:
+          AGENT_VERSION: ${{ inputs.agent_version }}
+          RUN_ID: ${{ inputs.run_id }}
+        run: |
+          set -euo pipefail
+          if [[ ! "$RUN_ID" =~ ^[0-9]+$ ]]; then echo "::error::The run ID must be a number."; exit 1; fi
+          git fetch --no-tags origin main
+          git worktree add --detach "$RUNNER_TEMP/release-data" origin/main
+          python3 "$RUNNER_TEMP/release-data/.github/scripts/release_data_entry.py" --dry-run \
+            --download-site "$GITHUB_WORKSPACE/deploy-artifacts/DownloadSite" \
+            --version "$AGENT_VERSION" --run-id "$RUN_ID" \
+            --data-file "$RUNNER_TEMP/release-data/release-data/download-site-hashes.json"

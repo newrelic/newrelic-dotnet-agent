@@ -139,7 +139,9 @@ runs), since a branch run gets no token:
    branch with `testMode` (it then skips the environment). release-please:
    run its CLI locally with `--dry-run` and `--target-branch=<your branch>`
    and a read-only token of your own. Deploys: `deploy=false`; post-deploy:
-   `test_mode`.
+   `test_mode`; release notes and release data (`publish_release_notes.yml`,
+   from `main`, since it runs in the `release` environment): `dry_run`, which
+   opens no pull request in either repository.
 2. To see real writes, point the workflow at a sandbox repository with a
    token scoped only to that sandbox.
 3. If it must hit the real target, run the tool locally with your own
