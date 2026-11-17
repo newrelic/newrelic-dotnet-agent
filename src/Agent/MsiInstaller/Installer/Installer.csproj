@@ -27,6 +27,83 @@
     <PackageReference Include="WixToolset.Util.wixext" Version="5.0.2" />
   </ItemGroup>
 
+  <!-- WiX would otherwise generate a random ProductCode and PackageCode on every build, so identical inputs produced different MSIs.
+       Derive both from the platform, the agent file version and the HEAD commit id instead (name-based GUIDs): the same commit always
+       gives the same codes, while every release, platform and commit gets different ones (major upgrades need the ProductCode to change).
+       Override the commit with -p:InstallerCodeCommit=<sha>; 'none' or an unavailable git leaves it out, so the codes then derive from
+       version and platform only. UpgradeCode is untouched. -->
+  <Target Name="DefineDeterministicInstallerCodes" BeforeTargets="CoreCompile">
+    <ReadFileVersionFromDll FilePath="$(SolutionDir)..\..\_build\AnyCPU-$(Configuration)\NewRelic.Agent.Core\net462\NewRelic.Agent.Core.dll">
+      <Output PropertyName="InstallerCodeVersion" TaskParameter="FileVersionString" />
+    </ReadFileVersionFromDll>
+    <Exec Condition="'$(InstallerCodeCommit)' == ''" Command="git rev-parse HEAD" WorkingDirectory="$(SolutionDir)..\..\.." ConsoleToMSBuild="true" IgnoreExitCode="true" IgnoreStandardErrorWarningFormat="true" StandardOutputImportance="low" StandardErrorImportance="low">
+      <Output TaskParameter="ConsoleOutput" PropertyName="InstallerResolvedCommit" />
+    </Exec>
+    <PropertyGroup>
+      <InstallerResolvedCommit Condition="'$(InstallerCodeCommit)' != ''">$(InstallerCodeCommit)</InstallerResolvedCommit>
+      <InstallerResolvedCommit Condition="!$([System.Text.RegularExpressions.Regex]::IsMatch('$(InstallerResolvedCommit)', '^[0-9a-fA-F]{7,64}$'))"></InstallerResolvedCommit>
+      <InstallerCodeSuffix Condition="'$(InstallerResolvedCommit)' != ''">/$(InstallerResolvedCommit.ToLowerInvariant())</InstallerCodeSuffix>
+    </PropertyGroup>
+    <NameBasedGuid Namespace="3c0a6f3e-5b1d-4e0c-9a57-2f6d8b41c7a9" Name="ProductCode/$(Platform)/$(InstallerCodeVersion)$(InstallerCodeSuffix)">
+      <Output PropertyName="InstallerProductCode" TaskParameter="Result" />
+    </NameBasedGuid>
+    <NameBasedGuid Namespace="3c0a6f3e-5b1d-4e0c-9a57-2f6d8b41c7a9" Name="PackageCode/$(Platform)/$(InstallerCodeVersion)$(InstallerCodeSuffix)">
+      <Output PropertyName="InstallerPackageCode" TaskParameter="Result" />
+    </NameBasedGuid>
+    <PropertyGroup>
+      <DefineConstants>$(DefineConstants);InstallerProductCode=$(InstallerProductCode)</DefineConstants>
+    </PropertyGroup>
+  </Target>
+
+  <!-- WiX has no way to set the PackageCode, and writes build times and a random cabinet ID into the MSI. StabilizeMsi sets the PackageCode
+       and clears those values in the finished MSI. It runs before signing, so the signature covers the final bytes. -->
+  <Target Name="StabilizeInstaller" BeforeTargets="SignInstaller">
+    <StabilizeMsi MsiPath="$(OutputPath)$(OutputName).msi" PackageCode="$(InstallerPackageCode)" />
+  </Target>
+
+  <UsingTask TaskName="StabilizeMsi" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+    <Task>
+      <Code Type="Class" Language="cs" Source="$(MSBuildThisFileDirectory)StabilizeMsi.cs" />
+    </Task>
+  </UsingTask>
+
+  <UsingTask TaskName="NameBasedGuid" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+    <ParameterGroup>
+      <Namespace ParameterType="System.String" Required="true" />
+      <Name ParameterType="System.String" Required="true" />
+      <Result ParameterType="System.String" Output="true" />
+    </ParameterGroup>
+    <Task>
+      <Using Namespace="System" />
+      <Using Namespace="System.Security.Cryptography" />
+      <Using Namespace="System.Text" />
+      <Code Type="Fragment" Language="cs"><![CDATA[
+                // RFC 4122 version 5 (SHA-1, name-based) GUID. Guid.ToByteArray is little-endian in its first three fields; RFC 4122 hashes network byte order.
+                var ns = Guid.Parse(Namespace).ToByteArray();
+                Array.Reverse(ns, 0, 4);
+                Array.Reverse(ns, 4, 2);
+                Array.Reverse(ns, 6, 2);
+                var name = Encoding.UTF8.GetBytes(Name);
+                var input = new byte[ns.Length + name.Length];
+                Buffer.BlockCopy(ns, 0, input, 0, ns.Length);
+                Buffer.BlockCopy(name, 0, input, ns.Length, name.Length);
+                byte[] hash;
+                using (var sha1 = SHA1.Create())
+                {
+                    hash = sha1.ComputeHash(input);
+                }
+                var bytes = new byte[16];
+                Buffer.BlockCopy(hash, 0, bytes, 0, 16);
+                bytes[6] = (byte)((bytes[6] & 0x0F) | 0x50);
+                bytes[8] = (byte)((bytes[8] & 0x3F) | 0x80);
+                Array.Reverse(bytes, 0, 4);
+                Array.Reverse(bytes, 4, 2);
+                Array.Reverse(bytes, 6, 2);
+                Result = new Guid(bytes).ToString("D").ToUpperInvariant();
+                ]]></Code>
+    </Task>
+  </UsingTask>
+
   <Target Name="SignInstaller" BeforeTargets="AfterBuild">
     <ItemGroup>
       <SignToolCandidates Include="$([Microsoft.Build.Utilities.ToolLocationHelper]::GetPlatformSDKLocation('Windows', '10.0'))bin\*\x64\signtool.exe" />
