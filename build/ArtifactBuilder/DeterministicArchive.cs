@@ -57,7 +57,8 @@ public static class DeterministicArchive
 
     /// <summary>
     /// Rewrites a package created by nuget.exe in place. Package contents and metadata are unchanged
-    /// except for the name of the random core properties part (and the relationship that points to it).
+    /// except for the name of the random core properties part (and the relationship that points to it)
+    /// and the order of the entries in [Content_Types].xml, which nuget.exe writes in a different order each run.
     /// </summary>
     public static void NormalizeNupkg(string nupkgFilePath, DateTimeOffset timestamp)
     {
@@ -74,6 +75,11 @@ public static class DeterministicArchive
             entries.Remove(coreProperties);
 
             entries[RelationshipsEntryName] = RewriteRelationships(entries[RelationshipsEntryName], coreProperties, newName);
+        }
+
+        if (entries.TryGetValue(ContentTypesEntryName, out var contentTypes))
+        {
+            entries[ContentTypesEntryName] = SortContentTypes(contentTypes);
         }
 
         var ordered = entries
@@ -131,10 +137,36 @@ public static class DeterministicArchive
             relationship.SetAttributeValue("Id", "R" + ToHex(SHA256.HashData(Encoding.UTF8.GetBytes(newTarget)), 8).ToUpperInvariant());
         }
 
+        return Serialize(document);
+    }
+
+    private static byte[] SortContentTypes(byte[] contentTypesXml)
+    {
+        using var reader = new MemoryStream(contentTypesXml);
+        var document = XDocument.Load(reader);
+
+        var types = document.Root;
+        var children = types.Elements().ToList();
+        types.RemoveNodes();
+
+        // Defaults first (by extension), then overrides (by part name); anything else keeps its relative order after them.
+        var sorted = children.Where(element => element.Name.LocalName == "Default").OrderBy(element => (string)element.Attribute("Extension"), StringComparer.Ordinal)
+            .Concat(children.Where(element => element.Name.LocalName == "Override").OrderBy(element => (string)element.Attribute("PartName"), StringComparer.Ordinal))
+            .Concat(children.Where(element => element.Name.LocalName != "Default" && element.Name.LocalName != "Override"));
+
+        types.Add(sorted);
+
+        return Serialize(document);
+    }
+
+    private static byte[] Serialize(XDocument document)
+    {
         var settings = new XmlWriterSettings
         {
             Encoding = new UTF8Encoding(false),
-            Indent = true
+            Indent = true,
+            NewLineChars = "\n",
+            NewLineHandling = NewLineHandling.Replace
         };
 
         using var output = new MemoryStream();

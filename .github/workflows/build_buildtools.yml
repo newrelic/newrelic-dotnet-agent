@@ -18,6 +18,11 @@ jobs:
       runs-on: windows-latest
   
       steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
+        with:
+          egress-policy: audit
+
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       # ArtifactBuilder targets the pinned SDK's .NET version, so build with that SDK.
@@ -26,3 +31,6 @@ jobs:
 
       - name: Build the solution
         run:  dotnet build build/BuildTools.sln -c Release -m -p:Platform="Any CPU" --restore
+
+      - name: Run the ArtifactBuilder tests
+        run: dotnet test build/ArtifactBuilder.Tests/ArtifactBuilder.Tests.csproj -c Release --no-build

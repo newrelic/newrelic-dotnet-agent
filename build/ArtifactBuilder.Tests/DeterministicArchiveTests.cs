@@ -6,6 +6,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
+using System.Xml.Linq;
 using NUnit.Framework;
 
 namespace ArtifactBuilder.Tests;
@@ -104,6 +105,52 @@ public class DeterministicArchiveTests
         Assert.That(archive.Entries.Select(entry => entry.LastWriteTime.DateTime), Has.All.EqualTo(new DateTime(2024, 5, 6, 12, 30, 40)));
     }
 
+    [Test]
+    public void NormalizeNupkg_ProducesIdenticalBytesWhenContentTypesListSameEntriesInDifferentOrder()
+    {
+        var first = Path.Combine(_workDirectory, "first.nupkg");
+        var second = Path.Combine(_workDirectory, "second.nupkg");
+        var entryTime = new DateTimeOffset(2020, 1, 2, 3, 4, 6, TimeSpan.Zero);
+        CreateFakeNupkg(first, "aaaa1111bbbb2222", entryTime, ContentTypes("dll", "xml", "config", "nuspec"));
+        CreateFakeNupkg(second, "aaaa1111bbbb2222", entryTime, ContentTypes("nuspec", "config", "dll", "xml"));
+
+        Assert.That(File.ReadAllBytes(second), Is.Not.EqualTo(File.ReadAllBytes(first)));
+
+        DeterministicArchive.NormalizeNupkg(first, _timestamp);
+        DeterministicArchive.NormalizeNupkg(second, _timestamp);
+
+        Assert.That(File.ReadAllBytes(second), Is.EqualTo(File.ReadAllBytes(first)));
+    }
+
+    [Test]
+    public void NormalizeNupkg_SortsContentTypesAndKeepsEveryEntry()
+    {
+        var path = Path.Combine(_workDirectory, "pkg.nupkg");
+        CreateFakeNupkg(path, "aaaa1111bbbb2222", new DateTimeOffset(2020, 1, 2, 3, 4, 6, TimeSpan.Zero), ContentTypes("xml", "dll", "config"));
+
+        DeterministicArchive.NormalizeNupkg(path, _timestamp);
+
+        using var archive = ZipFile.OpenRead(path);
+        var document = XDocument.Load(archive.GetEntry("[Content_Types].xml").Open());
+        var types = document.Root.Elements().ToList();
+
+        Assert.That(types.Select(element => element.Name.LocalName), Is.EqualTo(new[] { "Default", "Default", "Default", "Override" }));
+        Assert.That(types.Take(3).Select(element => element.Attribute("Extension").Value), Is.EqualTo(new[] { "config", "dll", "xml" }));
+        Assert.That(types[3].Attribute("PartName").Value, Is.EqualTo("/Pkg.nuspec"));
+        Assert.That(types[0].Attribute("ContentType").Value, Is.EqualTo("application/config"));
+    }
+
+    private static string ContentTypes(params string[] extensions)
+    {
+        var defaults = string.Concat(extensions.Select(extension => $"<Default Extension=\"{extension}\" ContentType=\"application/{extension}\" />"));
+
+        return "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+               "<Types xmlns=\"http://schemas.openxmlformats.org/package/2006/content-types\">" +
+               defaults +
+               "<Override PartName=\"/Pkg.nuspec\" ContentType=\"application/octet-stream\" />" +
+               "</Types>";
+    }
+
     private string CreateSourceDirectory(string name)
     {
         var root = Path.Combine(_workDirectory, name);
@@ -115,7 +162,7 @@ public class DeterministicArchiveTests
         return root;
     }
 
-    private static void CreateFakeNupkg(string path, string randomName, DateTimeOffset entryTime)
+    private static void CreateFakeNupkg(string path, string randomName, DateTimeOffset entryTime, string contentTypes = "<Types />")
     {
         var corePropertiesPath = $"package/services/metadata/core-properties/{randomName}.psmdcp";
         var rels = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
@@ -138,7 +185,7 @@ public class DeterministicArchiveTests
         Add("_rels/.rels", rels);
         Add("Pkg.nuspec", "<package />");
         Add("lib/net462/a.dll", "dll");
-        Add("[Content_Types].xml", "<Types />");
+        Add("[Content_Types].xml", contentTypes);
         Add(corePropertiesPath, "<coreProperties />");
     }
 }

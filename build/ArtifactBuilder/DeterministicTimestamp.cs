@@ -10,7 +10,9 @@ namespace ArtifactBuilder;
 /// <summary>
 /// The single timestamp stamped on every entry of the archives and packages we produce, so that
 /// two builds of the same commit are byte-identical. Order of precedence: the SOURCE_DATE_EPOCH
-/// environment variable, the HEAD commit time, then a fixed constant. It is never the current time.
+/// environment variable (which must be valid when set), the HEAD commit time, then a fixed constant.
+/// It is never the current time. The chosen source and value are written to the build log once, and
+/// falling back to the constant (git unavailable or failing) is reported as a warning.
 /// </summary>
 public static class DeterministicTimestamp
 {
@@ -24,13 +26,56 @@ public static class DeterministicTimestamp
 
     private static DateTimeOffset? _current;
 
-    public static DateTimeOffset Current => _current ??= Resolve(Environment.GetEnvironmentVariable, GetHeadCommitTime);
+    public static DateTimeOffset Current => _current ??= Resolve(Environment.GetEnvironmentVariable, GetHeadCommitTime, Console.WriteLine);
 
-    public static DateTimeOffset Resolve(Func<string, string> getEnvironmentVariable, Func<string> getHeadCommitTime)
+    /// <summary>
+    /// Throws <see cref="FormatException"/> when SOURCE_DATE_EPOCH is set to something that is not a valid
+    /// count of seconds. <paramref name="getHeadCommitTime"/> returns the raw output of the commit time
+    /// lookup and throws when the lookup fails.
+    /// </summary>
+    public static DateTimeOffset Resolve(Func<string, string> getEnvironmentVariable, Func<string> getHeadCommitTime, Action<string> log)
     {
-        return ParseEpochSeconds(getEnvironmentVariable(SourceDateEpochVariable))
-            ?? ParseEpochSeconds(getHeadCommitTime())
-            ?? FallbackTimestamp;
+        var epoch = getEnvironmentVariable(SourceDateEpochVariable);
+        if (!string.IsNullOrWhiteSpace(epoch))
+        {
+            var fromEpoch = ParseEpochSeconds(epoch)
+                ?? throw new FormatException($"{SourceDateEpochVariable} is set to '{epoch}', which is not a valid number of seconds since 1970-01-01 (0 through 253402300799). Fix or unset it.");
+
+            return Announce(log, $"the {SourceDateEpochVariable} environment variable", fromEpoch);
+        }
+
+        string commitTime;
+        try
+        {
+            commitTime = getHeadCommitTime();
+        }
+        catch (Exception exception)
+        {
+            return Fallback(log, $"the HEAD commit time could not be read ({exception.Message})");
+        }
+
+        var fromCommit = ParseEpochSeconds(commitTime);
+        if (fromCommit == null)
+        {
+            return Fallback(log, $"the HEAD commit time '{commitTime?.Trim()}' is not a valid number of seconds");
+        }
+
+        return Announce(log, "the HEAD commit time", fromCommit.Value);
+    }
+
+    private static DateTimeOffset Announce(Action<string> log, string source, DateTimeOffset timestamp)
+    {
+        log($"Deterministic package timestamp: {timestamp:yyyy-MM-dd'T'HH:mm:ss'Z'} (from {source})");
+
+        return timestamp;
+    }
+
+    private static DateTimeOffset Fallback(Action<string> log, string reason)
+    {
+        log($"WARNING: Deterministic package timestamp: using the fixed fallback {FallbackTimestamp:yyyy-MM-dd'T'HH:mm:ss'Z'} because {reason}. "
+            + $"Builds of this commit made where git works will not match this one; set {SourceDateEpochVariable} to make it explicit.");
+
+        return FallbackTimestamp;
     }
 
     /// <summary>
@@ -60,28 +105,31 @@ public static class DeterministicTimestamp
 
     private static string GetHeadCommitTime()
     {
-        try
+        var startInfo = new ProcessStartInfo
         {
-            var startInfo = new ProcessStartInfo
-            {
-                FileName = "git",
-                Arguments = "log -1 --format=%ct",
-                WorkingDirectory = FileHelpers.GetRepoRootDirectory(),
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false
-            };
+            FileName = "git",
+            Arguments = "log -1 --no-show-signature --format=%ct",
+            WorkingDirectory = FileHelpers.GetRepoRootDirectory(),
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false
+        };
 
-            using var process = Process.Start(startInfo);
-            var output = process.StandardOutput.ReadToEnd();
-            process.StandardError.ReadToEnd();
-            process.WaitForExit(10000);
+        using var process = Process.Start(startInfo);
+        var errorTask = process.StandardError.ReadToEndAsync();
+        var output = process.StandardOutput.ReadToEnd();
 
-            return process.ExitCode == 0 ? output : null;
-        }
-        catch (Exception)
+        if (!process.WaitForExit(10000))
         {
-            return null;
+            process.Kill();
+            throw new TimeoutException("git log did not finish within 10 seconds");
         }
+
+        if (process.ExitCode != 0)
+        {
+            throw new InvalidOperationException($"git log exited with code {process.ExitCode}: {errorTask.Result.Trim()}");
+        }
+
+        return output;
     }
 }
