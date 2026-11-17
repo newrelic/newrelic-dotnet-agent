@@ -30,8 +30,6 @@ this file, hashes the files as a customer would download them, and alerts when o
   `bucket-sha256` is the `SHA256/` folder next to the files (written by the same release process, so not independent), and
   `release-notes` is the checksum table in the version's release notes. Versions whose release notes carry no table have only the
   first. The initial entries were recorded from the files on the site on 2026-11-16 after these checks.
-- `exceptions` (optional) says that one of those sources was set aside for the version, and why. 10.20.1 has one: its release
-  notes originally listed hashes that did not match the files on the site, and were corrected.
 - `unverified` names the files of a version that could not be recorded. The monitoring excuses exactly those file names and
   never hashes them. A version cannot be in both places.
 

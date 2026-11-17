@@ -1605,18 +1605,11 @@
    }
   },
   "10.20.1": {
-   "recorded": "2026-11-17",
+   "recorded": "2026-11-16",
    "source": "backfill: hashed from the download site",
    "cross_checks": [
-    "bucket-sha256"
-   ],
-   "exceptions": [
-    {
-     "ignored": [
-      "release-notes"
-     ],
-     "reason": "The release notes listed hashes that did not match the files on the download site. The .NET agent team concluded that the files on the site are correct and the release notes were wrong. The release notes were corrected in https://github.com/newrelic/docs-website/pull/26691."
-    }
+    "bucket-sha256",
+    "release-notes"
    ],
    "files": {
     "NewRelicDotNetAgent_10.20.1_x64.msi": "1a4507643d0582deb528de10aebff6a0f01d4e67c6e8439d821e79a56629eaa8",
