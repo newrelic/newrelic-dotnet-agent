@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using NewRelic.Agent.Api;
+using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Extensions.Lambda;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Mock.Amazon.Lambda.SQSEvents;
@@ -458,6 +459,228 @@ public class LambdaEventHelpersTests
             Assert.That(_parsedMultiValueHeaders[NewRelicDistributedTraceKey], Is.EqualTo(new List<string>() { NewRelicDistributedTracePayload, NewRelicDistributedTracePayload2 }));
             Assert.That(_transportType, Is.EqualTo(TransportType.Unknown));
         });
+    }
+
+    // Header capture: allow-all reads each event key exactly; default capture tolerates missing and differently-cased headers
+    private void ArrangeAllowAllRequestHeaders(bool allowAllHeaders)
+    {
+        var configuration = Mock.Create<IConfiguration>();
+        Mock.Arrange(() => configuration.AllowAllRequestHeaders).Returns(allowAllHeaders);
+        Mock.Arrange(() => _agent.Configuration).Returns(configuration);
+    }
+
+    // TValue is string for single-value headers and IList<string> for multi-value headers
+    private Dictionary<string, string> ArrangeHeaderCapture<TValue>(bool allowAllHeaders = false)
+    {
+        var captured = new Dictionary<string, string>();
+        ArrangeAllowAllRequestHeaders(allowAllHeaders);
+        Mock.Arrange(() => _transaction.SetRequestHeaders(Arg.IsAny<IDictionary<string, TValue>>(), Arg.IsAny<IEnumerable<string>>(), Arg.IsAny<Func<IDictionary<string, TValue>, string, string>>()))
+            .DoInstead((IDictionary<string, TValue> headers, IEnumerable<string> keys, Func<IDictionary<string, TValue>, string, string> getter) =>
+            {
+                foreach (var key in keys)
+                {
+                    var value = getter(headers, key);
+                    if (value != null)
+                        captured[key] = value;
+                }
+            });
+        return captured;
+    }
+
+    [Test]
+    public void AddEventTypeAttributes_APIGatewayProxyRequest_DefaultHeaderCapture_ToleratesMissingAndLowercaseHeaders()
+    {
+        var inputObject = new NewRelic.Mock.Amazon.Lambda.APIGatewayEvents.APIGatewayProxyRequest
+        {
+            RequestContext = new(),
+            Headers = new() { { "host", "example.com" } },
+            MultiValueHeaders = new()
+            {
+                { "host", new[] { "example.com" } },
+                { "Accept", new[] { "text/html", "application/json" } }
+            },
+            HttpMethod = "GET",
+            Path = "/test/path"
+        };
+        var singleValueCaptured = ArrangeHeaderCapture<string>();
+        var multiValueCaptured = ArrangeHeaderCapture<IList<string>>();
+
+        Assert.DoesNotThrow(() => LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, AwsLambdaEventType.APIGatewayProxyRequest, (dynamic)inputObject));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(singleValueCaptured, Is.EquivalentTo(new Dictionary<string, string> { { "Host", "example.com" } }));
+            Assert.That(multiValueCaptured, Is.EquivalentTo(new Dictionary<string, string> { { "Host", "example.com" }, { "Accept", "text/html,application/json" } }));
+        });
+    }
+
+    [Test]
+    public void AddEventTypeAttributes_APIGatewayHttpApiV2ProxyRequest_DefaultHeaderCapture_ToleratesMissingAndLowercaseHeaders()
+    {
+        var inputObject = new NewRelic.Mock.Amazon.Lambda.APIGatewayEvents.APIGatewayHttpApiV2ProxyRequest
+        {
+            RequestContext = new() { Http = new() { Path = "testPath", Method = "testMethod" } },
+            Headers = new Dictionary<string, string> { { "host", "example.com" }, { "user-agent", "test-agent" } }
+        };
+        var captured = ArrangeHeaderCapture<string>();
+
+        Assert.DoesNotThrow(() => LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, AwsLambdaEventType.APIGatewayHttpApiV2ProxyRequest, (dynamic)inputObject));
+
+        Assert.That(captured, Is.EquivalentTo(new Dictionary<string, string> { { "Host", "example.com" }, { "User-Agent", "test-agent" } }));
+    }
+
+    [Test]
+    public void AddEventTypeAttributes_ApplicationLoadBalancerRequest_DefaultHeaderCapture_ToleratesMissingAndLowercaseHeaders()
+    {
+        var inputObject = new NewRelic.Mock.Amazon.Lambda.ApplicationLoadBalancerEvents.ApplicationLoadBalancerRequest
+        {
+            RequestContext = new() { Elb = new() { TargetGroupArn = "testTargetGroupArn" } },
+            Headers = new() { { "host", "example.com" }, { "accept", "*/*" } },
+            HttpMethod = "GET",
+            Path = "/test/path"
+        };
+        var captured = ArrangeHeaderCapture<string>();
+
+        Assert.DoesNotThrow(() => LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, AwsLambdaEventType.ApplicationLoadBalancerRequest, (dynamic)inputObject));
+
+        Assert.That(captured, Is.EquivalentTo(new Dictionary<string, string> { { "Host", "example.com" }, { "Accept", "*/*" } }));
+    }
+
+    [Test]
+    public void AddEventTypeAttributes_ApplicationLoadBalancerRequest_DefaultHeaderCapture_MultiValueHeaders_ToleratesMissingAndLowercaseHeaders()
+    {
+        var inputObject = new NewRelic.Mock.Amazon.Lambda.ApplicationLoadBalancerEvents.ApplicationLoadBalancerRequest
+        {
+            RequestContext = new() { Elb = new() { TargetGroupArn = "testTargetGroupArn" } },
+            MultiValueHeaders = new()
+            {
+                { "host", new[] { "example.com" } },
+                { "Accept", new[] { "text/html", "application/json" } }
+            },
+            HttpMethod = "GET",
+            Path = "/test/path"
+        };
+        var captured = ArrangeHeaderCapture<IList<string>>();
+
+        Assert.DoesNotThrow(() => LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, AwsLambdaEventType.ApplicationLoadBalancerRequest, (dynamic)inputObject));
+
+        Assert.That(captured, Is.EquivalentTo(new Dictionary<string, string> { { "Host", "example.com" }, { "Accept", "text/html,application/json" } }));
+    }
+
+    [Test]
+    public void AddEventTypeAttributes_APIGatewayHttpApiV2ProxyRequest_AllowAllHeaders_CapturesEveryEventHeader()
+    {
+        var inputObject = new NewRelic.Mock.Amazon.Lambda.APIGatewayEvents.APIGatewayHttpApiV2ProxyRequest
+        {
+            RequestContext = new() { Http = new() { Path = "testPath", Method = "testMethod" } },
+            Headers = new Dictionary<string, string> { { "Host", "x" }, { "host", "y" }, { "X-Custom", "custom-value" } }
+        };
+        var captured = ArrangeHeaderCapture<string>(allowAllHeaders: true);
+
+        LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, AwsLambdaEventType.APIGatewayHttpApiV2ProxyRequest, (dynamic)inputObject);
+
+        Assert.That(captured, Is.EquivalentTo(new Dictionary<string, string> { { "Host", "x" }, { "host", "y" }, { "X-Custom", "custom-value" } }));
+    }
+
+    [Test]
+    public void AddEventTypeAttributes_APIGatewayProxyRequest_AllowAllHeaders_CapturesEveryEventMultiValueHeader()
+    {
+        var inputObject = new NewRelic.Mock.Amazon.Lambda.APIGatewayEvents.APIGatewayProxyRequest
+        {
+            RequestContext = new(),
+            MultiValueHeaders = new()
+            {
+                { "Host", new[] { "x" } },
+                { "host", new[] { "y1", "y2" } },
+                { "X-Custom", new[] { "a", "b" } }
+            },
+            HttpMethod = "GET",
+            Path = "/test/path"
+        };
+        var captured = ArrangeHeaderCapture<IList<string>>(allowAllHeaders: true);
+
+        LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, AwsLambdaEventType.APIGatewayProxyRequest, (dynamic)inputObject);
+
+        Assert.That(captured, Is.EquivalentTo(new Dictionary<string, string> { { "Host", "x" }, { "host", "y1,y2" }, { "X-Custom", "a,b" } }));
+    }
+
+    [Test]
+    public void AddEventTypeAttributes_APIGatewayProxyRequest_AllowAllHeaders_CapturesEmptyMultiValueHeaderListAsEmptyString()
+    {
+        var inputObject = new NewRelic.Mock.Amazon.Lambda.APIGatewayEvents.APIGatewayProxyRequest
+        {
+            RequestContext = new(),
+            MultiValueHeaders = new()
+            {
+                { "X-Empty", new string[0] },
+                { "Accept", new[] { "text/html" } }
+            },
+            HttpMethod = "GET",
+            Path = "/test/path"
+        };
+        var captured = ArrangeHeaderCapture<IList<string>>(allowAllHeaders: true);
+
+        LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, AwsLambdaEventType.APIGatewayProxyRequest, (dynamic)inputObject);
+
+        Assert.That(captured, Is.EquivalentTo(new Dictionary<string, string> { { "X-Empty", "" }, { "Accept", "text/html" } }));
+    }
+
+    [Test]
+    public void AddEventTypeAttributes_APIGatewayProxyRequest_DefaultHeaderCapture_CapturesEmptyMultiValueHeaderListsAsEmptyString()
+    {
+        var inputObject = new NewRelic.Mock.Amazon.Lambda.APIGatewayEvents.APIGatewayProxyRequest
+        {
+            RequestContext = new(),
+            MultiValueHeaders = new()
+            {
+                { "Host", new string[0] },
+                { "user-agent", new string[0] },
+                { "Accept", new[] { "text/html" } }
+            },
+            HttpMethod = "GET",
+            Path = "/test/path"
+        };
+        var captured = ArrangeHeaderCapture<IList<string>>();
+
+        LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, AwsLambdaEventType.APIGatewayProxyRequest, (dynamic)inputObject);
+
+        Assert.That(captured, Is.EquivalentTo(new Dictionary<string, string> { { "Host", "" }, { "User-Agent", "" }, { "Accept", "text/html" } }));
+    }
+
+    [Test]
+    public void AddEventTypeAttributes_APIGatewayProxyRequest_DefaultHeaderCapture_ExactCaseKeyWinsOverCaseVariant()
+    {
+        var inputObject = new NewRelic.Mock.Amazon.Lambda.APIGatewayEvents.APIGatewayProxyRequest
+        {
+            RequestContext = new(),
+            MultiValueHeaders = new()
+            {
+                { "accept", new[] { "b" } },
+                { "Accept", new[] { "a" } }
+            },
+            HttpMethod = "GET",
+            Path = "/test/path"
+        };
+        var captured = ArrangeHeaderCapture<IList<string>>();
+
+        LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, AwsLambdaEventType.APIGatewayProxyRequest, (dynamic)inputObject);
+
+        Assert.That(captured, Is.EquivalentTo(new Dictionary<string, string> { { "Accept", "a" } }));
+    }
+
+    [Test]
+    public void AddEventTypeAttributes_APIGatewayHttpApiV2ProxyRequest_DefaultHeaderCapture_ExactCaseKeyWinsOverCaseVariant()
+    {
+        var inputObject = new NewRelic.Mock.Amazon.Lambda.APIGatewayEvents.APIGatewayHttpApiV2ProxyRequest
+        {
+            RequestContext = new() { Http = new() { Path = "testPath", Method = "testMethod" } },
+            Headers = new Dictionary<string, string> { { "accept", "b" }, { "Accept", "a" } }
+        };
+        var captured = ArrangeHeaderCapture<string>();
+
+        LambdaEventHelpers.AddEventTypeAttributes(_agent, _transaction, AwsLambdaEventType.APIGatewayHttpApiV2ProxyRequest, (dynamic)inputObject);
+
+        Assert.That(captured, Is.EquivalentTo(new Dictionary<string, string> { { "Accept", "a" } }));
     }
 
     // CloudWatchScheduledEvent
