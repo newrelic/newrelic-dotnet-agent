@@ -70,7 +70,7 @@ printf "\nPackage: ${PACKAGE_NAME}\nVersion: ${AGENT_VERSION}\n" >> ${INSTALL_RO
 cp /deb/agentinfo.json .
 
 # create debian package (dpkg-deb clamps entry and ar member times to SOURCE_DATE_EPOCH)
-dpkg-deb --build ${INSTALL_ROOT}
+dpkg-deb --root-owner-group --build ${INSTALL_ROOT}
 cp /tmp/${ARCH}/${PACKAGE_NAME}.deb /release/${PACKAGE_FILE_BASENAME}.deb
 # create a copy of the agent that only uses the package name to make it easy to link to builds
 cp /tmp/${ARCH}/${PACKAGE_NAME}.deb /release/${PACKAGE_NAME}_${ARCH}.deb
@@ -81,7 +81,7 @@ cp /common/agentinfo.json .
 # create tar.gz archive
 cd ..
 
-tar --sort=name --mtime="@${SOURCE_DATE_EPOCH}" -zcvf /release/${PACKAGE_FILE_BASENAME}.tar.gz ${PACKAGE_NAME} || { echo "::error tar exited with code: $?"; exit 1; }
+tar --sort=name --mtime="@${SOURCE_DATE_EPOCH}" --owner=0 --group=0 --numeric-owner -zcvf /release/${PACKAGE_FILE_BASENAME}.tar.gz ${PACKAGE_NAME} || { echo "::error tar exited with code: $?"; exit 1; }
 
 if [ $? -gt 0 ] ; then
     echo "::error Docker run exited with code: $?"
