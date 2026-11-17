@@ -86,6 +86,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{BADDAE10
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NewRelic.Agent.Extensions", "src\Agent\NewRelic\Agent\Extensions\NewRelic.Agent.Extensions\NewRelic.Agent.Extensions.csproj", "{686AE051-BC8C-4AEC-803D-237AEB807CA9}"
+	ProjectSection(ProjectDependencies) = postProject
+		{36C4B766-2A2F-CACB-CB91-0FC5C2E69773} = {36C4B766-2A2F-CACB-CB91-0FC5C2E69773}
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{C0BB7A5D-6820-4058-AC47-0111ECC34015}"
 	ProjectSection(SolutionItems) = preProject

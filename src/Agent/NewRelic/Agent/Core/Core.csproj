@@ -26,16 +26,19 @@
     <DebugType>embedded</DebugType>
   </PropertyGroup>
 
-  <ItemGroup>
-    <AssemblyAttribute Include="NewRelic.Agent.Core.Utilities.BuildTimestamp">
-      <!--
-          This AssemblyAttribute item generates an assembly attribute as follows: [assembly: NewRelic.Agent.Core.Utilities.BuildTimestamp("637213171838522390")]
-          Parameters for the attribute are always strings. There is an open issue requesting support for non-string parameters.
-          https://github.com/microsoft/msbuild/issues/2281
-      -->
-      <_Parameter1>$([System.DateTime]::UtcNow.Ticks)</_Parameter1>
-    </AssemblyAttribute>
-  </ItemGroup>
+  <!-- The time comes from the commit (see build/SourceDate.targets) so that rebuilding a commit gives identical assemblies. -->
+  <Target Name="AddBuildTimestampAttribute" DependsOnTargets="ResolveSourceDate" BeforeTargets="GetAssemblyAttributes">
+    <ItemGroup>
+      <AssemblyAttribute Include="NewRelic.Agent.Core.Utilities.BuildTimestamp">
+        <!--
+            This AssemblyAttribute item generates an assembly attribute as follows: [assembly: NewRelic.Agent.Core.Utilities.BuildTimestamp("637213171838522390")]
+            Parameters for the attribute are always strings. There is an open issue requesting support for non-string parameters.
+            https://github.com/microsoft/msbuild/issues/2281
+        -->
+        <_Parameter1>$(SourceDateTicks)</_Parameter1>
+      </AssemblyAttribute>
+    </ItemGroup>
+  </Target>
 
   <ItemGroup>
     <!-- Autofac v6+ doesn't support framework. We could possibly upgrade to v5.x but there's no compelling reason for it. -->
@@ -203,7 +206,7 @@
       <AssemblyDependency>&quot;$(OutputPath)..\..\NewRelic.Agent.Extensions\$(TargetFramework)-ILRepacked&quot;</AssemblyDependency>
     </PropertyGroup>
     <Message Importance="High" Text="Executing AssemblyModifier to complete the ILRepack process" />
-    <Exec Command="$(AssemblyModifierCommand) $(AssemblyToModify) $(AssemblyDependency)" />
+    <Exec Command="$(AssemblyModifierCommand) $(AssemblyToModify) $(AssemblyDependency) --key=&quot;$(AssemblyOriginatorKeyFile)&quot;" />
   </Target>
 
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />

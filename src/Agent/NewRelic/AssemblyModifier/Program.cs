@@ -4,13 +4,20 @@
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
-if (args.Length == 0)
+const string KeyOption = "--key=";
+const string NormalizeOnlyOption = "--normalize-only";
+
+var positionalArgs = args.Where(a => !a.StartsWith("--")).ToArray();
+
+if (positionalArgs.Length == 0)
 {
-    Console.WriteLine("Usage: <program> <assembly-path> <optional-search-directory>");
+    Console.WriteLine($"Usage: <program> <assembly-path> [<search-directory>] [{KeyOption}<strong-name-key-file>] [{NormalizeOnlyOption}]");
     return 1;
 }
 
-string assemblyPath = args[0];
+string assemblyPath = positionalArgs[0];
+string? keyPath = args.FirstOrDefault(a => a.StartsWith(KeyOption))?[KeyOption.Length..];
+bool normalizeOnly = args.Contains(NormalizeOnlyOption);
 var logger = GetLogger(assemblyPath);
 
 if (!File.Exists(assemblyPath))
@@ -23,9 +30,9 @@ try
 {
     var resolver = new DefaultAssemblyResolver();
 
-    if (args.Length > 1 && Directory.Exists(args[1]))
+    if (positionalArgs.Length > 1 && Directory.Exists(positionalArgs[1]))
     {
-        resolver.AddSearchDirectory(args[1]);
+        resolver.AddSearchDirectory(positionalArgs[1]);
     }
 
     var parameters = new ReaderParameters
@@ -42,7 +49,7 @@ try
     var hasEmbeddedPdb = module.GetDebugHeader().Entries
         .Any(e => e.Directory.Type == ImageDebugType.EmbeddedPortablePdb);
 
-    IEnumerable<IModificationJob> jobs = [new InternalizeMetricsEventSourceName(logger)];
+    IEnumerable<IModificationJob> jobs = normalizeOnly ? [] : [new InternalizeMetricsEventSourceName(logger)];
 
     foreach (var job in jobs)
     {
@@ -54,15 +61,30 @@ try
         }
     }
 
-    // Any other symbol format routes Mono.Cecil to NativePdbWriter, which faults intermittently, so drop symbols instead.
+    // The merged assembly is always rewritten so that its identity depends only on its content: ILRepack stamps a random MVID,
+    // a random PE timestamp and a debug path through a randomly named temporary directory into its output.
+    var writerParameters = new WriterParameters { DeterministicMvid = true };
+
+    if (keyPath != null)
+    {
+        // Cecil does not re-sign on its own, which would leave the signature ILRepack produced zeroed out.
+        writerParameters.StrongNameKeyBlob = File.ReadAllBytes(keyPath);
+    }
+
+    writerParameters.WriteSymbols = true;
+
     if (module.HasSymbols && hasEmbeddedPdb)
     {
-        module.Write(new WriterParameters { WriteSymbols = true, SymbolWriterProvider = new EmbeddedPortablePdbWriterProvider() });
+        writerParameters.SymbolWriterProvider = new EmbeddedPortablePdbWriterProvider();
     }
     else
     {
-        module.Write();
+        // Any other symbol format routes Mono.Cecil to NativePdbWriter, which faults intermittently, so drop symbols instead.
+        // This also drops the debug directory, which would otherwise carry the random ILRepack temp path and PDB id.
+        writerParameters.SymbolWriterProvider = new DropSymbolsWriterProvider();
     }
+
+    module.Write(writerParameters);
 }
 catch (Exception ex)
 {
@@ -91,5 +113,35 @@ public class Logger(string context)
     public void Log(string message, params scoped ReadOnlySpan<object?> arg)
     {
         Console.WriteLine(context + message, arg);
+    }
+}
+
+public class DropSymbolsWriterProvider : ISymbolWriterProvider
+{
+    public ISymbolWriter GetSymbolWriter(ModuleDefinition module, string fileName) => new DropSymbolsWriter();
+
+    public ISymbolWriter GetSymbolWriter(ModuleDefinition module, Stream symbolStream) => new DropSymbolsWriter();
+}
+
+public class DropSymbolsWriter : ISymbolWriter
+{
+    public ISymbolReaderProvider GetReaderProvider() => new DefaultSymbolReaderProvider(throwIfNoSymbol: false);
+
+    public ImageDebugHeader GetDebugHeader() => new ImageDebugHeader();
+
+    public void Write(MethodDebugInformation info)
+    {
+    }
+
+    public void Write()
+    {
+    }
+
+    public void Write(ICustomDebugInformationProvider provider)
+    {
+    }
+
+    public void Dispose()
+    {
     }
 }

@@ -9,7 +9,7 @@
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration'=='Debug'">
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'">
     <DebugType>embedded</DebugType>
   </PropertyGroup>
 
@@ -70,5 +70,15 @@
 
     <Message Importance="High" Text="Executing ILRepack.exe for $(TargetFramework) build: $(ILRepackCommand)" />
     <Exec Command="$(ILRepackCommand)" />
+
+    <!-- ILRepack output is not deterministic (random MVID, PE timestamp and temp debug path); AssemblyModifier normalizes and re-signs it. -->
+    <PropertyGroup>
+      <AssemblyModifierPath>$(RootProjectDirectory)src\Agent\NewRelic\AssemblyModifier\bin\$(Configuration)\AssemblyModifier.exe</AssemblyModifierPath>
+      <AssemblyToModify>&quot;$(OutputPath)..\$(TargetFramework)-ILRepacked\$(AssemblyName).dll&quot;</AssemblyToModify>
+    </PropertyGroup>
+    <!-- Building this project on its own (for example as a test dependency) does not build AssemblyModifier; only FullAgent.sln does. -->
+    <Message Importance="High" Text="AssemblyModifier.exe was not built; skipping normalization of the ILRepack output. Build FullAgent.sln for a reproducible assembly." Condition="!Exists('$(AssemblyModifierPath)')" />
+    <Message Importance="High" Text="Executing AssemblyModifier to normalize the ILRepack output" Condition="Exists('$(AssemblyModifierPath)')" />
+    <Exec Command="&quot;$(AssemblyModifierPath)&quot; $(AssemblyToModify) --key=&quot;$(AssemblyOriginatorKeyFile)&quot; --normalize-only" Condition="Exists('$(AssemblyModifierPath)')" />
   </Target>
 </Project>

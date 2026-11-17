@@ -1,0 +1,44 @@
+<Project>
+  <!--
+    Resolves the time that is stamped into build output (the copyright year and the Core BuildTimestamp attribute)
+    from the commit being built, so that two builds of the same commit produce identical assemblies.
+
+    Order of precedence:
+      1. SOURCE_DATE_EPOCH (https://reproducible-builds.org/specs/source-date-epoch/), if set to a number of seconds
+      2. the committer time of HEAD, read from the commit object. The git log format option is not used because it
+         needs a percent sign, which MSBuild Exec treats differently on Windows and Linux.
+      3. the current time. This is the fallback for a build from a source archive; it works but is not reproducible.
+
+    Outputs: SourceDateTicks (UTC ticks) and SourceDateYear.
+  -->
+  <Target Name="ResolveSourceDate" Condition="'$(SourceDateTicks)' == ''">
+    <PropertyGroup>
+      <SourceDateEpoch Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('$(SOURCE_DATE_EPOCH)', '^[0-9]+$'))">$(SOURCE_DATE_EPOCH)</SourceDateEpoch>
+    </PropertyGroup>
+
+    <Exec Condition="'$(SourceDateEpoch)' == ''" Command="git cat-file commit HEAD" WorkingDirectory="$(MSBuildThisFileDirectory)" ConsoleToMSBuild="true" StandardOutputImportance="low" StandardErrorImportance="low" IgnoreExitCode="true" IgnoreStandardErrorWarningFormat="true">
+      <Output TaskParameter="ConsoleOutput" PropertyName="SourceDateGitOutput" />
+    </Exec>
+
+    <!-- ConsoleOutput lines are joined with semicolons; the first committer line is the commit header. -->
+    <PropertyGroup Condition="'$(SourceDateEpoch)' == ''">
+      <SourceDateEpoch>$([System.Text.RegularExpressions.Regex]::Match('$(SourceDateGitOutput)', 'committer [^;]*? ([0-9]+) [+-][0-9]{4}').Groups[1].Value)</SourceDateEpoch>
+    </PropertyGroup>
+
+    <!-- 621355968000000000 is the number of ticks from 0001-01-01 to the Unix epoch. -->
+    <PropertyGroup Condition="'$(SourceDateEpoch)' != ''">
+      <SourceDateTicks>$([MSBuild]::Add(621355968000000000, $([MSBuild]::Multiply($(SourceDateEpoch), 10000000))))</SourceDateTicks>
+      <SourceDateYear>$([System.DateTime]::Parse('1970-01-01').AddSeconds($(SourceDateEpoch)).Year)</SourceDateYear>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(SourceDateEpoch)' == ''">
+      <SourceDateTicks>$([System.DateTime]::UtcNow.Ticks)</SourceDateTicks>
+      <SourceDateYear>$([System.DateTime]::UtcNow.Year)</SourceDateYear>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="ApplySourceDateCopyright" DependsOnTargets="ResolveSourceDate" BeforeTargets="GetAssemblyAttributes;GenerateNuspec">
+    <PropertyGroup>
+      <Copyright>Copyright © $(SourceDateYear)</Copyright>
+    </PropertyGroup>
+  </Target>
+</Project>
