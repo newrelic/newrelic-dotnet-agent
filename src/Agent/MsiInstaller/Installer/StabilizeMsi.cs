@@ -6,7 +6,7 @@
 // building the same inputs twice gives the same bytes:
 //   - PackageCode (the summary information revision number), which WiX generates randomly
 //   - the summary information create and last-saved times
-//   - the compound file's directory timestamps
+//   - the compound file's root entry timestamps
 //   - the cabinet set ID and per-file timestamps of every embedded cabinet (the media cabinet and
 //     the managed custom action package), which come from file modification times and a random ID
 // None of these values are covered by a checksum, so the payload is untouched.
@@ -14,26 +14,20 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Runtime.InteropServices;
-using System.Text;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using WixToolset.Dtf.WindowsInstaller;
 
 public class StabilizeMsi : Task
 {
-    private const uint PidRevNumber = 9;
-    private const uint PidCreateTime = 12;
-    private const uint PidLastSaveTime = 13;
-    private const uint VtEmpty = 0;
-    private const uint VtLpstr = 30;
-    private const uint VtFiletime = 64;
+    // The media cabinet and the cabinet inside the managed custom action package. A different count means a WiX update
+    // moved or changed the cabinets, and the MSI would silently stop being deterministic.
+    private const int ExpectedCabinets = 2;
 
     private const ushort FixedDosDate = (20 << 9) | (1 << 5) | 1; // 2000-01-01
     private const ushort FixedDosTime = 0;
-    private const long FixedFileTime = 125911584000000000L; // 2000-01-01T00:00:00Z
 
-    private const uint EndOfChain = 0xFFFFFFFE;
-    private const uint MaxRegularSector = 0xFFFFFFFA;
+    private static readonly DateTime FixedTime = new DateTime(2000, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
     [Required]
     public string MsiPath { get; set; }
@@ -45,8 +39,15 @@ public class StabilizeMsi : Task
     {
         try
         {
-            SetSummaryInformation();
-            PatchFile();
+            var cabinets = StabilizeDatabase();
+            if (cabinets != ExpectedCabinets)
+            {
+                Log.LogError("Found {0} embedded cabinet(s) in {1} but expected {2}. A WiX update probably moved or changed the cabinets, so the MSI would no longer be deterministic. The MSI was left unmodified.", cabinets, MsiPath, ExpectedCabinets);
+                return false;
+            }
+
+            ZeroRootEntryTimes();
+            Log.LogMessage(MessageImportance.High, "Stabilized {0} embedded cabinet(s) in {1}.", cabinets, MsiPath);
             return true;
         }
         catch (Exception ex)
@@ -56,139 +57,71 @@ public class StabilizeMsi : Task
         }
     }
 
-    private void SetSummaryInformation()
+    // Returns the number of cabinets found. Nothing is committed unless that is the expected number.
+    private int StabilizeDatabase()
     {
-        IntPtr database;
-        Check(MsiOpenDatabaseW(MsiPath, (IntPtr)2, out database), "MsiOpenDatabase");
-
-        try
+        using (var database = new Database(MsiPath, DatabaseOpenMode.Transact))
         {
-            IntPtr summary;
-            Check(MsiGetSummaryInformationW(database, null, 20, out summary), "MsiGetSummaryInformation");
-
-            try
-            {
-                var empty = 0L;
-                Check(MsiSummaryInfoSetPropertyW(summary, PidRevNumber, VtLpstr, 0, ref empty, "{" + PackageCode.Trim('{', '}').ToUpperInvariant() + "}"), "set revision number");
-
-                foreach (var pid in new[] { PidCreateTime, PidLastSaveTime })
-                {
-                    uint type;
-                    int intValue;
-                    long fileTime = 0;
-                    var length = 0u;
-                    var buffer = new StringBuilder();
-                    MsiSummaryInfoGetPropertyW(summary, pid, out type, out intValue, ref fileTime, buffer, ref length);
-
-                    if (type != VtEmpty)
-                    {
-                        var fixedTime = FixedFileTime;
-                        Check(MsiSummaryInfoSetPropertyW(summary, pid, VtFiletime, 0, ref fixedTime, null), "set summary time");
-                    }
-                }
-
-                Check(MsiSummaryInfoPersist(summary), "MsiSummaryInfoPersist");
-            }
-            finally
-            {
-                MsiCloseHandle(summary);
-            }
-        }
-        finally
-        {
-            MsiCloseHandle(database);
-        }
-    }
-
-    private void PatchFile()
-    {
-        using (var stream = new FileStream(MsiPath, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
-        {
-            var header = ReadAt(stream, 0, 512);
-            var sectorSize = 1 << BitConverter.ToUInt16(header, 30);
-            var fatSectorCount = BitConverter.ToInt32(header, 44);
-            var directoryStart = BitConverter.ToUInt32(header, 48);
-            var difatStart = BitConverter.ToUInt32(header, 68);
-            var difatCount = BitConverter.ToInt32(header, 72);
-            var perSector = sectorSize / 4;
-
-            var difat = new List<uint>();
-            for (var i = 0; i < 109; i++)
-            {
-                difat.Add(BitConverter.ToUInt32(header, 76 + i * 4));
-            }
-
-            var difatSector = difatStart;
-            for (var i = 0; i < difatCount; i++)
-            {
-                var block = ReadAt(stream, SectorOffset(difatSector, sectorSize), sectorSize);
-                for (var j = 0; j < perSector - 1; j++)
-                {
-                    difat.Add(BitConverter.ToUInt32(block, j * 4));
-                }
-
-                difatSector = BitConverter.ToUInt32(block, sectorSize - 4);
-            }
-
-            var fat = new List<uint>();
-            for (var i = 0; i < fatSectorCount; i++)
-            {
-                var block = ReadAt(stream, SectorOffset(difat[i], sectorSize), sectorSize);
-                for (var j = 0; j < perSector; j++)
-                {
-                    fat.Add(BitConverter.ToUInt32(block, j * 4));
-                }
-            }
-
+            var patched = new Dictionary<string, byte[]>();
             var cabinets = 0;
-            foreach (var directorySector in Chain(fat, directoryStart))
+
+            using (var view = database.OpenView("SELECT `Name`, `Data` FROM `_Streams`"))
             {
-                var sectorOffset = SectorOffset(directorySector, sectorSize);
-                var sector = ReadAt(stream, sectorOffset, sectorSize);
-
-                for (var entry = 0; entry < sectorSize / 128; entry++)
+                view.Execute();
+                foreach (var record in view)
                 {
-                    var o = entry * 128;
-                    var type = sector[o + 66];
-                    if (type == 0)
+                    using (record)
                     {
-                        continue;
-                    }
+                        byte[] data;
+                        using (var stream = record.GetStream(2))
+                        using (var buffer = new MemoryStream())
+                        {
+                            stream.CopyTo(buffer);
+                            data = buffer.ToArray();
+                        }
 
-                    Array.Clear(sector, o + 100, 16);
-
-                    var size = BitConverter.ToInt64(sector, o + 120);
-                    if (type == 2 && size >= 4096)
-                    {
-                        cabinets += PatchCabinets(stream, fat, BitConverter.ToUInt32(sector, o + 116), size, sectorSize);
+                        var count = PatchCabinets(data);
+                        if (count > 0)
+                        {
+                            cabinets += count;
+                            patched.Add(record.GetString(1), data);
+                        }
                     }
                 }
-
-                stream.Seek(sectorOffset, SeekOrigin.Begin);
-                stream.Write(sector, 0, sector.Length);
             }
 
-            Log.LogMessage(MessageImportance.High, "Stabilized {0} embedded cabinet(s) in {1}.", cabinets, MsiPath);
+            if (cabinets != ExpectedCabinets)
+            {
+                return cabinets;
+            }
+
+            using (var view = database.OpenView("SELECT `Name`, `Data` FROM `_Streams`"))
+            {
+                view.Execute();
+                foreach (var pair in patched)
+                {
+                    using (var record = new Record(2))
+                    {
+                        record.SetString(1, pair.Key);
+                        record.SetStream(2, new MemoryStream(pair.Value));
+                        view.Assign(record);
+                    }
+                }
+            }
+
+            var summary = database.SummaryInfo;
+            summary.RevisionNumber = "{" + PackageCode.Trim('{', '}').ToUpperInvariant() + "}";
+            summary.CreateTime = FixedTime;
+            summary.LastSaveTime = FixedTime;
+
+            database.Commit();
+            return cabinets;
         }
     }
 
-    private static int PatchCabinets(FileStream file, List<uint> fat, uint startSector, long size, int sectorSize)
+    // Clears the cabinet set ID and sets every file timestamp in each cabinet found in the data. Returns how many.
+    private static int PatchCabinets(byte[] data)
     {
-        var sectors = Chain(fat, startSector);
-        var data = new byte[size];
-        var copied = 0L;
-        foreach (var sector in sectors)
-        {
-            var count = (int)Math.Min(sectorSize, size - copied);
-            if (count <= 0)
-            {
-                break;
-            }
-
-            Buffer.BlockCopy(ReadAt(file, SectorOffset(sector, sectorSize), count), 0, data, (int)copied, count);
-            copied += count;
-        }
-
         var patched = 0;
         var from = 0;
         while (true)
@@ -225,11 +158,16 @@ public class StabilizeMsi : Task
             var position = (long)at + filesOffset;
             for (var i = 0; i < fileCount; i++)
             {
+                if (position + 17 > data.Length)
+                {
+                    throw new InvalidDataException("A cabinet file entry runs past the end of the cabinet.");
+                }
+
                 BitConverter.GetBytes(FixedDosDate).CopyTo(data, position + 10);
                 BitConverter.GetBytes(FixedDosTime).CopyTo(data, position + 12);
 
                 position += 16;
-                while (data[position] != 0)
+                while (position < data.Length && data[position] != 0)
                 {
                     position++;
                 }
@@ -238,25 +176,6 @@ public class StabilizeMsi : Task
             }
 
             patched++;
-        }
-
-        if (patched > 0)
-        {
-            var written = 0L;
-            foreach (var sector in sectors)
-            {
-                var count = (int)Math.Min(sectorSize, size - written);
-                if (count <= 0)
-                {
-                    break;
-                }
-
-                var block = new byte[count];
-                Buffer.BlockCopy(data, (int)written, block, 0, count);
-                file.Seek(SectorOffset(sector, sectorSize), SeekOrigin.Begin);
-                file.Write(block, 0, count);
-                written += count;
-            }
         }
 
         return patched;
@@ -275,43 +194,46 @@ public class StabilizeMsi : Task
         return -1;
     }
 
-    private static List<uint> Chain(List<uint> fat, uint start)
+    // The summary information and stream changes are written by the Windows Installer API, which leaves the root entry's
+    // creation and modification times (16 bytes) in the compound file directory. The first directory sector is at the
+    // header's directory start sector, and the root entry is its first entry, so no sector chain needs to be followed.
+    private void ZeroRootEntryTimes()
     {
-        var chain = new List<uint>();
-        var sector = start;
-        while (sector <= MaxRegularSector)
+        using (var stream = new FileStream(MsiPath, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
         {
-            chain.Add(sector);
-            sector = fat[(int)sector];
+            var header = new byte[512];
+            ReadFully(stream, header);
 
-            if (chain.Count > fat.Count)
+            if (BitConverter.ToUInt64(header, 0) != 0xE11AB1A1E011CFD0)
             {
-                throw new InvalidDataException("Loop in the compound file sector chain.");
+                throw new InvalidDataException("Not a compound file.");
             }
-        }
 
-        if (sector != EndOfChain)
-        {
-            throw new InvalidDataException("Unexpected end of sector chain.");
-        }
+            var sectorSize = 1 << BitConverter.ToUInt16(header, 30);
+            var directoryStart = BitConverter.ToUInt32(header, 48);
+            var rootEntry = ((long)directoryStart + 1) * sectorSize;
 
-        return chain;
+            var entry = new byte[128];
+            stream.Seek(rootEntry, SeekOrigin.Begin);
+            ReadFully(stream, entry);
+
+            const int RootStorageType = 5;
+            if (entry[66] != RootStorageType)
+            {
+                throw new InvalidDataException("The first directory entry is not the root entry.");
+            }
+
+            stream.Seek(rootEntry + 100, SeekOrigin.Begin);
+            stream.Write(new byte[16], 0, 16);
+        }
     }
 
-    private static long SectorOffset(uint sector, int sectorSize)
+    private static void ReadFully(Stream stream, byte[] buffer)
     {
-        return ((long)sector + 1) * sectorSize;
-    }
-
-    private static byte[] ReadAt(FileStream stream, long offset, int count)
-    {
-        var buffer = new byte[count];
-        stream.Seek(offset, SeekOrigin.Begin);
-
         var read = 0;
-        while (read < count)
+        while (read < buffer.Length)
         {
-            var n = stream.Read(buffer, read, count - read);
+            var n = stream.Read(buffer, read, buffer.Length - read);
             if (n <= 0)
             {
                 throw new EndOfStreamException();
@@ -319,33 +241,5 @@ public class StabilizeMsi : Task
 
             read += n;
         }
-
-        return buffer;
     }
-
-    private static void Check(uint result, string what)
-    {
-        if (result != 0)
-        {
-            throw new InvalidOperationException(what + " failed with Windows Installer error " + result);
-        }
-    }
-
-    [DllImport("msi.dll", CharSet = CharSet.Unicode)]
-    private static extern uint MsiOpenDatabaseW(string path, IntPtr persist, out IntPtr database);
-
-    [DllImport("msi.dll", CharSet = CharSet.Unicode)]
-    private static extern uint MsiGetSummaryInformationW(IntPtr database, string path, uint updateCount, out IntPtr summary);
-
-    [DllImport("msi.dll", CharSet = CharSet.Unicode)]
-    private static extern uint MsiSummaryInfoSetPropertyW(IntPtr summary, uint property, uint dataType, int intValue, ref long fileTime, string stringValue);
-
-    [DllImport("msi.dll", CharSet = CharSet.Unicode)]
-    private static extern uint MsiSummaryInfoGetPropertyW(IntPtr summary, uint property, out uint dataType, out int intValue, ref long fileTime, StringBuilder stringValue, ref uint stringLength);
-
-    [DllImport("msi.dll")]
-    private static extern uint MsiSummaryInfoPersist(IntPtr summary);
-
-    [DllImport("msi.dll")]
-    private static extern uint MsiCloseHandle(IntPtr handle);
 }
