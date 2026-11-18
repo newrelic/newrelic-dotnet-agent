@@ -316,7 +316,11 @@ jobs:
       prefix: ${{ matrix.prefix }}
       aws-region: "us-east-1"
       dry-run: false
-    # No secrets passed: the called job reads the bucket credentials from the "release" environment.
+    # These exist only in the "release" environment; the called job gets their values only if named here.
+    # Keep this list in sync with on.workflow_call.secrets in build_download_site_index_files.yml.
+    secrets:
+      RELEASE_DEPLOY_ROLE_ARN: ${{ secrets.RELEASE_DEPLOY_ROLE_ARN }}
+      PROD_MAIN_S3: ${{ secrets.PROD_MAIN_S3 }}
 
   deploy-nuget:
     needs: get-external-artifacts
@@ -601,7 +605,11 @@ jobs:
     with:
       agent_version: ${{ needs.get-release-info.outputs.release_version }}
       run_id: ${{ needs.get-release-info.outputs.workflow_run_id }}
-    # No secrets passed: the called job reads them from the "release" environment.
+    # These exist only in the "release" environment; the called job gets their values only if named here.
+    # Keep this list in sync with on.workflow_call.secrets in publish_release_notes.yml.
+    secrets:
+      BOT_EMAIL: ${{ secrets.BOT_EMAIL }}
+      DOTNET_AGENT_GH_TOKEN: ${{ secrets.DOTNET_AGENT_GH_TOKEN }}
 
   post-deploy:
     permissions:
@@ -615,7 +623,11 @@ jobs:
     with:
       agent_version: ${{ needs.get-release-info.outputs.release_version }}
       wait_for_apt_and_yum: true
-    # No secrets passed: the called jobs read them from the "release" environment.
+    # These exist only in the "release" environment; the called jobs get their values only if named here.
+    # Keep this list in sync with on.workflow_call.secrets in post_deploy_agent.yml.
+    secrets:
+      NEW_RELIC_API_KEY_PRODUCTION: ${{ secrets.NEW_RELIC_API_KEY_PRODUCTION }}
+      DOTNET_AGENT_GH_TOKEN: ${{ secrets.DOTNET_AGENT_GH_TOKEN }}
 
   agent-metadata:
       permissions:

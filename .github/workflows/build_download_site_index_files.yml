@@ -2,10 +2,17 @@ name: Build Download Site Index Files
 run-name: Indexing download site prefix /${{ inputs.prefix }} in ${{inputs.aws-region}} (dry-run=${{inputs.dry-run}}) by @${{ github.actor }}
 
 # The job assumes the release AWS role (RELEASE_DEPLOY_ROLE_ARN) over OIDC and reads PROD_MAIN_S3
-# ("s3://<bucket>"); both are secrets of the "release" environment, read directly by the job below.
-# They are not workflow_call secrets: environment secrets cannot be passed in from a caller.
+# ("s3://<bucket>"); both are secrets of the "release" environment.
 on:
   workflow_call:
+    # "release" environment secrets. Declare every one the jobs below read; a caller must pass
+    # each by name, and required: true fails the run otherwise. An undeclared one resolves empty.
+    # Keep this list in sync with the index-download-site job's secrets in deploy_agent.yml.
+    secrets:
+      RELEASE_DEPLOY_ROLE_ARN:
+        required: true
+      PROD_MAIN_S3:
+        required: true
     inputs:
       aws-region:
         description: 'AWS region s3 bucket is in'
