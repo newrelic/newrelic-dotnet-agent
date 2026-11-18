@@ -53,6 +53,10 @@ if [ -z "$AGENT_VERSION" ]; then
     fi
 fi
 echo "AGENT_VERSION=|$AGENT_VERSION|"
+
+# Every timestamp in the output derives from this value, so two builds of one commit match.
+export SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:-$(date +%s)}"
+echo "SOURCE_DATE_EPOCH=${SOURCE_DATE_EPOCH}"
 TARGET_SYSTEM_INSTALL_PATH="/usr/local/${PACKAGE_NAME}"
 SPECFILE="/rpm/${PACKAGE_NAME}.spec"
 
@@ -61,6 +65,9 @@ mkdir -p ~/rpmbuild/{RPMS,SRPMS,BUILD,SOURCES,SPECS,tmp}
 cat <<EOF >~/.rpmmacros
 %_topdir   %(echo $HOME)/rpmbuild
 %_tmppath  %{_topdir}/tmp
+%_buildhost reproducible
+%use_source_date_epoch_as_buildtime 1
+%clamp_mtime_to_source_date_epoch 1
 EOF
 
 dos2unix ${SPECFILE} && cp ${SPECFILE} ~/rpmbuild/SPECS

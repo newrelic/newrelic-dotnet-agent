@@ -2,7 +2,10 @@ services:
     build_deb: 
         build: ./build/deb 
         command: bash -c "dos2unix /deb/build.sh && chmod 755 -R /deb && chmod 777 /deb/build.sh && /deb/build.sh && /deb/build.sh arm64"
-        volumes: 
+        # Name-only: taken from the calling shell; the build scripts fall back to the current time.
+        environment:
+            - SOURCE_DATE_EPOCH
+        volumes:
             - ../../src/_build/CoreArtifacts:/release
             - ../../src/Agent:/data
             - ../../src/Agent/Miscellaneous:/docs
@@ -16,6 +19,7 @@ services:
         # Name-only: the value comes from the calling shell, so it never appears on a command line.
         environment:
             - GPG_KEY_PASSPHRASE
+            - SOURCE_DATE_EPOCH
         volumes:
             - ../../src/_build/CoreArtifacts:/release
             - ../../src/Agent:/data

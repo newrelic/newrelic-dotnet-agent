@@ -24,6 +24,11 @@ if [ -z "$AGENT_VERSION" ]; then
 fi
 
 echo "AGENT_VERSION=${AGENT_VERSION}"
+
+# Every timestamp in the outputs derives from this value, so two builds of one commit match.
+export SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:-$(date +%s)}"
+echo "SOURCE_DATE_EPOCH=${SOURCE_DATE_EPOCH}"
+
 INSTALL_ROOT=/tmp/${ARCH}/${PACKAGE_NAME}
 PACKAGE_FILE_BASENAME="${PACKAGE_NAME}_${AGENT_VERSION}_$ARCH"
 
@@ -64,8 +69,8 @@ printf "\nPackage: ${PACKAGE_NAME}\nVersion: ${AGENT_VERSION}\n" >> ${INSTALL_RO
 # agentinfo.json for deb
 cp /deb/agentinfo.json .
 
-# create debian package
-dpkg-deb --build ${INSTALL_ROOT}
+# create debian package (dpkg-deb clamps entry and ar member times to SOURCE_DATE_EPOCH)
+dpkg-deb --root-owner-group --build ${INSTALL_ROOT}
 cp /tmp/${ARCH}/${PACKAGE_NAME}.deb /release/${PACKAGE_FILE_BASENAME}.deb
 # create a copy of the agent that only uses the package name to make it easy to link to builds
 cp /tmp/${ARCH}/${PACKAGE_NAME}.deb /release/${PACKAGE_NAME}_${ARCH}.deb
@@ -76,7 +81,7 @@ cp /common/agentinfo.json .
 # create tar.gz archive
 cd ..
 
-tar -zcvf /release/${PACKAGE_FILE_BASENAME}.tar.gz ${PACKAGE_NAME}
+tar --sort=name --mtime="@${SOURCE_DATE_EPOCH}" --owner=0 --group=0 --numeric-owner -zcvf /release/${PACKAGE_FILE_BASENAME}.tar.gz ${PACKAGE_NAME} || { echo "::error tar exited with code: $?"; exit 1; }
 
 if [ $? -gt 0 ] ; then
     echo "::error Docker run exited with code: $?"
