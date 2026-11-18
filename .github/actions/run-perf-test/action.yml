@@ -11,7 +11,7 @@ inputs:
     description: 'Attach the New Relic .NET agent to the test app'
     default: 'false'
   agent-source:
-    description: 'Source of the agent binaries: github_release or build_artifact (only used when attach-agent is true)'
+    description: 'Source of the agent binaries: github_release (the published Linux tarball from the download site) or build_artifact (only used when attach-agent is true)'
     default: 'github_release'
   agent-version:
     description: 'Agent version to use, e.g. "10.49.0". Leave empty for latest. Only used with agent-source: github_release.'
@@ -65,60 +65,73 @@ runs:
       run: mkdir -p "${{ github.workspace }}/${{ env.PERF_TEST_DIR }}/agent-home"
 
     # -------------------------------------------------------------------------
-    # Agent download — github_release path
+    # Agent download — github_release path: the published Linux tarball, as a
+    # customer downloads it. A CI artifact would expire between releases.
     # -------------------------------------------------------------------------
-    - name: Get agent release run ID
+    - name: Resolve the release version
       if: inputs.attach-agent == 'true' && inputs.agent-source == 'github_release'
-      id: get-release-run-id
+      id: release-version
       shell: bash
       env:
         GH_TOKEN: ${{ inputs.github-token }}
+        REQUESTED_VERSION: ${{ inputs.agent-version }}
       run: |
-        VERSION="${{ inputs.agent-version }}"
+        VERSION="${REQUESTED_VERSION#v}"
         if [ -z "$VERSION" ]; then
-          echo "Looking up latest release commit SHA..."
-          COMMIT_SHA=$(git rev-list -n 1 "$(gh release list --limit 1 | awk '{ print $1 }')")
-        else
-          echo "Looking up release v${VERSION} commit SHA..."
-          COMMIT_SHA=$(git rev-list -n 1 "v${VERSION}")
+          echo "Looking up the latest release..."
+          VERSION=$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName --jq .tagName)
+          VERSION="${VERSION#v}"
         fi
-        if [ -z "$COMMIT_SHA" ]; then
-          echo "ERROR: Could not find commit SHA for release"
+        if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          echo "::error::Could not determine a release version (got '$VERSION')"
           exit 1
         fi
-        echo "Found commit SHA: $COMMIT_SHA"
+        echo "Release version: $VERSION"
+        echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
-        WORKFLOW_RUN_ID=$(gh run list --commit "$COMMIT_SHA" --workflow all_solutions.yml --event release --status success --limit 1 --json databaseId --jq '.[0].databaseId')
-        if [ -z "$WORKFLOW_RUN_ID" ]; then
-          echo "ERROR: Could not find a successful all_solutions.yml run for commit $COMMIT_SHA"
-          exit 1
-        fi
-        echo "Found workflow run ID: $WORKFLOW_RUN_ID"
-        echo "run_id=$WORKFLOW_RUN_ID" >> "$GITHUB_OUTPUT"
-
-    - name: Download agent homefolders from release build
-      if: inputs.attach-agent == 'true' && inputs.agent-source == 'github_release'
-      uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
-      with:
-        github-token: ${{ inputs.github-token }}
-        run-id: ${{ steps.get-release-run-id.outputs.run_id }}
-        name: homefolders
-        path: ${{ github.workspace }}/agent-download
-        repository: ${{ github.repository }}
-
-    - name: Locate agent home from release build
+    - name: Download the agent from the download site
       if: inputs.attach-agent == 'true' && inputs.agent-source == 'github_release'
       shell: bash
+      env:
+        AGENT_VERSION: ${{ steps.release-version.outputs.version }}
+        DOWNLOAD_DIR: ${{ github.workspace }}/agent-download
       run: |
-        AGENT_HOME="${{ github.workspace }}/${{ env.PERF_TEST_DIR }}/agent-home"
-        SOURCE=$(find "${{ github.workspace }}/agent-download" -name "newrelichome_x64_coreclr_linux" -type d | head -1)
-        if [ -z "$SOURCE" ]; then
-          echo "ERROR: Could not find newrelichome_x64_coreclr_linux in downloaded artifact"
-          find "${{ github.workspace }}/agent-download" -type d | head -20
+        FILE="newrelic-dotnet-agent_${AGENT_VERSION}_amd64.tar.gz"
+        BASE="https://download.newrelic.com/dot_net_agent/previous_releases/${AGENT_VERSION}"
+        mkdir -p "$DOWNLOAD_DIR"
+        curl --fail --silent --show-error --location --retry 3 --output "$DOWNLOAD_DIR/$FILE" "$BASE/$FILE"
+        ACTUAL=$(sha256sum "$DOWNLOAD_DIR/$FILE" | cut -d' ' -f1)
+
+        # The expected hash comes from the release data in the repository (reviewed pull requests), not from the bucket.
+        # A release whose data pull request is not merged yet falls back to the bucket's own SHA256 file.
+        DATA="$GITHUB_WORKSPACE/release-data/download-site-hashes.json"
+        EXPECTED=""
+        if [ -f "$DATA" ]; then
+          EXPECTED=$(python3 -c 'import json, sys; print(json.load(open(sys.argv[1]))["versions"].get(sys.argv[2], {}).get("files", {}).get(sys.argv[3], ""))' "$DATA" "$AGENT_VERSION" "$FILE")
+        fi
+        if [ -z "$EXPECTED" ]; then
+          echo "::warning::No release data for $FILE; checking against the SHA256 file next to it on the download site"
+          EXPECTED=$(curl --fail --silent --show-error --location --retry 3 "$BASE/SHA256/$FILE.sha256" | awk '{ print tolower($1) }')
+        fi
+        if [ -z "$EXPECTED" ]; then
+          echo "::error::No expected SHA-256 found for $FILE"
           exit 1
         fi
-        echo "Copying agent from: $SOURCE"
-        cp -r "$SOURCE/." "$AGENT_HOME/"
+        if [ "$ACTUAL" != "$EXPECTED" ]; then
+          echo "::error::$FILE has SHA-256 $ACTUAL, expected $EXPECTED"
+          exit 1
+        fi
+        echo "$FILE verified: $ACTUAL"
+
+    - name: Extract the agent home from the release
+      if: inputs.attach-agent == 'true' && inputs.agent-source == 'github_release'
+      shell: bash
+      env:
+        AGENT_VERSION: ${{ steps.release-version.outputs.version }}
+      run: |
+        AGENT_HOME="${{ github.workspace }}/${{ env.PERF_TEST_DIR }}/agent-home"
+        tar -xzf "${{ github.workspace }}/agent-download/newrelic-dotnet-agent_${AGENT_VERSION}_amd64.tar.gz" \
+          --strip-components=1 -C "$AGENT_HOME"
         echo "Agent home contents:"
         ls "$AGENT_HOME"
 
