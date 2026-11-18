@@ -27,6 +27,61 @@
     <PackageReference Include="WixToolset.Util.wixext" Version="5.0.2" />
   </ItemGroup>
 
+  <!-- WiX would otherwise generate a random ProductCode and PackageCode on every build, so identical inputs produced different MSIs.
+       Derive both from the platform, the agent file version, the HEAD commit id and whether the MSI is signed instead (name-based GUIDs,
+       built from a SHA-256 hash): the same inputs always give the same codes, while every release, platform and commit gets different ones
+       (major upgrades need the ProductCode to change). The signed and unsigned MSIs of one commit have different payloads, so they must
+       have different PackageCodes; the signed marker follows the same SkipSigning condition as the SignInstaller target.
+       Override the commit with -p:InstallerCodeCommit=<sha>; 'none' leaves it out, so the codes then derive from version, platform and
+       signing only. If git is unavailable and there is no override, the build warns and does the same. UpgradeCode is untouched. -->
+  <Target Name="DefineDeterministicInstallerCodes" BeforeTargets="CoreCompile">
+    <ReadFileVersionFromDll FilePath="$(SolutionDir)..\..\_build\AnyCPU-$(Configuration)\NewRelic.Agent.Core\net462\NewRelic.Agent.Core.dll">
+      <Output PropertyName="InstallerCodeVersion" TaskParameter="FileVersionString" />
+    </ReadFileVersionFromDll>
+    <!-- 2>nul keeps git's warnings out of ConsoleOutput, which would otherwise be joined to the commit id and fail the check below. -->
+    <Exec Condition="'$(InstallerCodeCommit)' == ''" Command="git rev-parse HEAD 2&gt;nul" WorkingDirectory="$(SolutionDir)..\..\.." ConsoleToMSBuild="true" IgnoreExitCode="true" StandardOutputImportance="low" StandardErrorImportance="low">
+      <Output TaskParameter="ConsoleOutput" PropertyName="InstallerResolvedCommit" />
+    </Exec>
+    <PropertyGroup>
+      <InstallerResolvedCommit Condition="'$(InstallerCodeCommit)' != ''">$(InstallerCodeCommit)</InstallerResolvedCommit>
+      <InstallerResolvedCommit Condition="!$([System.Text.RegularExpressions.Regex]::IsMatch('$(InstallerResolvedCommit)', '^[0-9a-fA-F]{7,64}$'))"></InstallerResolvedCommit>
+      <InstallerCodeSuffix Condition="'$(InstallerResolvedCommit)' != ''">/$(InstallerResolvedCommit.ToLowerInvariant())</InstallerCodeSuffix>
+      <InstallerPayloadKind Condition="'$(SkipSigning)' == 'true'">unsigned</InstallerPayloadKind>
+      <InstallerPayloadKind Condition="'$(SkipSigning)' != 'true'">signed</InstallerPayloadKind>
+    </PropertyGroup>
+    <Warning Condition="'$(InstallerResolvedCommit)' == '' And '$(InstallerCodeCommit)' == ''" Text="Could not determine the git commit for the installer ProductCode and PackageCode, so they derive from the version, platform and signing only and are the same for every commit of this version. Pass -p:InstallerCodeCommit=&lt;sha&gt; to set it." />
+    <PropertyGroup>
+      <InstallerCodeName>$(Platform)/$(InstallerCodeVersion)$(InstallerCodeSuffix)/$(InstallerPayloadKind)</InstallerCodeName>
+    </PropertyGroup>
+    <PropertyGroup>
+      <InstallerProductHash>$([MSBuild]::StableStringHash('NewRelic.Agent.Installer/ProductCode/$(InstallerCodeName)', 'Sha256'))</InstallerProductHash>
+      <InstallerPackageHash>$([MSBuild]::StableStringHash('NewRelic.Agent.Installer/PackageCode/$(InstallerCodeName)', 'Sha256'))</InstallerPackageHash>
+      <!-- Format the first 128 bits of the hash as a GUID, with the RFC 4122 variant bits and version nibble 8 (custom, hash-based). -->
+      <InstallerProductVariant>$([System.Convert]::ToString($([MSBuild]::BitwiseOr($([MSBuild]::BitwiseAnd($([System.Convert]::ToInt32($(InstallerProductHash.Substring(16, 1)), 16)), 3)), 8)), 16))</InstallerProductVariant>
+      <InstallerPackageVariant>$([System.Convert]::ToString($([MSBuild]::BitwiseOr($([MSBuild]::BitwiseAnd($([System.Convert]::ToInt32($(InstallerPackageHash.Substring(16, 1)), 16)), 3)), 8)), 16))</InstallerPackageVariant>
+      <InstallerProductCode>$(InstallerProductHash.Substring(0, 8))-$(InstallerProductHash.Substring(8, 4))-8$(InstallerProductHash.Substring(13, 3))-$(InstallerProductVariant)$(InstallerProductHash.Substring(17, 3))-$(InstallerProductHash.Substring(20, 12))</InstallerProductCode>
+      <InstallerPackageCode>$(InstallerPackageHash.Substring(0, 8))-$(InstallerPackageHash.Substring(8, 4))-8$(InstallerPackageHash.Substring(13, 3))-$(InstallerPackageVariant)$(InstallerPackageHash.Substring(17, 3))-$(InstallerPackageHash.Substring(20, 12))</InstallerPackageCode>
+      <InstallerProductCode>$(InstallerProductCode.ToUpperInvariant())</InstallerProductCode>
+      <InstallerPackageCode>$(InstallerPackageCode.ToUpperInvariant())</InstallerPackageCode>
+      <DefineConstants>$(DefineConstants);InstallerProductCode=$(InstallerProductCode)</DefineConstants>
+    </PropertyGroup>
+  </Target>
+
+  <!-- WiX has no way to set the PackageCode, and writes build times and a random cabinet ID into the MSI. StabilizeMsi sets the PackageCode
+       and clears those values in the finished MSI, and fails the build if the MSI no longer has the two cabinets it expects. It runs before
+       signing, so the signature covers the final bytes. WixBinDir is the WiX SDK's tools directory for the running MSBuild (net472 for
+       Visual Studio MSBuild, net6.0 for dotnet msbuild); WixToolset.Dtf.WindowsInstaller.dll ships in it. -->
+  <Target Name="StabilizeInstaller" BeforeTargets="SignInstaller">
+    <StabilizeMsi MsiPath="$(OutputPath)$(OutputName).msi" PackageCode="$(InstallerPackageCode)" />
+  </Target>
+
+  <UsingTask TaskName="StabilizeMsi" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+    <Task>
+      <Reference Include="$(WixBinDir)WixToolset.Dtf.WindowsInstaller.dll" />
+      <Code Type="Class" Language="cs" Source="$(MSBuildThisFileDirectory)StabilizeMsi.cs" />
+    </Task>
+  </UsingTask>
+
   <Target Name="SignInstaller" BeforeTargets="AfterBuild">
     <ItemGroup>
       <SignToolCandidates Include="$([Microsoft.Build.Utilities.ToolLocationHelper]::GetPlatformSDKLocation('Windows', '10.0'))bin\*\x64\signtool.exe" />

@@ -27,7 +27,7 @@ SPDX-License-Identifier: Apache-2.0
 
 
 
-  <Package Name="$(var.ProductName)" Language="1033" Version="!(bind.FileVersion.NewRelic.Agent.Core.dll)" Manufacturer="New Relic" UpgradeCode="{5AECDCE4-3892-4C79-BA1B-88EEF252BB25}" InstallerVersion="200">
+  <Package Name="$(var.ProductName)" Language="1033" Version="!(bind.FileVersion.NewRelic.Agent.Core.dll)" Manufacturer="New Relic" ProductCode="$(var.InstallerProductCode)" UpgradeCode="{5AECDCE4-3892-4C79-BA1B-88EEF252BB25}" InstallerVersion="200">
 
 
     <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
