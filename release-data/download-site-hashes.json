@@ -2870,6 +2870,30 @@
     "newrelic-dotnet-agent_amd64.tar.gz": "c59db4ac6f1d9e8afe9744ccaa92b9a99f79358a1890469565ab74513beb9571",
     "newrelic-dotnet-agent_arm64.tar.gz": "a28777b3be951631bb8bc578d12544954ee849807662633d99dfa68d5e87d267"
    }
+  },
+  "10.58.0": {
+   "recorded": "2026-11-18",
+   "source": "release-build run 44380288709: hashed from the files the release deployed",
+   "cross_checks": [
+    "release-build-checksums"
+   ],
+   "files": {
+    "NewRelicDotNetAgent_10.58.0_x64.msi": "267d12b26c129e60fe961738abdb62bd46d8153d007b05b2077a0ae3ea34ba43",
+    "NewRelicDotNetAgent_10.58.0_x64.zip": "7eddac39f25b82b39ff06615e5bfe9202a4005386d5fa4bc998b9d0c177e8135",
+    "NewRelicDotNetAgent_10.58.0_x86.msi": "098afe3c26c9d8f327972132f439d369cdfde5b8740dc603d5789b1466c3c68b",
+    "NewRelicDotNetAgent_10.58.0_x86.zip": "852ece28b5e053fa728a53d8173d89b10969e206c1c18fedd048043498399af6",
+    "NewRelicDotNetAgent_x64.msi": "267d12b26c129e60fe961738abdb62bd46d8153d007b05b2077a0ae3ea34ba43",
+    "NewRelicDotNetAgent_x64.zip": "7eddac39f25b82b39ff06615e5bfe9202a4005386d5fa4bc998b9d0c177e8135",
+    "NewRelicDotNetAgent_x86.msi": "098afe3c26c9d8f327972132f439d369cdfde5b8740dc603d5789b1466c3c68b",
+    "NewRelicDotNetAgent_x86.zip": "852ece28b5e053fa728a53d8173d89b10969e206c1c18fedd048043498399af6",
+    "newrelic-dotnet-agent-10.58.0-1.x86_64.rpm": "e7690ac9d4ad88493be69dd0bf7b5383b24c85c16ff4d69d5aa288850f0f2131",
+    "newrelic-dotnet-agent_10.58.0_amd64.deb": "cfbe4b6015fdc70dfd1fdb54053f4712b9e284b00552c6a620170aa41b2ffc34",
+    "newrelic-dotnet-agent_10.58.0_amd64.tar.gz": "1a55362d8d430728215854a85e7483dce02c7aa43a968a5b8d741cbea55ade8d",
+    "newrelic-dotnet-agent_10.58.0_arm64.deb": "3fc6f65bb4b84c50dcf2eba949bedd4c286cb55ddee0039f090fc5469b96c339",
+    "newrelic-dotnet-agent_10.58.0_arm64.tar.gz": "255abd4ec204741ab2c4b392efad2c51a373b5cab3838bb1d67dd5aa1c163414",
+    "newrelic-dotnet-agent_amd64.tar.gz": "1a55362d8d430728215854a85e7483dce02c7aa43a968a5b8d741cbea55ade8d",
+    "newrelic-dotnet-agent_arm64.tar.gz": "255abd4ec204741ab2c4b392efad2c51a373b5cab3838bb1d67dd5aa1c163414"
+   }
   }
  }
 }
