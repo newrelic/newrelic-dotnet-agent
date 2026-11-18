@@ -86,17 +86,11 @@ try
         writerParameters.StrongNameKeyBlob = File.ReadAllBytes(keyPath);
     }
 
-    writerParameters.WriteSymbols = true;
-
+    // Any other symbol format routes Mono.Cecil to NativePdbWriter, which faults intermittently, so only embedded symbols are written.
     if (module.HasSymbols && hasEmbeddedPdb)
     {
+        writerParameters.WriteSymbols = true;
         writerParameters.SymbolWriterProvider = new EmbeddedPortablePdbWriterProvider();
-    }
-    else
-    {
-        // Any other symbol format routes Mono.Cecil to NativePdbWriter, which faults intermittently, so drop symbols instead.
-        // This also drops the debug directory, so no PDB path or PDB id is embedded.
-        writerParameters.SymbolWriterProvider = new DropSymbolsWriterProvider();
     }
 
     module.Write(writerParameters);
@@ -128,35 +122,5 @@ public class Logger(string context)
     public void Log(string message, params scoped ReadOnlySpan<object?> arg)
     {
         Console.WriteLine(context + message, arg);
-    }
-}
-
-public class DropSymbolsWriterProvider : ISymbolWriterProvider
-{
-    public ISymbolWriter GetSymbolWriter(ModuleDefinition module, string fileName) => new DropSymbolsWriter();
-
-    public ISymbolWriter GetSymbolWriter(ModuleDefinition module, Stream symbolStream) => new DropSymbolsWriter();
-}
-
-public class DropSymbolsWriter : ISymbolWriter
-{
-    public ISymbolReaderProvider GetReaderProvider() => new DefaultSymbolReaderProvider(throwIfNoSymbol: false);
-
-    public ImageDebugHeader GetDebugHeader() => new ImageDebugHeader();
-
-    public void Write(MethodDebugInformation info)
-    {
-    }
-
-    public void Write()
-    {
-    }
-
-    public void Write(ICustomDebugInformationProvider provider)
-    {
-    }
-
-    public void Dispose()
-    {
     }
 }
