@@ -6,14 +6,12 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Threading;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Spans;
 using NewRelic.Agent.Core.Utilities;
-using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
@@ -193,13 +191,9 @@ public class AttributeDefinitions : IAttributeDefinitions
 {
     public const int DefaultRequestAttributeCacheCapacity = 1000;
 
-    private const int MaxRequestAttributeNameLength = 255;
-
     private readonly IAttributeFilter _attribFilter;
     private readonly FlushingAttributeCache<AttributeDefinition<string, string>> _requestParameterAttributes;
     private readonly FlushingAttributeCache<AttributeDefinition<string, string>> _requestHeadersAttributes;
-    private readonly AttributeDefinition<string, string> _requestAttributeNotCaptured;
-    private int _longNameLogged;
 
     public AttributeDefinitions(IAttributeFilter attribFilter, int requestAttributeCacheCapacity = DefaultRequestAttributeCacheCapacity, IAgentHealthReporter agentHealthReporter = null)
     {
@@ -208,8 +202,6 @@ public class AttributeDefinitions : IAttributeDefinitions
             CreateRequestParameterAttribute, () => agentHealthReporter?.ReportSupportabilityCountMetric(MetricNames.SupportabilityRequestParameterAttributeCacheFlush));
         _requestHeadersAttributes = new FlushingAttributeCache<AttributeDefinition<string, string>>("request header", requestAttributeCacheCapacity,
             CreateRequestHeadersAttribute, () => agentHealthReporter?.ReportSupportabilityCountMetric(MetricNames.SupportabilityRequestHeaderAttributeCacheFlush));
-        // A builder with no AppliesTo call makes a definition for no destination.
-        _requestAttributeNotCaptured = AttributeDefinitionBuilder.CreateString("request.not_captured", AttributeClassification.AgentAttributes).Build(attribFilter);
     }
 
     // For unit tests only.
@@ -367,23 +359,12 @@ public class AttributeDefinitions : IAttributeDefinitions
 
     public AttributeDefinition<string, string> GetRequestParameterAttribute(string paramName)
     {
-        // A name this long never makes a valid attribute, so do not cache it (NR-651452).
-        return paramName.Length > MaxRequestAttributeNameLength ? GetNotCapturedRequestAttribute() : _requestParameterAttributes.GetOrAdd(paramName);
-    }
-
-    private AttributeDefinition<string, string> GetNotCapturedRequestAttribute()
-    {
-        if (Interlocked.Exchange(ref _longNameLogged, 1) == 0)
-        {
-            Log.Debug("A request attribute name longer than 255 characters was not captured. Later names of this length are not captured and are not logged.");
-        }
-
-        return _requestAttributeNotCaptured;
+        return _requestParameterAttributes.GetOrAdd(paramName);
     }
 
     public AttributeDefinition<string, string> GetRequestHeadersAttribute(string paramName)
     {
-        return paramName.Length > MaxRequestAttributeNameLength ? GetNotCapturedRequestAttribute() : _requestHeadersAttributes.GetOrAdd(paramName);
+        return _requestHeadersAttributes.GetOrAdd(paramName);
     }
 
     private AttributeDefinition<TypeAttributeValue, string> CreateTypeAttribute(TypeAttributeValue tm)

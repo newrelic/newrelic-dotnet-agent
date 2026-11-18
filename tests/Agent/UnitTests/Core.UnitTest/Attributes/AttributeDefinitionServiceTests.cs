@@ -397,55 +397,6 @@ public class AttributeDefinitionServiceTests
         );
     }
 
-    [TestCase("parameters")]
-    [TestCase("headers")]
-    public void RequestAttributeCache_LongName_ReturnsSharedDefinitionAndIsNotCached(string kind)
-    {
-        _localConfig.attributes.include.Add($"request.{kind}.*");
-        UpdateConfig();
-
-        var first = GetRequestAttribute(kind, new string('a', 256));
-        var second = GetRequestAttribute(kind, new string('b', 256));
-
-        NrAssert.Multiple
-        (
-            () => Assert.That(first.IsAvailableForAny(AttributeDestinations.TransactionEvent), Is.False),
-            () => Assert.That(first.IsAvailableForAny(AttributeDestinations.SpanEvent), Is.False),
-            () => Assert.That(first.IsAvailableForAny(AttributeDestinations.ErrorEvent), Is.False),
-            () => Assert.That(first.IsAvailableForAny(AttributeDestinations.ErrorTrace), Is.False),
-            () => Assert.That(first.IsAvailableForAny(AttributeDestinations.TransactionTrace), Is.False),
-            () => Assert.That(second, Is.SameAs(first)),
-            () => Assert.That(GetRequestAttributeCacheCount(kind), Is.EqualTo(0))
-        );
-
-        GetRequestAttribute(kind, new string('c', 255));
-
-        Assert.That(GetRequestAttributeCacheCount(kind), Is.EqualTo(1));
-    }
-
-    [TestCase("parameters")]
-    [TestCase("headers")]
-    public void RequestAttributeCache_LongName_LogsOnceWithoutTheName(string kind)
-    {
-        var firstName = new string('a', 256);
-        var secondName = new string('b', 256);
-        const string logText = "A request attribute name longer than 255 characters was not captured";
-
-        using (var logging = new TestUtilities.Logging())
-        {
-            GetRequestAttribute(kind, firstName);
-            GetRequestAttribute(kind, secondName);
-
-            NrAssert.Multiple
-            (
-                () => Assert.That(logging.DebugCount, Is.EqualTo(1)),
-                () => Assert.That(logging.HasMessageThatContains(logText), Is.True),
-                () => Assert.That(logging.HasMessageThatContains(firstName), Is.False),
-                () => Assert.That(logging.HasMessageThatContains(secondName), Is.False)
-            );
-        }
-    }
-
     [Test]
     public void RequestAttributeCache_ParameterAndHeaderCachesAreSeparate()
     {
