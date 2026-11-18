@@ -1,10 +1,4 @@
 version: 2
-# Public feed (no credentials) for the Sitecore.Logging test package; see
-# tests/Agent/IntegrationTests/nuget.config.
-registries:
-  sitecore:
-    type: nuget-feed
-    url: https://nuget.sitecore.com/resources/v3/index.json
 updates:
   - package-ecosystem: github-actions
     # "/" covers .github/workflows only; the composite actions need their own entry.
@@ -123,8 +117,6 @@ updates:
     directories: # not recursive - only the specified directory will be scanned for .csproj or .sln files
       - /tests/Agent/IntegrationTests # will pick up container, integration and unbounded test solutions
       - / # will pick up FullAgent.sln which contains the unit tests
-    registries:
-      - sitecore
     schedule:
       interval: monthly
     commit-message:
