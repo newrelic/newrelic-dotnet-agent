@@ -56,7 +56,7 @@ public class TransactionEventMakerTests
 
 
         _errorService = new ErrorService(_configurationService);
-        _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
+        _attribDefSvc = new AttributeDefinitionService((f, c, r) => new AttributeDefinitions(f, c, r), null);
 
         _transactionEventMaker = new TransactionEventMaker(_attribDefSvc);
         _transactionAttributeMaker = new TransactionAttributeMaker(_configurationService, _attribDefSvc);

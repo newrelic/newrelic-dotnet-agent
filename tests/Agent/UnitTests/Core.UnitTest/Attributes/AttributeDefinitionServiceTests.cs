@@ -9,6 +9,7 @@ using NewRelic.Agent.Core.Config;
 using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Fixtures;
+using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.SharedInterfaces;
 using NewRelic.Agent.Core.SharedInterfaces.Web;
@@ -78,7 +79,7 @@ public class AttributeDefinitionServiceTests
         _configAutoResponder = new ConfigurationAutoResponder(_configuration);
 
         _transactionMetricNameMaker = Mock.Create<ITransactionMetricNameMaker>();
-        _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
+        _attribDefSvc = new AttributeDefinitionService((f, c, r) => new AttributeDefinitions(f, c, r), _agentHealthReporter);
         _transactionAttributeMaker = new TransactionAttributeMaker(_configurationService, _attribDefSvc);
     }
 
@@ -325,9 +326,181 @@ public class AttributeDefinitionServiceTests
         LazyValueTest_Assertions(wireModel.Intrinsics, wireModel.AgentAttributes, wireModel.UserAttributes);
     }
 
-       
+    private void SetRequestAttributeCacheCapacity(int capacity)
+    {
+        _localConfig.appSettings = new List<configurationAdd>
+        {
+            new configurationAdd { key = "RequestAttributeCacheCapacity", value = capacity.ToString() }
+        };
+        UpdateConfig();
+    }
 
+    private AttributeDefinition<string, string> GetRequestAttribute(string kind, string name)
+    {
+        return kind == "parameters" ? _attribDefs.GetRequestParameterAttribute(name) : _attribDefs.GetRequestHeadersAttribute(name);
+    }
 
+    private int GetRequestAttributeCacheCount(string kind)
+    {
+        var attribDefs = (AttributeDefinitions)_attribDefs;
+        return kind == "parameters" ? attribDefs.RequestParameterAttributeCacheCount : attribDefs.RequestHeadersAttributeCacheCount;
+    }
 
+    [TestCase("parameters")]
+    [TestCase("headers")]
+    public void RequestAttributeCache_ManyNewNames_CountStaysAtOrBelowConfiguredCapacity(string kind)
+    {
+        SetRequestAttributeCacheCapacity(5);
 
+        for (var i = 0; i < 50; i++)
+        {
+            GetRequestAttribute(kind, $"name{i}");
+
+            Assert.That(GetRequestAttributeCacheCount(kind), Is.LessThanOrEqualTo(5));
+        }
+    }
+
+    [TestCase("parameters")]
+    [TestCase("headers")]
+    public void RequestAttributeCache_AfterFlush_NamesAreStillCaptured(string kind)
+    {
+        _localConfig.attributes.include.Add($"request.{kind}.*");
+        SetRequestAttributeCacheCapacity(2);
+
+        GetRequestAttribute(kind, "a");
+        GetRequestAttribute(kind, "b");
+        var flushingAttribute = GetRequestAttribute(kind, "c");
+        var addedAgainAttribute = GetRequestAttribute(kind, "a");
+
+        NrAssert.Multiple
+        (
+            () => Assert.That(flushingAttribute.IsAvailableForAny(AttributeDestinations.TransactionEvent), Is.True),
+            () => Assert.That(addedAgainAttribute.IsAvailableForAny(AttributeDestinations.TransactionEvent), Is.True)
+        );
+    }
+
+    [TestCase("parameters")]
+    [TestCase("headers")]
+    public void RequestAttributeCache_Flush_ReportsSupportabilityMetric(string kind)
+    {
+        var expectedMetric = kind == "parameters" ? MetricNames.SupportabilityRequestParameterAttributeCacheFlush : MetricNames.SupportabilityRequestHeaderAttributeCacheFlush;
+        var otherMetric = kind == "parameters" ? MetricNames.SupportabilityRequestHeaderAttributeCacheFlush : MetricNames.SupportabilityRequestParameterAttributeCacheFlush;
+        SetRequestAttributeCacheCapacity(1);
+
+        GetRequestAttribute(kind, "a");
+        GetRequestAttribute(kind, "b");
+
+        NrAssert.Multiple
+        (
+            () => Mock.Assert(() => _agentHealthReporter.ReportSupportabilityCountMetric(expectedMetric, 1), Occurs.Once()),
+            () => Mock.Assert(() => _agentHealthReporter.ReportSupportabilityCountMetric(otherMetric, 1), Occurs.Never())
+        );
+    }
+
+    [TestCase("parameters")]
+    [TestCase("headers")]
+    public void RequestAttributeCache_LongName_ReturnsSharedDefinitionAndIsNotCached(string kind)
+    {
+        _localConfig.attributes.include.Add($"request.{kind}.*");
+        UpdateConfig();
+
+        var first = GetRequestAttribute(kind, new string('a', 256));
+        var second = GetRequestAttribute(kind, new string('b', 256));
+
+        NrAssert.Multiple
+        (
+            () => Assert.That(first.IsAvailableForAny(AttributeDestinations.TransactionEvent), Is.False),
+            () => Assert.That(first.IsAvailableForAny(AttributeDestinations.SpanEvent), Is.False),
+            () => Assert.That(first.IsAvailableForAny(AttributeDestinations.ErrorEvent), Is.False),
+            () => Assert.That(first.IsAvailableForAny(AttributeDestinations.ErrorTrace), Is.False),
+            () => Assert.That(first.IsAvailableForAny(AttributeDestinations.TransactionTrace), Is.False),
+            () => Assert.That(second, Is.SameAs(first)),
+            () => Assert.That(GetRequestAttributeCacheCount(kind), Is.EqualTo(0))
+        );
+
+        GetRequestAttribute(kind, new string('c', 255));
+
+        Assert.That(GetRequestAttributeCacheCount(kind), Is.EqualTo(1));
+    }
+
+    [TestCase("parameters")]
+    [TestCase("headers")]
+    public void RequestAttributeCache_LongName_LogsOnceWithoutTheName(string kind)
+    {
+        var firstName = new string('a', 256);
+        var secondName = new string('b', 256);
+        const string logText = "A request attribute name longer than 255 characters was not captured";
+
+        using (var logging = new TestUtilities.Logging())
+        {
+            GetRequestAttribute(kind, firstName);
+            GetRequestAttribute(kind, secondName);
+
+            NrAssert.Multiple
+            (
+                () => Assert.That(logging.DebugCount, Is.EqualTo(1)),
+                () => Assert.That(logging.HasMessageThatContains(logText), Is.True),
+                () => Assert.That(logging.HasMessageThatContains(firstName), Is.False),
+                () => Assert.That(logging.HasMessageThatContains(secondName), Is.False)
+            );
+        }
+    }
+
+    [Test]
+    public void RequestAttributeCache_ParameterAndHeaderCachesAreSeparate()
+    {
+        SetRequestAttributeCacheCapacity(2);
+
+        _attribDefs.GetRequestParameterAttribute("a");
+        _attribDefs.GetRequestParameterAttribute("b");
+
+        Assert.That(GetRequestAttributeCacheCount("headers"), Is.EqualTo(0));
+
+        _attribDefs.GetRequestHeadersAttribute("a");
+
+        Assert.That(GetRequestAttributeCacheCount("parameters"), Is.EqualTo(2));
+    }
+
+    [TestCase("parameters")]
+    [TestCase("headers")]
+    public void RequestAttributeCache_ConfigurationChange_ResetsCacheAndCapacity(string kind)
+    {
+        SetRequestAttributeCacheCapacity(5);
+
+        GetRequestAttribute(kind, "a");
+        GetRequestAttribute(kind, "b");
+        GetRequestAttribute(kind, "c");
+
+        SetRequestAttributeCacheCapacity(2);
+
+        Assert.That(GetRequestAttributeCacheCount(kind), Is.EqualTo(0));
+
+        for (var i = 0; i < 3; i++)
+        {
+            GetRequestAttribute(kind, $"new{i}");
+
+            Assert.That(GetRequestAttributeCacheCount(kind), Is.LessThanOrEqualTo(2));
+        }
+    }
+
+    [Test]
+    public void RequestAttributeCache_NullReporter_FlushDoesNotThrow()
+    {
+        var filter = new AttributeFilter(new AttributeFilter.Settings(_configuration));
+        var attribDefs = new AttributeDefinitions(filter, 1);
+
+        Assert.DoesNotThrow(() =>
+        {
+            attribDefs.GetRequestParameterAttribute("a");
+            attribDefs.GetRequestParameterAttribute("b");
+            attribDefs.GetRequestHeadersAttribute("a");
+            attribDefs.GetRequestHeadersAttribute("b");
+        });
+
+        NrAssert.Multiple
+        (
+            () => Assert.That(attribDefs.RequestParameterAttributeCacheCount, Is.EqualTo(1)),
+            () => Assert.That(attribDefs.RequestHeadersAttributeCacheCount, Is.EqualTo(1))
+        );
+    }
 }

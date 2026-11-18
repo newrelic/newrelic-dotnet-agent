@@ -19,7 +19,7 @@ public class AttributeCollectionTests
     public void SetUp()
     {
         _attribValues = new AttributeValueCollection(AttributeDestinations.ErrorEvent);
-        _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
+        _attribDefSvc = new AttributeDefinitionService((f, c, r) => new AttributeDefinitions(f, c, r), null);
     }
 
     [TearDown]

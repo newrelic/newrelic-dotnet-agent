@@ -14,7 +14,7 @@ public static class TransactionSegmentStateHelpers
     {
         var transactionSegmentState = Mock.Create<ITransactionSegmentState>();
 
-        var attributeService = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
+        var attributeService = new AttributeDefinitionService((f, c, r) => new AttributeDefinitions(f, c, r), null);
         Mock.Arrange(() => transactionSegmentState.AttribDefs).Returns(attributeService.AttributeDefs);
 
         var configurationService = Mock.Create<IConfigurationService>();

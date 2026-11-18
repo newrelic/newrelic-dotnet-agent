@@ -96,7 +96,7 @@ public class ErrorTraceWireModelTests
             _stackTrace = CreateStackTrace();
             _guid = "123";
 
-            _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
+            _attribDefSvc = new AttributeDefinitionService((f, c, r) => new AttributeDefinitions(f, c, r), null);
 
         }
 

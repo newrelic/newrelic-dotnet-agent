@@ -48,7 +48,7 @@ public class CatHeaderHandlerTests
         Mock.Arrange(() => configurationService.Configuration).Returns(_configuration);
         var catMetrics = Mock.Create<ICATSupportabilityMetricCounters>();
         _catHeaderHandler = new CatHeaderHandler(configurationService, catMetrics);
-        _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
+        _attribDefSvc = new AttributeDefinitionService((f, c, r) => new AttributeDefinitions(f, c, r), null);
     }
 
     [TearDown]
@@ -378,7 +378,7 @@ public class CatHeaderHandlerTests
         ISimpleTimer timer = Mock.Create<ISimpleTimer>();
         Mock.Arrange(() => timer.Duration).Returns(duration);
 
-        IAttributeDefinitionService attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
+        IAttributeDefinitionService attribDefSvc = new AttributeDefinitionService((f, c, r) => new AttributeDefinitions(f, c, r), null);
 
         var priority = 0.5f;
         var tx = new Transaction(_configuration, name, timer, startTime, Mock.Create<ICallStackManager>(), Mock.Create<IDatabaseService>(), priority, Mock.Create<IDatabaseStatementParser>(), Mock.Create<IDistributedTracePayloadHandler>(), Mock.Create<IErrorService>(), attribDefSvc.AttributeDefs, Mock.Create<ISamplerService>());

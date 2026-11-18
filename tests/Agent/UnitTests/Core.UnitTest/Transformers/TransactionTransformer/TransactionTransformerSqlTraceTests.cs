@@ -102,7 +102,7 @@ public class TransactionTransformerSqlTraceTests
         _spanEventMaker = Mock.Create<ISpanEventMaker>();
         _agentTimerService = Mock.Create<IAgentTimerService>();
 
-        _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
+        _attribDefSvc = new AttributeDefinitionService((f, c, r) => new AttributeDefinitions(f, c, r), null);
         _errorService = Mock.Create<IErrorService>();
 
         // Non-Mocks

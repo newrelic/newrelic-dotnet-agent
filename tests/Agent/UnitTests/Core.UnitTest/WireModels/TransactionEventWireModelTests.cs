@@ -44,7 +44,7 @@ public class TransactionEventWireModelTests
         {
             var config = CreateMockConfiguration();
             _configAutoResponder = new ConfigurationAutoResponder(config);
-            _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
+            _attribDefSvc = new AttributeDefinitionService((f, c, r) => new AttributeDefinitions(f, c, r), null);
         }
 
         [TearDown]

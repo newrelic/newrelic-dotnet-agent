@@ -43,7 +43,7 @@ public class SqlTraceWireModelTests
     public void SetUp()
     {
         _sqlTraceWireModel = new SqlTraceWireModel(TrxDisplayName, Uri, SqlId, Sql, DatabaseMetricName, CallCount, TotalCallTime, MinCallTime, MaxCallTime, _parameterData);
-        _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
+        _attribDefSvc = new AttributeDefinitionService((f, c, r) => new AttributeDefinitions(f, c, r), null);
     }
 
     [TearDown]
@@ -72,7 +72,7 @@ public class SqlTraceWireModelTests
         var transactionMetricName = new TransactionMetricName("WebTransaction", "Name");
         var databaseService = new DatabaseService();
         var configurationService = Mock.Create<IConfigurationService>();
-        var attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
+        var attribDefSvc = new AttributeDefinitionService((f, c, r) => new AttributeDefinitions(f, c, r), null);
 
         string[] queries = {Sql, "Select * from someTable", "Insert x into anotherTable", "another random string",
             "1234567890!@#$%^&*()", "fjdksalfjdkla;fjdla;", "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",

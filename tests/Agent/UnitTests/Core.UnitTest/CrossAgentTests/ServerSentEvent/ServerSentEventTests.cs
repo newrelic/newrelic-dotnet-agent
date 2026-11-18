@@ -127,7 +127,7 @@ public class ServerSentEventTests
         _customEventAggregator = Mock.Create<ICustomEventAggregator>();
         _errorService = Mock.Create<IErrorService>();
 
-        _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
+        _attribDefSvc = new AttributeDefinitionService((f, c, r) => new AttributeDefinitions(f, c, r), null);
 
         _agentTimerService = Mock.Create<IAgentTimerService>();
         var logEventAggregator = Mock.Create<ILogEventAggregator>();

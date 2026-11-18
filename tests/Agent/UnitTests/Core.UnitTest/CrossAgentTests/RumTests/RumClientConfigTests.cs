@@ -113,7 +113,7 @@ public class RumClientConfigTests
         _configAutoResponder = new ConfigurationAutoResponder(_configuration);
 
         _transactionMetricNameMaker = Mock.Create<ITransactionMetricNameMaker>();
-        _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
+        _attribDefSvc = new AttributeDefinitionService((f, c, r) => new AttributeDefinitions(f, c, r), null);
         _transactionAttributeMaker = new TransactionAttributeMaker(_configurationService, _attribDefSvc);
         _browserMonitoringScriptMaker = new BrowserMonitoringScriptMaker(_configurationService, _transactionMetricNameMaker, _transactionAttributeMaker, _attribDefSvc);
 

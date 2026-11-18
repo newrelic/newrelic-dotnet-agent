@@ -51,7 +51,7 @@ public class TransactionTests
         _databaseService = new DatabaseService();
         _errorService = new ErrorService(configurationService);
         _distributedTracePayloadHandler = Mock.Create<IDistributedTracePayloadHandler>();
-        _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
+        _attribDefSvc = new AttributeDefinitionService((f, c, r) => new AttributeDefinitions(f, c, r), null);
         _transaction = new Transaction(_configuration, Mock.Create<ITransactionName>(), Mock.Create<ISimpleTimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), _databaseService, Priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs, Mock.Create<ISamplerService>());
         _publishedEvent = null;
         _eventSubscription = new EventSubscription<TransactionFinalizedEvent>(e => _publishedEvent = e);

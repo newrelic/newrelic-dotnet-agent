@@ -155,7 +155,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             _distributedTracePayloadHandler = Mock.Create<IDistributedTracePayloadHandler>();
             _traceMetadataFactory = Mock.Create<ITraceMetadataFactory>();
             _errorService = new ErrorService(_configurationService);
-            _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
+            _attribDefSvc = new AttributeDefinitionService((f, c, r) => new AttributeDefinitions(f, c, r), null);
             _labelsService = Mock.Create<ILabelsService>();
 
             var scheduler = Mock.Create<IScheduler>();

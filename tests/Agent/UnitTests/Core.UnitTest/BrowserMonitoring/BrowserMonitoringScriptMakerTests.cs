@@ -65,7 +65,7 @@ public class BrowserMonitoringScriptMakerTests
         Mock.Arrange(() => _transactionMetricNameMaker.GetTransactionMetricName(Arg.IsAny<ITransactionName>())).Returns(new TransactionMetricName("prefix", "suffix"));
 
         _transactionAttributeMaker = Mock.Create<ITransactionAttributeMaker>();
-        _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
+        _attribDefSvc = new AttributeDefinitionService((f, c, r) => new AttributeDefinitions(f, c, r), null);
 
         _browserMonitoringScriptMaker = new BrowserMonitoringScriptMaker(configurationService, _transactionMetricNameMaker, _transactionAttributeMaker, _attribDefSvc);
     }

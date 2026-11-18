@@ -27,7 +27,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer;
 public static class TestTransactions
 {
     private static IDatabaseService _databaseService = new DatabaseService();
-    private static IAttributeDefinitionService _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
+    private static IAttributeDefinitionService _attribDefSvc = new AttributeDefinitionService((f, c, r) => new AttributeDefinitions(f, c, r), null);
 
     public static IConfiguration GetDefaultConfiguration()
     {

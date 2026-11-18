@@ -43,7 +43,7 @@ public class TransactionFinalizerTests
         _transactionMetricNameMaker = Mock.Create<ITransactionMetricNameMaker>();
         _pathHashMaker = Mock.Create<IPathHashMaker>();
         _transactionTransformer = Mock.Create<ITransactionTransformer>();
-        _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
+        _attribDefSvc = new AttributeDefinitionService((f, c, r) => new AttributeDefinitions(f, c, r), null);
         _transactionFinalizer = new TransactionFinalizer(_agentHealthReporter, _transactionMetricNameMaker, _pathHashMaker, _transactionTransformer);
     }
 

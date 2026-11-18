@@ -38,7 +38,7 @@ public class CustomEventTransformerTests
         Mock.Arrange(() => _customEventAggregator.Collect(Arg.IsAny<CustomEventWireModel>()))
             .DoInstead<CustomEventWireModel>(customEvent => _lastPublishedCustomEvent = customEvent);
 
-        _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
+        _attribDefSvc = new AttributeDefinitionService((f, c, r) => new AttributeDefinitions(f, c, r), null);
 
         _customEventTransformer = new CustomEventTransformer(_configurationService, _customEventAggregator, _attribDefSvc);
     }

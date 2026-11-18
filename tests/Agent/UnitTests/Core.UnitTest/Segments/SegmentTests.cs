@@ -657,7 +657,7 @@ public class SegmentTests
         Mock.Arrange(() => configuration.TransactionEventsEnabled).Returns(true);
 
         // Initialize the Transaction with its dependencies
-        var attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
+        var attribDefSvc = new AttributeDefinitionService((f, c, r) => new AttributeDefinitions(f, c, r), null);
         var databaseStatementParser = Mock.Create<IDatabaseStatementParser>();
         var distributedTracePayloadHandler = Mock.Create<IDistributedTracePayloadHandler>();
 

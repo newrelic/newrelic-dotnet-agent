@@ -44,7 +44,7 @@ public class ErrorTraceMakerTests
         _configurationService = Mock.Create<IConfigurationService>();
         Mock.Arrange(() => _configurationService.Configuration).Returns(_configuration);
 
-        _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
+        _attribDefSvc = new AttributeDefinitionService((f, c, r) => new AttributeDefinitions(f, c, r), null);
         _agentTimerService = Mock.Create<IAgentTimerService>();
         _errorTraceMaker = new ErrorTraceMaker(_configurationService, _attribDefSvc, _agentTimerService);
         _errorService = new ErrorService(_configurationService);
@@ -430,7 +430,7 @@ public class ErrorTraceMakerTests
         var metadata = transactionMetadata.ConvertToImmutableMetadata();
         guid = guid ?? Guid.NewGuid().ToString();
 
-        var attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
+        var attribDefSvc = new AttributeDefinitionService((f, c, r) => new AttributeDefinitions(f, c, r), null);
 
         return new ImmutableTransaction(name, segments, metadata, DateTime.UtcNow, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1), guid, false, false, false, 0.5f, false, string.Empty, null, attribDefSvc.AttributeDefs);
     }

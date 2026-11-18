@@ -267,7 +267,7 @@ public class ImmutableTransactionBuilder
             hasCatResponseHeaders: false,
             priority: _priority);;
 
-        var attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
+        var attribDefSvc = new AttributeDefinitionService((f, c, r) => new AttributeDefinitions(f, c, r), null);
         return new ImmutableTransaction(_transactionName, _segments, metadata, _startTime, _duration, _responseTime, _transactionGuid, true, true, false, 0.5f, _distributedTraceSampled, _distributedTraceTraceId, _tracingState, attribDefSvc.AttributeDefs);
     }
 }

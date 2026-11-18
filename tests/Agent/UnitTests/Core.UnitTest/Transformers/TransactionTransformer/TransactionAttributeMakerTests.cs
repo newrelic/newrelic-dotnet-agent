@@ -93,7 +93,7 @@ public class TransactionAttributeMakerTests
         _configAutoResponder = new ConfigurationAutoResponder(_configuration);
 
         _databaseService = new DatabaseService();
-        _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
+        _attribDefSvc = new AttributeDefinitionService((f, c, r) => new AttributeDefinitions(f, c, r), null);
         _transactionAttributeMaker = new TransactionAttributeMaker(_configurationService, _attribDefSvc);
         _errorService = new ErrorService(_configurationService);
         _distributedTracePayloadHandler = Mock.Create<IDistributedTracePayloadHandler>();

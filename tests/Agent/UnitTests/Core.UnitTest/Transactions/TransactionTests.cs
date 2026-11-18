@@ -42,7 +42,7 @@ public class TransactionTests
         Mock.Arrange(() => _configuration.TransactionEventsEnabled).Returns(true);
 
         // Initialize the Transaction with its dependencies
-        _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
+        _attribDefSvc = new AttributeDefinitionService((f, c, r) => new AttributeDefinitions(f, c, r), null);
         _databaseStatementParser = Mock.Create<IDatabaseStatementParser>();
         _distributedTracePayloadHandler = Mock.Create<IDistributedTracePayloadHandler>();
 

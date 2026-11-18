@@ -149,7 +149,7 @@ public class SpanEventMakerTests
         _configurationService = Mock.Create<IConfigurationService>();
         Mock.Arrange(() => _configurationService.Configuration).Returns(() => _config);
 
-        _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
+        _attribDefSvc = new AttributeDefinitionService((f, c, r) => new AttributeDefinitions(f, c, r), null);
 
         _metricNameSvc = new MetricNameService();
         _transactionMetricNameMaker = new TransactionMetricNameMaker(_metricNameSvc);

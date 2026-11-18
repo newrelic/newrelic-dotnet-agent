@@ -45,7 +45,7 @@ internal class SpanEventAggregatorTests
     {
         var result = new List<ISpanEventWireModel>();
 
-        var attribSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
+        var attribSvc = new AttributeDefinitionService((f, c, r) => new AttributeDefinitions(f, c, r), null);
         var attribDefs = attribSvc.AttributeDefs;
 
         {

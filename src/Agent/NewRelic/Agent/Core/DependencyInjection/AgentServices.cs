@@ -216,7 +216,7 @@ public static class AgentServices
         container.Register<ILabelsService, LabelsService>();
 
         container.Register<ITransactionService, TransactionService>();
-        container.RegisterInstance<Func<IAttributeFilter, IAttributeDefinitions>>((filter) => new AttributeDefinitions(filter));
+        container.RegisterInstance<Func<IAttributeFilter, int, IAgentHealthReporter, IAttributeDefinitions>>((filter, capacity, reporter) => new AttributeDefinitions(filter, capacity, reporter));
         container.Register<IAttributeDefinitionService, AttributeDefinitionService>();
 
         if (!serverlessModeEnabled)

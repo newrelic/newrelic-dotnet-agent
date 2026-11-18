@@ -195,6 +195,7 @@ public interface IConfiguration
     bool PayloadSuccessMetricsEnabled { get; }
     string ProcessHostDisplayName { get; }
     int DatabaseStatementCacheCapacity { get; }
+    int RequestAttributeCacheCapacity { get; }
     bool ForceSynchronousTimingCalculationHttpClient { get; }
 
     bool UseHeaderBasedRequestQueueTimeForClassicAspNet { get; }

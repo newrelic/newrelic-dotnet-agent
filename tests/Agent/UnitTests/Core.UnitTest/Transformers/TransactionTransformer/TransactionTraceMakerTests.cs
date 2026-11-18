@@ -41,7 +41,7 @@ public class TransactionTraceMakerTests
         Mock.Arrange(() => _configurationService.Configuration.DatabaseNameReportingEnabled).Returns(true);
         Mock.Arrange(() => _configurationService.Configuration.InstanceReportingEnabled).Returns(true);
 
-        _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
+        _attribDefSvc = new AttributeDefinitionService((f, c, r) => new AttributeDefinitions(f, c, r), null);
 
         _transactionTraceMaker = new TransactionTraceMaker(_configurationService, _attribDefSvc);
 

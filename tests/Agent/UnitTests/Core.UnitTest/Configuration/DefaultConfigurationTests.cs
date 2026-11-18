@@ -5652,4 +5652,41 @@ public class DefaultConfigurationTests
         return defaultConfig.KafkaMetricsInterval;
     }
 
+    #region RequestAttributeCacheCapacity
+
+    [Test]
+    public void RequestAttributeCacheCapacity_DefaultsTo1000_WhenAppSettingIsMissing()
+    {
+        Assert.That(_defaultConfig.RequestAttributeCacheCapacity, Is.EqualTo(1000));
+    }
+
+    [Test]
+    public void RequestAttributeCacheCapacity_UsesAppSettingValue()
+    {
+        _localConfig.appSettings.Add(new configurationAdd { key = "RequestAttributeCacheCapacity", value = "5" });
+
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+        Assert.That(defaultConfig.RequestAttributeCacheCapacity, Is.EqualTo(5));
+    }
+
+    [Test]
+    public void RequestAttributeCacheCapacity_DefaultsTo1000_ForTheStaticDefaultInstance()
+    {
+        Assert.That(DefaultConfiguration.Instance.RequestAttributeCacheCapacity, Is.EqualTo(1000));
+    }
+
+    [TestCase("0")]
+    [TestCase("-3")]
+    [TestCase("abc")]
+    public void RequestAttributeCacheCapacity_FallsBackTo1000_WhenAppSettingIsBelowOneOrInvalid(string appSettingValue)
+    {
+        _localConfig.appSettings.Add(new configurationAdd { key = "RequestAttributeCacheCapacity", value = appSettingValue });
+
+        var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _bootstrapConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+        Assert.That(defaultConfig.RequestAttributeCacheCapacity, Is.EqualTo(1000));
+    }
+
+    #endregion
 }

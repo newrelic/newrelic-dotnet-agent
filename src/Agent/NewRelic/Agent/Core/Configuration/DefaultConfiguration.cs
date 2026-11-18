@@ -9,6 +9,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Config;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.SharedInterfaces;
@@ -59,7 +60,7 @@ public class DefaultConfiguration : IConfiguration
     private readonly ServerConfiguration _serverConfiguration = ServerConfiguration.GetDefault();
     private readonly RunTimeConfiguration _runTimeConfiguration = new RunTimeConfiguration();
     private readonly IBootstrapConfiguration _bootstrapConfiguration = BootstrapConfiguration.GetDefault();
-    private readonly Dictionary<string, string> _newRelicAppSettings;
+    private readonly Dictionary<string, string> _newRelicAppSettings = new Dictionary<string, string>();
 
     public bool UseResourceBasedNamingForWCFEnabled { get; private set; }
         
@@ -2829,6 +2830,15 @@ public class DefaultConfiguration : IConfiguration
     int? _databaseStatementCacheCapacity = null;
     public int DatabaseStatementCacheCapacity => _databaseStatementCacheCapacity ?? (_databaseStatementCacheCapacity =
         TryGetAppSettingAsIntWithDefault("SqlStatementCacheCapacity", DefaultSqlStatementCacheCapacity)).Value;
+
+    private int? _requestAttributeCacheCapacity;
+    public int RequestAttributeCacheCapacity => _requestAttributeCacheCapacity ??= GetRequestAttributeCacheCapacity();
+
+    private int GetRequestAttributeCacheCapacity()
+    {
+        var capacity = TryGetAppSettingAsIntWithDefault("RequestAttributeCacheCapacity", AttributeDefinitions.DefaultRequestAttributeCacheCapacity);
+        return capacity >= 1 ? capacity : AttributeDefinitions.DefaultRequestAttributeCacheCapacity;
+    }
 
     private bool? _codeLevelMetricsEnabled;
     public bool CodeLevelMetricsEnabled => _codeLevelMetricsEnabled ??= EnvironmentOverrides(_localConfiguration.codeLevelMetrics.enabled, "NEW_RELIC_CODE_LEVEL_METRICS_ENABLED");

@@ -51,7 +51,7 @@ public class ErrorEventMakerTests
         _errorGroupCallback = null;
         _configuration = Mock.Create<IConfiguration>();
 
-        _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
+        _attribDefSvc = new AttributeDefinitionService((f, c, r) => new AttributeDefinitions(f, c, r), null);
 
         Mock.Arrange(() => _configuration.ErrorCollectorEnabled).Returns(true);
         Mock.Arrange(() => _configuration.ErrorCollectorCaptureEvents).Returns(true);
@@ -586,7 +586,7 @@ public class ErrorEventMakerTests
         var placeholderMetadataBuilder = new TransactionMetadata(guid);
         var placeholderMetadata = placeholderMetadataBuilder.ConvertToImmutableMetadata();
 
-        var attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
+        var attribDefSvc = new AttributeDefinitionService((f, c, r) => new AttributeDefinitions(f, c, r), null);
 
         var immutableTransaction = new ImmutableTransaction(name, segments, placeholderMetadata, DateTime.Now, TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(10), guid, false, false, false, 0.5f, false, string.Empty, null, attribDefSvc.AttributeDefs);
 

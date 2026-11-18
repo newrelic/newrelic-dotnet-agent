@@ -50,7 +50,7 @@ public class CustomEventAggregatorTests
         _dataTransportService = Mock.Create<IDataTransportService>();
         _agentHealthReporter = Mock.Create<IAgentHealthReporter>();
         _processStatic = Mock.Create<IProcessStatic>();
-        _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
+        _attribDefSvc = new AttributeDefinitionService((f, c, r) => new AttributeDefinitions(f, c, r), null);
 
         _scheduler = Mock.Create<IScheduler>();
         Mock.Arrange(() => _scheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>()))

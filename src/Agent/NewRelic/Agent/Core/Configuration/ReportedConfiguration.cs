@@ -632,6 +632,9 @@ public class ReportedConfiguration : IConfiguration
     [JsonProperty("transaction_tracer.database_statement_cache_capacity")]
     public int DatabaseStatementCacheCapacity => _configuration.DatabaseStatementCacheCapacity;
 
+    [JsonProperty("attributes.request_attribute_cache_capacity")]
+    public int RequestAttributeCacheCapacity => _configuration.RequestAttributeCacheCapacity;
+
     [JsonProperty("agent.force_synchronous_timing_calculation_for_http_client")]
     public bool ForceSynchronousTimingCalculationHttpClient => _configuration.ForceSynchronousTimingCalculationHttpClient;
 

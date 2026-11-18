@@ -42,7 +42,7 @@ public class TransactionBuilderServiceTests
         var factory1 = CreateFactoryForTransactionContext(_highPriorityTransactionContext);
         var factory2 = CreateFactoryForTransactionContext(_lowPriorityTransactionContext);
 
-        IAttributeDefinitionService _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
+        IAttributeDefinitionService _attribDefSvc = new AttributeDefinitionService((f, c, r) => new AttributeDefinitions(f, c, r), null);
 
         _transactionService = new TransactionService(new[] { factory1, factory2 }, Mock.Create<ISimpleTimerFactory>(), Mock.Create<ICallStackManagerFactory>(), Mock.Create<IDatabaseService>(), Mock.Create<ITracePriorityManager>(), Mock.Create<IDatabaseStatementParser>(), Mock.Create<IErrorService>(), Mock.Create<IDistributedTracePayloadHandler>(), _attribDefSvc, Mock.Create<ISamplerService>());
     }

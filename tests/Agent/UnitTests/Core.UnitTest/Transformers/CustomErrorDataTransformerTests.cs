@@ -47,7 +47,7 @@ public class CustomErrorDataTransformerTests
         Mock.Arrange(() => configurationService.Configuration).Returns(_configuration);
 
         _agentTimerService = Mock.Create<IAgentTimerService>();
-        _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
+        _attribDefSvc = new AttributeDefinitionService((f, c, r) => new AttributeDefinitions(f, c, r), null);
         _errorTraceMaker = new ErrorTraceMaker(configurationService, _attribDefSvc, _agentTimerService);
         _errorTraceAggregator = Mock.Create<IErrorTraceAggregator>();
         _errorEventMaker = new ErrorEventMaker(_attribDefSvc, configurationService, _agentTimerService);

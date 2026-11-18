@@ -329,7 +329,7 @@ public class CallStackManagerTests
     {
         var configuration = Mock.Create<IConfiguration>();
         Mock.Arrange(() => configuration.TransactionTracerMaxSegments).Returns(1000);
-        var attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
+        var attribDefSvc = new AttributeDefinitionService((f, c, r) => new AttributeDefinitions(f, c, r), null);
         return new Transaction(configuration, Mock.Create<ITransactionName>(), Mock.Create<ISimpleTimer>(), DateTime.UtcNow,
             callStackManager, Mock.Create<IDatabaseService>(), 0.0f, Mock.Create<IDatabaseStatementParser>(),
             Mock.Create<IDistributedTracePayloadHandler>(), Mock.Create<IErrorService>(), attribDefSvc.AttributeDefs, Mock.Create<ISamplerService>());

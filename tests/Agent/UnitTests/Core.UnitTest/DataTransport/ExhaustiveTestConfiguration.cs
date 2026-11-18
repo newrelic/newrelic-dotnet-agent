@@ -434,6 +434,7 @@ public class ExhaustiveTestConfiguration : IConfiguration
     public string ProcessHostDisplayName => "ProcessHostDisplayName";
 
     public int DatabaseStatementCacheCapacity => 1234;
+    public int RequestAttributeCacheCapacity => 4321;
 
     public bool ForceSynchronousTimingCalculationHttpClient => true;
 

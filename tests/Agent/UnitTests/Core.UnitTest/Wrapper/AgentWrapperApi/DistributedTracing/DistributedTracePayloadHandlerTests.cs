@@ -92,7 +92,7 @@ public class DistributedTracePayloadHandlerTests
 
         _agentHealthReporter = Mock.Create<IAgentHealthReporter>();
         _distributedTracePayloadHandler = new DistributedTracePayloadHandler(configurationService, _agentHealthReporter, _samplerService);
-        _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
+        _attribDefSvc = new AttributeDefinitionService((f, c, r) => new AttributeDefinitions(f, c, r), null);
     }
 
     [TearDown]

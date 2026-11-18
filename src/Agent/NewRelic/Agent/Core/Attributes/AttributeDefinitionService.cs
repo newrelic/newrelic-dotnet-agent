@@ -6,10 +6,14 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Threading;
+using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.Events;
+using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Spans;
 using NewRelic.Agent.Core.Utilities;
+using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
@@ -162,11 +166,13 @@ public class AttributeDefinitionService : ConfigurationBasedService, IAttributeD
 {
     public IAttributeDefinitions AttributeDefs { get; private set; }
 
-    private readonly Func<IAttributeFilter, IAttributeDefinitions> _attribDefinitionsFactory;
+    private readonly Func<IAttributeFilter, int, IAgentHealthReporter, IAttributeDefinitions> _attribDefinitionsFactory;
+    private readonly IAgentHealthReporter _agentHealthReporter;
 
-    public AttributeDefinitionService(Func<IAttributeFilter, IAttributeDefinitions> attribDefinitionFactory)
+    public AttributeDefinitionService(Func<IAttributeFilter, int, IAgentHealthReporter, IAttributeDefinitions> attribDefinitionFactory, IAgentHealthReporter agentHealthReporter)
     {
         _attribDefinitionsFactory = attribDefinitionFactory;
+        _agentHealthReporter = agentHealthReporter;
         ResetAttributeDefinitions();
     }
 
@@ -174,7 +180,7 @@ public class AttributeDefinitionService : ConfigurationBasedService, IAttributeD
     {
         var filterSettings = new AttributeFilter.Settings(_configuration);
         var filter = new AttributeFilter(filterSettings);
-        AttributeDefs = _attribDefinitionsFactory(filter);
+        AttributeDefs = _attribDefinitionsFactory(filter, _configuration.RequestAttributeCacheCapacity, _agentHealthReporter);
     }
 
     protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)
@@ -185,19 +191,37 @@ public class AttributeDefinitionService : ConfigurationBasedService, IAttributeD
 
 public class AttributeDefinitions : IAttributeDefinitions
 {
-    private readonly IAttributeFilter _attribFilter;
+    public const int DefaultRequestAttributeCacheCapacity = 1000;
 
-    public AttributeDefinitions(IAttributeFilter attribFilter)
+    private const int MaxRequestAttributeNameLength = 255;
+
+    private readonly IAttributeFilter _attribFilter;
+    private readonly FlushingAttributeCache<AttributeDefinition<string, string>> _requestParameterAttributes;
+    private readonly FlushingAttributeCache<AttributeDefinition<string, string>> _requestHeadersAttributes;
+    private readonly AttributeDefinition<string, string> _requestAttributeNotCaptured;
+    private int _longNameLogged;
+
+    public AttributeDefinitions(IAttributeFilter attribFilter, int requestAttributeCacheCapacity = DefaultRequestAttributeCacheCapacity, IAgentHealthReporter agentHealthReporter = null)
     {
         _attribFilter = attribFilter;
+        _requestParameterAttributes = new FlushingAttributeCache<AttributeDefinition<string, string>>("request parameter", requestAttributeCacheCapacity,
+            CreateRequestParameterAttribute, () => agentHealthReporter?.ReportSupportabilityCountMetric(MetricNames.SupportabilityRequestParameterAttributeCacheFlush));
+        _requestHeadersAttributes = new FlushingAttributeCache<AttributeDefinition<string, string>>("request header", requestAttributeCacheCapacity,
+            CreateRequestHeadersAttribute, () => agentHealthReporter?.ReportSupportabilityCountMetric(MetricNames.SupportabilityRequestHeaderAttributeCacheFlush));
+        // A builder with no AppliesTo call makes a definition for no destination.
+        _requestAttributeNotCaptured = AttributeDefinitionBuilder.CreateString("request.not_captured", AttributeClassification.AgentAttributes).Build(attribFilter);
     }
+
+    // For unit tests only.
+    public int RequestParameterAttributeCacheCount => _requestParameterAttributes.Count;
+
+    // For unit tests only.
+    public int RequestHeadersAttributeCacheCount => _requestHeadersAttributes.Count;
 
     private readonly ConcurrentDictionary<string, AttributeDefinition<object, object>> _trxCustomAttributes = new ConcurrentDictionary<string, AttributeDefinition<object, object>>();
     private readonly ConcurrentDictionary<string, AttributeDefinition<object, object>> _spanCustomAttributes = new ConcurrentDictionary<string, AttributeDefinition<object, object>>();
     private readonly ConcurrentDictionary<string, AttributeDefinition<object, object>> _errorCustomAttributes = new ConcurrentDictionary<string, AttributeDefinition<object, object>>();
     private readonly ConcurrentDictionary<string, AttributeDefinition<object, object>> _customEventCustomAttributes = new ConcurrentDictionary<string, AttributeDefinition<object, object>>();
-    private readonly ConcurrentDictionary<string, AttributeDefinition<string, string>> _requestParameterAttributes = new ConcurrentDictionary<string, AttributeDefinition<string, string>>();
-    private readonly ConcurrentDictionary<string, AttributeDefinition<string, string>> _requestHeadersAttributes = new ConcurrentDictionary<string, AttributeDefinition<string, string>>();
     private readonly ConcurrentDictionary<string, AttributeDefinition<object, object>> _lambdaAttributes = new ConcurrentDictionary<string, AttributeDefinition<object, object>>();
     private readonly ConcurrentDictionary<string, AttributeDefinition<object, object>> _faasAttributes = new();
     private readonly ConcurrentDictionary<string, AttributeDefinition<object, object>> _cloudSdkAttributes = new();
@@ -343,12 +367,23 @@ public class AttributeDefinitions : IAttributeDefinitions
 
     public AttributeDefinition<string, string> GetRequestParameterAttribute(string paramName)
     {
-        return _requestParameterAttributes.GetOrAdd(paramName, CreateRequestParameterAttribute);
+        // A name this long never makes a valid attribute, so do not cache it (NR-651452).
+        return paramName.Length > MaxRequestAttributeNameLength ? GetNotCapturedRequestAttribute() : _requestParameterAttributes.GetOrAdd(paramName);
+    }
+
+    private AttributeDefinition<string, string> GetNotCapturedRequestAttribute()
+    {
+        if (Interlocked.Exchange(ref _longNameLogged, 1) == 0)
+        {
+            Log.Debug("A request attribute name longer than 255 characters was not captured. Later names of this length are not captured and are not logged.");
+        }
+
+        return _requestAttributeNotCaptured;
     }
 
     public AttributeDefinition<string, string> GetRequestHeadersAttribute(string paramName)
     {
-        return _requestHeadersAttributes.GetOrAdd(paramName, CreateRequestHeadersAttribute);
+        return paramName.Length > MaxRequestAttributeNameLength ? GetNotCapturedRequestAttribute() : _requestHeadersAttributes.GetOrAdd(paramName);
     }
 
     private AttributeDefinition<TypeAttributeValue, string> CreateTypeAttribute(TypeAttributeValue tm)

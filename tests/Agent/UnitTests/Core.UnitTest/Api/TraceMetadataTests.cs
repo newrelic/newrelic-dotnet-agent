@@ -35,7 +35,7 @@ public class TraceMetadataTests
         Mock.Arrange(() => _configuration.DistributedTracingEnabled).Returns(true);
         Mock.Arrange(() => _configuration.TransactionEventsEnabled).Returns(true);
 
-        _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
+        _attribDefSvc = new AttributeDefinitionService((f, c, r) => new AttributeDefinitions(f, c, r), null);
 
         _samplerService = Mock.Create<ISamplerService>();
         _traceMetadataFactory = new TraceMetadataFactory();

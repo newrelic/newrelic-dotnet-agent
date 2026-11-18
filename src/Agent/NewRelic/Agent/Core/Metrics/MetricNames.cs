@@ -1154,6 +1154,9 @@ public static class MetricNames
 
     #endregion Span Metrics
 
+    public const string SupportabilityRequestParameterAttributeCacheFlush = SupportabilityDotNetPs + "RequestAttributeCache" + PathSeparator + "Parameter" + PathSeparator + "Flush";
+    public const string SupportabilityRequestHeaderAttributeCacheFlush = SupportabilityDotNetPs + "RequestAttributeCache" + PathSeparator + "Header" + PathSeparator + "Flush";
+
     #region Infinite Tracing Metrics
 
     private const string SupportabilityInfiniteTracing = "InfiniteTracing" + PathSeparator;

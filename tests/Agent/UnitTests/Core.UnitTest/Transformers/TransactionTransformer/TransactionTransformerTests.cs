@@ -137,7 +137,7 @@ public class TransactionTransformerTests
         _agentTimerService = Mock.Create<IAgentTimerService>();
         _errorService = new ErrorService(_configurationService);
         _distributedTracePayloadHandler = Mock.Create<IDistributedTracePayloadHandler>();
-        _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
+        _attribDefSvc = new AttributeDefinitionService((f, c, r) => new AttributeDefinitions(f, c, r), null);
         _labelsService = Mock.Create<ILabelsService>();
         _samplerService = Mock.Create<ISamplerService>();
 

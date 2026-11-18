@@ -28,7 +28,7 @@ public class EventWireModelSerializerTests
     public void SetUp()
     {
         _configAutoResponder = new ConfigurationAutoResponder(GetConfiguration());
-        _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
+        _attribDefSvc = new AttributeDefinitionService((f, c, r) => new AttributeDefinitions(f, c, r), null);
     }
 
     [TearDown]

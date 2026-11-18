@@ -43,7 +43,7 @@ public class SqlTraceMakerTests
         Mock.Arrange(() => _configurationService.Configuration.InstanceReportingEnabled).Returns(true);
         Mock.Arrange(() => _configurationService.Configuration.DatabaseNameReportingEnabled).Returns(true);
 
-        _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
+        _attribDefSvc = new AttributeDefinitionService((f, c, r) => new AttributeDefinitions(f, c, r), null);
         _sqlTraceMaker = new SqlTraceMaker(_configurationService, _attribDefSvc, _databaseService);
         _errorService = new ErrorService(_configurationService);
     }
@@ -115,7 +115,7 @@ public class SqlTraceMakerTests
     {
         //Arrange
         var attribDefs = Mock.Create<IAttributeDefinitions>();
-        var attribDefSvc = new AttributeDefinitionService((f) => attribDefs);
+        var attribDefSvc = new AttributeDefinitionService((f, c, r) => attribDefs, null);
         var sqlTraceMaker = new SqlTraceMaker(_configurationService, attribDefSvc, _databaseService);
         var attribFilter = Mock.Create<IAttributeFilter>();
 
