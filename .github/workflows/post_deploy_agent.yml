@@ -31,9 +31,14 @@ on:
         type: boolean
         default: false
         required: false
-    # NEW_RELIC_API_KEY_PRODUCTION and DOTNET_AGENT_GH_TOKEN are secrets of the "release"
-    # environment, read directly by the report-deprecated-nuget-packages and release-tags jobs.
-    # They are not workflow_call secrets: environment secrets cannot be passed in from a caller.
+    # "release" environment secrets. Declare every one the jobs below read; a caller must pass
+    # each by name, and required: true fails the run otherwise. An undeclared one resolves empty.
+    # Keep this list in sync with the post-deploy job's secrets in deploy_agent.yml.
+    secrets:
+      NEW_RELIC_API_KEY_PRODUCTION:
+        required: true
+      DOTNET_AGENT_GH_TOKEN:
+        required: true
 
 permissions:
   contents: read
