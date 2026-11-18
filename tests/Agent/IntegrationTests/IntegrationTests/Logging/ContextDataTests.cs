@@ -291,6 +291,9 @@ public class MELContextDataNetCoreOldestTests : ContextDataTestsBase<ConsoleDyna
 #endregion
 
 #region Sitecore
+// Disabled: Dependabot's proxy blocks the Sitecore NuGet feed. To re-enable, define SITECORE_LOGGING
+// and restore the Sitecore.Logging references in MultiFunctionApplicationHelpers.csproj.
+#if SITECORE_LOGGING
 [Trait("Platform", "WindowsOnly")]
 public class SitecoreContextDataFWLatestTests : ContextDataTestsBase<ConsoleDynamicMethodFixtureFWLatest>
 {
@@ -327,7 +330,7 @@ public class SitecorePlusLog4NetContextDataFW48Tests : ContextDataTestsBase<Cons
     }
 }
 
-
+#endif
 #endregion // Sitecore
 
 #region SEL

@@ -132,9 +132,12 @@
     <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" Condition="'$(TargetFramework)' == 'net48'" />
     <PackageReference Include="Serilog.Sinks.Console" Version="4.0.1" Condition="'$(TargetFramework)' == 'net48'" />
 
-    <!-- There is only a Framework 4.8 version of Sitecore.Logging -->
+    <!-- Disabled: Sitecore.Logging is only on Sitecore's feed, which Dependabot's proxy blocks. To re-enable, restore
+         these references and the deleted tests/Agent/IntegrationTests/nuget.config, and define SITECORE_LOGGING. -->
+    <!--
     <PackageReference Include="Sitecore.Logging" Version="10.3.0" Condition="'$(TargetFramework)' == 'net48'" Aliases="Sitecore" />
     <PackageReference Include="Sitecore.Logging" Version="10.0.0" Condition="'$(TargetFramework)' == 'net481'" Aliases="Sitecore" />
+    -->
 
     <!-- Serilog .NET core references -->
     <!-- Can't go any earlier than 2.5.0 in .NET core due to minimum version required by
