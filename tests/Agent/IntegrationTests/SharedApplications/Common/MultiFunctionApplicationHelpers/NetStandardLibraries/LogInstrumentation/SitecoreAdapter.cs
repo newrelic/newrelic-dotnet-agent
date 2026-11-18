@@ -1,7 +1,8 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-#if NET48_OR_GREATER
+// Disabled with the Sitecore.Logging package references; see MultiFunctionApplicationHelpers.csproj.
+#if NET48_OR_GREATER && SITECORE_LOGGING
 
 extern alias Sitecore;
 

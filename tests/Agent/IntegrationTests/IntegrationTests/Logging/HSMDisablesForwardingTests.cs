@@ -140,6 +140,9 @@ public class NLogHSMDisablesForwardingTestsNetCoreLatestTests : HSMDisablesForwa
 #endregion
 
 #region Sitecore
+// Disabled: Dependabot's proxy blocks the Sitecore NuGet feed. To re-enable, define SITECORE_LOGGING
+// and restore the Sitecore.Logging references in MultiFunctionApplicationHelpers.csproj.
+#if SITECORE_LOGGING
 
 [Trait("Platform", "WindowsOnly")]
 public class SitecoreHSMDisablesForwardingTestsFWLatestTests : HSMDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureFWLatestHSM>
@@ -150,4 +153,5 @@ public class SitecoreHSMDisablesForwardingTestsFWLatestTests : HSMDisablesForwar
     }
 }
 
+#endif
 #endregion

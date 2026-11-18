@@ -9,7 +9,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="18.7.23">
+    <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="18.12.1">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
