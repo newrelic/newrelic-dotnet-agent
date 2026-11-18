@@ -49,7 +49,7 @@ public class ZipArchive : Artifact
         agentInfo.WriteToDisk(Path.Combine(StagingDirectory, CoreSubDirectoryName));
 
         Directory.CreateDirectory(OutputDirectory);
-        System.IO.Compression.ZipFile.CreateFromDirectory(StagingDirectory, _zipFilePath);
+        DeterministicArchive.CreateFromDirectory(StagingDirectory, _zipFilePath, DeterministicTimestamp.Current);
         File.WriteAllText($@"{OutputDirectory}\checksum.sha256", FileHelpers.GetSha256Checksum(_zipFilePath));
 
         Console.WriteLine($"Successfully created artifact for {nameof(ZipArchive)}.");

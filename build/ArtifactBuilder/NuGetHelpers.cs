@@ -55,6 +55,7 @@ public static class NuGetHelpers
             // verify the file exists, then return the filename
             if (File.Exists(packagePath))
             {
+                DeterministicArchive.NormalizeNupkg(packagePath, DeterministicTimestamp.Current);
                 return Path.GetFileName(packagePath);
             }
         }
