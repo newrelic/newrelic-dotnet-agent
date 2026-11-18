@@ -66,7 +66,7 @@ public class LoggingTester
                 logger = new SerilogLoggingWebAdapter(loggingPort);
                 break;
 #endif
-#if NET48_OR_GREATER
+#if NET48_OR_GREATER && SITECORE_LOGGING
             case "SITECORE":
                     logger = new SitecoreLoggingAdapter();
                 break;
