@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Authors>New Relic</Authors>
     <Company>New Relic</Company>
-    <Copyright>Copyright © $([System.DateTime]::Now.ToString(yyyy))</Copyright>
+    <!-- Copyright is set from the commit date by build/SourceDate.targets -->
 
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)keys\NewRelicStrongNameKey.snk</AssemblyOriginatorKeyFile>

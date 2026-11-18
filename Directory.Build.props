@@ -9,6 +9,10 @@
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
+  <!-- On GitHub Actions the compiler maps the checkout path to /_/ in PDBs and embedded paths, so output does not depend on where the repository is checked out. -->
+  <PropertyGroup>
+    <ContinuousIntegrationBuild Condition="'$(ContinuousIntegrationBuild)' == '' and '$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
+  </PropertyGroup>
   <!-- Pin all NuGet dependencies (incl. transitive, with content hashes) in packages.lock.json; CI restores in locked mode.
        tests/Directory.Build.props opts out. -->
   <PropertyGroup>

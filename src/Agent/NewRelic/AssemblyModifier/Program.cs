@@ -4,14 +4,36 @@
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
-if (args.Length == 0)
+const string KeyOption = "--key=";
+const string TimestampOption = "--timestamp=";
+const string NormalizeOnlyOption = "--normalize-only";
+
+var positionalArgs = args.Where(a => !a.StartsWith("--")).ToArray();
+
+if (positionalArgs.Length == 0)
 {
-    Console.WriteLine("Usage: <program> <assembly-path> <optional-search-directory>");
+    Console.WriteLine($"Usage: <program> <assembly-path> [<search-directory>] [{KeyOption}<strong-name-key-file>] [{TimestampOption}<unix-seconds>] [{NormalizeOnlyOption}]");
     return 1;
 }
 
-string assemblyPath = args[0];
+string assemblyPath = positionalArgs[0];
+string? keyPath = args.FirstOrDefault(a => a.StartsWith(KeyOption))?[KeyOption.Length..];
+bool normalizeOnly = args.Contains(NormalizeOnlyOption);
+var timestampArg = args.FirstOrDefault(a => a.StartsWith(TimestampOption))?[TimestampOption.Length..];
 var logger = GetLogger(assemblyPath);
+
+uint? timestamp = null;
+
+if (timestampArg != null)
+{
+    if (!uint.TryParse(timestampArg, out var parsedTimestamp))
+    {
+        logger.Log($"Error: '{timestampArg}' is not a valid {TimestampOption}<unix-seconds> value");
+        return 1;
+    }
+
+    timestamp = parsedTimestamp;
+}
 
 if (!File.Exists(assemblyPath))
 {
@@ -23,9 +45,9 @@ try
 {
     var resolver = new DefaultAssemblyResolver();
 
-    if (args.Length > 1 && Directory.Exists(args[1]))
+    if (positionalArgs.Length > 1 && Directory.Exists(positionalArgs[1]))
     {
-        resolver.AddSearchDirectory(args[1]);
+        resolver.AddSearchDirectory(positionalArgs[1]);
     }
 
     var parameters = new ReaderParameters
@@ -42,7 +64,7 @@ try
     var hasEmbeddedPdb = module.GetDebugHeader().Entries
         .Any(e => e.Directory.Type == ImageDebugType.EmbeddedPortablePdb);
 
-    IEnumerable<IModificationJob> jobs = [new InternalizeMetricsEventSourceName(logger)];
+    IEnumerable<IModificationJob> jobs = normalizeOnly ? [] : [new InternalizeMetricsEventSourceName(logger)];
 
     foreach (var job in jobs)
     {
@@ -54,15 +76,24 @@ try
         }
     }
 
-    // Any other symbol format routes Mono.Cecil to NativePdbWriter, which faults intermittently, so drop symbols instead.
+    // The merged assembly is always rewritten so that its MVID is derived from its content and its PE timestamp is the
+    // source date rather than a value computed by ILRepack or Cecil.
+    var writerParameters = new WriterParameters { DeterministicMvid = true, Timestamp = timestamp };
+
+    if (keyPath != null)
+    {
+        // Cecil does not re-sign on its own, which would leave the signature ILRepack produced zeroed out.
+        writerParameters.StrongNameKeyBlob = File.ReadAllBytes(keyPath);
+    }
+
+    // Any other symbol format routes Mono.Cecil to NativePdbWriter, which faults intermittently, so only embedded symbols are written.
     if (module.HasSymbols && hasEmbeddedPdb)
     {
-        module.Write(new WriterParameters { WriteSymbols = true, SymbolWriterProvider = new EmbeddedPortablePdbWriterProvider() });
+        writerParameters.WriteSymbols = true;
+        writerParameters.SymbolWriterProvider = new EmbeddedPortablePdbWriterProvider();
     }
-    else
-    {
-        module.Write();
-    }
+
+    module.Write(writerParameters);
 }
 catch (Exception ex)
 {
