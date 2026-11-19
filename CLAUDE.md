@@ -218,6 +218,15 @@ later turn. Instead:
   expose what's needed through a proper surface (interface, public helper,
   or a dedicated testable seam) rather than piercing encapsulation.
 
+## AI attribution
+
+- Commits with AI-generated code carry a `Co-Authored-By:` trailer for the
+  tool. Never strip it.
+- A PR body, issue, review, or comment that an agent posts under a person's
+  account ends with a note that names the agent.
+- A PR body includes the PR template's AI usage list with the matching box
+  ticked, even when the body does not otherwise follow the template.
+
 ## GitHub workflows
 
 Pinning rules for workflow `uses:` and `pip install` (CI-enforced) are in

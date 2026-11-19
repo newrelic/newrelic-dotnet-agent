@@ -7,6 +7,10 @@ The what, the why and the how of your PR.
 # Author Checklist
 - [ ] Unit tests, Integration tests, and Unbounded tests completed
 - [ ] Performance testing completed with satisfactory results (if required)
+- AI usage disclosure:
+  - [ ] No AI used
+  - [ ] AI-assisted (AI wrote some of the code or text)
+  - [ ] Bulk AI-generated (AI wrote most of the change)
 
 # Reviewer Checklist
 - [ ] Perform code review
