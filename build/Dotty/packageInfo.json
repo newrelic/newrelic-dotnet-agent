@@ -126,9 +126,6 @@
         "packageName": "microsoft.azure.functions.worker.extensions.storage.queues"
     },
     {
-        "packageName": "microsoft.azure.functions.worker.sdk"
-    },
-    {
         "packageName": "microsoft.extensions.logging"
     },
     {
