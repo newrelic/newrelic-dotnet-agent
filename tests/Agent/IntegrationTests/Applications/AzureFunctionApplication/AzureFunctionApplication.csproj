@@ -1,4 +1,4 @@
-<Project Sdk="Azure.Functions.Sdk/1.1.0" TreatAsLocalProperty="DeployOnBuild">
+<Project Sdk="Azure.Functions.Sdk" TreatAsLocalProperty="DeployOnBuild">
   <PropertyGroup>
     <TargetFrameworks>net481;net10.0;net11.0</TargetFrameworks>
     <!-- Publish per framework only (CI and the test fixture do this); a multi-target publish fails. -->

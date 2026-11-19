@@ -144,6 +144,7 @@ updates:
       - dependency-name: "xunit*"
       - dependency-name: "PublicApiGenerator"
       - dependency-name: "Verify.NUnit"
+      - dependency-name: "Azure.Functions.Sdk"
     ignore:
       - dependency-name: "Verify.NUnit"
         update-types: ["version-update:semver-major"] # v33 adds a SponsorCheck maintenance-fee gate that fails the build
