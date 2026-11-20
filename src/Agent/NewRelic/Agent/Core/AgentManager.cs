@@ -238,7 +238,7 @@ public sealed class AgentManager : IAgentManager, IDisposable
             // never become the live instance). CP's native sampler thread is the one piece that would
             // otherwise leak for the life of the process, since AgentSingleton.CreateInstance's catch never
             // gets a reference to this half-built manager.
-            StopProfilerServices(null, () => _continuousProfilingService?.Dispose());
+            ProfilerServicesTeardown.Stop(null, () => _continuousProfilingService?.Dispose());
 
             throw;
         }
@@ -405,29 +405,9 @@ public sealed class AgentManager : IAgentManager, IDisposable
 
     private void StopServices()
     {
-        StopProfilerServices(
+        ProfilerServicesTeardown.Stop(
             () => _threadProfilingService?.Stop(),
             () => _continuousProfilingService?.Dispose());
-    }
-
-    // Best-effort two-step profiler teardown. The continuous-profiling dispose MUST run even when stopping
-    // thread profiling throws: ThreadProfilingService.Stop() joins a sampling worker and can throw, and the
-    // original unguarded `Stop(); Dispose();` would then skip Dispose() and orphan the continuous-profiling
-    // native sampler thread for the rest of the process (Shutdown()'s outer catch never compensates -- its
-    // finally only disposes the container, not the CP service). The finally guarantees the CP dispose runs
-    // while still letting a Stop() failure propagate so the shutdown path's error/health reporting is
-    // preserved. Public static so the ordering/null-safety/isolation is unit-testable without constructing
-    // AgentManager (whose ctor drives the full static startup path).
-    public static void StopProfilerServices(Action stopThreadProfiler, Action disposeContinuousProfiler)
-    {
-        try
-        {
-            stopThreadProfiler?.Invoke();
-        }
-        finally
-        {
-            disposeContinuousProfiler?.Invoke();
-        }
     }
 
     /// <summary>

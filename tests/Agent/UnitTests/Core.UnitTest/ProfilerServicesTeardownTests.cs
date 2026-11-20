@@ -8,22 +8,19 @@ using NUnit.Framework;
 namespace NewRelic.Agent.Core.UnitTest;
 
 /// <summary>
-/// Covers <see cref="AgentManager.StopProfilerServices"/>, the extracted profiler-teardown seam AgentManager's
-/// StopServices delegates to. AgentManager itself is not unit-testable (its private parameterless ctor drives
-/// the full static startup path -- DI container, config loader, event bus, collector connect), so the
-/// teardown POLICY -- ordering, null-safety, and cross-step exception isolation -- is proven here through the
-/// public static helper instead. The isolation test is a regression for the orphaned-CP-sampler defect: a
-/// throw from stopping thread profiling used to skip disposing continuous profiling entirely.
+/// Covers <see cref="ProfilerServicesTeardown.Stop"/>: ordering, null-safety, and cross-step exception isolation
+/// of the profiler teardown that AgentManager delegates to. Do not reference AgentManager here; on .NET
+/// Framework that runs its static initializer, which starts a full agent and leaks it into later tests.
 /// </summary>
 [TestFixture]
-public class AgentManagerTests
+public class ProfilerServicesTeardownTests
 {
     [Test]
-    public void StopProfilerServices_runs_thread_profiling_stop_before_continuous_profiling_dispose()
+    public void Stop_runs_thread_profiling_stop_before_continuous_profiling_dispose()
     {
         var order = new List<string>();
 
-        AgentManager.StopProfilerServices(
+        ProfilerServicesTeardown.Stop(
             () => order.Add("stop-thread-profiling"),
             () => order.Add("dispose-continuous-profiling"));
 
@@ -31,36 +28,36 @@ public class AgentManagerTests
     }
 
     [Test]
-    public void StopProfilerServices_tolerates_both_steps_being_null()
+    public void Stop_tolerates_both_steps_being_null()
     {
         // In production either service reference can be null (serverless mode, or a CP construction that
         // threw), in which case StopServices passes a no-op lambda -- but the helper must also be safe when
         // handed null delegates directly.
-        Assert.DoesNotThrow(() => AgentManager.StopProfilerServices(null, null));
+        Assert.DoesNotThrow(() => ProfilerServicesTeardown.Stop(null, null));
     }
 
     [Test]
-    public void StopProfilerServices_runs_the_continuous_profiling_step_when_the_thread_profiling_step_is_null()
+    public void Stop_runs_the_continuous_profiling_step_when_the_thread_profiling_step_is_null()
     {
         var disposed = false;
 
-        AgentManager.StopProfilerServices(null, () => disposed = true);
+        ProfilerServicesTeardown.Stop(null, () => disposed = true);
 
         Assert.That(disposed, Is.True);
     }
 
     [Test]
-    public void StopProfilerServices_runs_the_thread_profiling_step_when_the_continuous_profiling_step_is_null()
+    public void Stop_runs_the_thread_profiling_step_when_the_continuous_profiling_step_is_null()
     {
         var stopped = false;
 
-        AgentManager.StopProfilerServices(() => stopped = true, null);
+        ProfilerServicesTeardown.Stop(() => stopped = true, null);
 
         Assert.That(stopped, Is.True);
     }
 
     [Test]
-    public void StopProfilerServices_disposes_continuous_profiling_even_when_stopping_thread_profiling_throws()
+    public void Stop_disposes_continuous_profiling_even_when_stopping_thread_profiling_throws()
     {
         // The regression: ThreadProfilingService.Stop() joins a sampling worker and can throw. The original
         // unguarded teardown skipped the continuous-profiling dispose in that case, orphaning the CP native
@@ -69,7 +66,7 @@ public class AgentManagerTests
         var disposed = false;
 
         var thrown = Assert.Throws<InvalidOperationException>(() =>
-            AgentManager.StopProfilerServices(
+            ProfilerServicesTeardown.Stop(
                 () => throw new InvalidOperationException("stop failed"),
                 () => disposed = true));
 
@@ -81,14 +78,14 @@ public class AgentManagerTests
     }
 
     [Test]
-    public void StopProfilerServices_still_ran_the_thread_profiling_stop_when_disposing_continuous_profiling_throws()
+    public void Stop_still_ran_the_thread_profiling_stop_when_disposing_continuous_profiling_throws()
     {
         // The thread-profiling stop runs first, so a throw from the continuous-profiling dispose cannot undo
         // it; the dispose failure propagates on its own.
         var stopped = false;
 
         var thrown = Assert.Throws<InvalidOperationException>(() =>
-            AgentManager.StopProfilerServices(
+            ProfilerServicesTeardown.Stop(
                 () => stopped = true,
                 () => throw new InvalidOperationException("dispose failed")));
 
