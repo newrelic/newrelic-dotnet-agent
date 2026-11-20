@@ -15,12 +15,27 @@ public partial class AttributeValue : IAttributeValue
     private readonly AttributeDefinition _attributeDefinition;
     public AttributeDefinition AttributeDefinition => _attributeDefinition;
 
+    private readonly string _name;
+    private readonly AttributeDestinations _destinations;
+
+    public string Name => _name ?? _attributeDefinition.Name;
+
+    public AttributeDestinations AttributeDestinations => _name != null ? _destinations : _attributeDefinition.AttributeDestinations;
+
+    public AttributeKey Key => new AttributeKey(_attributeDefinition.Guid, _name);
+
     public AttributeValue(AttributeDefinition attributeDefinition)
     {
         _attributeDefinition = attributeDefinition;
     }
 
-    public AttributeValue(IAttributeValue attribValue) : this(attribValue.AttributeDefinition)
+    public AttributeValue(AttributeDefinition attributeDefinition, string name, AttributeDestinations destinations) : this(attributeDefinition)
+    {
+        _name = name;
+        _destinations = destinations;
+    }
+
+    public AttributeValue(IAttributeValue attribValue) : this(attribValue.AttributeDefinition, attribValue.Key.Name, attribValue.AttributeDestinations)
     {
         if (attribValue.Value != null)
         {

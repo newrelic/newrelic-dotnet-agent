@@ -409,7 +409,7 @@ public class AttributeFilterTests
             var filteredAttribs = new AttributeValueCollection(unfilteredAttribs, testDestination);
 
             var countMatchAttribValues = filteredAttribs.GetAttributeValues(AttributeClassification.UserAttributes)
-                .Count(x => x.AttributeDefinition.Name == testCase.AttributeKey);
+                .Count(x => x.Name == testCase.AttributeKey);
 
             var expectedCount = expectedDestinations.Contains(testDestination) ? 1 : 0;
 

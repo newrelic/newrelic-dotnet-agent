@@ -89,17 +89,6 @@ public static class AttributeDefinitionBuilder
             .WithConvert((dbStmt) => TruncateDatastoreStatement(dbStmt, dbStmtMaxLengthBytes));
     }
 
-    public static AttributeDefinitionBuilder<object, object> CreateCustomAttribute(string name, AttributeDestinations destination)
-    {
-        var builder = Create<object, object>(name, AttributeClassification.UserAttributes);
-
-        builder.AppliesTo(destination, true);
-
-        builder.WithConvert(GenericConverter);
-
-        return builder;
-    }
-
     public static AttributeDefinitionBuilder<object, object> CreateAgentAttribute(string name, AttributeDestinations destination)
     {
         var builder = Create<object, object>(name, AttributeClassification.AgentAttributes);
@@ -206,12 +195,6 @@ public static class AttributeDefinitionBuilder
 
 public class AttributeDefinitionBuilder<TInput, TOutput>
 {
-    private static readonly AttributeDestinations[] AttribDestinationValues =
-        Enum.GetValues(typeof(AttributeDestinations)).OfType<AttributeDestinations>()
-            .Where(x=>x != AttributeDestinations.None)
-            .Where(x=>x != AttributeDestinations.All)
-            .ToArray();
-
     private readonly string _name;
     private readonly AttributeClassification _classification;
     private TOutput _defaultOutputVal;
@@ -252,27 +235,15 @@ public class AttributeDefinitionBuilder<TInput, TOutput>
 
     public AttributeDefinitionBuilder<TInput, TOutput> AppliesTo(AttributeDestinations destination, bool isAvailable)
     {
-        foreach (var val in AttribDestinationValues)
-        {
-            if ((destination & val) == val)
-            {
-                _availability[val] = isAvailable;
-            }
-        }
-
+        AttributeAvailability.Set(_availability, destination, isAvailable);
         UpdateDestinationsFlags();
-            
+
         return this;
     }
 
     private void UpdateDestinationsFlags()
     {
-        _destinations = AttributeDestinations.None;
-
-        foreach (var availDestination in _availability.Where(x => x.Value))
-        {
-            _destinations |= availDestination.Key;
-        }
+        _destinations = AttributeAvailability.ToFlags(_availability);
     }
 
     public AttributeDefinitionBuilder<TInput, TOutput> WithConvert(Func<TInput, TOutput> convertValueImpl)
@@ -299,13 +270,7 @@ public class AttributeDefinitionBuilder<TInput, TOutput>
         // via the filtering services.
         if (_classification != AttributeClassification.Intrinsics)
         {
-            foreach (var dest in _availability.Keys.ToArray())
-            {
-                _availability[dest] = _availability[dest]
-                                      && !filter.ShouldFilterAttribute(dest)
-                                      && filter.CheckOrAddAttributeClusionCache(_name, dest, dest);
-            }
-
+            AttributeAvailability.ApplyFilter(_availability, _name, filter);
             UpdateDestinationsFlags();
         }
 
@@ -321,7 +286,7 @@ public class AttributeDefinition
     public const string KeyName_Guid = "guid";
     public const string KeyName_TraceId = "traceId";
 
-    private const int _attribNameMaxLengthBytes = 255;
+    internal const int AttribNameMaxLengthBytes = 255;
 
     public readonly Guid Guid = Guid.NewGuid();
     public readonly string Name;
@@ -371,7 +336,7 @@ public class AttributeDefinition
             return false;
         }
 
-        if (Encoding.UTF8.GetByteCount(Name) > _attribNameMaxLengthBytes)
+        if (Encoding.UTF8.GetByteCount(Name) > AttribNameMaxLengthBytes)
         {
             Log.Debug($"{AttributeDestinations} {Classification} Attribute definition is not valid - Name is is too large ({Name})");
             return false;
@@ -382,12 +347,17 @@ public class AttributeDefinition
 
     protected void HandleNullValue()
     {
-        if (Classification != AttributeClassification.UserAttributes)
+        LogNullValue(AttributeDestinations, Classification, Name);
+    }
+
+    protected static void LogNullValue(AttributeDestinations destinations, AttributeClassification classification, string name)
+    {
+        if (classification != AttributeClassification.UserAttributes)
         {
             return;
         }
 
-        Log.Debug($"{AttributeDestinations} {Classification} Attribute '{Name}' was not recorded - value was null");
+        Log.Debug($"{destinations} {classification} Attribute '{name}' was not recorded - value was null");
     }
 }
 
@@ -447,27 +417,10 @@ public class AttributeDefinition<TInput, TOutput> : AttributeDefinition
             return false;
         }
 
-        if (sourceVal == null || _conversionImpl == null)
+        if (!AttributeValueConverter.TryConvert(sourceVal, _conversionImpl, _postProcessingImpl, out var destVal))
         {
             HandleNullValue();
             return false;
-        }
-
-        var destVal = _conversionImpl(sourceVal);
-        if (destVal == null)
-        {
-            HandleNullValue();
-            return false;
-        }
-
-        if (_postProcessingImpl != null)
-        {
-            destVal = _postProcessingImpl(destVal);
-            if (destVal == null)
-            {
-                HandleNullValue();
-                return false;
-            }
         }
 
         return collection.TrySetValue(this, destVal);
@@ -500,28 +453,10 @@ public class AttributeDefinition<TInput, TOutput> : AttributeDefinition
 
     private object ResolveLazyValue(Func<TInput> getInputValFx)
     {
-        var inputVal = getInputValFx();
-        if (inputVal == null)
+        if (!AttributeValueConverter.TryConvert(getInputValFx(), _conversionImpl, _postProcessingImpl, out var destVal))
         {
             HandleNullValue();
             return null;
-        }
-
-        var destVal = _conversionImpl(inputVal);
-        if (destVal == null)
-        {
-            HandleNullValue();
-            return null;
-        }
-
-        if (_postProcessingImpl != null)
-        {
-            destVal = _postProcessingImpl(destVal);
-            if (destVal == null)
-            {
-                HandleNullValue();
-                return null;
-            }
         }
 
         return destVal;

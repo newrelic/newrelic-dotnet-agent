@@ -89,10 +89,10 @@ public class CustomErrorDataTransformerTests
         // ARRANGE
         var attribValues = new AttributeValueCollection(AttributeDestinations.TransactionEvent, AttributeDestinations.ErrorEvent, AttributeDestinations.ErrorTrace, AttributeDestinations.JavaScriptAgent); ;
 
-        _attribDefs.GetCustomAttributeForCustomEvent("CustomEventAttrib").TrySetValue(attribValues, "CustomEventValue");        //CustomEvent
-        _attribDefs.GetCustomAttributeForError("ErrorEventAttrib").TrySetValue(attribValues, "ErrorEventValue");                //Error Event and Trace
-        _attribDefs.GetCustomAttributeForSpan("SpanEventAttrib").TrySetValue(attribValues, "SpanEventValue");                   //Span only
-        _attribDefs.GetCustomAttributeForTransaction("TrxEventAttrib").TrySetValue(attribValues, "TrxEventValue");              //All Destiantions
+        _attribDefs.CustomEventCustomAttributes.TrySetValue(attribValues, "CustomEventAttrib", "CustomEventValue");        //CustomEvent
+        _attribDefs.ErrorCustomAttributes.TrySetValue(attribValues, "ErrorEventAttrib", "ErrorEventValue");                //Error Event and Trace
+        _attribDefs.SpanCustomAttributes.TrySetValue(attribValues, "SpanEventAttrib", "SpanEventValue");                   //Span only
+        _attribDefs.TransactionCustomAttributes.TrySetValue(attribValues, "TrxEventAttrib", "TrxEventValue");              //All Destiantions
 
         var errorCustomParameters = new ReadOnlyDictionary<string, object>(new Dictionary<string, object>() { { "ErrorCustomAttrib", "ErrorCustomValue" } });
         var errorNoticedAt = DateTime.Now;

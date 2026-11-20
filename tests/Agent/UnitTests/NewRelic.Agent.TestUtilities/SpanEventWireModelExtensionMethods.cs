@@ -20,6 +20,6 @@ public static class SpanEventWireModelExtensionMethods
     {
         return new ReadOnlyDictionary<string, object>(spanEvent
             .GetAttributeValues(classification)
-            .ToDictionary(x => x.AttributeDefinition.Name, x => x.Value));
+            .ToDictionary(x => x.Name, x => x.Value));
     }
 }

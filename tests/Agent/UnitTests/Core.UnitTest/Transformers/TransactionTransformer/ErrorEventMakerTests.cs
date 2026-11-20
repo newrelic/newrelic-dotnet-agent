@@ -275,7 +275,7 @@ public class ErrorEventMakerTests
         // Arrange
         var customAttributes = new AttributeValueCollection(AttributeDestinations.ErrorEvent);
         var errorData = GetErrorDataFromException(null);
-        _attribDefs.GetCustomAttributeForError("custom attribute name").TrySetValue(customAttributes, "custom attribute value");
+        _attribDefs.ErrorCustomAttributes.TrySetValue(customAttributes, "custom attribute name", "custom attribute value");
 
         // Act
         float priority = 0.5f;

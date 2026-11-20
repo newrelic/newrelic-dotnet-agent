@@ -273,7 +273,7 @@ public class EventWireModelSerializerTests
         _attribDefs.GetTypeAttribute(TypeAttributeValue.SpanLink).TrySetDefault(linkAttribValues);
         _attribDefs.LinkedTraceId.TrySetValue(linkAttribValues, "trace-abc");
         _attribDefs.LinkedSpanId.TrySetValue(linkAttribValues, "span-def");
-        _attribDefs.GetCustomAttributeForSpan("link.custom").TrySetValue(linkAttribValues, "custom-value");
+        _attribDefs.SpanCustomAttributes.TrySetValue(linkAttribValues, "link.custom", "custom-value");
         var spanLink = new SpanLinkWireModel(linkAttribValues);
         attribValues.Span.Links.Add(spanLink);
 
@@ -303,7 +303,7 @@ public class EventWireModelSerializerTests
         var eventAttribValues = new SpanAttributeValueCollection();
         _attribDefs.GetTypeAttribute(TypeAttributeValue.SpanEvent).TrySetDefault(eventAttribValues);
         _attribDefs.NameForSpan.TrySetValue(eventAttribValues, "custom-event");
-        _attribDefs.GetCustomAttributeForSpan("event.custom").TrySetValue(eventAttribValues, 123);
+        _attribDefs.SpanCustomAttributes.TrySetValue(eventAttribValues, "event.custom", 123);
         var spanEvent = new SpanEventEventWireModel(eventAttribValues);
         attribValues.Span.Events.Add(spanEvent);
 
@@ -328,7 +328,7 @@ public class EventWireModelSerializerTests
         var attribValues = new SpanAttributeValueCollection();
         attribValues.Priority = 0.5f;
         _attribDefs.GetTypeAttribute(TypeAttributeValue.Span).TrySetDefault(attribValues);
-        _attribDefs.GetCustomAttributeForSpan("tags").TrySetValue(attribValues, new object[] { "red", "green", "blue" });
+        _attribDefs.SpanCustomAttributes.TrySetValue(attribValues, "tags", new object[] { "red", "green", "blue" });
 
         var serializer = new SpanEventWireModelSerializer();
         var stringBuilder = new StringBuilder();
@@ -354,7 +354,7 @@ public class EventWireModelSerializerTests
         var attribValues = new SpanAttributeValueCollection();
         attribValues.Priority = 0.5f;
         _attribDefs.GetTypeAttribute(TypeAttributeValue.Span).TrySetDefault(attribValues);
-        _attribDefs.GetCustomAttributeForSpan("scores").TrySetValue(attribValues, new object[] { 10, 20, 30 });
+        _attribDefs.SpanCustomAttributes.TrySetValue(attribValues, "scores", new object[] { 10, 20, 30 });
 
         var serializer = new SpanEventWireModelSerializer();
         var stringBuilder = new StringBuilder();
@@ -380,7 +380,7 @@ public class EventWireModelSerializerTests
         var attribValues = new SpanAttributeValueCollection();
         attribValues.Priority = 0.5f;
         _attribDefs.GetTypeAttribute(TypeAttributeValue.Span).TrySetDefault(attribValues);
-        _attribDefs.GetCustomAttributeForSpan("mixed").TrySetValue(attribValues, new object[] { "hello", 42, true });
+        _attribDefs.SpanCustomAttributes.TrySetValue(attribValues, "mixed", new object[] { "hello", 42, true });
 
         var serializer = new SpanEventWireModelSerializer();
         var stringBuilder = new StringBuilder();
@@ -410,7 +410,7 @@ public class EventWireModelSerializerTests
         // Must use AllTargetModelTypes (individual flags) rather than AttributeDestinations.All
         // (composite flag) because IsAvailableForAny checks individual keys in the availability dictionary.
         var transactionAttribs = new AttributeValueCollection(AttributeValueCollection.AllTargetModelTypes);
-        _attribDefs.GetCustomAttributeForTransaction("tags").TrySetValue(transactionAttribs, new object[] { "a", "b", "c" });
+        _attribDefs.TransactionCustomAttributes.TrySetValue(transactionAttribs, "tags", new object[] { "a", "b", "c" });
 
         var spanAttribs = new SpanAttributeValueCollection();
         spanAttribs.Priority = 0.5f;
@@ -442,7 +442,7 @@ public class EventWireModelSerializerTests
         var attribValues = new SpanAttributeValueCollection();
         attribValues.Priority = 0.5f;
         _attribDefs.GetTypeAttribute(TypeAttributeValue.Span).TrySetDefault(attribValues);
-        _attribDefs.GetCustomAttributeForSpan("nums").TrySetValue(attribValues, new object[] { 1, 2, 3 });
+        _attribDefs.SpanCustomAttributes.TrySetValue(attribValues, "nums", new object[] { 1, 2, 3 });
 
         var serializer = new SpanEventWireModelSerializer();
         var stringBuilder = new StringBuilder();

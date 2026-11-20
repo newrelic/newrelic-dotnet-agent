@@ -12,6 +12,7 @@ using NewRelic.Agent.Core.Spans;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Agent.Extensions.SystemExtensions;
 
 namespace NewRelic.Agent.Core.Attributes;
 
@@ -122,10 +123,10 @@ public interface IAttributeDefinitions
     AttributeDefinition<string, string> TrustedParentId { get; }
     AttributeDefinition<TimeSpan, double> WebDuration { get; }
 
-    AttributeDefinition<object, object> GetCustomAttributeForCustomEvent(string name);
-    AttributeDefinition<object, object> GetCustomAttributeForError(string name);
-    AttributeDefinition<object, object> GetCustomAttributeForSpan(string name);
-    AttributeDefinition<object, object> GetCustomAttributeForTransaction(string name);
+    DynamicAttributeDefinition<object, object> TransactionCustomAttributes { get; }
+    DynamicAttributeDefinition<object, object> SpanCustomAttributes { get; }
+    DynamicAttributeDefinition<object, object> ErrorCustomAttributes { get; }
+    DynamicAttributeDefinition<object, object> CustomEventCustomAttributes { get; }
 
     AttributeDefinition<object, object> GetAgentAttributeForSpan(string key);
 
@@ -133,9 +134,8 @@ public interface IAttributeDefinitions
     AttributeDefinition<object, object> GetFaasAttribute(string name);
     AttributeDefinition<object, object> GetCloudSdkAttribute(string name);
 
-    AttributeDefinition<string, string> GetRequestParameterAttribute(string paramName);
-
-    AttributeDefinition<string, string> GetRequestHeadersAttribute(string paramName);
+    DynamicAttributeDefinition<string, string> RequestParameterAttributes { get; }
+    DynamicAttributeDefinition<string, string> RequestHeaderAttributes { get; }
 
     AttributeDefinition<TypeAttributeValue, string> GetTypeAttribute(TypeAttributeValue destination);
 
@@ -187,17 +187,6 @@ public class AttributeDefinitions : IAttributeDefinitions
 {
     private readonly IAttributeFilter _attribFilter;
 
-    public AttributeDefinitions(IAttributeFilter attribFilter)
-    {
-        _attribFilter = attribFilter;
-    }
-
-    private readonly ConcurrentDictionary<string, AttributeDefinition<object, object>> _trxCustomAttributes = new ConcurrentDictionary<string, AttributeDefinition<object, object>>();
-    private readonly ConcurrentDictionary<string, AttributeDefinition<object, object>> _spanCustomAttributes = new ConcurrentDictionary<string, AttributeDefinition<object, object>>();
-    private readonly ConcurrentDictionary<string, AttributeDefinition<object, object>> _errorCustomAttributes = new ConcurrentDictionary<string, AttributeDefinition<object, object>>();
-    private readonly ConcurrentDictionary<string, AttributeDefinition<object, object>> _customEventCustomAttributes = new ConcurrentDictionary<string, AttributeDefinition<object, object>>();
-    private readonly ConcurrentDictionary<string, AttributeDefinition<string, string>> _requestParameterAttributes = new ConcurrentDictionary<string, AttributeDefinition<string, string>>();
-    private readonly ConcurrentDictionary<string, AttributeDefinition<string, string>> _requestHeadersAttributes = new ConcurrentDictionary<string, AttributeDefinition<string, string>>();
     private readonly ConcurrentDictionary<string, AttributeDefinition<object, object>> _lambdaAttributes = new ConcurrentDictionary<string, AttributeDefinition<object, object>>();
     private readonly ConcurrentDictionary<string, AttributeDefinition<object, object>> _faasAttributes = new();
     private readonly ConcurrentDictionary<string, AttributeDefinition<object, object>> _cloudSdkAttributes = new();
@@ -207,67 +196,41 @@ public class AttributeDefinitions : IAttributeDefinitions
 
     private readonly ConcurrentDictionary<TypeAttributeValue, AttributeDefinition<TypeAttributeValue, string>> _typeAttributes = new ConcurrentDictionary<TypeAttributeValue, AttributeDefinition<TypeAttributeValue, string>>();
 
+    public DynamicAttributeDefinition<object, object> TransactionCustomAttributes { get; }
+    public DynamicAttributeDefinition<object, object> SpanCustomAttributes { get; }
+    public DynamicAttributeDefinition<object, object> ErrorCustomAttributes { get; }
+    public DynamicAttributeDefinition<object, object> CustomEventCustomAttributes { get; }
+    public DynamicAttributeDefinition<string, string> RequestParameterAttributes { get; }
+    public DynamicAttributeDefinition<string, string> RequestHeaderAttributes { get; }
 
-    private AttributeDefinition<object, object> CreateCustomAttributeForTransaction(string name)
+    public AttributeDefinitions(IAttributeFilter attribFilter)
     {
-        return AttributeDefinitionBuilder
-            .CreateCustomAttribute(name, AttributeDestinations.All)
-            .Build(_attribFilter);
+        _attribFilter = attribFilter;
+
+        TransactionCustomAttributes = CreateCustomFamily("custom.transaction.*", AttributeDestinations.All);
+        SpanCustomAttributes = CreateCustomFamily("custom.span.*", AttributeDestinations.SpanEvent);
+        ErrorCustomAttributes = CreateCustomFamily("custom.error.*", AttributeDestinations.ErrorEvent | AttributeDestinations.ErrorTrace);
+        CustomEventCustomAttributes = CreateCustomFamily("custom.event.*", AttributeDestinations.CustomEvent);
+        RequestParameterAttributes = CreateRequestFamily("request.parameters.*", "request.parameters.");
+        RequestHeaderAttributes = CreateRequestFamily("request.headers.*", "request.headers.");
     }
 
-    private AttributeDefinition<object, object> CreateCustomAttributeForCustomEvent(string name)
+    private DynamicAttributeDefinition<object, object> CreateCustomFamily(string familyLabel, AttributeDestinations familyDestinations)
     {
-        return AttributeDefinitionBuilder
-            .CreateCustomAttribute(name, AttributeDestinations.CustomEvent)
-            .Build(_attribFilter);
+        return new DynamicAttributeDefinition<object, object>(familyLabel, AttributeClassification.UserAttributes, AttributeDefinitionBuilder.GenericConverter, o => o,
+            rawName => AttributeNameResolver.ResolveCustom(_attribFilter, rawName, familyDestinations));
     }
 
-    private AttributeDefinition<object, object> CreateCustomAttributeForError(string name)
+    private DynamicAttributeDefinition<string, string> CreateRequestFamily(string familyLabel, string prefix)
     {
-        return AttributeDefinitionBuilder
-            .CreateCustomAttribute(name, AttributeDestinations.ErrorEvent | AttributeDestinations.ErrorTrace)
-            .Build(_attribFilter);
-    }
-
-    private AttributeDefinition<object, object> CreateCustomAttributeForSpan(string name)
-    {
-        return AttributeDefinitionBuilder
-            .CreateCustomAttribute(name, AttributeDestinations.SpanEvent)
-            .Build(_attribFilter);
+        return new DynamicAttributeDefinition<string, string>(familyLabel, AttributeClassification.AgentAttributes, v => v, v => v.TruncateUnicodeStringByBytes(255),
+            rawName => AttributeNameResolver.ResolvePrefixed(_attribFilter, prefix, rawName));
     }
 
     private AttributeDefinition<object, object> CreateAgentAttributeForSpan(string name)
     {
         return AttributeDefinitionBuilder
             .CreateAgentAttribute(name, AttributeDestinations.SpanEvent)
-            .Build(_attribFilter);
-    }
-
-    private AttributeDefinition<string, string> CreateRequestParameterAttribute(string paramName)
-    {
-        var attribName = $"request.parameters.{paramName}";
-
-        return AttributeDefinitionBuilder
-            .CreateString(attribName, AttributeClassification.AgentAttributes)
-            .AppliesTo(AttributeDestinations.TransactionEvent, _attribFilter.CheckOrAddAttributeClusionCache(attribName, AttributeDestinations.None, AttributeDestinations.TransactionEvent))
-            .AppliesTo(AttributeDestinations.TransactionTrace, _attribFilter.CheckOrAddAttributeClusionCache(attribName, AttributeDestinations.None, AttributeDestinations.TransactionTrace))
-            .AppliesTo(AttributeDestinations.ErrorTrace, _attribFilter.CheckOrAddAttributeClusionCache(attribName, AttributeDestinations.None, AttributeDestinations.ErrorTrace))
-            .AppliesTo(AttributeDestinations.ErrorEvent, _attribFilter.CheckOrAddAttributeClusionCache(attribName, AttributeDestinations.None, AttributeDestinations.ErrorEvent))
-            .AppliesTo(AttributeDestinations.SpanEvent, _attribFilter.CheckOrAddAttributeClusionCache(attribName, AttributeDestinations.None, AttributeDestinations.SpanEvent))
-            .Build(_attribFilter);
-    }
-
-    private AttributeDefinition<string, string> CreateRequestHeadersAttribute(string paramName)
-    {
-        var attribName = $"request.headers.{paramName}";
-
-        return AttributeDefinitionBuilder
-            .CreateString(attribName, AttributeClassification.AgentAttributes)
-            .AppliesTo(AttributeDestinations.TransactionEvent, _attribFilter.CheckOrAddAttributeClusionCache(attribName, AttributeDestinations.None, AttributeDestinations.TransactionEvent))
-            .AppliesTo(AttributeDestinations.TransactionTrace, _attribFilter.CheckOrAddAttributeClusionCache(attribName, AttributeDestinations.None, AttributeDestinations.TransactionTrace))
-            .AppliesTo(AttributeDestinations.ErrorTrace, _attribFilter.CheckOrAddAttributeClusionCache(attribName, AttributeDestinations.None, AttributeDestinations.ErrorTrace))
-            .AppliesTo(AttributeDestinations.ErrorEvent, _attribFilter.CheckOrAddAttributeClusionCache(attribName, AttributeDestinations.None, AttributeDestinations.ErrorEvent))
-            .AppliesTo(AttributeDestinations.SpanEvent, _attribFilter.CheckOrAddAttributeClusionCache(attribName, AttributeDestinations.None, AttributeDestinations.SpanEvent))
             .Build(_attribFilter);
     }
 
@@ -316,39 +279,9 @@ public class AttributeDefinitions : IAttributeDefinitions
     {
         return _cloudSdkAttributes.GetOrAdd(name, CreateCloudSdkAttribute);
     }
-    public AttributeDefinition<object, object> GetCustomAttributeForTransaction(string name)
-    {
-        return _trxCustomAttributes.GetOrAdd(name, CreateCustomAttributeForTransaction);
-    }
-
-    public AttributeDefinition<object, object> GetCustomAttributeForCustomEvent(string name)
-    {
-        return _customEventCustomAttributes.GetOrAdd(name, CreateCustomAttributeForCustomEvent);
-    }
-
-    public AttributeDefinition<object, object> GetCustomAttributeForError(string name)
-    {
-        return _errorCustomAttributes.GetOrAdd(name, CreateCustomAttributeForError);
-    }
-
-    public AttributeDefinition<object, object> GetCustomAttributeForSpan(string name)
-    {
-        return _spanCustomAttributes.GetOrAdd(name, CreateCustomAttributeForSpan);
-    }
-
     public AttributeDefinition<object, object> GetAgentAttributeForSpan(string name)
     {
         return _spanAgentAttributes.GetOrAdd(name, CreateAgentAttributeForSpan);
-    }
-
-    public AttributeDefinition<string, string> GetRequestParameterAttribute(string paramName)
-    {
-        return _requestParameterAttributes.GetOrAdd(paramName, CreateRequestParameterAttribute);
-    }
-
-    public AttributeDefinition<string, string> GetRequestHeadersAttribute(string paramName)
-    {
-        return _requestHeadersAttributes.GetOrAdd(paramName, CreateRequestHeadersAttribute);
     }
 
     private AttributeDefinition<TypeAttributeValue, string> CreateTypeAttribute(TypeAttributeValue tm)

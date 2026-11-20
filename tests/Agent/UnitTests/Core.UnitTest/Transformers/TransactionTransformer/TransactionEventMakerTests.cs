@@ -116,12 +116,12 @@ public class TransactionEventMakerTests
 
 
         var unfilteredIntrinsicsDic = attributes.GetAttributeValues(AttributeClassification.Intrinsics)
-            .Where(x=>x.AttributeDefinition.IsAvailableForAny(AttributeDestinations.TransactionEvent))
-            .GroupBy(x=>x.AttributeDefinition)
+            .Where(x => (x.AttributeDestinations & AttributeDestinations.TransactionEvent) != AttributeDestinations.None)
+            .GroupBy(x => x.Key)
             .ToDictionary(x => x.Key, x=>x.Last());
 
         var filteredIntrinsicsDic = transactionEvent.AttributeValues.GetAttributeValues(AttributeClassification.Intrinsics)
-            .GroupBy(x => x.AttributeDefinition)
+            .GroupBy(x => x.Key)
             .ToDictionary(x => x.Key, x => x.Last());
 
         // ASSERT

@@ -60,8 +60,8 @@ public class ErrorEventWireModelTests
             {"identity.product", "product"}
         });
 
-        _attribDefs.GetCustomAttributeForError("identity.user").TrySetValue(attribValues, "samw");
-        _attribDefs.GetCustomAttributeForError("identity.product").TrySetValue(attribValues, "product");
+        _attribDefs.ErrorCustomAttributes.TrySetValue(attribValues, "identity.user", "samw");
+        _attribDefs.ErrorCustomAttributes.TrySetValue(attribValues, "identity.product", "product");
 
         var agentAttributes = new ReadOnlyDictionary<string, object>(new Dictionary<string, object>
         {
