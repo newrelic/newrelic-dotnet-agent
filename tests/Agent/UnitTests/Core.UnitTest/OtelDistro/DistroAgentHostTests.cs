@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using NewRelic.Agent.Core.Tracer;
 using NUnit.Framework;
 using Telerik.JustMock;
 
@@ -14,12 +15,14 @@ public class DistroAgentHostTests
     public void SetUp()
     {
         DistroAgentHost.ResetForTesting();
+        AgentShim.ResetDistroStateForTesting();
     }
 
     [TearDown]
     public void TearDown()
     {
         DistroAgentHost.ResetForTesting();
+        AgentShim.ResetDistroStateForTesting();
     }
 
     [Test]
@@ -124,5 +127,35 @@ public class DistroAgentHostTests
         var afterReset = DistroAgentHost.Start(() => secondAgent);
 
         Assert.That(afterReset, Is.SameAs(secondAgent));
+    }
+
+    [Test]
+    public void Start_RegistersAgentWithShim_WhenAgentIsAnAgentManager()
+    {
+        var agent = Mock.Create<IDistroAgent>(c => c.Implements<IAgentManager>());
+        var tracer = Mock.Create<ITracer>();
+        var agentManager = (IAgentManager)agent;
+        Mock.Arrange(() => agentManager.GetTracerImpl(Arg.AnyString, Arg.IsAny<uint>(), Arg.AnyString, Arg.AnyString, Arg.IsAny<Type>(), Arg.AnyString, Arg.AnyString, Arg.AnyString, Arg.IsAny<object>(), Arg.IsAny<object[]>(), Arg.IsAny<ulong>(), Arg.IsAny<Type>()))
+            .Returns(tracer);
+
+        DistroAgentHost.Start(() => agent);
+
+        var result = AgentShim.GetFinishTracerDelegate("F", 0, "M", "A", typeof(object), "T", "Meth", "", null, new object[0], 1, null);
+        result(null, null);
+
+        Mock.Assert(() => agentManager.GetTracerImpl(Arg.AnyString, Arg.IsAny<uint>(), Arg.AnyString, Arg.AnyString, Arg.IsAny<Type>(), Arg.AnyString, Arg.AnyString, Arg.AnyString, Arg.IsAny<object>(), Arg.IsAny<object[]>(), Arg.IsAny<ulong>(), Arg.IsAny<Type>()), Occurs.Once());
+    }
+
+    [Test]
+    public void Start_FactoryThrows_ShimStaysInDistroModeAndNoOps()
+    {
+        var expected = new InvalidOperationException("start-up failed");
+
+        Assert.Throws<InvalidOperationException>(() => DistroAgentHost.Start(() => throw expected));
+
+        var result = AgentShim.GetFinishTracerDelegate("F", 0, "M", "A", typeof(object), "T", "Meth", "", null, new object[0], 1, null);
+
+        Assert.That(result, Is.Not.Null);
+        Assert.DoesNotThrow(() => result(null, null));
     }
 }

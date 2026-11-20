@@ -62,6 +62,9 @@ public class LogsPlugin : IPlugin, IConfigureLogsOptions<OpenTelemetryLoggerOpti
 
         options.IncludeFormattedMessage = true;
         options.IncludeScopes = true;
+        // Where the dedupe's fallback path flushes OTel records NR did not record (see DistroLogCapture). The sink maps
+        // and forwards them through Core's log path, the same as a non-deferred record.
+        DistroLogCapture.SetSink(agent.LogSink.Record);
         options.AddProcessor(new DistroLogProcessor(agent.LogSink));
         Log.Debug("OTel distro logs plugin: ConfigureLogsOptions called; attached a log processor.");
     }

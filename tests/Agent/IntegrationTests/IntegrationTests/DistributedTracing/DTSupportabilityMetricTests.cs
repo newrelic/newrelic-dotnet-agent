@@ -10,12 +10,15 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.DistributedTracing;
 
-[Trait("Platform", "WindowsOnly")]
-public class DTSupportabilityMetricTests : NewRelicIntegrationTest<RemoteServiceFixtures.DTBasicMVCApplicationFixture>
+// Generic on the fixture so the same assertions run in agent mode and in OTel distro mode (hosted web core under the
+// OTel native profiler + the New Relic distro plugin). The distro subclass lives in the OtelDistro namespace, which CI
+// does not select (it needs NR_DEV_OTEL_HOME).
+public abstract class DTSupportabilityMetricTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
+    where TFixture : RemoteServiceFixtures.DTBasicMVCApplicationFixture
 {
-    readonly RemoteServiceFixtures.DTBasicMVCApplicationFixture _fixture;
+    readonly TFixture _fixture;
 
-    public DTSupportabilityMetricTests(RemoteServiceFixtures.DTBasicMVCApplicationFixture fixture, ITestOutputHelper output) : base(fixture)
+    protected DTSupportabilityMetricTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
     {
         _fixture = fixture;
         _fixture.TestLogger = output;
@@ -65,4 +68,12 @@ public class DTSupportabilityMetricTests : NewRelicIntegrationTest<RemoteService
         );
     }
 
+}
+
+[Trait("Platform", "WindowsOnly")]
+public class DTSupportabilityMetricTests : DTSupportabilityMetricTestsBase<RemoteServiceFixtures.DTBasicMVCApplicationFixture>
+{
+    public DTSupportabilityMetricTests(RemoteServiceFixtures.DTBasicMVCApplicationFixture fixture, ITestOutputHelper output) : base(fixture, output)
+    {
+    }
 }

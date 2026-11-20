@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<extension xmlns="urn:newrelic-extension">
+  <instrumentation>
+    <tracerFactory name="NewRelic.Providers.Wrapper.CustomInstrumentation.OtherTransactionWrapper">
+      <match assemblyName="AsyncProofApp" className="AsyncProofApp.Work">
+        <exactMethodMatcher methodName="RunTransactionAsync" parameters="System.Int32" />
+      </match>
+    </tracerFactory>
+    <tracerFactory>
+      <match assemblyName="AsyncProofApp" className="AsyncProofApp.Work">
+        <exactMethodMatcher methodName="Traced" />
+      </match>
+    </tracerFactory>
+  </instrumentation>
+</extension>

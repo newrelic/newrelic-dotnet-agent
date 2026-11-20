@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
@@ -13,6 +14,7 @@ using NewRelic.Agent.Core.DependencyInjection;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Time;
+using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Wrapper;
 using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
@@ -27,6 +29,10 @@ public class DistroAgentManagerTests
     private const string FatalConfigurationMessage = "There was a fatal configuration problem preventing the agent from starting. Please see previous log messages for details.";
     private const string ShutdownDuringStartMessage = "The agent received a shutdown event during start-up.";
     private const string ExtensionsDirectory = @"C:\nr\extensions";
+    private const string PropagatorsMetric = "Supportability/Dotnet/OtelDistro/Config/PropagatorsNotDefault";
+    private const string ExporterMetric = "Supportability/Dotnet/OtelDistro/Config/ExporterNotNone/Traces";
+    private const string NotFoundMetric = "Supportability/Dotnet/OtelDistro/MethodResolution/NotFound";
+    private const string AmbiguousMetric = "Supportability/Dotnet/OtelDistro/MethodResolution/Ambiguous";
 
     private List<string> _calls;
     private IAgentManagerEnvironment _environment;
@@ -135,6 +141,12 @@ public class DistroAgentManagerTests
         _connectionManager?.Dispose();
 
         ConfigurationLoader.UseBootstrapConfigurationForTesting(_originalBootstrapConfig);
+
+        AgentShim.ResetDistroStateForTesting();
+
+        // Static sink: reset here (not at the end of the tests) so a failing assertion cannot leak it into other tests.
+        DistroMethodResolutionDiagnostics.ResetForTesting();
+        DistroConfigMetrics.ResetForTesting();
     }
 
     [Test]
@@ -220,6 +232,141 @@ public class DistroAgentManagerTests
         Mock.Assert(() => _container.Resolve<IAgent>(), Occurs.Exactly(3));
         Mock.Assert(() => _container.Resolve<IErrorService>(), Occurs.Once());
         Mock.Assert(() => _container.Resolve<CommandService>(), Occurs.Once());
+    }
+
+    // Finding 1 (final review): Core's metric aggregator drops what is recorded before connect, so the distro metric
+    // sink is only attached on AgentConnectedEvent. The mocked AttemptAutoStart publishes nothing: an async connect.
+    [Test]
+    public void Start_AsyncConnect_HoldsMetricsUntilAgentConnected_ThenSendsThemOnce()
+    {
+        var site = new DistroInstrumentationSite("Factory", "Metric", 0u, "Asm", "NS.Worker", "DoWork", string.Empty, 1ul);
+        DistroConfigMetrics.Record(PropagatorsMetric);
+        DistroMethodResolutionDiagnostics.Report(new DistroResolvedMethod(DistroResolutionOutcome.NotFound, false, 1ul, typeof(object), string.Empty), site, 1);
+
+        _manager = new DistroAgentManager(_environment);
+        DistroConfigMetrics.Record(ExporterMetric);
+        Mock.Assert(() => _healthReporter.ReportSupportabilityCountMetric(Arg.AnyString, Arg.AnyLong), Occurs.Never());
+
+        EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
+
+        Mock.Assert(() => _healthReporter.ReportSupportabilityCountMetric(PropagatorsMetric, 1), Occurs.Once());
+        Mock.Assert(() => _healthReporter.ReportSupportabilityCountMetric(NotFoundMetric, 1), Occurs.Once());
+        Mock.Assert(() => _healthReporter.ReportSupportabilityCountMetric(ExporterMetric, 1), Occurs.Once());
+
+        // Attached: later records go straight to the reporter.
+        DistroMethodResolutionDiagnostics.Report(new DistroResolvedMethod(DistroResolutionOutcome.AmbiguousDisagreeing, false, 1ul, typeof(object), string.Empty), site, 1);
+        Mock.Assert(() => _healthReporter.ReportSupportabilityCountMetric(AmbiguousMetric, 1), Occurs.Once());
+
+        // A reconnect re-attaches harmlessly: nothing is sent twice.
+        EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
+        Mock.Assert(() => _healthReporter.ReportSupportabilityCountMetric(Arg.AnyString, Arg.AnyLong), Occurs.Exactly(4));
+    }
+
+    // A synchronous connect publishes AgentConnectedEvent inside start-up step 11; the subscription (step 10) catches it.
+    [Test]
+    public void Start_SyncConnect_AttachesSinkDuringStart()
+    {
+        Mock.Arrange(() => _connectionManager.AttemptAutoStart()).DoInstead(() => EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent()));
+        DistroConfigMetrics.Record(PropagatorsMetric);
+
+        _manager = new DistroAgentManager(_environment);
+
+        Mock.Assert(() => _healthReporter.ReportSupportabilityCountMetric(PropagatorsMetric, 1), Occurs.Once());
+        DistroConfigMetrics.Record(ExporterMetric);
+        Mock.Assert(() => _healthReporter.ReportSupportabilityCountMetric(ExporterMetric, 1), Occurs.Once());
+    }
+
+    [Test]
+    public void Shutdown_DetachesSink_AndALaterConnectDoesNotReattach()
+    {
+        _manager = new DistroAgentManager(_environment);
+        EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
+        DistroConfigMetrics.Record(PropagatorsMetric);
+        Mock.Assert(() => _healthReporter.ReportSupportabilityCountMetric(PropagatorsMetric, 1), Occurs.Once());
+
+        _manager.Shutdown();
+        DistroConfigMetrics.Record(PropagatorsMetric);
+        EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
+
+        Mock.Assert(() => _healthReporter.ReportSupportabilityCountMetric(PropagatorsMetric, 1), Occurs.Once());
+
+        // Still queued, not lost: a later sink (a new agent) gets it.
+        var sent = new List<string>();
+        DistroConfigMetrics.SetMetricSink(sent.Add);
+        Assert.That(sent, Is.EqualTo(new[] { PropagatorsMetric }));
+    }
+
+    [Test]
+    public void Dispose_ALaterConnectDoesNotReattach()
+    {
+        _manager = new DistroAgentManager(_environment);
+        _manager.Dispose();
+
+        DistroConfigMetrics.Record(PropagatorsMetric);
+        EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
+
+        Mock.Assert(() => _healthReporter.ReportSupportabilityCountMetric(Arg.AnyString, Arg.AnyLong), Occurs.Never());
+    }
+
+    // The connect handler re-checks under the gate: a connect whose handler was already captured by EventBus.Publish's
+    // copied invocation list, but runs after shutdown closed the gate, does not re-attach.
+    [Test]
+    public void ConnectHandlerRunningAfterShutdown_DoesNotReattach()
+    {
+        // Subscribed before the manager, so it runs first in the same Publish and shuts the manager down.
+        Action<AgentConnectedEvent> shutdownFirst = _ => _manager?.Shutdown();
+        EventBus<AgentConnectedEvent>.Subscribe(shutdownFirst);
+        try
+        {
+            _manager = new DistroAgentManager(_environment);
+            DistroConfigMetrics.Record(PropagatorsMetric);
+            EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
+        }
+        finally
+        {
+            EventBus<AgentConnectedEvent>.Unsubscribe(shutdownFirst);
+        }
+
+        Mock.Assert(() => _healthReporter.ReportSupportabilityCountMetric(Arg.AnyString, Arg.AnyLong), Occurs.Never());
+    }
+
+    // Finding 1d: the held resolution log lines go out when Core's logger is ready (Core start), not at connect.
+    [Test]
+    public void Start_FlushesHeldResolutionLogLinesAtCoreStart_BeforeConnect()
+    {
+        var infos = CaptureInfoLines();
+        var site = new DistroInstrumentationSite("Factory", "Metric", 0u, "Asm", "NS.Worker", "DoWork", string.Empty, 1ul);
+        DistroMethodResolutionDiagnostics.Report(new DistroResolvedMethod(DistroResolutionOutcome.NotFound, false, 1ul, typeof(object), string.Empty), site, 1);
+        Assert.That(infos.Where(m => m.Contains("could not identify the method")), Is.Empty);
+
+        _manager = new DistroAgentManager(_environment);
+
+        Assert.That(infos.Where(m => m.Contains("could not identify the method")).Count(), Is.EqualTo(1));
+        Mock.Assert(() => _healthReporter.ReportSupportabilityCountMetric(Arg.AnyString, Arg.AnyLong), Occurs.Never());
+    }
+
+    [Test]
+    public void Shutdown_HoldsResolutionLogLinesAgain()
+    {
+        var infos = CaptureInfoLines();
+        _manager = new DistroAgentManager(_environment);
+        _manager.Shutdown();
+
+        DistroMethodResolutionDiagnostics.Report(new DistroResolvedMethod(DistroResolutionOutcome.NotFound, false, 1ul, typeof(object), string.Empty), new DistroInstrumentationSite("Factory", "Metric", 0u, "Asm", "NS.Worker", "DoWork", string.Empty, 1ul), 1);
+
+        Assert.That(infos.Where(m => m.Contains("could not identify the method")), Is.Empty);
+    }
+
+    // Core's own start-up lines are not all format strings, so the raw template and its arguments are captured.
+    private List<string> CaptureInfoLines()
+    {
+        var infos = new List<string>();
+        var logger = Mock.Create<ILogger>();
+        Mock.Arrange(() => logger.Info(Arg.IsAny<string>(), Arg.IsAny<object[]>()))
+            .DoInstead((string message, object[] args) => infos.Add(message + " | " + string.Join(", ", args ?? new object[0])));
+        Log.Initialize(logger);
+        _logInitialized = true;
+        return infos;
     }
 
     [Test]
@@ -490,5 +637,305 @@ public class DistroAgentManagerTests
 
         // The null guard returned without touching the static, so it is still the value SetUp saved.
         Assert.That(ConfigurationLoader.BootstrapConfig, Is.SameAs(_originalBootstrapConfig));
+    }
+
+    [Test]
+    public void GetTracerImpl_AfterStart_UsesResolvedWrapperService()
+    {
+        _manager = new DistroAgentManager(_environment);
+        IAgentManager agentManager = _manager;
+
+        var type = typeof(string);
+        var invocationTarget = new object();
+        var arguments = new object[] { 1, 2 };
+        AfterWrappedMethodDelegate afterWrappedMethodDelegate = (_, __) => { };
+
+        Mock.Arrange(() => _wrapperService.BeforeWrappedMethod(type, "M", "System.Int32", invocationTarget, arguments, "Factory", "Metric", 7u, 42ul, null))
+            .Returns(afterWrappedMethodDelegate);
+
+        var result = agentManager.GetTracerImpl("Factory", 7u, "Metric", "AssemblyName", type, "TypeName", "M", "System.Int32", invocationTarget, arguments, 42ul, null);
+
+        Assert.That(result, Is.InstanceOf<WrapperTracer>());
+        Mock.Assert(() => _wrapperService.BeforeWrappedMethod(type, "M", "System.Int32", invocationTarget, arguments, "Factory", "Metric", 7u, 42ul, null), Occurs.Once());
+    }
+
+    // Covers the lookup's null-delegate path (BeforeWrappedMethod returns null), not the unreachable
+    // _wrapperService == null guard in GetTracerImpl.
+    [Test]
+    public void GetTracerImpl_BeforeWrappedMethodReturnsNull_ReturnsNull()
+    {
+        _manager = new DistroAgentManager(_environment);
+        IAgentManager agentManager = _manager;
+
+        Mock.Arrange(() => _wrapperService.BeforeWrappedMethod(Arg.IsAny<Type>(), Arg.AnyString, Arg.AnyString, Arg.IsAny<object>(), Arg.IsAny<object[]>(), Arg.AnyString, Arg.AnyString, Arg.IsAny<uint>(), Arg.IsAny<ulong>(), Arg.IsAny<Type>()))
+            .Returns((AfterWrappedMethodDelegate)null);
+
+        var result = agentManager.GetTracerImpl("Factory", 7u, "Metric", "AssemblyName", typeof(string), "TypeName", "M", "System.Int32", new object(), new object[0], 42ul, null);
+
+        Assert.That(result, Is.Null);
+    }
+
+    [Test]
+    public void Shutdown_UnregistersFromShim()
+    {
+        AgentShim.EnterDistroMode();
+        _manager = new DistroAgentManager(_environment);
+        AgentShim.SetDistroAgentManager(_manager);
+
+        _manager.Shutdown();
+
+        var tracer = AgentShim.GetTracer("Factory", 7u, "Metric", "AssemblyName", typeof(string), "TypeName", "M", "System.Int32", new object(), new object[0], 42ul, null);
+
+        Assert.That(tracer, Is.Null);
+        Mock.Assert(() => _wrapperService.BeforeWrappedMethod(Arg.IsAny<Type>(), Arg.AnyString, Arg.AnyString, Arg.IsAny<object>(), Arg.IsAny<object[]>(), Arg.AnyString, Arg.AnyString, Arg.IsAny<uint>(), Arg.IsAny<ulong>(), Arg.IsAny<Type>()), Occurs.Never());
+    }
+
+    [Test]
+    public void Dispose_UnregistersFromShim()
+    {
+        AgentShim.EnterDistroMode();
+        _manager = new DistroAgentManager(_environment);
+        AgentShim.SetDistroAgentManager(_manager);
+
+        _manager.Dispose();
+
+        var tracer = AgentShim.GetTracer("Factory", 7u, "Metric", "AssemblyName", typeof(string), "TypeName", "M", "System.Int32", new object(), new object[0], 42ul, null);
+
+        Assert.That(tracer, Is.Null);
+        Mock.Assert(() => _wrapperService.BeforeWrappedMethod(Arg.IsAny<Type>(), Arg.AnyString, Arg.AnyString, Arg.IsAny<object>(), Arg.IsAny<object[]>(), Arg.AnyString, Arg.AnyString, Arg.IsAny<uint>(), Arg.IsAny<ulong>(), Arg.IsAny<Type>()), Occurs.Never());
+    }
+
+    // ---- XML toggles
+
+    private const string ShippedXml = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<extension xmlns=\"urn:newrelic-extension\">\n<instrumentation>\n"
+        + "  <tracerFactory name=\"F1\">\n    <match assemblyName=\"Asm\" className=\"NS.Foo\">\n      <exactMethodMatcher methodName=\"Run\" parameters=\"\" />\n    </match>\n  </tracerFactory>\n"
+        + "</instrumentation>\n</extension>\n";
+
+    private static DistroShippedXmlTestData.Shipped ShippedTable() => new DistroShippedXmlTestData.Shipped(new[] { ("A.xml", ShippedXml, true) });
+
+    private static bool RegisterNothing(IReadOnlyList<int> indices, out string failure)
+    {
+        failure = null;
+        return true;
+    }
+
+    // Records messages by level. Some Core start-up lines use named placeholders ("{Version}"), which string.Format rejects,
+    // so a message that does not format is kept as written.
+    private sealed class FormattingTolerantLog
+    {
+        private readonly List<(Level Level, string Message)> _entries = new List<(Level, string)>();
+
+        public void Add(Level level, string message, object[] args)
+        {
+            string text;
+            try
+            {
+                text = args == null || args.Length == 0 ? message : string.Format(message, args);
+            }
+            catch (FormatException)
+            {
+                text = message;
+            }
+
+            lock (_entries)
+            {
+                _entries.Add((level, text));
+            }
+        }
+
+        public string[] Messages(Level level)
+        {
+            lock (_entries)
+            {
+                return _entries.Where(e => e.Level == level).Select(e => e.Message).ToArray();
+            }
+        }
+    }
+
+    private FormattingTolerantLog RecordingLogger()
+    {
+        var log = new FormattingTolerantLog();
+        var logger = Mock.Create<ILogger>();
+        Mock.Arrange(() => logger.Debug(Arg.AnyString, Arg.IsAny<object[]>())).DoInstead((string m, object[] a) => log.Add(Level.Debug, m, a));
+        Mock.Arrange(() => logger.Info(Arg.AnyString, Arg.IsAny<object[]>())).DoInstead((string m, object[] a) => log.Add(Level.Info, m, a));
+        Mock.Arrange(() => logger.Warn(Arg.AnyString, Arg.IsAny<object[]>())).DoInstead((string m, object[] a) => log.Add(Level.Warn, m, a));
+        Mock.Arrange(() => logger.Error(Arg.AnyString, Arg.IsAny<object[]>())).DoInstead((string m, object[] a) => log.Add(Level.Error, m, a));
+        Log.Initialize(logger);
+        _logInitialized = true;
+        return log;
+    }
+
+    [Test]
+    public void CreateXmlToggles_ReadsTheExtensionsDirectoryAndItsRuntimeSubfolder()
+    {
+        var root = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "nr-distro-manager-xml-" + Guid.NewGuid().ToString("N"));
+        var runtime = System.IO.Path.Combine(root, AgentInstallConfiguration.RuntimeDirectoryName);
+        System.IO.Directory.CreateDirectory(runtime);
+        try
+        {
+            System.IO.File.WriteAllText(System.IO.Path.Combine(root, "A.xml"), ShippedXml);
+            System.IO.File.WriteAllText(System.IO.Path.Combine(runtime, "Custom.xml"), ShippedXml.Replace("\"Run\"", "\"Custom\""));
+            Mock.Arrange(() => _environment.ExtensionsDirectory).Returns(root);
+            var logger = RecordingLogger();
+            _manager = new DistroAgentManager(_environment);
+            var shipped = ShippedTable();
+
+            var toggles = ((IDistroAgent)_manager).CreateXmlToggles(shipped.Sites, shipped.Manifest, RegisterNothing);
+            var registerNow = toggles.ApplyAtStartup();
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(registerNow, Is.EqualTo(new[] { true, true }), "plugin site and the unchanged shipped Run");
+                Assert.That(logger.Messages(Level.Warn), Has.Some.Contains("Custom.xml names NS.Foo.Custom"));
+                Assert.That(logger.Messages(Level.Debug), Has.None.Contains("disabled by local configuration"), "the default configuration watches");
+                Assert.That(logger.Messages(Level.Error), Is.Empty);
+            });
+        }
+        finally
+        {
+            _manager?.Dispose();
+            System.IO.Directory.Delete(root, true);
+        }
+    }
+
+    [Test]
+    public void CreateXmlToggles_AChangeThatTurnsSitesOff_ClearsTheWrapperCaches()
+    {
+        var root = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "nr-distro-manager-xml-" + Guid.NewGuid().ToString("N"));
+        System.IO.Directory.CreateDirectory(root);
+        try
+        {
+            var shippedFile = System.IO.Path.Combine(root, "A.xml");
+            System.IO.File.WriteAllText(shippedFile, ShippedXml);
+            Mock.Arrange(() => _environment.ExtensionsDirectory).Returns(root);
+            _manager = new DistroAgentManager(_environment);
+            var shipped = ShippedTable();
+            var toggles = _manager.CreateXmlToggles(shipped.Sites, shipped.Manifest, RegisterNothing);
+            toggles.ApplyAtStartup();
+            var clearedAtStartup = Mock.GetTimesCalled(() => _wrapperService.ClearCaches());
+
+            System.IO.File.Delete(shippedFile);
+            toggles.OnChange();
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(clearedAtStartup, Is.EqualTo(0));
+                Assert.That(Enumerable.Range(0, shipped.Sites.Count).Count(shipped.Sites.IsOn), Is.EqualTo(1), "only the plugin site: Run is off with its file deleted");
+            });
+            Mock.Assert(() => _wrapperService.ClearCaches(), Occurs.Once());
+        }
+        finally
+        {
+            _manager?.Dispose();
+            System.IO.Directory.Delete(root, true);
+        }
+    }
+
+    [Test]
+    public void CreateXmlToggles_ExtensionsDirectoryNotFound_KeepsDefaultsAndWarnsNamingIt()
+    {
+        var missing = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "nr-distro-manager-missing-" + Guid.NewGuid().ToString("N"));
+        Mock.Arrange(() => _environment.ExtensionsDirectory).Returns(missing);
+        var logger = RecordingLogger();
+        _manager = new DistroAgentManager(_environment);
+        var shipped = ShippedTable();
+
+        var registerNow = _manager.CreateXmlToggles(shipped.Sites, shipped.Manifest, RegisterNothing).ApplyAtStartup();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(registerNow, Is.EqualTo(new[] { true, true }), "compiled defaults, not 'every shipped file deleted'");
+            Assert.That(logger.Messages(Level.Warn), Has.Some.EqualTo("NR instrumentation XML folder " + missing + " was not found; using the distro's compiled instrumentation defaults."));
+        });
+    }
+
+    [Test]
+    public void CreateXmlToggles_SecondCall_ReturnsTheSameInstance()
+    {
+        _manager = new DistroAgentManager(_environment);
+        var shipped = ShippedTable();
+
+        var first = _manager.CreateXmlToggles(shipped.Sites, shipped.Manifest, RegisterNothing);
+        var second = _manager.CreateXmlToggles(shipped.Sites, shipped.Manifest, RegisterNothing);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(first, Is.Not.Null);
+            Assert.That(second, Is.SameAs(first));
+        });
+    }
+
+    [Test]
+    public void Shutdown_DisposesXmlToggles_AndALaterCreateReturnsNull()
+    {
+        _manager = new DistroAgentManager(_environment);
+        var shipped = ShippedTable();
+        var toggles = _manager.CreateXmlToggles(shipped.Sites, shipped.Manifest, RegisterNothing);
+
+        _manager.Shutdown();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(toggles.IsDisposed, Is.True);
+            Assert.That(_manager.CreateXmlToggles(shipped.Sites, shipped.Manifest, RegisterNothing), Is.Null);
+        });
+    }
+
+    [Test]
+    public void Dispose_DisposesXmlToggles_AndALaterCreateReturnsNull()
+    {
+        _manager = new DistroAgentManager(_environment);
+        var shipped = ShippedTable();
+        var toggles = _manager.CreateXmlToggles(shipped.Sites, shipped.Manifest, RegisterNothing);
+
+        _manager.Dispose();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(toggles.IsDisposed, Is.True);
+            Assert.That(_manager.CreateXmlToggles(shipped.Sites, shipped.Manifest, RegisterNothing), Is.Null);
+        });
+    }
+
+    [Test]
+    public void Shutdown_WithoutXmlToggles_DoesNotThrow()
+    {
+        _manager = new DistroAgentManager(_environment);
+
+        Assert.DoesNotThrow(() => _manager.Shutdown());
+    }
+
+    [Test]
+    public void CreateXmlToggles_InvalidArguments_LogsErrorAndReturnsNull()
+    {
+        var logger = RecordingLogger();
+        _manager = new DistroAgentManager(_environment);
+        var shipped = ShippedTable();
+
+        var toggles = _manager.CreateXmlToggles(null, shipped.Manifest, RegisterNothing);
+        var retry = _manager.CreateXmlToggles(shipped.Sites, shipped.Manifest, RegisterNothing);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(toggles, Is.Null);
+            Assert.That(logger.Messages(Level.Error), Has.Some.Contains("ArgumentNullException"));
+            Assert.That(retry, Is.Not.Null, "a failed create does not block a later one");
+        });
+    }
+
+    [Test]
+    public void CreateXmlToggles_InvalidArgumentsAndLoggerThrows_ReturnsNull()
+    {
+        _manager = new DistroAgentManager(_environment);
+        var shipped = ShippedTable();
+        var logger = Mock.Create<ILogger>();
+        Mock.Arrange(() => logger.Error(Arg.AnyString, Arg.IsAny<object[]>())).Throws(new InvalidOperationException("logger"));
+        Log.Initialize(logger);
+        _logInitialized = true;
+
+        DistroXmlToggles toggles = null;
+        Assert.DoesNotThrow(() => toggles = _manager.CreateXmlToggles(shipped.Sites, null, RegisterNothing));
+
+        Assert.That(toggles, Is.Null);
     }
 }

@@ -20,8 +20,66 @@ public class AgentShim
         AgentInitializer.InitializeAgent();
     }
 
-    private static bool _initialized = false;
+    // volatile: this is the publication gate for _distroAgentManager. The hot-path reader
+    // (GetFinishTracerDelegate / GetTracer) reads _initialized first, then _distroAgentManager.
+    // A plain bool load could be reordered on a weak memory model (arm64) so a reader observes
+    // _initialized == true while _distroAgentManager is still null -- falling through to
+    // AgentManager.Instance and booting an agent-mode agent in distro mode. A volatile read is an
+    // acquire load (plain mov on x64, ldar on arm64), so pairing it with the writer's store order
+    // in SetDistroAgentManager (_distroAgentManager first, _initialized last) guarantees a reader
+    // that sees _initialized == true also sees the registered _distroAgentManager.
+    private static volatile bool _initialized = false;
     private static SemaphoreSlim _lockSemaphore = new SemaphoreSlim(1, 1);
+
+    private static volatile bool _distroMode;
+    private static volatile IAgentManager _distroAgentManager;
+
+    /// <summary>
+    /// Marks this process as running in OTel distro mode. Never initializes anything -- the distro host
+    /// is responsible for starting Core (see <see cref="SetDistroAgentManager"/>). Once set, the
+    /// uninitialized branch of <see cref="GetFinishTracerDelegate"/> never falls through to
+    /// <see cref="TryInitialize"/>, so a second, agent-mode agent is never booted alongside the distro agent.
+    /// </summary>
+    public static void EnterDistroMode()
+    {
+        _distroMode = true;
+    }
+
+    /// <summary>
+    /// Registers (or unregisters, with a null <paramref name="agentManager"/>) the distro agent that
+    /// <see cref="GetTracer"/> routes to while in distro mode. Only callable after <see cref="EnterDistroMode"/>;
+    /// agent mode must never take this path. A null <paramref name="agentManager"/> while distro mode was never
+    /// entered is treated as a no-op rather than an error, since <see cref="OtelDistro.DistroAgentManager"/>'s
+    /// shutdown/dispose paths call this unconditionally.
+    /// </summary>
+    public static void SetDistroAgentManager(IAgentManager agentManager)
+    {
+        if (!_distroMode)
+        {
+            if (agentManager == null)
+            {
+                return;
+            }
+
+            throw new InvalidOperationException("SetDistroAgentManager cannot be called before EnterDistroMode.");
+        }
+
+        // Ordering contract: store _distroAgentManager before the volatile _initialized gate. The
+        // volatile write is a release store, so a reader that observes _initialized == true is
+        // guaranteed to also observe the _distroAgentManager written here (see the field comment).
+        _distroAgentManager = agentManager ?? new DisabledAgentManager();
+        _initialized = true;
+    }
+
+    /// <summary>
+    /// Resets all distro-mode statics to their pre-registration state. Unit tests only.
+    /// </summary>
+    public static void ResetDistroStateForTesting()
+    {
+        _distroMode = false;
+        _distroAgentManager = null;
+        _initialized = false;
+    }
 
     static bool TryInitialize(string method)
     {
@@ -147,7 +205,7 @@ public class AgentShim
     {
         if (!_initialized)
         {
-            if (!TryInitialize($"{typeName}.{methodName}")) return NoOpFinishTracer;
+            if (_distroMode || !TryInitialize($"{typeName}.{methodName}")) return NoOpFinishTracerDelegate;
         }
 
         var tracer = GetTracer(
@@ -166,13 +224,25 @@ public class AgentShim
 
         if (tracer == null)
         {
-            return NoOpFinishTracer;
+            return NoOpFinishTracerDelegate;
         }
         else
         {
             return new TracerWrapper(tracer).FinishTracer;
         }
     }
+
+    // The single cached instance of the no-op finish delegate, so a caller can tell "no tracer started" from a real
+    // finish by reference (GetFinishTracerDelegate never returns null; it returns this when no tracer was created).
+    private static readonly Action<object, Exception> NoOpFinishTracerDelegate = NoOpFinishTracer;
+
+    /// <summary>
+    /// True when <paramref name="finishTracerDelegate"/> is the shared no-op returned by
+    /// <see cref="GetFinishTracerDelegate"/> when no tracer started (agent not initialized, distro agent not registered,
+    /// or the tracer factory produced none). The OTel distro bridge uses this to tell "NR recorded nothing" from a real
+    /// finish, since the delegate is never null.
+    /// </summary>
+    public static bool IsNoOpFinishTracer(object finishTracerDelegate) => ReferenceEquals(finishTracerDelegate, NoOpFinishTracerDelegate);
 
     /// <summary>
     /// Returns a tracer. This method is reflectively invoked from the injected bytecode if the CLR is 2.0 (which
@@ -233,7 +303,7 @@ public class AgentShim
             if (IgnoreWork.AgentDepth > 0)
                 return null;
 
-            var agent = AgentManager.Instance;
+            var agent = _distroAgentManager ?? AgentManager.Instance;
 
             return agent?.GetTracerImpl(
                 tracerFactoryName,

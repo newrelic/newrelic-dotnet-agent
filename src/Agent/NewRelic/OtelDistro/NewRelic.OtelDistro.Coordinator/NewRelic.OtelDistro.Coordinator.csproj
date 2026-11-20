@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net462</TargetFrameworks>
+    <AssemblyName>NewRelic.OtelDistro.Coordinator</AssemblyName>
+    <RootNamespace>NewRelic.OtelDistro.Coordinator</RootNamespace>
+    <Description>Process-wide coordinator that sends each New Relic instrumentation definition to OTel native once per process (S4 prototype). References only the BCL.</Description>
+    <!-- Prototype build output stays under this project's bin/obj; it must never be copied into a newrelichome_* directory. -->
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+</Project>

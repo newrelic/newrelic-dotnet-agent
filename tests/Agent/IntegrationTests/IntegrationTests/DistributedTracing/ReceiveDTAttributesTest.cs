@@ -12,12 +12,28 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.DistributedTracing;
 
-[Trait("Platform", "WindowsOnly")]
-public class ReceiveDTAttributesTest : NewRelicIntegrationTest<RemoteServiceFixtures.DTBasicMVCApplicationFixture>
+// Generic on the fixture so the same assertions run in agent mode and in OTel distro mode (hosted web core under the
+// OTel native profiler + the New Relic distro plugin). The distro subclass lives in the OtelDistro namespace, which CI
+// does not select (it needs NR_DEV_OTEL_HOME).
+public abstract class ReceiveDTAttributesTestBase<TFixture> : NewRelicIntegrationTest<TFixture>
+    where TFixture : RemoteServiceFixtures.DTBasicMVCApplicationFixture
 {
-    private readonly RemoteServiceFixtures.DTBasicMVCApplicationFixture _fixture;
+    private static readonly IReadOnlyList<string> ExpectedAttributes = new List<string>()
+    {
+        "parent.type",
+        "parent.app",
+        "parent.account",
+        "parent.transportType",
+        "parent.transportDuration",
+        "guid",
+        "traceId",
+        "priority",
+        "sampled"
+    };
 
-    public ReceiveDTAttributesTest(RemoteServiceFixtures.DTBasicMVCApplicationFixture fixture, ITestOutputHelper output) : base(fixture)
+    private readonly TFixture _fixture;
+
+    protected ReceiveDTAttributesTestBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
     {
         _fixture = fixture;
         _fixture.TestLogger = output;
@@ -42,32 +58,15 @@ public class ReceiveDTAttributesTest : NewRelicIntegrationTest<RemoteServiceFixt
     [Fact]
     public void Test()
     {
-        var expectedAttributes = new List<string>()
-        {
-            "parent.type",
-            "parent.app",
-            "parent.account",
-            "parent.transportType",
-            "parent.transportDuration",
-            "guid",
-            "traceId",
-            "priority",
-            "sampled"
-        };
-
-        var transactionEventExpectedAttributes = new List<string>(expectedAttributes) { "parentId" };
+        var transactionEventExpectedAttributes = new List<string>(ExpectedAttributes) { "parentId" };
 
         var transactionEvent = _fixture.AgentLog.GetTransactionEvents().FirstOrDefault();
-        var errorEvent = _fixture.AgentLog.GetErrorEvents().FirstOrDefault();
-        var errorTrace = _fixture.AgentLog.GetErrorTraces().FirstOrDefault();
         var transactionSample = _fixture.AgentLog.GetTransactionSamples()
             .FirstOrDefault(sample => sample.Path == @"WebTransaction/MVC/DistributedTracingController/ReceivePayload");
 
         NrAssert.Multiple(
             () => Assertions.TransactionEventHasAttributes(transactionEventExpectedAttributes, TransactionEventAttributeType.Intrinsic, transactionEvent),
-            () => Assertions.ErrorEventHasAttributes(expectedAttributes, EventAttributeType.Intrinsic, errorEvent),
-            () => Assertions.ErrorTraceHasAttributes(expectedAttributes, ErrorTraceAttributeType.Intrinsic, errorTrace),
-            () => Assertions.TransactionTraceHasAttributes(expectedAttributes, TransactionTraceAttributeType.Intrinsic, transactionSample)
+            () => Assertions.TransactionTraceHasAttributes(ExpectedAttributes, TransactionTraceAttributeType.Intrinsic, transactionSample)
         );
 
         var parentIdKey = "parentId";
@@ -76,5 +75,26 @@ public class ReceiveDTAttributesTest : NewRelicIntegrationTest<RemoteServiceFixt
         var transactionEventParentId = transactionEvent.IntrinsicAttributes[parentIdKey];
 
         Assert.Equal(expectedParentId, transactionEventParentId);
+    }
+
+    // Split out of Test() so the distro subclass can skip it: the ReceivePayload action calls NoticeError (Agent API).
+    [Fact]
+    public virtual void ErrorAttributes()
+    {
+        var errorEvent = _fixture.AgentLog.GetErrorEvents().FirstOrDefault();
+        var errorTrace = _fixture.AgentLog.GetErrorTraces().FirstOrDefault();
+
+        NrAssert.Multiple(
+            () => Assertions.ErrorEventHasAttributes(ExpectedAttributes, EventAttributeType.Intrinsic, errorEvent),
+            () => Assertions.ErrorTraceHasAttributes(ExpectedAttributes, ErrorTraceAttributeType.Intrinsic, errorTrace)
+        );
+    }
+}
+
+[Trait("Platform", "WindowsOnly")]
+public class ReceiveDTAttributesTest : ReceiveDTAttributesTestBase<RemoteServiceFixtures.DTBasicMVCApplicationFixture>
+{
+    public ReceiveDTAttributesTest(RemoteServiceFixtures.DTBasicMVCApplicationFixture fixture, ITestOutputHelper output) : base(fixture, output)
+    {
     }
 }

@@ -26,6 +26,11 @@
     <DebugType>embedded</DebugType>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <!-- Selects the Core namespace in the generator's XML parser/hasher sources linked below. -->
+    <DefineConstants>$(DefineConstants);NR_OTELDISTRO_CORE</DefineConstants>
+  </PropertyGroup>
+
   <ItemGroup>
     <AssemblyAttribute Include="NewRelic.Agent.Core.Utilities.BuildTimestamp">
       <!--
@@ -90,6 +95,20 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- One XML parser and hasher set for the build-time generator and the run-time Core. Core cannot reference the
+         analyzer, so the sources are linked; NR_OTELDISTRO_CORE puts them in a Core namespace so they do not clash with
+         the public types of the same name in the generator assembly (Core.UnitTest references both). -->
+    <Compile Include="..\..\OtelDistro\NewRelic.OtelDistro.Generators\InstrumentationXmlParser.cs" Link="OtelDistro\Xml\InstrumentationXmlParser.cs" />
+    <Compile Include="..\..\OtelDistro\NewRelic.OtelDistro.Generators\XmlInstrumentationPoint.cs" Link="OtelDistro\Xml\XmlInstrumentationPoint.cs" />
+    <Compile Include="..\..\OtelDistro\NewRelic.OtelDistro.Generators\VersionRangeConverter.cs" Link="OtelDistro\Xml\VersionRangeConverter.cs" />
+    <Compile Include="..\..\OtelDistro\NewRelic.OtelDistro.Generators\FunctionIdHasher.cs" Link="OtelDistro\Xml\FunctionIdHasher.cs" />
+    <Compile Include="..\..\OtelDistro\NewRelic.OtelDistro.Generators\XmlContentHasher.cs" Link="OtelDistro\Xml\XmlContentHasher.cs" />
+    <Compile Include="..\..\OtelDistro\NewRelic.OtelDistro.Generators\PointKeyHasher.cs" Link="OtelDistro\Xml\PointKeyHasher.cs" />
+    <Compile Include="..\..\OtelDistro\NewRelic.OtelDistro.Generators\Fnv1a64.cs" Link="OtelDistro\Xml\Fnv1a64.cs" />
+    <Compile Include="..\..\OtelDistro\NewRelic.OtelDistro.Generators\XmlPointEligibility.cs" Link="OtelDistro\Xml\XmlPointEligibility.cs" />
   </ItemGroup>
 
   <ItemGroup>

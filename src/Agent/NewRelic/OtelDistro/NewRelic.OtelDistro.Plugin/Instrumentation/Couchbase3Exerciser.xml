@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  TEST-ONLY. Declares the [Transaction] methods of the Couchbase3 integration-test exerciser app
+  (MultiFunctionApplicationHelpers.NetStandardLibraries.Couchbase.Couchbase3Exerciser) as OtherTransactionWrapper
+  sites, so the Couchbase3 integration tests can run under the distro (where [Transaction] attributes do nothing).
+  Remove before any product build.
+-->
+<extension xmlns="urn:newrelic-extension">
+  <instrumentation>
+    <tracerFactory name="NewRelic.Providers.Wrapper.CustomInstrumentation.OtherTransactionWrapper">
+      <match assemblyName="MultiFunctionApplicationHelpers" className="MultiFunctionApplicationHelpers.NetStandardLibraries.Couchbase.Couchbase3Exerciser">
+        <exactMethodMatcher methodName="Get" parameters="System.String,System.String,System.String" />
+        <exactMethodMatcher methodName="GetAndLockAndUnlock" parameters="System.String,System.String,System.String" />
+        <exactMethodMatcher methodName="Exists" parameters="System.String,System.String,System.String" />
+        <exactMethodMatcher methodName="InsertUpsertReplaceAndRemove" parameters="System.String,System.String,System.String,System.String,System.String,System.String" />
+        <exactMethodMatcher methodName="Mutate" parameters="" />
+        <exactMethodMatcher methodName="Lookup" parameters="System.String,System.String,System.String" />
+        <exactMethodMatcher methodName="Scan" parameters="" />
+        <exactMethodMatcher methodName="Touch" parameters="" />
+        <exactMethodMatcher methodName="ScopeQuery" parameters="" />
+        <exactMethodMatcher methodName="ClusterQuery" parameters="" />
+        <exactMethodMatcher methodName="ScopeSearch" parameters="" />
+        <exactMethodMatcher methodName="ClusterSearch" parameters="" />
+        <exactMethodMatcher methodName="ClusterAnalytics" parameters="" />
+        <exactMethodMatcher methodName="ScopeAnalytics" parameters="" />
+      </match>
+    </tracerFactory>
+  </instrumentation>
+</extension>

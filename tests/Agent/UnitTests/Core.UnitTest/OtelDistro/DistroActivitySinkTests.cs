@@ -143,6 +143,56 @@ public class DistroActivitySinkTests
     }
 
     [Test]
+    public void ShouldListenTo_NoAdditionsSet_ListensToGeneratedAdditionNames()
+    {
+        Assert.That(_sink.ShouldListenTo("Distro.Addition"), Is.True);
+    }
+
+    [Test]
+    public void ShouldListenTo_AdditionsSet_ExcludesHybridDefaultAndAdditionButNotOthers()
+    {
+        _sink.SetExcludedActivitySourceAdditions(new[] { "Distro.Addition" });
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(_sink.ShouldListenTo("Default.Excluded"), Is.False);
+            Assert.That(_sink.ShouldListenTo("Distro.Addition"), Is.False);
+            Assert.That(_sink.ShouldListenTo("Some.Other.Source"), Is.True);
+        });
+    }
+
+    [Test]
+    public void ShouldListenTo_AdditionsSetToNull_IsExactlyTheHybridList()
+    {
+        _sink.SetExcludedActivitySourceAdditions(new[] { "Distro.Addition" });
+        _sink.SetExcludedActivitySourceAdditions(null);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(_sink.ShouldListenTo("Default.Excluded"), Is.False);
+            Assert.That(_sink.ShouldListenTo("Distro.Addition"), Is.True);
+        });
+    }
+
+    [Test]
+    public void ShouldListenTo_AdditionIncludedByCustomer_IsListenedTo()
+    {
+        Mock.Arrange(() => _mockConfig.OpenTelemetryTracingIncludedActivitySources).Returns(new List<string> { "Distro.Addition" });
+        _sink.SetExcludedActivitySourceAdditions(new[] { "Distro.Addition" });
+
+        Assert.That(_sink.ShouldListenTo("Distro.Addition"), Is.True);
+    }
+
+    [Test]
+    public void ShouldListenTo_AdditionsSet_WhenConfigurationThrows_ReturnsFalse()
+    {
+        _sink.SetExcludedActivitySourceAdditions(new[] { "Distro.Addition" });
+        Mock.Arrange(() => _mockAgent.Configuration).Throws(new InvalidOperationException("boom"));
+
+        Assert.That(_sink.ShouldListenTo("Some.Other.Source"), Is.False);
+    }
+
+    [Test]
     public void ShouldListenTo_WhenConfigurationThrows_ReturnsFalse()
     {
         Mock.Arrange(() => _mockAgent.Configuration).Throws(new InvalidOperationException("boom"));
@@ -245,6 +295,87 @@ public class DistroActivitySinkTests
         Assert.DoesNotThrow(() => _sink.OnStarted(activity));
         Assert.DoesNotThrow(() => _sink.OnStopped(activity));
     }
+
+    #region TryGetCurrentTraceId
+
+    [Test]
+    public void TryGetCurrentTraceId_ValidHybridTransaction_ReturnsTraceId()
+    {
+        var hybridTransaction = Mock.Create<ITransaction>(c => c.Implements<IHybridAgentTransaction>());
+        Mock.Arrange(() => hybridTransaction.IsValid).Returns(true);
+        Mock.Arrange(() => hybridTransaction.IsFinished).Returns(false);
+        Mock.Arrange(() => ((IHybridAgentTransaction)hybridTransaction).TraceId).Returns("trace-id-123");
+        Mock.Arrange(() => _mockAgent.CurrentTransaction).Returns(hybridTransaction);
+
+        Assert.That(_sink.TryGetCurrentTraceId(), Is.EqualTo("trace-id-123"));
+    }
+
+    [Test]
+    public void TryGetCurrentTraceId_NoTransaction_ReturnsNull()
+    {
+        Mock.Arrange(() => _mockTransaction.IsValid).Returns(false);
+
+        Assert.That(_sink.TryGetCurrentTraceId(), Is.Null);
+    }
+
+    [Test]
+    public void TryGetCurrentTraceId_FinishedTransaction_ReturnsNull()
+    {
+        var hybridTransaction = Mock.Create<ITransaction>(c => c.Implements<IHybridAgentTransaction>());
+        Mock.Arrange(() => hybridTransaction.IsValid).Returns(true);
+        Mock.Arrange(() => hybridTransaction.IsFinished).Returns(true);
+        Mock.Arrange(() => _mockAgent.CurrentTransaction).Returns(hybridTransaction);
+
+        Assert.That(_sink.TryGetCurrentTraceId(), Is.Null);
+    }
+
+    [Test]
+    public void TryGetCurrentTraceId_NonHybridTransaction_ReturnsNull()
+    {
+        Mock.Arrange(() => _mockTransaction.IsValid).Returns(true);
+        Mock.Arrange(() => _mockTransaction.IsFinished).Returns(false);
+
+        Assert.That(_sink.TryGetCurrentTraceId(), Is.Null);
+    }
+
+    [Test]
+    public void TryGetCurrentTraceId_Disabled_ReturnsNull()
+    {
+        _sink.Disable();
+
+        Assert.That(_sink.TryGetCurrentTraceId(), Is.Null);
+        Mock.Assert(() => _mockAgent.CurrentTransaction, Occurs.Never());
+    }
+
+    [Test]
+    public void TryGetCurrentTraceId_AgentThrows_ReturnsNull()
+    {
+        Mock.Arrange(() => _mockAgent.CurrentTransaction).Throws(new InvalidOperationException("traceid-boom"));
+
+        string result = "not-null";
+        Assert.DoesNotThrow(() => result = _sink.TryGetCurrentTraceId());
+        Assert.That(result, Is.Null);
+    }
+
+    [Test]
+    public void TryGetCurrentTraceId_WhenAgentThrowsRepeatedly_LogsErrorOnce()
+    {
+        Mock.Arrange(() => _mockAgent.CurrentTransaction).Throws(new InvalidOperationException("traceid-boom"));
+
+        using (var logging = new TestUtilities.Logging())
+        {
+            Assert.DoesNotThrow(() => _sink.TryGetCurrentTraceId());
+            Assert.DoesNotThrow(() => _sink.TryGetCurrentTraceId());
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(logging.ErrorCount, Is.EqualTo(1));
+                Assert.That(logging.HasErrorMessageThatContains("traceid-boom"), Is.True);
+            });
+        }
+    }
+
+    #endregion
 
     #region F59 duplicate server Activity
 

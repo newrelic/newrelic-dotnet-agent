@@ -267,16 +267,6 @@ public sealed class AgentManager : AgentManagerBase, IAgentManager
     /// an Object is the preferred type because it has a trival type signature.</returns>
     public ITracer GetTracerImpl(string tracerFactoryName, uint tracerArguments, string metricName, string assemblyName, Type type, string typeName, string methodName, string argumentSignature, object invocationTarget, object[] arguments, ulong functionId, Type effectiveReturnType)
     {
-        try
-        {
-            // First try to get a wrapper from the newer WrapperService
-            var afterWrappedMethodDelegate = _wrapperService.BeforeWrappedMethod(type, methodName, argumentSignature, invocationTarget, arguments, tracerFactoryName, metricName, tracerArguments, functionId, effectiveReturnType);
-            return (afterWrappedMethodDelegate != null) ? new WrapperTracer(afterWrappedMethodDelegate) : null;
-        }
-        catch (Exception e)
-        {
-            Log.Error(e, "Tracer invocation error");
-            return null;
-        }
+        return WrapperTracerLookup.GetTracer(_wrapperService, tracerFactoryName, tracerArguments, metricName, type, methodName, argumentSignature, invocationTarget, arguments, functionId, effectiveReturnType);
     }
 }

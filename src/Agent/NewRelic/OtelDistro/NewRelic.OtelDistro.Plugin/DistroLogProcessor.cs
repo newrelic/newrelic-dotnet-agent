@@ -37,6 +37,15 @@ public sealed class DistroLogProcessor : BaseProcessor<LogRecord>
                 return;
             }
 
+            // Early drop, no copy: on the common MEL path New Relic's wrapper already recorded this line in Begin (marking
+            // the capture scope) before OTel's provider ran inside Logger.Log, so this OTel copy is a known duplicate.
+            // Ask Core first -- DropDuplicate is counted there and returns before anything is built or copied.
+            var decision = DistroLogCapture.ClassifyOtelRecord();
+            if (decision == DistroLogDecision.DropDuplicate)
+            {
+                return;
+            }
+
             // LogRecord.Severity and SeverityText have no public getter in OpenTelemetry 1.20.1 (they live on the internal
             // LogRecordData), so the level comes from LogLevel, the same value the ILogger bridge derives both from.
 #pragma warning disable CS0618 // LogRecord.LogLevel is obsolete, but it is the only public level
@@ -60,6 +69,14 @@ public sealed class DistroLogProcessor : BaseProcessor<LogRecord>
             {
                 record.TraceId = data.TraceId.ToHexString();
                 record.SpanId = data.SpanId.ToHexString();
+            }
+
+            // Defer-then-decide: a scope is open but not yet marked, so hold the copied record for the scope's end
+            // decision (discard if NR records the same line, flush as a fallback otherwise). Outside any scope
+            // (agent/normal), or if holding fails, forward straight through.
+            if (decision == DistroLogDecision.Defer && DistroLogCapture.TryDefer(record))
+            {
+                return;
             }
 
             _sink.Record(record);

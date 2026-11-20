@@ -45,6 +45,8 @@ public static class DistroAgentHost
                 return _instance;
             }
 
+            AgentShim.EnterDistroMode();
+
             var agent = factory();
             if (agent == null)
             {
@@ -52,6 +54,12 @@ public static class DistroAgentHost
             }
 
             _instance = agent;
+
+            if (agent is IAgentManager agentManager)
+            {
+                AgentShim.SetDistroAgentManager(agentManager);
+            }
+
             return _instance;
         }
     }
@@ -79,5 +87,7 @@ public static class DistroAgentHost
         {
             _instance = null;
         }
+
+        AgentShim.ResetDistroStateForTesting();
     }
 }

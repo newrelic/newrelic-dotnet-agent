@@ -113,3 +113,17 @@ public class MultiAppDomainWebApplicationFixture : RemoteApplicationFixture
         Assert.Fail($"Application at {address} did not respond within {WarmUpTimeout.TotalMinutes:N0} minutes.");
     }
 }
+
+// OTel distro variant: the two-application hosted web core (HWC) process (a HostedWebCore.exe copy named w3wp.exe, see
+// RemoteWebApplication) runs under the OpenTelemetry .NET auto-instrumentation native profiler + the New Relic distro
+// plugin instead of the New Relic profiler (RemoteApplication.UseOtelDistro). One OTel profiler per process, one plugin
+// and one NR Core per AppDomain. No New Relic profiler is attached, so no profiler log is expected. Requires
+// NR_DEV_OTEL_HOME.
+public class MultiAppDomainWebApplicationFixtureDistro : MultiAppDomainWebApplicationFixture
+{
+    public MultiAppDomainWebApplicationFixtureDistro()
+    {
+        RemoteApplication.UseOtelDistro = true;
+        ProfilerLogExpected = false;
+    }
+}

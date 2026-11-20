@@ -22,22 +22,27 @@ namespace NewRelic.Agent.IntegrationTests.MultiAppDomain;
 /// but a separate field VALUE per AppDomain. The design is correct by construction; nothing in this
 /// repository exercised it, because the storage that ships on main is AppDomain.GetData/SetData,
 /// which is per-domain by API contract rather than by runtime indirection.
+///
+/// Generic on the fixture so the same assertions run in agent mode and in OTel distro mode (hosted web core under the
+/// OTel native profiler + the New Relic distro plugin). The distro subclass lives in the OtelDistro namespace, which CI
+/// does not select (it needs NR_DEV_OTEL_HOME).
 /// </summary>
-public abstract class MultiAppDomainCachingTestsBase : NewRelicIntegrationTest<MultiAppDomainWebApplicationFixture>
+public abstract class MultiAppDomainCachingTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
+    where TFixture : MultiAppDomainWebApplicationFixture
 {
     // Generous relative to the sibling AppDomainCachingTestsBase, which allows 2 minutes total for a
     // console fixture. Two agents connect behind one Hosted Web Core cold start here.
     private static readonly TimeSpan ConnectTimeout = TimeSpan.FromMinutes(3);
     private static readonly TimeSpan MetricHarvestTimeout = TimeSpan.FromMinutes(2);
 
-    protected readonly MultiAppDomainWebApplicationFixture _fixture;
+    protected readonly TFixture _fixture;
 
     private readonly bool _appDomainCachingDisabled;
 
     private readonly string _expectedCallingStrategy;
 
     protected MultiAppDomainCachingTestsBase(
-        MultiAppDomainWebApplicationFixture fixture,
+        TFixture fixture,
         ITestOutputHelper output,
         bool appDomainCachingDisabled,
         string expectedCallingStrategy) : base(fixture)
@@ -131,7 +136,7 @@ public abstract class MultiAppDomainCachingTestsBase : NewRelicIntegrationTest<M
     }
 
     [Fact]
-    public void EachAppReportsOnlyItsOwnCustomAttributes()
+    public virtual void EachAppReportsOnlyItsOwnCustomAttributes()
     {
         AssertEveryMarkedTraceCarries(
             _fixture.RootAppAgentLog,
@@ -272,7 +277,7 @@ public abstract class MultiAppDomainCachingTestsBase : NewRelicIntegrationTest<M
     }
 
     [Fact]
-    public void ProfilerUsesTheCallingStrategyThisArmSelected()
+    public virtual void ProfilerUsesTheCallingStrategyThisArmSelected()
     {
         // LOAD-BEARING. This is the only assertion that proves the two arms take different paths.
         // Every other assertion in this class would pass identically under either strategy, so if the
@@ -285,7 +290,7 @@ public abstract class MultiAppDomainCachingTestsBase : NewRelicIntegrationTest<M
 }
 
 [Trait("Platform", "WindowsOnly")]
-public class MultiAppDomainCachingEnabledTests : MultiAppDomainCachingTestsBase
+public class MultiAppDomainCachingEnabledTests : MultiAppDomainCachingTestsBase<MultiAppDomainWebApplicationFixture>
 {
     public MultiAppDomainCachingEnabledTests(MultiAppDomainWebApplicationFixture fixture, ITestOutputHelper output)
         : base(fixture, output, false, "AppDomain Fallback Cache")
@@ -294,7 +299,7 @@ public class MultiAppDomainCachingEnabledTests : MultiAppDomainCachingTestsBase
 }
 
 [Trait("Platform", "WindowsOnly")]
-public class MultiAppDomainCachingDisabledTests : MultiAppDomainCachingTestsBase
+public class MultiAppDomainCachingDisabledTests : MultiAppDomainCachingTestsBase<MultiAppDomainWebApplicationFixture>
 {
     public MultiAppDomainCachingDisabledTests(MultiAppDomainWebApplicationFixture fixture, ITestOutputHelper output)
         : base(fixture, output, true, "Reflection")

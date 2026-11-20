@@ -112,6 +112,22 @@ public abstract class RemoteApplication : IDisposable
         return Path.Combine(RepositoryRootPath, "src", "Agent", homeDirName);
     }
 
+    // OTel distro mode (UseOtelDistro): the app runs under the OpenTelemetry .NET auto-instrumentation native
+    // profiler + the NR distro plugin instead of the NR profiler. Recipe translated from the spike harness
+    // (otel-distro-spike02 asyncproof run.ps1).
+    private const string OtelHomeEnvironmentVariableName = "NR_DEV_OTEL_HOME";
+    private const string OtelNativeProfilerFileName = "OpenTelemetry.AutoInstrumentation.Native.dll";
+    private const string OtelProfilerGuid = "{918728DD-259F-4A6A-AC2B-B85E1B658318}";
+    private const string OtelDistroPlugins = "NewRelic.OtelDistro.Plugin.Plugin, NewRelic.OtelDistro.Plugin:NewRelic.OtelDistro.Plugin.SamplerPlugin, NewRelic.OtelDistro.Plugin";
+
+    private static readonly string[] OtelDistroStrippedEnvironmentVariablePrefixes = { "OTEL_", "COR_", "CORECLR_" };
+
+    private static readonly string[] OtelDistroLoggedEnvironmentVariablePrefixes = { "OTEL_", "COR_", "CORECLR_", "DOTNET_", "COMPLUS_", "NEWRELIC_", "NEW_RELIC_" };
+
+    private static readonly string[] SecretEnvironmentVariableNameMarkers = { "LICENSE", "KEY", "PASSWORD", "SECRET", "TOKEN", "HEADERS" };
+
+    private static readonly string SourceOtelDistroPluginBinDirectoryPath = Path.Combine(RepositoryRootPath, "src", "Agent", "NewRelic", "OtelDistro", "NewRelic.OtelDistro.Plugin", "bin", Utilities.Configuration);
+
     private static readonly string SourceApplicationLauncherProjectDirectoryPath = Path.Combine(SourceIntegrationTestsSolutionDirectoryPath, "ApplicationLauncher");
 
     private static readonly string SourceApplicationLauncherDirectoryPath = Path.Combine(SourceApplicationLauncherProjectDirectoryPath, "bin", Utilities.Configuration);
@@ -264,6 +280,40 @@ public abstract class RemoteApplication : IDisposable
     protected string DestinationRootDirectoryPath { get { return Path.Combine(DestinationWorkingDirectoryRemotePath, UniqueFolderName); } }
 
     public string DestinationNewRelicHomeDirectoryPath { get { return Path.Combine(DestinationRootDirectoryPath, "newrelichome"); } }
+
+    private bool _useOtelDistro;
+
+    /// <summary>
+    /// When true, the application launches under the OpenTelemetry .NET auto-instrumentation native profiler with the
+    /// New Relic distro plugin (no New Relic profiler). Needs NR_DEV_OTEL_HOME pointing at a pristine OTel home, which
+    /// is copied per fixture and never modified. Off by default; when off, nothing about the launch changes.
+    /// Turning it on checks NR_DEV_OTEL_HOME right away (and again at staging), so a fixture without a usable OTel home
+    /// fails in its constructor with a message naming the variable, instead of a later, unrelated shutdown error.
+    /// </summary>
+    public bool UseOtelDistro
+    {
+        get
+        {
+            return _useOtelDistro;
+        }
+        set
+        {
+            if (value)
+            {
+                if (Utilities.IsLinux)
+                {
+                    throw new InvalidOperationException("UseOtelDistro is Windows-only for now: the OTel distro staging and profiler paths are win-x64/win-x86.");
+                }
+
+                GetValidatedSourceOtelHomeDirectoryPath();
+                GetValidatedOtelDistroPluginFilePath();
+            }
+
+            _useOtelDistro = value;
+        }
+    }
+
+    private string DestinationOtelHomeDirectoryPath { get { return Path.Combine(DestinationRootDirectoryPath, "otelhome"); } }
 
     public string DestinationExtensionsDirectoryPath { get { return Path.Combine(DestinationNewRelicHomeDirectoryPath, "extensions"); } }
 
@@ -640,7 +690,14 @@ public abstract class RemoteApplication : IDisposable
         // Remove any existing New Relic environment variables to avoid conflicts
         RemoveNewRelicEnvironmentVariables(startInfo.EnvironmentVariables);
 
-        ConfigureProfilerEnvironmentVariables(startInfo, doProfile);
+        if (UseOtelDistro)
+        {
+            ConfigureOtelDistroEnvironmentVariables(startInfo, doProfile);
+        }
+        else
+        {
+            ConfigureProfilerEnvironmentVariables(startInfo, doProfile);
+        }
 
         // configure env vars as needed for testing environment overrides
         foreach (var envVar in environmentVariables)
@@ -663,6 +720,205 @@ public abstract class RemoteApplication : IDisposable
         }
 
         AddCustomEnvironmentVariables(startInfo);
+
+        if (UseOtelDistro)
+        {
+            LogOtelDistroEnvironmentVariables(startInfo);
+        }
+    }
+
+    /// <summary>
+    /// OTel distro counterpart of <c>ConfigureProfilerEnvironmentVariables</c>: strips every inherited
+    /// OTEL_*/COR_*/CORECLR_* variable and DOTNET_STARTUP_HOOKS, then attaches the OTel native profiler with the
+    /// New Relic distro plugin pointed at the fixture's copied New Relic home.
+    /// </summary>
+    private void ConfigureOtelDistroEnvironmentVariables(ProcessStartInfo startInfo, bool doProfile)
+    {
+        var environment = startInfo.Environment;
+        var inheritedKeys = new List<string>(environment.Keys);
+        foreach (var key in inheritedKeys)
+        {
+            if (HasAnyPrefix(key, OtelDistroStrippedEnvironmentVariablePrefixes) || string.Equals(key, "DOTNET_STARTUP_HOOKS", StringComparison.OrdinalIgnoreCase))
+            {
+                environment.Remove(key);
+            }
+        }
+
+        if (!doProfile)
+        {
+            return;
+        }
+
+        var otelHome = DestinationOtelHomeDirectoryPath;
+        environment["OTEL_DOTNET_AUTO_HOME"] = otelHome;
+        environment["OTEL_DOTNET_AUTO_PLUGINS"] = OtelDistroPlugins;
+        environment["OTEL_DOTNET_AUTO_FAIL_FAST"] = "true";
+        environment["OTEL_DOTNET_AUTO_SETUP_SDK"] = "true";
+        environment["OTEL_TRACES_EXPORTER"] = "none";
+        environment["OTEL_METRICS_EXPORTER"] = "none";
+        environment["OTEL_LOGS_EXPORTER"] = "none";
+        // Installer stand-in: the distro installer must set OTel's file-based (YAML) config off (a spike 05 requirement,
+        // not yet implemented); NR's env defaults only hold with it off.
+        environment["OTEL_EXPERIMENTAL_FILE_BASED_CONFIGURATION_ENABLED"] = "false";
+        environment["OTEL_LOG_LEVEL"] = "debug";
+        environment["OTEL_DOTNET_AUTO_LOG_DIRECTORY"] = DefaultLogFileDirectoryPath;
+
+        var nativeProfiler64 = Path.Combine(otelHome, "win-x64", OtelNativeProfilerFileName);
+        var nativeProfiler32 = Path.Combine(otelHome, "win-x86", OtelNativeProfilerFileName);
+
+        if (IsCoreApp)
+        {
+            environment["CORECLR_ENABLE_PROFILING"] = "1";
+            environment["CORECLR_PROFILER"] = OtelProfilerGuid;
+            environment["CORECLR_PROFILER_PATH_64"] = nativeProfiler64;
+            environment["CORECLR_PROFILER_PATH_32"] = nativeProfiler32;
+            environment["DOTNET_STARTUP_HOOKS"] = Path.Combine(otelHome, "net", "OpenTelemetry.AutoInstrumentation.StartupHook.dll");
+            environment["DOTNET_EnableDiagnostics"] = "1";
+            environment["CORECLR_NEW_RELIC_HOME"] = DestinationNewRelicHomeDirectoryPath;
+        }
+        else
+        {
+            environment["COR_ENABLE_PROFILING"] = "1";
+            environment["COR_PROFILER"] = OtelProfilerGuid;
+            environment["COR_PROFILER_PATH_64"] = nativeProfiler64;
+            environment["COR_PROFILER_PATH_32"] = nativeProfiler32;
+            environment["NEW_RELIC_HOME"] = DestinationNewRelicHomeDirectoryPath;
+        }
+    }
+
+    private void LogOtelDistroEnvironmentVariables(ProcessStartInfo startInfo)
+    {
+        var keys = new List<string>();
+        foreach (var key in startInfo.Environment.Keys)
+        {
+            if (HasAnyPrefix(key, OtelDistroLoggedEnvironmentVariablePrefixes))
+            {
+                keys.Add(key);
+            }
+        }
+
+        keys.Sort(StringComparer.OrdinalIgnoreCase);
+
+        TestLogger?.WriteLine("[RemoteApplication] OTel distro launch, profiler-related environment of the child process:");
+        foreach (var key in keys)
+        {
+            var value = IsSecretEnvironmentVariableName(key) ? "<hidden>" : startInfo.Environment[key];
+            TestLogger?.WriteLine($"[RemoteApplication]   {key}={value}");
+        }
+    }
+
+    private static bool HasAnyPrefix(string key, string[] prefixes)
+    {
+        foreach (var prefix in prefixes)
+        {
+            if (key.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool IsSecretEnvironmentVariableName(string key)
+    {
+        foreach (var marker in SecretEnvironmentVariableNameMarkers)
+        {
+            if (key.IndexOf(marker, StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Copies the pristine OTel home (NR_DEV_OTEL_HOME) into this fixture's working directory and drops the distro
+    /// plugin plus the fixture home's NewRelic.Agent.Core/Extensions into its runtime folder. The source home is only
+    /// read. Runs right after the New Relic home copy so Core comes from the same build as the agent home.
+    /// </summary>
+    private void StageOtelDistroHomeIfEnabled()
+    {
+        if (!UseOtelDistro)
+        {
+            return;
+        }
+
+        var sourceOtelHome = GetValidatedSourceOtelHomeDirectoryPath();
+
+        var otelHome = DestinationOtelHomeDirectoryPath;
+        CommonUtils.CopyDirectory(sourceOtelHome, otelHome);
+
+        var runtimeDirectory = Path.Combine(otelHome, IsCoreApp ? "net" : "netfx");
+        var pluginFilePath = GetValidatedOtelDistroPluginFilePath();
+        var pluginBinDirectory = Path.GetDirectoryName(pluginFilePath);
+
+        var stagedFiles = new List<string>
+        {
+            CopyFileForOtelDistro(pluginFilePath, runtimeDirectory),
+            CopyFileForOtelDistro(Path.Combine(DestinationNewRelicHomeDirectoryPath, "NewRelic.Agent.Core.dll"), runtimeDirectory),
+            CopyFileForOtelDistro(Path.Combine(DestinationNewRelicHomeDirectoryPath, "NewRelic.Agent.Extensions.dll"), runtimeDirectory)
+        };
+
+        // The process-wide registration coordinator ships next to the plugin (its project reference copies it per TFM). On
+        // .NET Framework the coordinator loads itself into the default AppDomain from this staged copy's location.
+        stagedFiles.Add(CopyFileForOtelDistro(Path.Combine(pluginBinDirectory, "NewRelic.OtelDistro.Coordinator.dll"), runtimeDirectory));
+
+        foreach (var pdbName in new[] { "NewRelic.OtelDistro.Plugin.pdb", "NewRelic.OtelDistro.Coordinator.pdb" })
+        {
+            var pdb = Path.Combine(pluginBinDirectory, pdbName);
+            if (File.Exists(pdb))
+            {
+                stagedFiles.Add(CopyFileForOtelDistro(pdb, runtimeDirectory));
+            }
+        }
+
+        TestLogger?.WriteLine($"[RemoteApplication] OTel distro home staged from {sourceOtelHome} to {otelHome}:");
+        foreach (var stagedFile in stagedFiles)
+        {
+            var info = new FileInfo(stagedFile);
+            TestLogger?.WriteLine($"[RemoteApplication]   {info.FullName} size={info.Length} lastWriteUtc={info.LastWriteTimeUtc:O}");
+        }
+    }
+
+    private static string GetValidatedSourceOtelHomeDirectoryPath()
+    {
+        var sourceOtelHome = Environment.GetEnvironmentVariable(OtelHomeEnvironmentVariableName);
+        var sourceNativeProfiler = string.IsNullOrWhiteSpace(sourceOtelHome)
+            ? OtelHomeEnvironmentVariableName + " is not set"
+            : Path.Combine(sourceOtelHome, "win-x64", OtelNativeProfilerFileName);
+
+        if (string.IsNullOrWhiteSpace(sourceOtelHome) || !File.Exists(sourceNativeProfiler))
+        {
+            throw new InvalidOperationException($"UseOtelDistro requires NR_DEV_OTEL_HOME to point at an OpenTelemetry .NET auto-instrumentation home (missing: {sourceNativeProfiler})");
+        }
+
+        return sourceOtelHome;
+    }
+
+    // The distro plugin build for this app's runtime (net8.0 for .NET, net462 for .NET Framework).
+    private string GetValidatedOtelDistroPluginFilePath()
+    {
+        var pluginFilePath = Path.Combine(SourceOtelDistroPluginBinDirectoryPath, IsCoreApp ? "net8.0" : "net462", "NewRelic.OtelDistro.Plugin.dll");
+        if (!File.Exists(pluginFilePath))
+        {
+            throw new InvalidOperationException($"UseOtelDistro requires the New Relic OTel distro plugin built for this app's runtime (missing: {pluginFilePath}). Build FullAgent.sln first.");
+        }
+
+        return pluginFilePath;
+    }
+
+    private static string CopyFileForOtelDistro(string sourceFilePath, string destinationDirectoryPath)
+    {
+        if (!File.Exists(sourceFilePath))
+        {
+            throw new FileNotFoundException($"UseOtelDistro staging: required file not found: {sourceFilePath}", sourceFilePath);
+        }
+
+        var destinationFilePath = Path.Combine(destinationDirectoryPath, Path.GetFileName(sourceFilePath));
+        File.Copy(sourceFilePath, destinationFilePath, true);
+        return destinationFilePath;
     }
 
 
@@ -755,12 +1011,14 @@ public abstract class RemoteApplication : IDisposable
     {
         Directory.CreateDirectory(DestinationNewRelicHomeDirectoryPath);
         CommonUtils.CopyDirectory(SourceNewRelicHomeDirectoryPath, DestinationNewRelicHomeDirectoryPath);
+        StageOtelDistroHomeIfEnabled();
     }
 
     protected void CopyNewRelicHomeCoreClrDirectoryToRemote()
     {
         Directory.CreateDirectory(DestinationNewRelicHomeDirectoryPath);
         CommonUtils.CopyDirectory(SourceNewRelicHomeCoreClrDirectoryPath, DestinationNewRelicHomeDirectoryPath);
+        StageOtelDistroHomeIfEnabled();
     }
 
     protected void CopyNewRelicHomeCoreClrLinuxDirectoryToRemote(string arch)
@@ -776,6 +1034,7 @@ public abstract class RemoteApplication : IDisposable
     {
         Directory.CreateDirectory(DestinationNewRelicHomeDirectoryPath);
         CommonUtils.CopyDirectory(GetSourceDirectoryForHomeDir(Utilities.GetRuntimeHomeDirNameFor(arch, false)), DestinationNewRelicHomeDirectoryPath);
+        StageOtelDistroHomeIfEnabled();
     }
 
     protected void CopyApplicationDirectoryToRemote()

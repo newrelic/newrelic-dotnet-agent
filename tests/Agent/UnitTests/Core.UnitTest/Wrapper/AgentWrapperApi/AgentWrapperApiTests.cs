@@ -186,6 +186,51 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             _samplerFactory.Dispose();
         }
 
+        // The OTel distro log dedupe seam: RecordLogMessage marks the current DistroLogCapture scope "NR recorded" before
+        // any filtering, so OTel's deferred duplicate is discarded. In agent mode (no open scope) it is a no-op.
+        [Test]
+        public void RecordLogMessage_MarksTheOpenDistroLogCaptureScope()
+        {
+            OtelDistro.DistroLogCapture.ResetForTesting();
+            var flushed = new List<object>();
+            OtelDistro.DistroLogCapture.SetSink(r => flushed.Add(r));
+            try
+            {
+                OtelDistro.DistroLogCapture.Enter();
+                OtelDistro.DistroLogCapture.TryDefer(new OtelDistro.DistroLogRecord());
+
+                _agent.RecordLogMessage("fw", new object(), _ => DateTime.UtcNow, _ => "INFO", _ => "msg", _ => null, _ => null, "spanId", "traceId");
+
+                OtelDistro.DistroLogCapture.ExitFrame(1);
+
+                Assert.Multiple(() =>
+                {
+                    // Scope was marked by RecordLogMessage, so the deferred OTel copy is discarded, not flushed.
+                    Assert.That(flushed, Is.Empty);
+                    Assert.That(OtelDistro.DistroLogCapture.DuplicatesDroppedTotal, Is.EqualTo(1));
+                });
+            }
+            finally
+            {
+                OtelDistro.DistroLogCapture.ResetForTesting();
+            }
+        }
+
+        [Test]
+        public void RecordLogMessage_WithNoOpenScope_IsANoOp()
+        {
+            OtelDistro.DistroLogCapture.ResetForTesting();
+            try
+            {
+                Assert.DoesNotThrow(() => _agent.RecordLogMessage("fw", new object(), _ => DateTime.UtcNow, _ => "INFO", _ => "msg", _ => null, _ => null, "spanId", "traceId"));
+                Assert.That(OtelDistro.DistroLogCapture.IsCapturing, Is.False);
+            }
+            finally
+            {
+                OtelDistro.DistroLogCapture.ResetForTesting();
+            }
+        }
+
         private class CallStackManagerFactory : ICallStackManagerFactory
         {
             private readonly ICallStackManager _callStackManager;

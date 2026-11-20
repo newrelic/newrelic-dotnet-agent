@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<extension xmlns="urn:newrelic-extension">
+  <instrumentation>
+    <tracerFactory name="NewRelic.Providers.Wrapper.CustomInstrumentation.OtherTransactionWrapper">
+      <match assemblyName="Step0App" className="Step0App.Worker">
+        <exactMethodMatcher methodName="DoWork" parameters="System.Int32" />
+      </match>
+    </tracerFactory>
+  </instrumentation>
+</extension>

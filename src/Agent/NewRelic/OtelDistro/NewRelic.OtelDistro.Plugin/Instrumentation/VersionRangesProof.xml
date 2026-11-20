@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  TEST-ONLY. Declares the [Transaction] methods of the MySql and HttpClient integration-test exerciser classes
+  (MultiFunctionApplicationHelpers.NetStandardLibraries.MySql.MySqlExerciser and
+  MultiFunctionApplicationHelpers.NetStandardLibraries.Internal.HttpClientDriver) as OtherTransactionWrapper sites,
+  so the version-range proof can run the MySql and HttpClient integration tests under the distro (where
+  [Transaction] attributes do nothing). Remove before any product build.
+-->
+<extension xmlns="urn:newrelic-extension">
+  <instrumentation>
+    <tracerFactory name="NewRelic.Providers.Wrapper.CustomInstrumentation.OtherTransactionWrapper">
+      <match assemblyName="MultiFunctionApplicationHelpers" className="MultiFunctionApplicationHelpers.NetStandardLibraries.MySql.MySqlExerciser">
+        <exactMethodMatcher methodName="SingleDateQueryAsync" parameters="" />
+      </match>
+      <match assemblyName="MultiFunctionApplicationHelpers" className="MultiFunctionApplicationHelpers.NetStandardLibraries.Internal.HttpClientDriver">
+        <exactMethodMatcher methodName="Get" parameters="" />
+        <exactMethodMatcher methodName="Get" parameters="System.String" />
+        <exactMethodMatcher methodName="CancelledGetOperation" parameters="System.String" />
+        <exactMethodMatcher methodName="FactoryGet" parameters="System.String" />
+        <exactMethodMatcher methodName="Post" parameters="System.String" />
+        <exactMethodMatcher methodName="Put" parameters="System.String" />
+      </match>
+    </tracerFactory>
+  </instrumentation>
+</extension>

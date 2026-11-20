@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  TEST-ONLY. Declares the [Transaction] methods run by the sync MySql and MySqlConnector integration tests
+  (MultiFunctionApplicationHelpers.NetStandardLibraries.MySql.MySqlExerciser.SingleDateQuery and the 12
+  MySqlConnectorExerciser commands of MySqlConnectorTestBase) as OtherTransactionWrapper sites, so the on-disk XML
+  toggle proof can run those tests under the distro (where [Transaction] attributes do nothing).
+  Remove before any product build.
+-->
+<extension xmlns="urn:newrelic-extension">
+  <instrumentation>
+    <tracerFactory name="NewRelic.Providers.Wrapper.CustomInstrumentation.OtherTransactionWrapper">
+      <match assemblyName="MultiFunctionApplicationHelpers" className="MultiFunctionApplicationHelpers.NetStandardLibraries.MySql.MySqlExerciser">
+        <exactMethodMatcher methodName="SingleDateQuery" parameters="" />
+      </match>
+      <match assemblyName="MultiFunctionApplicationHelpers" className="MultiFunctionApplicationHelpers.NetStandardLibraries.MySql.MySqlConnectorExerciser">
+        <exactMethodMatcher methodName="ExecuteReaderWithDelay" parameters="" />
+        <exactMethodMatcher methodName="ExecuteScalar" parameters="" />
+        <exactMethodMatcher methodName="ExecuteNonQuery" parameters="" />
+        <exactMethodMatcher methodName="ExecuteReaderAsync" parameters="" />
+        <exactMethodMatcher methodName="ExecuteScalarAsync" parameters="" />
+        <exactMethodMatcher methodName="ExecuteNonQueryAsync" parameters="" />
+        <exactMethodMatcher methodName="DbCommandExecuteReader" parameters="" />
+        <exactMethodMatcher methodName="DbCommandExecuteScalar" parameters="" />
+        <exactMethodMatcher methodName="DbCommandExecuteNonQuery" parameters="" />
+        <exactMethodMatcher methodName="DbCommandExecuteReaderAsync" parameters="" />
+        <exactMethodMatcher methodName="DbCommandExecuteScalarAsync" parameters="" />
+        <exactMethodMatcher methodName="DbCommandExecuteNonQueryAsync" parameters="" />
+      </match>
+    </tracerFactory>
+  </instrumentation>
+</extension>

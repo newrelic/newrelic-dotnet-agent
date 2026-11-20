@@ -16,6 +16,14 @@ public class RemoteWebApplication : RemoteApplication
 
     private const string HostedWebCoreProcessName = @"HostedWebCore.exe";
 
+    // OTel distro mode launches a copy of HostedWebCore.exe named w3wp.exe. The OTel .NET native profiler takes its IIS
+    // path only for a process named w3wp.exe (or iisexpress.exe): it injects its managed loader into
+    // System.Web.Compilation.BuildManager.InvokePreStartInitMethods, inside the ASP.NET AppDomain. Under any other
+    // process name the loader is injected into the first method JIT-compiled in that AppDomain
+    // (AspNetAppDomainManagerImpl's constructor, during AppDomain creation), where it never starts: OTel's managed
+    // profiler is not loaded into the ASP.NET AppDomain, and no instrumentation runs there.
+    private const string OtelDistroHostedWebCoreProcessName = @"w3wp.exe";
+
     protected override string SourceApplicationDirectoryPath { get { return Path.Combine(SourceApplicationsDirectoryPath, ApplicationDirectoryName, "Deploy"); } }
 
     private static readonly string SourceHostedWebCoreProjectDirectoryPath = Path.Combine(SourceIntegrationTestsSolutionDirectoryPath, "HostedWebCore");
@@ -26,7 +34,9 @@ public class RemoteWebApplication : RemoteApplication
 
     private string DestinationHostedWebCoreDirectoryPath { get { return Path.Combine(DestinationRootDirectoryPath, "HostedWebCore"); } }
 
-    private string DestinationHostedWebCoreExecutablePath { get { return Path.Combine(DestinationHostedWebCoreDirectoryPath, HostedWebCoreProcessName); } }
+    private string LaunchedHostedWebCoreProcessName { get { return UseOtelDistro ? OtelDistroHostedWebCoreProcessName : HostedWebCoreProcessName; } }
+
+    private string DestinationHostedWebCoreExecutablePath { get { return Path.Combine(DestinationHostedWebCoreDirectoryPath, LaunchedHostedWebCoreProcessName); } }
 
     protected string DestinationApplicationHostConfigFilePath { get { return Path.Combine(DestinationHostedWebCoreDirectoryPath, "applicationHost.config"); } }
 
@@ -55,7 +65,7 @@ public class RemoteWebApplication : RemoteApplication
     {
         return $"--port={Port} {arguments}";
     }
-    protected override string StartInfoFileName => Path.Combine(DestinationHostedWebCoreDirectoryPath, "HostedWebCore.exe");
+    protected override string StartInfoFileName => Path.Combine(DestinationHostedWebCoreDirectoryPath, LaunchedHostedWebCoreProcessName);
 
     protected override string StartInfoWorkingDirectory => DestinationHostedWebCoreDirectoryPath;
 
@@ -99,6 +109,13 @@ public class RemoteWebApplication : RemoteApplication
     {
         Directory.CreateDirectory(DestinationHostedWebCoreDirectoryPath);
         CommonUtils.CopyDirectory(SourceHostedWebCoreDirectoryPath, DestinationHostedWebCoreDirectoryPath);
+
+        if (UseOtelDistro)
+        {
+            // The renamed copy keeps its config (the CLR reads <exe name>.config); its .pid file follows the new name.
+            File.Copy(Path.Combine(DestinationHostedWebCoreDirectoryPath, HostedWebCoreProcessName), DestinationHostedWebCoreExecutablePath, true);
+            File.Copy(Path.Combine(DestinationHostedWebCoreDirectoryPath, HostedWebCoreProcessName + ".config"), DestinationHostedWebCoreExecutablePath + ".config", true);
+        }
     }
 
     private void SetNewRelicAppNameInWebConfig()

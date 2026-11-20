@@ -24,12 +24,13 @@ public static partial class AgentInstallConfiguration
     // configuration logic to use the same environment variable logic.
     public static IEnvironment EnvironmentVariableProxy = new SharedInterfaces.Environment();
 
+    // RuntimeDirectoryName: the runtime-specific extensions subfolder the profiler also scans (and the OTel distro reads).
 #if NETSTANDARD2_0
     private static readonly string[] NewRelicHomeEnvironmentVariables = ["CORECLR_NEW_RELIC_HOME", "CORECLR_NEWRELIC_HOME"];
-    private const string RuntimeDirectoryName = "netcore";
+    public const string RuntimeDirectoryName = "netcore";
 #else
         private static readonly string[] NewRelicHomeEnvironmentVariables = ["NEW_RELIC_HOME", "NEWRELIC_HOME"];
-        private const string RuntimeDirectoryName = "netframework";
+        public const string RuntimeDirectoryName = "netframework";
 #endif
     private static readonly string[] NewRelicInstallPathEnvironmentVariables = ["NEW_RELIC_INSTALL_PATH", "NEWRELIC_INSTALL_PATH"];
 

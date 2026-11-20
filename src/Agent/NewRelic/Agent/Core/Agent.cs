@@ -528,6 +528,11 @@ public class Agent : IAgent // any changes to api, update the interface in exten
 
     public void RecordLogMessage(string frameworkName, object logEvent, Func<object, DateTime> getTimestamp, Func<object, object> getLevel, Func<object, string> getLogMessage, Func<object, Exception> getLogException, Func<object, Dictionary<string, object>> getContextData, string spanId, string traceId)
     {
+        // OTel distro log dedupe seam: mark the current capture scope (if any) as "New Relic recorded this line", before
+        // any level/deny-list filtering below, so a line NR deliberately filters still counts as NR-handled and OTel's
+        // deferred copy is discarded rather than forwarded. One thread-static read; in agent mode the depth is always 0.
+        OtelDistro.DistroLogCapture.NotifyNrRecorded();
+
         _agentHealthReporter.ReportLogForwardingFramework(frameworkName);
 
         var normalizedLevel = string.Empty;

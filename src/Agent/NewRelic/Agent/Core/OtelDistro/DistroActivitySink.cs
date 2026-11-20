@@ -45,10 +45,14 @@ public class DistroActivitySink
     // callback checks this first: one volatile read on the per-Activity path.
     private volatile bool _disabled;
 
+    // Hybrid default exclude list plus the generated additions; no additions until the plugin sets them.
+    private volatile DistroActivitySourceFilter _sourceFilter = new DistroActivitySourceFilter(null);
+
     private int _loggedShouldListenToError;
     private int _loggedShouldSampleError;
     private int _loggedOnStartedError;
     private int _loggedOnStoppedError;
+    private int _loggedTryGetCurrentTraceIdError;
 
     /// <summary>
     /// Whether the caller should attach its listener at all. Mirrors agent mode, which starts the ActivityBridge only
@@ -92,12 +96,52 @@ public class DistroActivitySink
     /// <summary>
     /// Prepares the reflection-built helpers the bridge needs. The types are passed in (from the caller's
     /// DiagnosticSource) rather than referenced, so Core never exposes DiagnosticSource types publicly.
-    /// Does not set Activity.DefaultIdFormat or Activity.TraceIdGenerator.
+    /// Does not set Activity.DefaultIdFormat. The plugin's own ActivityListener installs Activity.TraceIdGenerator.
     /// </summary>
     public void InitializeActivityTypes(Type activityType, Type activitySourceType, Type activityKindType)
     {
         ActivityBridge.CreateActivityTraceFlagsSetter(activityType);
         NewRelicActivitySourceProxy.SetAndCreateRuntimeActivitySource(activitySourceType, activityKindType);
+    }
+
+    /// <summary>
+    /// The current transaction's NR trace id, for the plugin's Activity.TraceIdGenerator to use for every root
+    /// Activity. Mirrors <see cref="ActivityBridge.TryGetCurrentTraceId"/>: returns the trace id of
+    /// <see cref="IAgent.CurrentTransaction"/> when it is valid, not finished, and an
+    /// <see cref="IHybridAgentTransaction"/>; otherwise null (including when the sink is disabled or any step
+    /// throws). Never throws.
+    /// </summary>
+    public string TryGetCurrentTraceId()
+    {
+        if (_disabled)
+        {
+            return null;
+        }
+
+        try
+        {
+            var transaction = _agent.CurrentTransaction;
+            if (transaction.IsValid && !transaction.IsFinished && transaction is IHybridAgentTransaction hybridAgentTransaction)
+            {
+                return hybridAgentTransaction.TraceId;
+            }
+
+            return null;
+        }
+        catch (Exception exception)
+        {
+            LogCallbackErrorOnce(ref _loggedTryGetCurrentTraceIdError, exception, nameof(TryGetCurrentTraceId));
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Sets the ActivitySource names excluded in distro mode on top of the hybrid default exclude list (the generated
+    /// additions). The plugin calls this once, right after Core starts and before it attaches its listener. Null clears them.
+    /// </summary>
+    public void SetExcludedActivitySourceAdditions(IEnumerable<string> additions)
+    {
+        _sourceFilter = new DistroActivitySourceFilter(additions);
     }
 
     public bool ShouldListenTo(string activitySourceName)
@@ -109,7 +153,7 @@ public class DistroActivitySink
 
         try
         {
-            return ActivitySourceExtensions.ShouldListenToActivitySource(activitySourceName, _agent.Configuration);
+            return _sourceFilter.ShouldListenTo(activitySourceName, _agent.Configuration);
         }
         catch (Exception exception)
         {

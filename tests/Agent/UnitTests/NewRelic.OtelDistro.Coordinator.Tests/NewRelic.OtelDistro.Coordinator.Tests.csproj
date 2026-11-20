@@ -1,0 +1,49 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net481;net11.0</TargetFrameworks>
+    <RootNamespace>NewRelic.OtelDistro.Coordinator.Tests</RootNamespace>
+    <AssemblyName>NewRelic.OtelDistro.Coordinator.Tests</AssemblyName>
+    <IsPackable>false</IsPackable>
+    <DebugType>Full</DebugType>
+    <RunSettingsFilePath>$(SolutionDir)test.runsettings</RunSettingsFilePath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="NUnit" />
+    <PackageReference Include="NUnit.Analyzers">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="NUnit3TestAdapter">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Reads OTel's DLL metadata without loading it for execution (OtelNativeLayoutCompatibilityTests). -->
+    <PackageReference Include="System.Reflection.MetadataLoadContext" />
+    <!-- Not referenced, only located: the test compares the coordinator's native struct copy with the types in this
+         package's OpenTelemetry.AutoInstrumentation.dll. ExcludeAssets=all: nothing from it is compiled against or copied. -->
+    <PackageReference Include="OpenTelemetry.AutoInstrumentation.Runtime.Managed" GeneratePathProperty="true" ExcludeAssets="all" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Where OtelNativeLayoutCompatibilityTests finds the OTel package, baked in at build time so the test does not guess paths. -->
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>OtelAutoInstrumentationPackageDirectory</_Parameter1>
+      <_Parameter2>$(PkgOpenTelemetry_AutoInstrumentation_Runtime_Managed)</_Parameter2>
+    </AssemblyAttribute>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(RootProjectDirectory)\src\Agent\NewRelic\OtelDistro\NewRelic.OtelDistro.Coordinator\NewRelic.OtelDistro.Coordinator.csproj" />
+  </ItemGroup>
+
+</Project>

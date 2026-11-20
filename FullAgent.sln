@@ -240,6 +240,14 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AssemblyModifier", "src\Age
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NewRelic.OtelDistro.Plugin", "src\Agent\NewRelic\OtelDistro\NewRelic.OtelDistro.Plugin\NewRelic.OtelDistro.Plugin.csproj", "{3FC1B586-6F74-4EE2-AF47-FAE68AFCAEAE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NewRelic.OtelDistro.Generators", "src\Agent\NewRelic\OtelDistro\NewRelic.OtelDistro.Generators\NewRelic.OtelDistro.Generators.csproj", "{2673AD30-8BC6-4E03-8734-30E5064C499F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NewRelic.OtelDistro.Generators.Tests", "tests\Agent\UnitTests\NewRelic.OtelDistro.Generators.Tests\NewRelic.OtelDistro.Generators.Tests.csproj", "{801169B3-5D9C-4652-AC46-0C854FFA7AE0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NewRelic.OtelDistro.Coordinator", "src\Agent\NewRelic\OtelDistro\NewRelic.OtelDistro.Coordinator\NewRelic.OtelDistro.Coordinator.csproj", "{763A6419-1D61-4C4D-BB12-9D373675774C}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NewRelic.OtelDistro.Coordinator.Tests", "tests\Agent\UnitTests\NewRelic.OtelDistro.Coordinator.Tests\NewRelic.OtelDistro.Coordinator.Tests.csproj", "{9380925A-754B-4DE5-A621-FFB43B311ECC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -506,6 +514,22 @@ Global
 		{3FC1B586-6F74-4EE2-AF47-FAE68AFCAEAE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3FC1B586-6F74-4EE2-AF47-FAE68AFCAEAE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3FC1B586-6F74-4EE2-AF47-FAE68AFCAEAE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2673AD30-8BC6-4E03-8734-30E5064C499F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2673AD30-8BC6-4E03-8734-30E5064C499F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2673AD30-8BC6-4E03-8734-30E5064C499F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2673AD30-8BC6-4E03-8734-30E5064C499F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{801169B3-5D9C-4652-AC46-0C854FFA7AE0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{801169B3-5D9C-4652-AC46-0C854FFA7AE0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{801169B3-5D9C-4652-AC46-0C854FFA7AE0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{801169B3-5D9C-4652-AC46-0C854FFA7AE0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{763A6419-1D61-4C4D-BB12-9D373675774C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{763A6419-1D61-4C4D-BB12-9D373675774C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{763A6419-1D61-4C4D-BB12-9D373675774C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{763A6419-1D61-4C4D-BB12-9D373675774C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9380925A-754B-4DE5-A621-FFB43B311ECC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9380925A-754B-4DE5-A621-FFB43B311ECC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9380925A-754B-4DE5-A621-FFB43B311ECC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9380925A-754B-4DE5-A621-FFB43B311ECC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -581,6 +605,8 @@ Global
 		{CE9B992B-A2A7-20F9-9EEB-AE699C6D77CC} = {2D194040-0192-4A87-A076-2B640C7FA82F}
 		{5011E41D-F7CB-454B-A7D0-0C3C3E655030} = {5E86E10A-C38F-48CB-ADE9-67B22BB2F50A}
 		{36C4B766-2A2F-CACB-CB91-0FC5C2E69773} = {E3DAC9C6-AE41-4B37-A253-C621E568590E}
+		{801169B3-5D9C-4652-AC46-0C854FFA7AE0} = {E5B988C0-5D19-407E-8210-71FFB90C579A}
+		{9380925A-754B-4DE5-A621-FFB43B311ECC} = {E5B988C0-5D19-407E-8210-71FFB90C579A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {D8B98070-6B8E-403C-A07F-A3F2E4A3A3D0}

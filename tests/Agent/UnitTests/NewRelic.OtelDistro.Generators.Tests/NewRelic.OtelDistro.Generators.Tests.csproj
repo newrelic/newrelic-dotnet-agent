@@ -1,0 +1,61 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net11.0</TargetFramework>
+    <RootNamespace>NewRelic.OtelDistro.Generators.Tests</RootNamespace>
+    <AssemblyName>NewRelic.OtelDistro.Generators.Tests</AssemblyName>
+    <IsPackable>false</IsPackable>
+    <RunSettingsFilePath>$(SolutionDir)test.runsettings</RunSettingsFilePath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="NUnit" />
+    <PackageReference Include="NUnit.Analyzers">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="NUnit3TestAdapter">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(RootProjectDirectory)\src\Agent\NewRelic\OtelDistro\NewRelic.OtelDistro.Generators\NewRelic.OtelDistro.Generators.csproj" />
+    <!-- Core's InstrumentationDefinitionsTable reads the generated table back in the round-trip tests. -->
+    <ProjectReference Include="$(RootProjectDirectory)\src\Agent\NewRelic\Agent\Core\Core.csproj" />
+    <!-- PluginIntegrationTypesTests inspects the built plugin DLLs, so the plugin must be built first. Build ordering only:
+         ReferenceOutputAssembly=false, and SkipGetTargetFrameworkProperties=true so the reference builds the plugin's
+         outer (multi-target) build, i.e. both net8.0 and net462, not just the TFM nearest to this project's. -->
+    <ProjectReference Include="$(RootProjectDirectory)\src\Agent\NewRelic\OtelDistro\NewRelic.OtelDistro.Plugin\NewRelic.OtelDistro.Plugin.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" UndefineProperties="TargetFramework" Private="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Reads the plugin DLLs' metadata without loading them for execution (the net462 build cannot run here). -->
+    <PackageReference Include="System.Reflection.MetadataLoadContext" />
+    <!-- Not referenced, only located: the plugin's CallTarget types (CallTargetState, CallTargetReturn) live in this
+         package's OpenTelemetry.AutoInstrumentation.dll, which the plugin references compile-only, so the test points
+         MetadataLoadContext at the package folder. ExcludeAssets=all: nothing from it is compiled against or copied. -->
+    <PackageReference Include="OpenTelemetry.AutoInstrumentation.Runtime.Managed" GeneratePathProperty="true" ExcludeAssets="all" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Where PluginIntegrationTypesTests finds its inputs, baked in at build time so the test does not guess paths. -->
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>PluginOutputDirectory</_Parameter1>
+      <_Parameter2>$(RootProjectDirectory)src\Agent\NewRelic\OtelDistro\NewRelic.OtelDistro.Plugin\bin\$(Configuration)</_Parameter2>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>OtelAutoInstrumentationPackageDirectory</_Parameter1>
+      <_Parameter2>$(PkgOpenTelemetry_AutoInstrumentation_Runtime_Managed)</_Parameter2>
+    </AssemblyAttribute>
+    <!-- ShippedInstrumentationXmlTests reads the shipped wrapper instrumentation XML from the source tree. -->
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>RepositoryRootDirectory</_Parameter1>
+      <_Parameter2>$(RootProjectDirectory)</_Parameter2>
+    </AssemblyAttribute>
+  </ItemGroup>
+
+</Project>

@@ -15,6 +15,64 @@
     <!-- AddOtlpExporter lives here; it is otherwise only a transitive dependency. Version (1.20.1) is pinned
          centrally in Directory.Packages.props and matches the OTLP exporter the OTel auto-instrumentation home ships. -->
     <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" />
+    <!-- Compile-only reference to the OTel auto-instrumentation managed assembly (OpenTelemetry.AutoInstrumentation.dll).
+         It supplies the CallTarget types the generated integrations and DistroCallTarget compile against, plus the
+         internal SharedPayload / NativeCallTargetDefinition2 types DistroDefinitionsPayload reaches via reflection.
+         ExcludeAssets="runtime" + PrivateAssets="all": nothing is copied next to the plugin; the OTel home supplies
+         the DLL at run time. -->
+    <PackageReference Include="OpenTelemetry.AutoInstrumentation.Runtime.Managed" PrivateAssets="all" ExcludeAssets="runtime" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The source generator (Task 4) that turns the instrumentation XML below into CallTarget integration classes
+         plus GeneratedDistroDefinitions.Table (an NRIDT table). ReferenceOutputAssembly=false: the generator runs at build time only. -->
+    <ProjectReference Include="..\NewRelic.OtelDistro.Generators\NewRelic.OtelDistro.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    <!-- NR instrumentation XML the generator consumes (spike-0 step). -->
+    <AdditionalFiles Include="Instrumentation\*.xml" />
+    <!-- Default: every shipped instrumentation XML for this target framework's agent home, read at build time
+         (not copied) from the home's extensions folder. This requires a previously built home (FullAgent.sln
+         creates/refreshes it), so Home.csproj is referenced below for build ordering. net8.0 reads the .NET Core
+         x64 home, net462 the .NET Framework x64 home. -->
+    <AdditionalFiles Include="$(MSBuildThisFileDirectory)..\..\..\newrelichome_x64_coreclr\extensions\*.xml" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <AdditionalFiles Include="$(MSBuildThisFileDirectory)..\..\..\newrelichome_x64\extensions\*.xml" Condition="'$(TargetFramework)' == 'net462'" />
+    <!-- Every shipped instrumentation XML file (each wrapper's, plus Misc), hash-only: in addition to being
+         compiled from the home copy above, each is also listed here by its home name and content hash in the
+         table's shipped XML manifest, so the run time can tell an unchanged shipped file from an edited one.
+         A file listed both ways (home copy above, hash-only here) is still only counted as compiled once by the
+         generator. The NrDistroHashOnly metadata reaches the generator through CompilerVisibleItemMetadata below. -->
+    <AdditionalFiles Include="..\..\Agent\Extensions\Providers\Wrapper\*\Instrumentation.xml;..\..\..\Miscellaneous\NewRelic.Providers.Wrapper.Misc.Instrumentation.xml"
+                     NrDistroHashOnly="true" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="NrDistroHashOnly" />
+    <!-- The generator resolves the OTel disable list per runtime (OtelInstrumentationMap): ".NETCoreApp" for net8.0
+         gets the .NET rules (e.g. HTTPCLIENT off with the HttpClient XML alone), net462 the .NET Framework rules. -->
+    <CompilerVisibleProperty Include="TargetFrameworkIdentifier" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <!-- The generator's version-range warnings (NRDG006 invalid bound, NRDG007 revision widened, NRDG008 empty range
+         dropped, NRDG009 overload-wide match in range where the explicit one is not, NRDG010 overlapping same-key ranges
+         with different tracer factories) report residues OTel cannot express exactly; NRDG011 (OTel instrumentation
+         stays on for a library NR covers only with default-off points) reports a coverage gap. NRDG002 (more than 8
+         parameters), NRDG003 (duplicate match), and NRDG004 (malformed XML) are skip warnings the full shipped XML
+         set trips. The repo builds with TreatWarningsAsErrors; keep them all visible as warnings rather than failing
+         the build. -->
+    <WarningsNotAsErrors>$(WarningsNotAsErrors);NRDG002;NRDG003;NRDG004;NRDG006;NRDG007;NRDG008;NRDG009;NRDG010;NRDG011</WarningsNotAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Build-order-only reference: the AdditionalFiles above read the agent home's extensions folder, so the home
+         must exist (and be current) before this project's generator runs. ReferenceOutputAssembly=false: Home.csproj
+         is "empty on purpose" (see its Description) and produces no assembly this project consumes.
+         Home.csproj targets netstandard2.0 only, while this project multi-targets net8.0/net462: without
+         UndefineProperties, the outer build's TargetFramework global property (net8.0 or net462) leaks into the
+         Home build request, which Home's own restore assets don't have, failing with NETSDK1005.
+         SkipGetTargetFrameworkProperties skips the cross-targeting negotiation call (Home has no TargetFrameworks
+         list to negotiate against); UndefineProperties clears the leaked TargetFramework so Home builds with its
+         own default. -->
+    <ProjectReference Include="..\..\Home\Home.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" UndefineProperties="TargetFramework" />
   </ItemGroup>
 
   <PropertyGroup>
@@ -32,6 +90,12 @@
     <!-- Core's public API (IAgentApi, IAgent) lives in NewRelic.Agent.Extensions, which is not merged into Core; it is deployed from the agent home too. -->
     <ProjectReference Include="..\..\Agent\Extensions\NewRelic.Agent.Extensions\NewRelic.Agent.Extensions.csproj" Private="false" />
     <Reference Include="NewRelic.Agent.Core" HintPath="$(CoreRepackedDir)NewRelic.Agent.Core.dll" Private="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The process-wide registration coordinator (BCL only). Copied next to the plugin in its bin, per target framework;
+         the integration-test fixture stages it from there into the OTel home's runtime folder with the plugin. -->
+    <ProjectReference Include="..\NewRelic.OtelDistro.Coordinator\NewRelic.OtelDistro.Coordinator.csproj" />
   </ItemGroup>
 
 </Project>
