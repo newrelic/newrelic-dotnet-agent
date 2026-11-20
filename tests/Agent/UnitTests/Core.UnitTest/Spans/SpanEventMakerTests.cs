@@ -822,8 +822,8 @@ public class SpanEventMakerTests
         var metricStatsCollection = new TransactionMetricStatsCollection(transactionMetricName);
         var transactionAttribs = _transactionAttribMaker.GetAttributes(immutableTransaction, transactionMetricName, TimeSpan.FromSeconds(1), immutableTransaction.Duration, metricStatsCollection);
 
-        _attribDefs.GetCustomAttributeForTransaction("filterOnTrx").TrySetValue(transactionAttribs, "trxCustomAttribValue1");
-        _attribDefs.GetCustomAttributeForTransaction("filterOnSpan").TrySetValue(transactionAttribs, "trxCustomAttribValue2");
+        _attribDefs.TransactionCustomAttributes.TrySetValue(transactionAttribs, "filterOnTrx", "trxCustomAttribValue1");
+        _attribDefs.TransactionCustomAttributes.TrySetValue(transactionAttribs, "filterOnSpan", "trxCustomAttribValue2");
 
         var trxEvent = _transactionEventMaker.GetTransactionEvent(immutableTransaction, transactionAttribs);
         var spanEvents = _spanEventMaker.GetSpanEvents(immutableTransaction, TransactionName, transactionAttribs);
@@ -893,7 +893,7 @@ public class SpanEventMakerTests
         var metricStatsCollection = new TransactionMetricStatsCollection(transactionMetricName);
         var allAttribValues = _transactionAttribMaker.GetAttributes(immutableTransaction, transactionMetricName, TimeSpan.FromSeconds(1), immutableTransaction.Duration, metricStatsCollection);
 
-        _attribDefs.GetCustomAttributeForTransaction("trxCustomAttrib").TrySetValue(allAttribValues, "trxCustomAttribValue");
+        _attribDefs.TransactionCustomAttributes.TrySetValue(allAttribValues, "trxCustomAttrib", "trxCustomAttribValue");
         _attribDefs.GetLambdaAttribute("lambdaAttributeKey").TrySetValue(allAttribValues, "lambdaAttributeValue");
         _attribDefs.GetFaasAttribute("faasAttributeKey").TrySetValue(allAttribValues, "faasAttributeValue");
         _attribDefs.OriginalUrl.TrySetValue(allAttribValues, "http://www.test.com");
@@ -913,9 +913,9 @@ public class SpanEventMakerTests
 
             foreach (var trxAttrib in trxAttribs)
             {
-                var attribName = trxAttrib.AttributeDefinition.Name;
+                var attribName = trxAttrib.Name;
 
-                if (trxAttrib.AttributeDefinition.IsAvailableForAny(AttributeDestinations.SpanEvent))
+                if ((trxAttrib.AttributeDestinations & AttributeDestinations.SpanEvent) != AttributeDestinations.None)
                 {
                     hasExistCheck = true;
                     assertions.Add(() => Assert.That(rootSpanAttribsDic.ContainsKey(attribName), Is.True, $"{classificationLocal} attributes should have attribute {attribName}"));

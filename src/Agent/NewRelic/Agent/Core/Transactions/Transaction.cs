@@ -992,8 +992,7 @@ public class Transaction : IInternalTransaction, ITransactionSegmentState, IHybr
         {
             if (parameter.Key != null && parameter.Value != null)
             {
-                var paramAttribute = _attribDefs.GetRequestParameterAttribute(parameter.Key);
-                TransactionMetadata.UserAndRequestAttributes.TrySetValue(paramAttribute, parameter.Value);
+                _attribDefs.RequestParameterAttributes.TrySetValueUnchecked(TransactionMetadata.UserAndRequestAttributes, parameter.Key, parameter.Value);
             }
         }
     }
@@ -1009,8 +1008,7 @@ public class Transaction : IInternalTransaction, ITransactionSegmentState, IHybr
             return this;
         }
 
-        var customAttrib = _attribDefs.GetCustomAttributeForTransaction(key);
-        TransactionMetadata.UserAndRequestAttributes.TrySetValue(customAttrib, value);
+        _attribDefs.TransactionCustomAttributes.TrySetValueUnchecked(TransactionMetadata.UserAndRequestAttributes, key, value);
 
         return this;
     }
@@ -1469,8 +1467,7 @@ public class Transaction : IInternalTransaction, ITransactionSegmentState, IHybr
 
             if (value != null)
             {
-                var paramAttribute = _attribDefs.GetRequestHeadersAttribute(key.ToLowerInvariant());
-                TransactionMetadata.UserAndRequestAttributes.TrySetValue(paramAttribute, value);
+                _attribDefs.RequestHeaderAttributes.TrySetValueUnchecked(TransactionMetadata.UserAndRequestAttributes, key.ToLowerInvariant(), value);
             }
         }
 

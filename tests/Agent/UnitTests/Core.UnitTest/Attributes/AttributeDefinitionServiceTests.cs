@@ -132,13 +132,13 @@ public class AttributeDefinitionServiceTests
         UpdateConfig();
 
 
-        var attrib = _attribDefs.GetRequestParameterAttribute("foo");
+        var attrib = _attribDefs.RequestParameterAttributes.Resolve("foo");
 
         NrAssert.Multiple
         (
-            () => Assert.That(attrib.IsAvailableForAny(AttributeDestinations.TransactionTrace), Is.EqualTo(expectCaptureRequestParams)),
-            () => Assert.That(attrib.IsAvailableForAny(AttributeDestinations.ErrorTrace), Is.EqualTo(expectCaptureRequestParams)),
-            () => Assert.That(attrib.IsAvailableForAny(AttributeDestinations.ErrorEvent), Is.EqualTo(expectCaptureRequestParams))
+            () => Assert.That(attrib.IsAvailableForAny(new[] { AttributeDestinations.TransactionTrace }), Is.EqualTo(expectCaptureRequestParams)),
+            () => Assert.That(attrib.IsAvailableForAny(new[] { AttributeDestinations.ErrorTrace }), Is.EqualTo(expectCaptureRequestParams)),
+            () => Assert.That(attrib.IsAvailableForAny(new[] { AttributeDestinations.ErrorEvent }), Is.EqualTo(expectCaptureRequestParams))
         );
     }
 
@@ -179,12 +179,12 @@ public class AttributeDefinitionServiceTests
         UpdateConfig();
 
 
-        var attrib = _attribDefs.GetRequestParameterAttribute("foo");
+        var attrib = _attribDefs.RequestParameterAttributes.Resolve("foo");
 
         NrAssert.Multiple
         (
-            () => Assert.That(attrib.IsAvailableForAny(AttributeDestinations.TransactionEvent), Is.EqualTo(expectCaptureRequestParams)),
-            () => Assert.That(attrib.IsAvailableForAny(AttributeDestinations.SpanEvent), Is.EqualTo(expectCaptureRequestParams))
+            () => Assert.That(attrib.IsAvailableForAny(new[] { AttributeDestinations.TransactionEvent }), Is.EqualTo(expectCaptureRequestParams)),
+            () => Assert.That(attrib.IsAvailableForAny(new[] { AttributeDestinations.SpanEvent }), Is.EqualTo(expectCaptureRequestParams))
         );
     }
 
@@ -219,15 +219,15 @@ public class AttributeDefinitionServiceTests
 
         for (var i = 0; i < inputHeaders.Length; i++)
         {
-            var attrib = _attribDefs.GetRequestHeadersAttribute(inputHeaders[i]);
+            var attrib = _attribDefs.RequestHeaderAttributes.Resolve(inputHeaders[i]);
 
             NrAssert.Multiple
             (
-                () => Assert.That(attrib.IsAvailableForAny(AttributeDestinations.TransactionEvent), Is.EqualTo(expectCaptureRequestHeaders[i])),
-                () => Assert.That(attrib.IsAvailableForAny(AttributeDestinations.SpanEvent), Is.EqualTo(expectCaptureRequestHeaders[i])),
-                () => Assert.That(attrib.IsAvailableForAny(AttributeDestinations.ErrorEvent), Is.EqualTo(expectCaptureRequestHeaders[i])),
-                () => Assert.That(attrib.IsAvailableForAny(AttributeDestinations.ErrorTrace), Is.EqualTo(expectCaptureRequestHeaders[i])),
-                () => Assert.That(attrib.IsAvailableForAny(AttributeDestinations.TransactionTrace), Is.EqualTo(expectCaptureRequestHeaders[i]))
+                () => Assert.That(attrib.IsAvailableForAny(new[] { AttributeDestinations.TransactionEvent }), Is.EqualTo(expectCaptureRequestHeaders[i])),
+                () => Assert.That(attrib.IsAvailableForAny(new[] { AttributeDestinations.SpanEvent }), Is.EqualTo(expectCaptureRequestHeaders[i])),
+                () => Assert.That(attrib.IsAvailableForAny(new[] { AttributeDestinations.ErrorEvent }), Is.EqualTo(expectCaptureRequestHeaders[i])),
+                () => Assert.That(attrib.IsAvailableForAny(new[] { AttributeDestinations.ErrorTrace }), Is.EqualTo(expectCaptureRequestHeaders[i])),
+                () => Assert.That(attrib.IsAvailableForAny(new[] { AttributeDestinations.TransactionTrace }), Is.EqualTo(expectCaptureRequestHeaders[i]))
             );
         }
     }
@@ -237,10 +237,19 @@ public class AttributeDefinitionServiceTests
     private object _lazyTest_ExpectedValDtmm => _lazyTest_AttribValDtm.ToString("o");
     const string _lazyTest_AttribNameEmpty = "emptyAttrib";
 
+    private static AttributeDefinition<object, object> CreateLazyTestDefinition(string name)
+    {
+        return AttributeDefinitionBuilder
+            .Create<object, object>(name, AttributeClassification.UserAttributes)
+            .AppliesTo(AttributeDestinations.All, true)
+            .WithConvert(AttributeDefinitionBuilder.GenericConverter)
+            .Build(new AttributeFilter(new AttributeFilter.Settings()));
+    }
+
     private void LazyValueTest_SetAttribValues(IAttributeValueCollection attribValues)
     {
-        var attribDefDtm = _attribDefs.GetCustomAttributeForTransaction(_lazyTest_AttribNameDtm);
-        var attribDefEmpty = _attribDefs.GetCustomAttributeForTransaction(_lazyTest_AttribNameEmpty);
+        var attribDefDtm = CreateLazyTestDefinition(_lazyTest_AttribNameDtm);
+        var attribDefEmpty = CreateLazyTestDefinition(_lazyTest_AttribNameEmpty);
 
         //This is a lazy instantiation
         attribDefDtm.TrySetValue(attribValues, () => _lazyTest_AttribValDtm);

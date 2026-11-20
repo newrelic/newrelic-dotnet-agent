@@ -38,7 +38,7 @@ public class AttributeServiceTests
 
         _attribDefs.TransactionName.TrySetValue(_attribValues,"name");
         _attribDefs.HostDisplayName.TrySetValue(_attribValues, "host");
-        _attribDefs.GetCustomAttributeForTransaction("custom1Name").TrySetValue(_attribValues, "custom1Value");
+        _attribDefs.TransactionCustomAttributes.TrySetValue(_attribValues, "custom1Name", "custom1Value");
 
         var expectedIntrisicDictionary = new Dictionary<string, object> { { "name", "name" } };
         NrAssert.Multiple
@@ -57,7 +57,7 @@ public class AttributeServiceTests
 
         _attribDefs.TransactionName.TrySetValue(_attribValues, "name");
         _attribDefs.HostDisplayName.TrySetValue(_attribValues, "host");
-        _attribDefs.GetCustomAttributeForTransaction("custom1Name").TrySetValue(_attribValues, "custom1Value");
+        _attribDefs.TransactionCustomAttributes.TrySetValue(_attribValues, "custom1Name", "custom1Value");
 
 
         var expectedIntrisicDictionary = new Dictionary<string, object> { { "name", "name" } };
@@ -75,7 +75,7 @@ public class AttributeServiceTests
     {
         _attribDefs.TransactionName.TrySetValue(_attribValues, "name");
         _attribDefs.HostDisplayName.TrySetValue(_attribValues, "host");
-        _attribDefs.GetCustomAttributeForTransaction("custom1Name").TrySetValue(_attribValues, "custom1Value");
+        _attribDefs.TransactionCustomAttributes.TrySetValue(_attribValues, "custom1Name", "custom1Value");
 
         var expectedIntrisicDictionary = new Dictionary<string, object> { { "name", "name" } };
         var expectedAgentDictionary = new Dictionary<string, object> { { "host.displayName", "host" } };
@@ -93,7 +93,7 @@ public class AttributeServiceTests
     {
         _attribDefs.TransactionName.TrySetValue(_attribValues, null as string);
         _attribDefs.HostDisplayName.TrySetValue(_attribValues, null as string);
-        _attribDefs.GetCustomAttributeForTransaction("custom1Name").TrySetValue(_attribValues, null);
+        _attribDefs.TransactionCustomAttributes.TrySetValue(_attribValues, "custom1Name", null);
 
         Assert.That(_attribValues.ToDictionary(), Is.Empty);
     }

@@ -17,7 +17,7 @@ public static class JsonSerializerHelpers
         writer.WriteStartObject();
         if (attribValues != null)
         {
-            foreach (var attribVal in attribValues.OrderBy(x => x.AttributeDefinition.Name))
+            foreach (var attribVal in attribValues.OrderBy(x => x.Name))
             {
                 //this performs the lazy function (if necessary)
                 //which can result in a null value
@@ -28,7 +28,7 @@ public static class JsonSerializerHelpers
                     continue;
                 }
 
-                WriteJsonKeyAndValue(writer, attribVal.AttributeDefinition.Name, outputValue);
+                WriteJsonKeyAndValue(writer, attribVal.Name, outputValue);
             }
         }
 

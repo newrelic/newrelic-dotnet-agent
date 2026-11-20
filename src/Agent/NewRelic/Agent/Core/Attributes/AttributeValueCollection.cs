@@ -32,6 +32,8 @@ public interface IAttributeValueCollection
 
     bool TrySetValue(IAttributeValue attrib);
 
+    bool TrySetValue(AttributeDefinition familyDefinition, ResolvedAttributeName resolved, object value);
+
     IEnumerable<IAttributeValue> GetAttributeValues(AttributeClassification classification);
 
     IDictionary<string, object> GetAttributeValuesDic(AttributeClassification classification);
@@ -66,26 +68,26 @@ public abstract class AttributeValueCollectionBase<TAttrib> : IAttributeValueCol
     public AttributeDestinations[] TargetModelTypes { get; private set; }
     public AttributeDestinations TargetModelTypesAsFlags { get; private set; }
 
-    public abstract bool CollectionContainsAttribute(AttributeDefinition attrDef);
+    public abstract bool CollectionContainsAttribute(AttributeClassification classification, AttributeKey key, string name);
 
-    private bool ValidateCollectionLimits(AttributeDefinition attrDef)
+    private bool ValidateCollectionLimits(AttributeClassification classification, AttributeKey key, string name)
     {
         var attributeLimitReached = false;
         string message = string.Empty;
 
-        if (attrDef.Classification == AttributeClassification.UserAttributes && _userAttributeCount >= MaxCountUserAttrib)
+        if (classification == AttributeClassification.UserAttributes && _userAttributeCount >= MaxCountUserAttrib)
         {
-            message = $"User Attribute '{attrDef.Name}' was not recorded - A max of {MaxCountUserAttrib} User Attributes may be supplied.";
+            message = $"User Attribute '{name}' was not recorded - A max of {MaxCountUserAttrib} User Attributes may be supplied.";
             attributeLimitReached = true;
         }
         else if (Count >= MaxCountAllAttrib)
         {
-            message = $"{attrDef.Classification} Attribute '{attrDef.Name}' was not recorded - A max of {MaxCountAllAttrib} attributes may be supplied.";
+            message = $"{classification} Attribute '{name}' was not recorded - A max of {MaxCountAllAttrib} attributes may be supplied.";
             attributeLimitReached = true;
         }
 
         // Log a message and return false if we hit an attribute limit but don't currently contain the attribute
-        if (attributeLimitReached && !CollectionContainsAttribute(attrDef))
+        if (attributeLimitReached && !CollectionContainsAttribute(classification, key, name))
         {
             LogTransactionIfFinest(message);
             return false;
@@ -132,7 +134,7 @@ public abstract class AttributeValueCollectionBase<TAttrib> : IAttributeValueCol
         var result = new Dictionary<string, object>();
         foreach (var attribVal in GetAttribValuesImpl(classification))
         {
-            result[attribVal.AttributeDefinition.Name] = attribVal.Value;
+            result[attribVal.Name] = attribVal.Value;
         }
 
         return result;
@@ -146,7 +148,7 @@ public abstract class AttributeValueCollectionBase<TAttrib> : IAttributeValueCol
             foreach (var attribVal in GetAttribValuesImpl(classification))
             {
                 // This will overwrite existing values in the order of: user < intrinsic < agent
-                result[attribVal.AttributeDefinition.Name] = attribVal.Value;
+                result[attribVal.Name] = attribVal.Value;
             }
         }
 
@@ -157,8 +159,7 @@ public abstract class AttributeValueCollectionBase<TAttrib> : IAttributeValueCol
     {
         foreach (var attribVal in attribValues)
         {
-
-            if ((attribVal.AttributeDefinition.AttributeDestinations & TargetModelTypesAsFlags) == 0)
+            if ((attribVal.AttributeDestinations & TargetModelTypesAsFlags) == 0)
             {
                 continue;
             }
@@ -198,7 +199,7 @@ public abstract class AttributeValueCollectionBase<TAttrib> : IAttributeValueCol
 
     public bool TrySetValue<TInput, TOutput>(AttributeDefinition<TInput, TOutput> attribDef, TOutput val)
     {
-        if (!ValidateCollectionLimits(attribDef))
+        if (!ValidateCollectionLimits(attribDef.Classification, new AttributeKey(attribDef.Guid, null), attribDef.Name))
         {
             return false;
         }
@@ -215,7 +216,7 @@ public abstract class AttributeValueCollectionBase<TAttrib> : IAttributeValueCol
 
     public bool TrySetValue(IAttributeValue attribValue)
     {
-        if (!ValidateCollectionLimits(attribValue.AttributeDefinition))
+        if (!ValidateCollectionLimits(attribValue.AttributeDefinition.Classification, attribValue.Key, attribValue.Name))
         {
             return false;
         }
@@ -230,9 +231,26 @@ public abstract class AttributeValueCollectionBase<TAttrib> : IAttributeValueCol
         return true;
     }
 
+    public bool TrySetValue(AttributeDefinition familyDefinition, ResolvedAttributeName resolved, object value)
+    {
+        if (!ValidateCollectionLimits(familyDefinition.Classification, new AttributeKey(familyDefinition.Guid, resolved.Name), resolved.Name))
+        {
+            return false;
+        }
+
+        if (!SetValueImpl(familyDefinition, resolved.Name, resolved.Destinations, value))
+        {
+            return false;
+        }
+
+        IncrementAttribCount(familyDefinition.Classification);
+
+        return true;
+    }
+
     public bool TrySetValue<TInput, TOutput>(AttributeDefinition<TInput, TOutput> attribDef, Lazy<object> lazyValueImpl)
     {
-        if (lazyValueImpl == null || !ValidateCollectionLimits(attribDef))
+        if (lazyValueImpl == null || !ValidateCollectionLimits(attribDef.Classification, new AttributeKey(attribDef.Guid, null), attribDef.Name))
         {
             return false;
         }
@@ -252,6 +270,8 @@ public abstract class AttributeValueCollectionBase<TAttrib> : IAttributeValueCol
     protected abstract bool SetValueImpl(IAttributeValue attribVal);
 
     protected abstract bool SetValueImpl(AttributeDefinition attribDef, object value);
+
+    protected abstract bool SetValueImpl(AttributeDefinition definition, string name, AttributeDestinations destinations, object value);
 
     protected abstract bool SetValueImpl(AttributeDefinition attribDef, Lazy<object> lazyValue);
 
@@ -332,27 +352,27 @@ public class AttributeValueCollection : AttributeValueCollectionBase<AttributeVa
         { AttributeClassification.UserAttributes, new object() }
     };
 
-    private Dictionary<Guid, AttributeValue> _intrinsicAttributes;
-    private Dictionary<Guid, AttributeValue> _agentAttributes;
-    private Dictionary<Guid, AttributeValue> _userAttributes;
+    private Dictionary<AttributeKey, AttributeValue> _intrinsicAttributes;
+    private Dictionary<AttributeKey, AttributeValue> _agentAttributes;
+    private Dictionary<AttributeKey, AttributeValue> _userAttributes;
 
-    private Dictionary<Guid, AttributeValue> GetAttribValuesInternal(AttributeClassification classification, bool withCreate)
+    private Dictionary<AttributeKey, AttributeValue> GetAttribValuesInternal(AttributeClassification classification, bool withCreate)
     {
         switch (classification)
         {
             case AttributeClassification.Intrinsics:
                 return withCreate
-                    ? _intrinsicAttributes ??= new Dictionary<Guid, AttributeValue>()
+                    ? _intrinsicAttributes ??= new Dictionary<AttributeKey, AttributeValue>()
                     : _intrinsicAttributes;
 
             case AttributeClassification.AgentAttributes:
                 return withCreate
-                    ? _agentAttributes ??= new Dictionary<Guid, AttributeValue>()
+                    ? _agentAttributes ??= new Dictionary<AttributeKey, AttributeValue>()
                     : _agentAttributes;
 
             case AttributeClassification.UserAttributes:
                 return withCreate
-                    ? _userAttributes ??= new Dictionary<Guid, AttributeValue>()
+                    ? _userAttributes ??= new Dictionary<AttributeKey, AttributeValue>()
                     : _userAttributes;
         }
 
@@ -370,12 +390,12 @@ public class AttributeValueCollection : AttributeValueCollectionBase<AttributeVa
     {
         foreach (var lockObjKvp in _lockObjects)
         {
-            var guidsToRemove = itemsToRemove
+            var keysToRemove = itemsToRemove
                 .Where(x => x.AttributeDefinition.Classification == lockObjKvp.Key)
-                .Select(x => x.AttributeDefinition.Guid)
+                .Select(x => x.Key)
                 .ToArray();
 
-            if (guidsToRemove.Length == 0)
+            if (keysToRemove.Length == 0)
             {
                 continue;
             }
@@ -388,21 +408,21 @@ public class AttributeValueCollection : AttributeValueCollectionBase<AttributeVa
 
             lock (lockObjKvp.Value)
             {
-                foreach (var guidToRemove in guidsToRemove)
+                foreach (var keyToRemove in keysToRemove)
                 {
-                    dicForClassification.Remove(guidToRemove);
+                    dicForClassification.Remove(keyToRemove);
                 }
             }
         }
     }
 
-    public override bool CollectionContainsAttribute(AttributeDefinition attrDef)
+    public override bool CollectionContainsAttribute(AttributeClassification classification, AttributeKey key, string name)
     {
-        var lockObj = _lockObjects[attrDef.Classification];
+        var lockObj = _lockObjects[classification];
         lock (lockObj)
         {
-            var dic = GetAttribValuesInternal(attrDef.Classification, false);
-            var hasItem = dic?.ContainsKey(attrDef.Guid);
+            var dic = GetAttribValuesInternal(classification, false);
+            var hasItem = dic?.ContainsKey(key);
             return hasItem.HasValue && hasItem.Value;
         }
     }
@@ -413,7 +433,7 @@ public class AttributeValueCollection : AttributeValueCollectionBase<AttributeVa
         {
 #if DEBUG
             // try to catch attempts to add to an immutable collection during development
-            throw new Exception($"Attempted to add attribute {attribVal.AttributeDefinition.Name} to immutable collection");
+            throw new Exception($"Attempted to add attribute {attribVal.Name} to immutable collection");
 #endif
         }
         if (attribVal is AttributeValue attribValTyped)
@@ -423,12 +443,19 @@ public class AttributeValueCollection : AttributeValueCollectionBase<AttributeVa
 
         if (attribVal.Value != null)
         {
-            return SetValueImpl(attribVal.AttributeDefinition, attribVal.Value);
+            return attribVal.Key.Name != null
+                ? SetValueImpl(attribVal.AttributeDefinition, attribVal.Key.Name, attribVal.AttributeDestinations, attribVal.Value)
+                : SetValueImpl(attribVal.AttributeDefinition, attribVal.Value);
         }
 
         if (attribVal.LazyValue != null)
         {
-            return SetValueImpl(attribVal.AttributeDefinition, attribVal.LazyValue);
+            var namedValue = new AttributeValue(attribVal.AttributeDefinition, attribVal.Key.Name, attribVal.AttributeDestinations)
+            {
+                LazyValue = attribVal.LazyValue
+            };
+
+            return SetValueImplInternal(namedValue);
         }
 
         return false;
@@ -447,6 +474,26 @@ public class AttributeValueCollection : AttributeValueCollectionBase<AttributeVa
         }
 
         var attribVal = new AttributeValue(attribDef)
+        {
+            Value = value
+        };
+
+        return SetValueImplInternal(attribVal);
+    }
+
+    protected override bool SetValueImpl(AttributeDefinition definition, string name, AttributeDestinations destinations, object value)
+    {
+        if (IsImmutable)
+        {
+#if DEBUG
+            // try to catch attempts to add to an immutable collection during development
+            throw new Exception($"Attempted to add attribute {name} to immutable collection");
+#else
+                return false;
+#endif
+        }
+
+        var attribVal = new AttributeValue(definition, name, destinations)
         {
             Value = value
         };
@@ -480,18 +527,19 @@ public class AttributeValueCollection : AttributeValueCollectionBase<AttributeVa
         {
 #if DEBUG
             // try to catch attempts to add to an immutable collection during development
-            throw new Exception($"Attempted to add attribute {attribVal.AttributeDefinition.Name} to immutable collection");
+            throw new Exception($"Attempted to add attribute {attribVal.Name} to immutable collection");
 #else
                 return false;
 #endif
         }
 
+        var key = attribVal.Key;
         var lockObj = _lockObjects[attribVal.AttributeDefinition.Classification];
         lock (lockObj)
         {
             var dic = GetAttribValuesInternal(attribVal.AttributeDefinition.Classification, true);
-            var hasItem = dic.ContainsKey(attribVal.AttributeDefinition.Guid);
-            dic[attribVal.AttributeDefinition.Guid] = attribVal;
+            var hasItem = dic.ContainsKey(key);
+            dic[key] = attribVal;
 
             return !hasItem;
         }

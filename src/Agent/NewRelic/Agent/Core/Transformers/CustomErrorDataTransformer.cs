@@ -55,7 +55,7 @@ public class CustomErrorDataTransformer : ICustomErrorDataTransformer
         {
             foreach (var customAttrib in errorData.CustomAttributes)
             {
-                _attribDefs.GetCustomAttributeForError(customAttrib.Key).TrySetValue(attribValues, customAttrib.Value);
+                _attribDefs.ErrorCustomAttributes.TrySetValue(attribValues, customAttrib.Key, customAttrib.Value);
             }
         }
 

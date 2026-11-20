@@ -5,6 +5,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using NewRelic.Agent.Configuration;
 
 namespace NewRelic.Agent.Core.Attributes;
@@ -18,7 +19,7 @@ public interface IAttributeFilter
 
 public class AttributeFilter : IAttributeFilter
 {
-    private const uint MaxCacheSize = 1000;
+    public const int MaxCacheSize = 1000;
 
     private readonly TrieNode<AttributeFilterNode> _explicitAttributeTrie;
 
@@ -27,6 +28,10 @@ public class AttributeFilter : IAttributeFilter
     private readonly Settings _settings;
 
     private readonly ConcurrentDictionary<string, bool> _cachedClusions = new ConcurrentDictionary<string, bool>();
+
+    private int _cachedClusionCount;
+
+    public int CachedClusionCount => Volatile.Read(ref _cachedClusionCount);
 
     public AttributeFilter(Settings settings)
     {
@@ -89,9 +94,10 @@ public class AttributeFilter : IAttributeFilter
         {
             result = !ShouldExcludeAttribute(name, defaultDestinations, destination);
 
-            if (_cachedClusions.Count <= MaxCacheSize)
+            // ConcurrentDictionary.Count takes every lock, so the entries are counted separately.
+            if (Volatile.Read(ref _cachedClusionCount) <= MaxCacheSize && _cachedClusions.TryAdd(cacheKey, result))
             {
-                _cachedClusions.TryAdd(cacheKey, result);
+                Interlocked.Increment(ref _cachedClusionCount);
             }
         }
 

@@ -320,7 +320,7 @@ internal class ExpectedAttribute
 
     public static bool CheckIfAllAttributesMatch(IEnumerable<IAttributeValue> actualAttributes, IEnumerable<ExpectedAttribute> expectedAttributes, StringBuilder errorMessageBuilder)
     {
-        return CheckIfAllAttributesMatch(actualAttributes.ToDictionary(x => x.AttributeDefinition.Name, x => x.Value), expectedAttributes, errorMessageBuilder);
+        return CheckIfAllAttributesMatch(actualAttributes.ToDictionary(x => x.Name, x => x.Value), expectedAttributes, errorMessageBuilder);
     }
 
     public static bool CheckIfAllAttributesMatch(IDictionary<string, object> actualAttributes, IEnumerable<ExpectedAttribute> expectedAttributes, StringBuilder errorMessageBuilder)
@@ -381,7 +381,7 @@ internal class ExpectedAttribute
 
     public static bool CheckIfAllAttributesNotFound(IEnumerable<IAttributeValue> actualAttributes, IEnumerable<string> unexpectedAttributes, StringBuilder errorMessageBuilder)
     {
-        return CheckIfAllAttributesNotFound(actualAttributes.ToDictionary(x => x.AttributeDefinition.Name, x => x.Value), unexpectedAttributes, errorMessageBuilder);
+        return CheckIfAllAttributesNotFound(actualAttributes.ToDictionary(x => x.Name, x => x.Value), unexpectedAttributes, errorMessageBuilder);
     }
 
     public static bool CheckIfAllAttributesNotFound(IDictionary<string, object> actualAttributes, IEnumerable<string> unexpectedAttributes, StringBuilder errorMessageBuilder)

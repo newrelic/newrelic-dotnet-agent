@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Fixtures;
@@ -221,8 +222,8 @@ class SpanEventWireModelTests
         _attribDefs.SpanIdForSpanLink.TrySetValue(attribValues, "span-def");
         _attribDefs.LinkedTraceId.TrySetValue(attribValues, "linked-trace-ghi");
         _attribDefs.LinkedSpanId.TrySetValue(attribValues, "linked-span-jkl");
-        _attribDefs.GetCustomAttributeForSpan("link.attr1").TrySetValue(attribValues, "value1");
-        _attribDefs.GetCustomAttributeForSpan("link.attr2").TrySetValue(attribValues, 42);
+        _attribDefs.SpanCustomAttributes.TrySetValue(attribValues, "link.attr1", "value1");
+        _attribDefs.SpanCustomAttributes.TrySetValue(attribValues, "link.attr2", 42);
 
         var spanLink = new SpanLinkWireModel(attribValues);
 
@@ -317,9 +318,9 @@ class SpanEventWireModelTests
         _attribDefs.NameForSpan.TrySetValue(attribValues, "custom-event");
         _attribDefs.TraceIdForSpanData.TrySetValue(attribValues, "trace-abc");
         _attribDefs.SpanIdForSpanEvent.TrySetValue(attribValues, "span-def");
-        _attribDefs.GetCustomAttributeForSpan("event.attr1").TrySetValue(attribValues, "event-value");
-        _attribDefs.GetCustomAttributeForSpan("event.attr2").TrySetValue(attribValues, 99);
-        _attribDefs.GetCustomAttributeForSpan("event.attr3").TrySetValue(attribValues, true);
+        _attribDefs.SpanCustomAttributes.TrySetValue(attribValues, "event.attr1", "event-value");
+        _attribDefs.SpanCustomAttributes.TrySetValue(attribValues, "event.attr2", 99);
+        _attribDefs.SpanCustomAttributes.TrySetValue(attribValues, "event.attr3", true);
 
         var spanEvent = new SpanEventEventWireModel(attribValues);
 
@@ -337,4 +338,238 @@ class SpanEventWireModelTests
     }
 
     #endregion
+
+    private static AttributeDefinition CreateFamilyDefinition()
+    {
+        return new AttributeDefinition("test.family.*", AttributeClassification.UserAttributes, new Dictionary<AttributeDestinations, bool>());
+    }
+
+    private static ResolvedAttributeName Resolve(string name, AttributeDestinations destinations = AttributeDestinations.SpanEvent)
+    {
+        return new ResolvedAttributeName(name, AttributeClassification.UserAttributes, destinations);
+    }
+
+    [TestCase("traceId")]
+    [TestCase("guid")]
+    public void SpanCollection_TraceIdAndGuidSwitch_ReadsValueName(string name)
+    {
+        var collection = new SpanAttributeValueCollection();
+
+        collection.TrySetValue(CreateFamilyDefinition(), Resolve(name), "abc123");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(collection.Span.TraceId, Is.EqualTo(name == "traceId" ? "abc123" : string.Empty));
+            Assert.That(collection.Span.SpanId, Is.EqualTo(name == "guid" ? "abc123" : null));
+        });
+    }
+
+    [Test]
+    public void SpanCollection_FamilySet_KeysByName()
+    {
+        var collection = new SpanAttributeValueCollection();
+        var family = CreateFamilyDefinition();
+
+        var first = collection.TrySetValue(family, Resolve("foo"), "one");
+        var second = collection.TrySetValue(family, Resolve("bar"), "two");
+        var overwrite = collection.TrySetValue(family, Resolve("foo"), "three");
+
+        var values = collection.GetAttributeValuesDic(AttributeClassification.UserAttributes);
+        Assert.Multiple(() =>
+        {
+            Assert.That(first, Is.True);
+            Assert.That(second, Is.True);
+            Assert.That(overwrite, Is.False);
+            Assert.That(collection.Count, Is.EqualTo(2));
+            Assert.That(values["foo"], Is.EqualTo("three"));
+            Assert.That(values["bar"], Is.EqualTo("two"));
+        });
+    }
+
+    [Test]
+    public void SpanCollection_FamilySet_UserLimit_UsesName()
+    {
+        var collection = new SpanAttributeValueCollection();
+        var family = CreateFamilyDefinition();
+        for (var i = 1; i <= 64; i++)
+        {
+            collection.TrySetValue(family, Resolve($"name{i}"), i);
+        }
+
+        var rejected = collection.TrySetValue(family, Resolve("name65"), 65);
+        collection.TrySetValue(family, Resolve("name1"), 1000);
+
+        var values = collection.GetAttributeValuesDic(AttributeClassification.UserAttributes);
+        Assert.Multiple(() =>
+        {
+            Assert.That(rejected, Is.False);
+            Assert.That(values, Has.Count.EqualTo(64));
+            Assert.That(values["name1"], Is.EqualTo(1000L));
+        });
+    }
+
+    [Test]
+    public void SpanCollection_RemoveItems_RemovesByValueName()
+    {
+        var collection = new SpanAttributeValueCollection();
+        var family = CreateFamilyDefinition();
+        collection.TrySetValue(family, Resolve("foo"), null);
+        collection.TrySetValue(family, Resolve("bar"), "kept");
+
+        collection.MakeImmutable();
+
+        var values = collection.GetAttributeValuesDic(AttributeClassification.UserAttributes);
+        Assert.Multiple(() =>
+        {
+            Assert.That(values, Has.Count.EqualTo(1));
+            Assert.That(values["bar"], Is.EqualTo("kept"));
+        });
+    }
+
+    [Test]
+    public void CopyFallback_FamilyValue_KeepsNameAndDestinations()
+    {
+        var source = new SpanAttributeValueCollection();
+        var family = CreateFamilyDefinition();
+        source.TrySetValue(family, Resolve("foo", AttributeDestinations.SpanEvent), "one");
+        var destination = new AttributeValueCollection(AttributeDestinations.SpanEvent);
+
+        destination.AddRange(source);
+
+        var copied = destination.GetAttributeValues(AttributeClassification.UserAttributes).Single();
+        Assert.Multiple(() =>
+        {
+            Assert.That(copied.Name, Is.EqualTo("foo"));
+            Assert.That(copied.AttributeDestinations, Is.EqualTo(AttributeDestinations.SpanEvent));
+            Assert.That(copied.Key.Equals(new AttributeKey(family.Guid, "foo")), Is.True);
+            Assert.That(copied.Value, Is.EqualTo("one"));
+        });
+    }
+
+    [Test]
+    public void CoreCollectionCopiedIntoSpanCollection_KeepsOnlySpanEventFamilyValues()
+    {
+        var family = CreateFamilyDefinition();
+        var source = new AttributeValueCollection(AttributeDestinations.SpanEvent, AttributeDestinations.TransactionEvent);
+        source.TrySetValue(family, Resolve("foo", AttributeDestinations.SpanEvent), "one");
+        source.TrySetValue(family, Resolve("bar", AttributeDestinations.TransactionEvent), "two");
+        var destination = new SpanAttributeValueCollection();
+
+        destination.AddRange(source);
+
+        var copied = destination.GetAttributeValues(AttributeClassification.UserAttributes).Single();
+        Assert.Multiple(() =>
+        {
+            Assert.That(destination.Count, Is.EqualTo(1));
+            Assert.That(copied.Name, Is.EqualTo("foo"));
+            Assert.That(copied.AttributeDestinations, Is.EqualTo(AttributeDestinations.SpanEvent));
+            Assert.That(copied.Value, Is.EqualTo("one"));
+        });
+    }
+
+    [Test]
+    public void CopyFallback_FamilyValue_TwoNames_TwoValues()
+    {
+        var source = new SpanAttributeValueCollection();
+        var family = CreateFamilyDefinition();
+        source.TrySetValue(family, Resolve("foo"), "one");
+        source.TrySetValue(family, Resolve("bar"), "two");
+        var destination = new AttributeValueCollection(AttributeDestinations.SpanEvent);
+
+        destination.AddRange(source);
+
+        var copied = destination.GetAttributeValuesDic(AttributeClassification.UserAttributes);
+        Assert.Multiple(() =>
+        {
+            Assert.That(copied, Has.Count.EqualTo(2));
+            Assert.That(copied["foo"], Is.EqualTo("one"));
+            Assert.That(copied["bar"], Is.EqualTo("two"));
+        });
+    }
+
+    [Test]
+    public void CopyFallback_FamilyValue_NotForTargetDestination_IsDropped()
+    {
+        var source = new SpanAttributeValueCollection();
+        source.TrySetValue(CreateFamilyDefinition(), Resolve("foo", AttributeDestinations.TransactionEvent), "one");
+        var destination = new AttributeValueCollection(AttributeDestinations.SpanEvent);
+
+        destination.AddRange(source);
+
+        Assert.That(destination.Count, Is.EqualTo(0));
+    }
+
+    [Test]
+    public void CopyFallback_FamilyValueWithoutValue_IsDroppedAndNotCounted()
+    {
+        var source = new SpanAttributeValueCollection();
+        source.TrySetValue(CreateFamilyDefinition(), Resolve("foo"), null);
+        var destination = new AttributeValueCollection(AttributeDestinations.SpanEvent);
+
+        destination.AddRange(source);
+
+        Assert.That(destination.Count, Is.EqualTo(0));
+    }
+
+    private static IAttributeValue CreateLazyFamilyMock(AttributeDefinition family)
+    {
+        var foreign = Mock.Create<IAttributeValue>();
+        Mock.Arrange(() => foreign.AttributeDefinition).Returns(family);
+        Mock.Arrange(() => foreign.Key).Returns(new AttributeKey(family.Guid, "foo"));
+        Mock.Arrange(() => foreign.Name).Returns("foo");
+        Mock.Arrange(() => foreign.AttributeDestinations).Returns(AttributeDestinations.SpanEvent);
+        Mock.Arrange(() => foreign.Value).Returns((object)null);
+        Mock.Arrange(() => foreign.LazyValue).Returns(new Lazy<object>(() => "lazy"));
+        return foreign;
+    }
+
+    [Test]
+    public void CopyFallback_FamilyValueWithLazyValue_KeepsNameAndDestinations()
+    {
+        var destination = new AttributeValueCollection(AttributeDestinations.SpanEvent);
+
+        var wasSet = destination.TrySetValue(CreateLazyFamilyMock(CreateFamilyDefinition()));
+
+        destination.MakeImmutable();
+
+        var stored = destination.GetAttributeValues(AttributeClassification.UserAttributes).Single();
+        Assert.Multiple(() =>
+        {
+            Assert.That(wasSet, Is.True);
+            Assert.That(stored.Name, Is.EqualTo("foo"));
+            Assert.That(stored.AttributeDestinations, Is.EqualTo(AttributeDestinations.SpanEvent));
+            Assert.That(destination.GetAttributeValuesDic(AttributeClassification.UserAttributes)["foo"], Is.EqualTo("lazy"));
+        });
+    }
+
+    [Test]
+    public void SpanCollectionCopy_FamilyValueWithLazyValue_KeepsNameAndLazyValue()
+    {
+        var destination = new SpanAttributeValueCollection();
+
+        destination.TrySetValue(CreateLazyFamilyMock(CreateFamilyDefinition()));
+        destination.MakeImmutable();
+
+        var copied = destination.GetAttributeValuesDic(AttributeClassification.UserAttributes);
+        Assert.That(copied["foo"], Is.EqualTo("lazy"));
+    }
+
+    [Test]
+    public void CopyFallback_StaticValue_KeepsNullKeyName()
+    {
+        var source = new SpanAttributeValueCollection();
+        _attribDefs.HttpRequestMethod.TrySetValue(source, "GET");
+        var destination = new AttributeValueCollection(AttributeDestinations.SpanEvent);
+
+        destination.AddRange(source);
+
+        var copied = destination.GetAttributeValues(AttributeClassification.AgentAttributes).Single();
+        Assert.Multiple(() =>
+        {
+            Assert.That(copied.Key.Name, Is.Null);
+            Assert.That(copied.Key.DefinitionGuid, Is.EqualTo(_attribDefs.HttpRequestMethod.Guid));
+            Assert.That(copied.Name, Is.EqualTo(_attribDefs.HttpRequestMethod.Name));
+            Assert.That(copied.AttributeDestinations, Is.EqualTo(_attribDefs.HttpRequestMethod.AttributeDestinations));
+        });
+    }
 }
