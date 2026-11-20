@@ -21,12 +21,12 @@ public sealed class ClockCache<TKey, TValue> where TValue : class
     private readonly ConcurrentDictionary<TKey, Entry> _map;
     private readonly object _lock = new object();
 
-    // _slots, _count, and _hand are read and written only while holding _lock.
+    // _slots and _hand are used only while holding _lock. _count is written under _lock and read by Count without it.
     private Entry[] _slots;
     private int _count;
     private int _hand;
 
-    public int Count => _map.Count;
+    public int Count => Volatile.Read(ref _count);
 
     public ClockCache(int capacity, Func<TKey, TValue> factory, IEqualityComparer<TKey> comparer)
     {

@@ -450,7 +450,12 @@ public class AttributeValueCollection : AttributeValueCollectionBase<AttributeVa
 
         if (attribVal.LazyValue != null)
         {
-            return SetValueImpl(attribVal.AttributeDefinition, attribVal.LazyValue);
+            var namedValue = new AttributeValue(attribVal.AttributeDefinition, attribVal.Key.Name, attribVal.AttributeDestinations)
+            {
+                LazyValue = attribVal.LazyValue
+            };
+
+            return SetValueImplInternal(namedValue);
         }
 
         return false;

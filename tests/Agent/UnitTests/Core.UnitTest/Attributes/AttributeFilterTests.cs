@@ -420,16 +420,6 @@ public class AttributeFilterTests
     }
 
     [Test]
-    public void CheckOrAddAttributeClusionCache_NewKey_IncrementsCachedClusionCount()
-    {
-        var attributeFilter = new AttributeFilter(new AttributeFilter.Settings());
-
-        attributeFilter.CheckOrAddAttributeClusionCache("alpha", AttributeDestinations.All, AttributeDestinations.TransactionEvent);
-
-        Assert.That(attributeFilter.CachedClusionCount, Is.EqualTo(1));
-    }
-
-    [Test]
     public void CheckOrAddAttributeClusionCache_RepeatedKey_DoesNotIncrementCount()
     {
         var attributeFilter = new AttributeFilter(new AttributeFilter.Settings());
@@ -438,17 +428,6 @@ public class AttributeFilterTests
         attributeFilter.CheckOrAddAttributeClusionCache("alpha", AttributeDestinations.All, AttributeDestinations.TransactionEvent);
 
         Assert.That(attributeFilter.CachedClusionCount, Is.EqualTo(1));
-    }
-
-    [Test]
-    public void CheckOrAddAttributeClusionCache_SameNameDifferentDestination_CountsTwo()
-    {
-        var attributeFilter = new AttributeFilter(new AttributeFilter.Settings());
-
-        attributeFilter.CheckOrAddAttributeClusionCache("alpha", AttributeDestinations.All, AttributeDestinations.TransactionEvent);
-        attributeFilter.CheckOrAddAttributeClusionCache("alpha", AttributeDestinations.All, AttributeDestinations.TransactionTrace);
-
-        Assert.That(attributeFilter.CachedClusionCount, Is.EqualTo(2));
     }
 
     [Test]

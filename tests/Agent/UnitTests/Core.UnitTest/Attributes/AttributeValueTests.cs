@@ -1,7 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
 using System.Collections.Generic;
 using NUnit.Framework;
 
@@ -97,61 +96,4 @@ public class AttributeValueTests
         Assert.That(value.AttributeDestinations, Is.EqualTo(AttributeDestinations.None));
     }
 
-    [TestCase(ValueKind.Core)]
-    [TestCase(ValueKind.InfiniteTracing)]
-    public void SegmentsCopy_OfStaticValue_KeepsNullKeyName(ValueKind source)
-    {
-        var definition = CreateStaticDefinition();
-        var original = CreateStaticValue(source, definition);
-        original.Value = "bar";
-
-        var copy = new Segments.AttributeValue(original);
-
-        Assert.Multiple(() =>
-        {
-            Assert.That(copy.Key.Name, Is.Null);
-            Assert.That(copy.Key.Equals(original.Key), Is.True);
-            Assert.That(copy.Name, Is.EqualTo("test.static"));
-            Assert.That(copy.AttributeDestinations, Is.EqualTo(AttributeDestinations.TransactionEvent));
-            Assert.That(copy.Value, Is.EqualTo("bar"));
-        });
-    }
-
-    [TestCase(ValueKind.Core)]
-    [TestCase(ValueKind.InfiniteTracing)]
-    public void SegmentsCopy_OfFamilyValue_KeepsNameAndDestinations(ValueKind source)
-    {
-        var definition = CreateFamilyDefinition();
-        var original = CreateFamilyValue(source, definition, "foo", AttributeDestinations.SpanEvent);
-        original.Value = "bar";
-
-        var copy = new Segments.AttributeValue(original);
-
-        Assert.Multiple(() =>
-        {
-            Assert.That(copy.Name, Is.EqualTo("foo"));
-            Assert.That(copy.Key.Equals(new AttributeKey(definition.Guid, "foo")), Is.True);
-            Assert.That(copy.AttributeDestinations, Is.EqualTo(AttributeDestinations.SpanEvent));
-            Assert.That(copy.Value, Is.EqualTo("bar"));
-        });
-    }
-
-    [Test]
-    public void SegmentsCopy_OfFamilyValueWithLazyValue_KeepsNameAndLazyValue()
-    {
-        var definition = CreateFamilyDefinition();
-        var original = new AttributeValue(definition, "foo", AttributeDestinations.SpanEvent)
-        {
-            LazyValue = new Lazy<object>(() => "lazy")
-        };
-
-        var copy = new Segments.AttributeValue(original);
-        copy.MakeImmutable();
-
-        Assert.Multiple(() =>
-        {
-            Assert.That(copy.Name, Is.EqualTo("foo"));
-            Assert.That(copy.Value, Is.EqualTo("lazy"));
-        });
-    }
 }

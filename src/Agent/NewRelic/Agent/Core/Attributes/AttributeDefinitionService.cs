@@ -217,7 +217,7 @@ public class AttributeDefinitions : IAttributeDefinitions
 
     private DynamicAttributeDefinition<object, object> CreateCustomFamily(string familyLabel, AttributeDestinations familyDestinations)
     {
-        return new DynamicAttributeDefinition<object, object>(familyLabel, AttributeClassification.UserAttributes, AttributeDefinitionBuilder.GenericConverter, o => o,
+        return new DynamicAttributeDefinition<object, object>(familyLabel, AttributeClassification.UserAttributes, AttributeDefinitionBuilder.GenericConverter, null,
             rawName => AttributeNameResolver.ResolveCustom(_attribFilter, rawName, familyDestinations));
     }
 

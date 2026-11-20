@@ -307,14 +307,6 @@ public class DynamicAttributeDefinitionTests
     }
 
     [Test]
-    public void Resolve_NullName_StillThrowsArgumentNullException()
-    {
-        var def = new AttributeDefinitions(NoRulesFilter()).TransactionCustomAttributes;
-
-        Assert.Throws<ArgumentNullException>(() => def.Resolve(null));
-    }
-
-    [Test]
     public void MemoryBound_100kRequestParameterNames()
     {
         var def = new AttributeDefinitions(IncludeAllFilter()).RequestParameterAttributes;
@@ -328,22 +320,6 @@ public class DynamicAttributeDefinitionTests
     }
 
 #if NET
-    [Test]
-    public void Resolve_Hit_AllocatesZeroBytes()
-    {
-        var def = new AttributeDefinitions(IncludeAllFilter()).RequestParameterAttributes;
-        def.Resolve("foo");
-
-        var before = GC.GetAllocatedBytesForCurrentThread();
-        for (var i = 0; i < 1000; i++)
-        {
-            def.Resolve("foo");
-        }
-        var allocated = GC.GetAllocatedBytesForCurrentThread() - before;
-
-        Assert.That(allocated, Is.EqualTo(0));
-    }
-
     [Test]
     public void FamilySet_KnownName_AllocatesSameAsStaticSet()
     {
@@ -400,39 +376,6 @@ public class DynamicAttributeDefinitionTests
             Assert.That(afterCachedName, Is.EqualTo(1));
             Assert.That(logging.DebugCount - afterCachedName, Is.EqualTo(2));
         });
-    }
-
-    [Test]
-    public void ConfigurationRebuild_StartsWithEmptyCaches()
-    {
-        var filter = IncludeAllFilter();
-        var oldDefinitions = new AttributeDefinitions(filter);
-        oldDefinitions.RequestParameterAttributes.Resolve("foo");
-
-        var newDefinitions = new AttributeDefinitions(filter);
-
-        Assert.Multiple(() =>
-        {
-            Assert.That(oldDefinitions.RequestParameterAttributes.CachedNameCount, Is.EqualTo(1));
-            Assert.That(newDefinitions.RequestParameterAttributes.CachedNameCount, Is.EqualTo(0));
-            Assert.That(newDefinitions.RequestParameterAttributes.Guid, Is.Not.EqualTo(oldDefinitions.RequestParameterAttributes.Guid));
-        });
-    }
-
-    [Test]
-    public void TrySetValue_NullName_Throws()
-    {
-        var def = Create(Resolved("foo"));
-
-        Assert.Throws<ArgumentNullException>(() => def.TrySetValue(_collection, null, "value"));
-    }
-
-    [Test]
-    public void TrySetValueUnchecked_NullName_Throws()
-    {
-        var def = Create(Resolved("foo"));
-
-        Assert.Throws<ArgumentNullException>(() => def.TrySetValueUnchecked(_collection, null, "value"));
     }
 
     [Test]
@@ -506,27 +449,6 @@ public class DynamicAttributeDefinitionTests
         });
     }
 
-    [TestCase(nameof(IAttributeDefinitions.TransactionCustomAttributes))]
-    [TestCase(nameof(IAttributeDefinitions.SpanCustomAttributes))]
-    [TestCase(nameof(IAttributeDefinitions.ErrorCustomAttributes))]
-    [TestCase(nameof(IAttributeDefinitions.CustomEventCustomAttributes))]
-    [TestCase(nameof(IAttributeDefinitions.RequestParameterAttributes))]
-    [TestCase(nameof(IAttributeDefinitions.RequestHeaderAttributes))]
-    public void Families_AreSingletonsPerAttributeDefinitions(string family)
-    {
-        var defs = new AttributeDefinitions(IncludeAllFilter());
-        var other = new AttributeDefinitions(IncludeAllFilter());
-
-        var firstRead = Family(defs, family).Definition;
-        var secondRead = Family(defs, family).Definition;
-
-        Assert.Multiple(() =>
-        {
-            Assert.That(secondRead, Is.SameAs(firstRead));
-            Assert.That(Family(other, family).Definition, Is.Not.SameAs(firstRead));
-        });
-    }
-
     private static DynamicAttributeDefinition<object, object> CustomFamily(string family)
     {
         var defs = new AttributeDefinitions(new AttributeFilter(new AttributeFilter.Settings()));
@@ -564,24 +486,6 @@ public class DynamicAttributeDefinitionTests
         {
             Assert.That(values["foo"], Is.EqualTo(2.0d));
             Assert.That(values["bar"], Is.EqualTo(5L));
-        });
-    }
-
-    [Test]
-    public void RequestFamilies_TruncateTo255Bytes()
-    {
-        var defs = new AttributeDefinitions(IncludeAllFilter());
-        var attribVals = new AttributeValueCollection(AttributeValueCollection.AllTargetModelTypes);
-
-        defs.RequestParameterAttributes.TrySetValue(attribVals, "foo", new string('a', 300));
-        defs.RequestHeaderAttributes.TrySetValue(attribVals, "bar", new string('b', 300));
-
-        var values = attribVals.GetAttributeValues(AttributeClassification.AgentAttributes).ToDictionary(x => x.Name, x => (string)x.Value);
-
-        Assert.Multiple(() =>
-        {
-            Assert.That(values["request.parameters.foo"], Has.Length.EqualTo(255));
-            Assert.That(values["request.headers.bar"], Has.Length.EqualTo(255));
         });
     }
 

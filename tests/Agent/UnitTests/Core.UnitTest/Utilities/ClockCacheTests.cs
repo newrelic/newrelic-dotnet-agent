@@ -63,22 +63,13 @@ public class ClockCacheTests
     }
 
     [Test]
-    public void Count_NeverExceedsCapacity()
-    {
-        var cache = CreateCache();
-
-        for (var i = 0; i < 100; i++)
-        {
-            cache.GetOrAdd(Key(i));
-
-            Assert.That(cache.Count, Is.EqualTo(Math.Min(i + 1, Capacity)));
-        }
-    }
-
-    [Test]
-    public void Flood_KeepsAllButOneOldKey()
+    public void Flood_DoesNotEvictHotOrColdOldKeys()
     {
         var cache = CreateFullCache(out var originals);
+        for (var i = 1; i <= 3; i++)
+        {
+            cache.GetOrAdd(Key(i));
+        }
 
         for (var i = 0; i < 80; i++)
         {
@@ -95,29 +86,6 @@ public class ClockCacheTests
         Assert.That(_factoryCalls, Is.EqualTo(callsBeforeChecks));
         Assert.That(cache.GetOrAdd(Key(0)), Is.Not.SameAs(originals[0]));
         Assert.That(_factoryCalls, Is.EqualTo(callsBeforeChecks + 1));
-    }
-
-    [Test]
-    public void Flood_DoesNotEvictHotOrColdOldKeys()
-    {
-        var cache = CreateFullCache(out var originals);
-        for (var i = 1; i <= 3; i++)
-        {
-            cache.GetOrAdd(Key(i));
-        }
-
-        for (var i = 0; i < 80; i++)
-        {
-            cache.GetOrAdd("flood" + i);
-        }
-
-        var callsBeforeChecks = _factoryCalls;
-        for (var i = 1; i < Capacity; i++)
-        {
-            Assert.That(cache.GetOrAdd(Key(i)), Is.SameAs(originals[i]));
-        }
-
-        Assert.That(_factoryCalls, Is.EqualTo(callsBeforeChecks));
     }
 
     [Test]
@@ -288,9 +256,9 @@ public class ClockCacheTests
         for (var i = 0; i < 250; i++)
         {
             cache.GetOrAdd(Key(i));
-        }
 
-        Assert.That(cache.Count, Is.EqualTo(100));
+            Assert.That(cache.Count, Is.EqualTo(Math.Min(i + 1, 100)));
+        }
     }
 
 #if NET

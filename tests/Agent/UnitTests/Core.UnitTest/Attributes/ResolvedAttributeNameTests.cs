@@ -41,24 +41,6 @@ public class ResolvedAttributeNameTests
         Assert.That(Create(new string(character, count)).IsNameValid, Is.EqualTo(expected));
     }
 
-    [Test]
-    public void IsNameValid_LogsOnce_AndOnlyWhenRead()
-    {
-        using var logging = new TestUtilities.Logging();
-
-        var resolved = Create(new string('a', 256));
-        Assert.That(logging.DebugCount, Is.EqualTo(0));
-
-        Assert.That(resolved.IsNameValid, Is.False);
-        Assert.That(resolved.IsNameValid, Is.False);
-
-        Assert.Multiple(() =>
-        {
-            Assert.That(logging.DebugCount, Is.EqualTo(1));
-            Assert.That(logging.HasMessageThatContains("Attribute definition is not valid"), Is.True);
-        });
-    }
-
     [TestCase("foo", true, 0)]
     [TestCase("", false, 1)]
     [TestCase(" ", false, 1)]
@@ -66,6 +48,7 @@ public class ResolvedAttributeNameTests
     {
         using var logging = new TestUtilities.Logging();
         var resolved = Create(name);
+        var countAtConstruction = logging.DebugCount;
 
         var first = resolved.IsNameValid;
         var second = resolved.IsNameValid;
@@ -73,6 +56,7 @@ public class ResolvedAttributeNameTests
 
         Assert.Multiple(() =>
         {
+            Assert.That(countAtConstruction, Is.EqualTo(0));
             Assert.That(first, Is.EqualTo(expected));
             Assert.That(second, Is.EqualTo(expected));
             Assert.That(third, Is.EqualTo(expected));
@@ -88,16 +72,6 @@ public class ResolvedAttributeNameTests
         Assert.That(Create("").IsNameValid, Is.False);
 
         Assert.That(logging.HasMessageThatContains("Name is null/empty"), Is.True);
-    }
-
-    [Test]
-    public void IsNameValid_ValidName_DoesNotLog()
-    {
-        using var logging = new TestUtilities.Logging();
-
-        Assert.That(Create("foo").IsNameValid, Is.True);
-
-        Assert.That(logging.DebugCount, Is.EqualTo(0));
     }
 
     [Test]

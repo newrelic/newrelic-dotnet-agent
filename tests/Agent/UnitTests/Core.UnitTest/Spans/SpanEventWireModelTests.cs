@@ -511,6 +511,49 @@ class SpanEventWireModelTests
         Assert.That(destination.Count, Is.EqualTo(0));
     }
 
+    private static IAttributeValue CreateLazyFamilyMock(AttributeDefinition family)
+    {
+        var foreign = Mock.Create<IAttributeValue>();
+        Mock.Arrange(() => foreign.AttributeDefinition).Returns(family);
+        Mock.Arrange(() => foreign.Key).Returns(new AttributeKey(family.Guid, "foo"));
+        Mock.Arrange(() => foreign.Name).Returns("foo");
+        Mock.Arrange(() => foreign.AttributeDestinations).Returns(AttributeDestinations.SpanEvent);
+        Mock.Arrange(() => foreign.Value).Returns((object)null);
+        Mock.Arrange(() => foreign.LazyValue).Returns(new Lazy<object>(() => "lazy"));
+        return foreign;
+    }
+
+    [Test]
+    public void CopyFallback_FamilyValueWithLazyValue_KeepsNameAndDestinations()
+    {
+        var destination = new AttributeValueCollection(AttributeDestinations.SpanEvent);
+
+        var wasSet = destination.TrySetValue(CreateLazyFamilyMock(CreateFamilyDefinition()));
+
+        destination.MakeImmutable();
+
+        var stored = destination.GetAttributeValues(AttributeClassification.UserAttributes).Single();
+        Assert.Multiple(() =>
+        {
+            Assert.That(wasSet, Is.True);
+            Assert.That(stored.Name, Is.EqualTo("foo"));
+            Assert.That(stored.AttributeDestinations, Is.EqualTo(AttributeDestinations.SpanEvent));
+            Assert.That(destination.GetAttributeValuesDic(AttributeClassification.UserAttributes)["foo"], Is.EqualTo("lazy"));
+        });
+    }
+
+    [Test]
+    public void SpanCollectionCopy_FamilyValueWithLazyValue_KeepsNameAndLazyValue()
+    {
+        var destination = new SpanAttributeValueCollection();
+
+        destination.TrySetValue(CreateLazyFamilyMock(CreateFamilyDefinition()));
+        destination.MakeImmutable();
+
+        var copied = destination.GetAttributeValuesDic(AttributeClassification.UserAttributes);
+        Assert.That(copied["foo"], Is.EqualTo("lazy"));
+    }
+
     [Test]
     public void CopyFallback_StaticValue_KeepsNullKeyName()
     {
