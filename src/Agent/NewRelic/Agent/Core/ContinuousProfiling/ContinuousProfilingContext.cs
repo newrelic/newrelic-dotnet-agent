@@ -332,6 +332,14 @@ public class ContinuousProfilingContext : IContinuousProfilingContext
         Volatile.Write(ref *(long*)cell, spanId);
     }
 
+    /// <summary>
+    /// FOR TESTING ONLY: Re-arms the once-per-process "no pending-push cell" log so a test can observe it.
+    /// </summary>
+    public static void ResetPendingPushCellUnavailableLogForTesting()
+    {
+        Interlocked.Exchange(ref _loggedPendingPushCellUnavailable, 0);
+    }
+
     private static void LogPendingPushCellUnavailableOnce(Exception ex)
     {
         if (Interlocked.Exchange(ref _loggedPendingPushCellUnavailable, 1) != 0)
