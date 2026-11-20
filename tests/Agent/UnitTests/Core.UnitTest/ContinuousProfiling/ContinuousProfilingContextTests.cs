@@ -49,7 +49,7 @@ public class ContinuousProfilingContextTests
         Marshal.FreeHGlobal(_cell);
         _cell = IntPtr.Zero;
 
-        // The Order(0) test below installs a real Serilog logger (Serilog.Log.Logger) and initializes the
+        // PushTraceContext_logs_the_exception_when_cell_resolution_throws installs a real Serilog logger (Serilog.Log.Logger) and initializes the
         // shared Log seam with it. Reset both back to the no-op logger so that installed logger (and its
         // now-discarded InMemorySink) can't leak into later tests in the process.
         global::NewRelic.Agent.Extensions.Logging.Log.Initialize(new global::NewRelic.Agent.Extensions.Logging.NoOpLogger());
@@ -691,16 +691,12 @@ public class ContinuousProfilingContextTests
         Mock.Assert(() => _native.SetTraceContext(Arg.AnyLong, Arg.AnyLong, Arg.AnyLong), Occurs.Once());
     }
 
-    // LogPendingPushCellUnavailableOnce has two overloads (with/without an exception) behind a single
-    // process-wide once-only guard (_loggedPendingPushCellUnavailable is a static field, not per-instance),
-    // so whichever failure mode -- a Zero cell or a throwing resolution -- runs FIRST across the whole test
-    // run wins the log and every later test hits the early-return guard instead. Order(0) forces this test
-    // to run before the sibling Zero-cell test below (and everything else unordered in this fixture), so the
-    // exception overload specifically is what claims the guard and reaches line 347's Log.Finest(ex, ...).
+    // The pending-push-cell log sits behind a process-wide once-only guard (a static field), so any earlier
+    // test that hits a failure mode claims it. Reset the guard so this test observes the log.
     [Test]
-    [Order(0)]
     public void PushTraceContext_logs_the_exception_when_cell_resolution_throws()
     {
+        ContinuousProfilingContext.ResetPendingPushCellUnavailableLogForTesting();
         Mock.Arrange(() => _native.GetPendingPushCell()).Throws(new InvalidOperationException("simulated cell resolution failure"));
         _context.Enable(_native);
 

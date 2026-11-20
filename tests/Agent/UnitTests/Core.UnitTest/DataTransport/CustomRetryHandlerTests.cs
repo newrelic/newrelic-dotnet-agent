@@ -331,7 +331,7 @@ public class CustomRetryHandlerTests
         _innerHandler.SetException(new HttpRequestException("Network error"));
 
         // Act & Assert
-        var ex = Assert.ThrowsAsync<HttpRequestException>(async () =>
+        var ex = await Assert.ThrowsAsync<HttpRequestException>(async () =>
             await _httpClient.GetAsync("http://test.com"));
 
         Assert.That(_innerHandler.RequestCount, Is.EqualTo(3));
@@ -345,7 +345,7 @@ public class CustomRetryHandlerTests
         _innerHandler.SetException(new TaskCanceledException("Request timed out"));
 
         // Act & Assert
-        var ex = Assert.ThrowsAsync<TaskCanceledException>(async () =>
+        var ex = await Assert.ThrowsAsync<TaskCanceledException>(async () =>
             await _httpClient.GetAsync("http://test.com"));
 
         Assert.That(_innerHandler.RequestCount, Is.EqualTo(3));
@@ -359,7 +359,7 @@ public class CustomRetryHandlerTests
         cts.Cancel(); // Cancel immediately before making the request
 
         // Act & Assert
-        var ex = Assert.ThrowsAsync<TaskCanceledException>(async () =>
+        var ex = await Assert.ThrowsAsync<TaskCanceledException>(async () =>
             await _httpClient.GetAsync("http://test.com", cts.Token));
 
         // Should not retry when user cancels
@@ -367,7 +367,7 @@ public class CustomRetryHandlerTests
     }
 
     [Test]
-    public void SendAsync_WithCancellationIndistinguishableFromTimeout_RecordsExportFailure()
+    public async Task SendAsync_WithCancellationIndistinguishableFromTimeout_RecordsExportFailure()
     {
         // Arrange -- verified empirically (not just by inspection): a TaskCanceledException raised
         // mid-SendAsync carries no marker distinguishing HttpClient.Timeout from real caller/shutdown
@@ -391,7 +391,7 @@ public class CustomRetryHandlerTests
         cts.Cancel();
 
         // Act & Assert
-        Assert.ThrowsAsync<TaskCanceledException>(async () => await client.GetAsync("http://test.com", cts.Token));
+        await Assert.ThrowsAsync<TaskCanceledException>(async () => await client.GetAsync("http://test.com", cts.Token));
         Assert.That(counters.Recorded, Does.Contain(OtelBridgeSupportabilityMetric.ExportFailure));
         Assert.That(_innerHandler.RequestCount, Is.LessThanOrEqualTo(1));
     }
@@ -406,7 +406,7 @@ public class CustomRetryHandlerTests
         _innerHandler.SetException(new InvalidOperationException("Unexpected error"));
 
         // Act & Assert
-        var ex = Assert.ThrowsAsync<InvalidOperationException>(async () =>
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
             await client.GetAsync("http://test.com"));
 
         Assert.That(_innerHandler.RequestCount, Is.EqualTo(1));
@@ -597,7 +597,7 @@ public class CustomRetryHandlerTests
         _innerHandler.SetException(new HttpRequestException("Network failure"));
 
         // Act & Assert
-        var ex = Assert.ThrowsAsync<HttpRequestException>(async () =>
+        var ex = await Assert.ThrowsAsync<HttpRequestException>(async () =>
             await _httpClient.GetAsync("http://test.com"));
 
         Assert.That(ex.Message, Does.Contain("Network failure"));
@@ -880,7 +880,7 @@ public class CustomRetryHandlerTests
     }
 
     [Test]
-    public void SendAsync_TimeoutDuringRetryDelay_RecordsExportFailure()
+    public async Task SendAsync_TimeoutDuringRetryDelay_RecordsExportFailure()
     {
         // Arrange -- HttpClient.Timeout firing while the backoff sleep is in flight
         var counters = new FakeMetricCounters();
@@ -889,13 +889,13 @@ public class CustomRetryHandlerTests
         _innerHandler.SetResponse(new HttpResponseMessage(HttpStatusCode.ServiceUnavailable));
 
         // Act & Assert -- the failure is counted and still surfaces to the caller
-        Assert.ThrowsAsync<TaskCanceledException>(async () => await client.GetAsync("http://test.com"));
+        await Assert.ThrowsAsync<TaskCanceledException>(async () => await client.GetAsync("http://test.com"));
         Assert.That(counters.Recorded, Does.Contain(OtelBridgeSupportabilityMetric.ExportFailure));
         Assert.That(_innerHandler.RequestCount, Is.EqualTo(1));
     }
 
     [Test]
-    public void SendAsync_CancellationTokenCancelledDuringRetryDelay_RecordsExportFailureAndPropagates()
+    public async Task SendAsync_CancellationTokenCancelledDuringRetryDelay_RecordsExportFailureAndPropagates()
     {
         // Arrange -- distinct from both SendAsync_WithUserCancellation_DoesNotRetry (cancelled before any
         // send is attempted, so the loop's delay is never reached) and
@@ -915,7 +915,7 @@ public class CustomRetryHandlerTests
         using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(50));
 
         // Act & Assert
-        Assert.ThrowsAsync<TaskCanceledException>(async () => await client.GetAsync("http://test.com", cts.Token));
+        await Assert.ThrowsAsync<TaskCanceledException>(async () => await client.GetAsync("http://test.com", cts.Token));
         Assert.That(counters.Recorded, Does.Contain(OtelBridgeSupportabilityMetric.ExportFailure));
         Assert.That(_innerHandler.RequestCount, Is.EqualTo(1), "cancellation during the delay must pre-empt the second send attempt");
     }
@@ -1029,7 +1029,7 @@ public class CustomRetryHandlerTests
         _innerHandler.SetException(new HttpRequestException("Network error"));
 
         // Act & Assert
-        Assert.ThrowsAsync<HttpRequestException>(async () => await client.GetAsync("http://test.com"));
+        await Assert.ThrowsAsync<HttpRequestException>(async () => await client.GetAsync("http://test.com"));
         Assert.That(counters.Recorded, Does.Contain(OtelBridgeSupportabilityMetric.ExportFailure));
         Assert.That(counters.Recorded, Does.Not.Contain(OtelBridgeSupportabilityMetric.ExportSuccess));
     }
@@ -1220,7 +1220,7 @@ public class CustomRetryHandlerTests
     }
 
     [Test]
-    public void RetryableExhaustionFailureLog_IsAlsoRateLimited()
+    public async Task RetryableExhaustionFailureLog_IsAlsoRateLimited()
     {
         // The exhausted-retryable-exception path (network error on every attempt) is the air-gapped/
         // unreachable-host case; its Error log is rate-limited the same way. The exception overload is used
@@ -1233,9 +1233,9 @@ public class CustomRetryHandlerTests
         using var client = new HttpClient(handler);
         _innerHandler.SetException(new HttpRequestException("Network unreachable"));
 
-        Assert.ThrowsAsync<HttpRequestException>(async () => await client.GetAsync("http://test.com"));
+        await Assert.ThrowsAsync<HttpRequestException>(async () => await client.GetAsync("http://test.com"));
         clock.Now = clock.Now.AddSeconds(30);
-        Assert.ThrowsAsync<HttpRequestException>(async () => await client.GetAsync("http://test.com"));
+        await Assert.ThrowsAsync<HttpRequestException>(async () => await client.GetAsync("http://test.com"));
 
         Mock.Assert(() => logger.Error(Arg.IsAny<Exception>(), Arg.Matches<string>(m => m.Contains("failed after")), Arg.IsAny<object[]>()), Occurs.Once());
         Mock.Assert(() => logger.Debug(Arg.IsAny<Exception>(), Arg.Matches<string>(m => m.Contains("failed after")), Arg.IsAny<object[]>()), Occurs.Once());

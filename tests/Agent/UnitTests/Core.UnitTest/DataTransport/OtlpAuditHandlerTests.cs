@@ -86,7 +86,7 @@ public class OtlpAuditHandlerTests
         // Act & Assert
         using var httpClient = new HttpClient(_auditHandler);
             
-        Assert.ThrowsAsync<HttpRequestException>(async () => await httpClient.SendAsync(request));
+        await Assert.ThrowsAsync<HttpRequestException>(async () => await httpClient.SendAsync(request));
     }
 
 

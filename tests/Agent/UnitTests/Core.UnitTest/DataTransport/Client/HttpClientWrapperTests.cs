@@ -49,7 +49,7 @@ public class HttpClientWrapperTests
     }
 
     [Test]
-    public void SendAsync_ShouldThrowException_OnFailure()
+    public async Task SendAsync_ShouldThrowException_OnFailure()
     {
         // Arrange
         var requestMessage = new HttpRequestMessage(HttpMethod.Get, "http://example.com");
@@ -57,11 +57,11 @@ public class HttpClientWrapperTests
             .Throws(new HttpRequestException("Request failed"));
 
         // Act & Assert
-        Assert.ThrowsAsync<HttpRequestException>(async () => await _httpClientWrapper.SendAsync(requestMessage));
+        await Assert.ThrowsAsync<HttpRequestException>(async () => await _httpClientWrapper.SendAsync(requestMessage));
     }
 
     [Test]
-    public void SendAsync_ShouldThrowException_OnTimeout()
+    public async Task SendAsync_ShouldThrowException_OnTimeout()
     {
         // Arrange
         var requestMessage = new HttpRequestMessage(HttpMethod.Get, "http://example.com");
@@ -73,7 +73,7 @@ public class HttpClientWrapperTests
             });
 
         // Act & Assert
-        Assert.ThrowsAsync<TaskCanceledException>(async () => await _httpClientWrapper.SendAsync(requestMessage));
+        await Assert.ThrowsAsync<TaskCanceledException>(async () => await _httpClientWrapper.SendAsync(requestMessage));
     }
 }
 #endif
