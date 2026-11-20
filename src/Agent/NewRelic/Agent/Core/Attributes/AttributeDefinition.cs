@@ -14,7 +14,7 @@ namespace NewRelic.Agent.Core.Attributes;
 
 public static class AttributeDefinitionBuilder
 {
-    private const int StringValueMaxLengthBytes = 255;
+    internal const int StringValueMaxLengthBytes = 255;
     private const int ErrorMessageMaxLengthBytes = 1023;
 
     public static AttributeDefinitionBuilder<TInput, TOutput> Create<TInput, TOutput>(string name, AttributeClassification classification)

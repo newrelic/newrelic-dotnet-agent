@@ -223,7 +223,7 @@ public class AttributeDefinitions : IAttributeDefinitions
 
     private DynamicAttributeDefinition<string, string> CreateRequestFamily(string familyLabel, string prefix)
     {
-        return new DynamicAttributeDefinition<string, string>(familyLabel, AttributeClassification.AgentAttributes, v => v, v => v.TruncateUnicodeStringByBytes(255),
+        return new DynamicAttributeDefinition<string, string>(familyLabel, AttributeClassification.AgentAttributes, v => v, v => v.TruncateUnicodeStringByBytes(AttributeDefinitionBuilder.StringValueMaxLengthBytes),
             rawName => AttributeNameResolver.ResolvePrefixed(_attribFilter, prefix, rawName));
     }
 

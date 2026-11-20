@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using NewRelic.Agent.Core.Utilities;
 
 namespace NewRelic.Agent.Core.Attributes;
 
@@ -11,9 +12,15 @@ namespace NewRelic.Agent.Core.Attributes;
 /// </summary>
 public class DynamicAttributeDefinition<TInput, TOutput> : AttributeDefinition
 {
+    public const int NameCacheCapacity = 1000;
+    public const int MaxCachedNameLength = 255;
+
     private readonly Func<TInput, TOutput> _conversionImpl;
     private readonly Func<TOutput, TOutput> _postProcessingImpl;
     private readonly Func<string, ResolvedAttributeName> _resolver;
+    private readonly ClockCache<string, ResolvedAttributeName> _nameCache;
+
+    public int CachedNameCount => _nameCache.Count;
 
     public DynamicAttributeDefinition(string familyLabel, AttributeClassification classification, Func<TInput, TOutput> convert, Func<TOutput, TOutput> postProcess, Func<string, ResolvedAttributeName> resolver)
         : base(familyLabel, classification, new Dictionary<AttributeDestinations, bool>())
@@ -21,6 +28,7 @@ public class DynamicAttributeDefinition<TInput, TOutput> : AttributeDefinition
         _conversionImpl = convert;
         _postProcessingImpl = postProcess;
         _resolver = resolver;
+        _nameCache = new ClockCache<string, ResolvedAttributeName>(NameCacheCapacity, resolver, StringComparer.Ordinal);
     }
 
     public ResolvedAttributeName Resolve(string rawName)
@@ -30,7 +38,13 @@ public class DynamicAttributeDefinition<TInput, TOutput> : AttributeDefinition
             throw new ArgumentNullException(nameof(rawName));
         }
 
-        return _resolver(rawName);
+        // A longer name fails validation and is not cached, which bounds the memory of one entry.
+        if (rawName.Length > MaxCachedNameLength)
+        {
+            return _resolver(rawName);
+        }
+
+        return _nameCache.GetOrAdd(rawName);
     }
 
     /// <returns>true if the value was set</returns>

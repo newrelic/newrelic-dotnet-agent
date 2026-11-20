@@ -237,12 +237,186 @@ public class DynamicAttributeDefinitionTests
         });
     }
 
-    [Test]
-    public void Resolve_NullName_Throws()
+    private static AttributeFilter NoRulesFilter()
     {
-        var def = Create(Resolved("foo"));
+        return new AttributeFilter(new AttributeFilter.Settings());
+    }
+
+    [Test]
+    public void Resolve_SameName_ReturnsSameInstance()
+    {
+        var def = new AttributeDefinitions(NoRulesFilter()).TransactionCustomAttributes;
+
+        var first = def.Resolve("foo");
+
+        Assert.That(def.Resolve("foo"), Is.SameAs(first));
+    }
+
+    [Test]
+    public void CachedNameCount_CountsDistinctNames()
+    {
+        var def = new AttributeDefinitions(NoRulesFilter()).TransactionCustomAttributes;
+        Assert.That(def.CachedNameCount, Is.EqualTo(0));
+
+        def.Resolve("foo");
+        def.Resolve("foo");
+        def.Resolve("bar");
+
+        Assert.That(def.CachedNameCount, Is.EqualTo(2));
+    }
+
+    [Test]
+    public void Resolve_255CharName_IsCached()
+    {
+        var def = new AttributeDefinitions(NoRulesFilter()).TransactionCustomAttributes;
+        var name = new string('a', DynamicAttributeDefinition<object, object>.MaxCachedNameLength);
+
+        var first = def.Resolve(name);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(def.CachedNameCount, Is.EqualTo(1));
+            Assert.That(def.Resolve(name), Is.SameAs(first));
+        });
+    }
+
+    [Test]
+    public void Resolve_256CharName_IsNotCached_ResultUnchanged()
+    {
+        var def = new AttributeDefinitions(NoRulesFilter()).TransactionCustomAttributes;
+        var name = new string('a', DynamicAttributeDefinition<object, object>.MaxCachedNameLength + 1);
+
+        var first = def.Resolve(name);
+        var second = def.Resolve(name);
+        var checkedCollection = new AttributeValueCollection(AttributeValueCollection.AllTargetModelTypes);
+        var uncheckedCollection = new AttributeValueCollection(AttributeValueCollection.AllTargetModelTypes);
+        var checkedResult = def.TrySetValue(checkedCollection, name, "value");
+        var uncheckedResult = def.TrySetValueUnchecked(uncheckedCollection, name, "value");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(def.CachedNameCount, Is.EqualTo(0));
+            Assert.That(second, Is.Not.SameAs(first));
+            Assert.That(second.Name, Is.EqualTo(first.Name));
+            Assert.That(second.Destinations, Is.EqualTo(first.Destinations));
+            Assert.That(checkedResult, Is.False);
+            Assert.That(checkedCollection.GetAttributeValues(AttributeClassification.UserAttributes), Is.Empty);
+            Assert.That(uncheckedResult, Is.True);
+            Assert.That(uncheckedCollection.GetAttributeValues(AttributeClassification.UserAttributes).Select(x => x.Name), Is.EqualTo(new[] { name }));
+        });
+    }
+
+    [Test]
+    public void Resolve_NullName_StillThrowsArgumentNullException()
+    {
+        var def = new AttributeDefinitions(NoRulesFilter()).TransactionCustomAttributes;
 
         Assert.Throws<ArgumentNullException>(() => def.Resolve(null));
+    }
+
+    [Test]
+    public void MemoryBound_100kRequestParameterNames()
+    {
+        var def = new AttributeDefinitions(IncludeAllFilter()).RequestParameterAttributes;
+
+        for (var i = 0; i < 100000; i++)
+        {
+            def.Resolve($"p{i}");
+        }
+
+        Assert.That(def.CachedNameCount, Is.LessThanOrEqualTo(DynamicAttributeDefinition<string, string>.NameCacheCapacity));
+    }
+
+#if NET
+    [Test]
+    public void Resolve_Hit_AllocatesZeroBytes()
+    {
+        var def = new AttributeDefinitions(IncludeAllFilter()).RequestParameterAttributes;
+        def.Resolve("foo");
+
+        var before = GC.GetAllocatedBytesForCurrentThread();
+        for (var i = 0; i < 1000; i++)
+        {
+            def.Resolve("foo");
+        }
+        var allocated = GC.GetAllocatedBytesForCurrentThread() - before;
+
+        Assert.That(allocated, Is.EqualTo(0));
+    }
+
+    [Test]
+    public void FamilySet_KnownName_AllocatesSameAsStaticSet()
+    {
+        var family = new AttributeDefinitions(NoRulesFilter()).SpanCustomAttributes;
+        var staticDefinition = AttributeDefinitionBuilder.Create<object>("foo", AttributeClassification.UserAttributes)
+            .WithConvert(AttributeDefinitionBuilder.GenericConverter)
+            .AppliesTo(AttributeDestinations.SpanEvent)
+            .Build(NoRulesFilter());
+        object value = 1L;
+        var familyCollection = new AttributeValueCollection(AttributeValueCollection.AllTargetModelTypes);
+        var staticCollection = new AttributeValueCollection(AttributeValueCollection.AllTargetModelTypes);
+
+        long Measure(Action set)
+        {
+            var before = GC.GetAllocatedBytesForCurrentThread();
+            for (var i = 0; i < 1000; i++)
+            {
+                set();
+            }
+            return GC.GetAllocatedBytesForCurrentThread() - before;
+        }
+
+        void FamilySet() => family.TrySetValue(familyCollection, "foo", value);
+        void StaticSet() => staticDefinition.TrySetValue(staticCollection, value);
+
+        // The first rounds absorb one-time JIT and growth allocations.
+        for (var round = 0; round < 3; round++)
+        {
+            Measure(FamilySet);
+            Measure(StaticSet);
+        }
+
+        Assert.That(Measure(FamilySet), Is.EqualTo(Measure(StaticSet)));
+    }
+#endif
+
+    [Test]
+    public void InvalidName_LogsOncePerCachedName()
+    {
+        using var logging = new TestUtilities.Logging(LogEventLevel.Debug);
+        var def = new AttributeDefinitions(NoRulesFilter()).SpanCustomAttributes;
+        var collection = new AttributeValueCollection(AttributeValueCollection.AllTargetModelTypes);
+
+        def.TrySetValue(collection, " ", 1L);
+        def.TrySetValue(collection, " ", 1L);
+        var afterCachedName = logging.DebugCount;
+
+        var longName = new string('a', DynamicAttributeDefinition<object, object>.MaxCachedNameLength + 1);
+        def.TrySetValue(collection, longName, 1L);
+        def.TrySetValue(collection, longName, 1L);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(afterCachedName, Is.EqualTo(1));
+            Assert.That(logging.DebugCount - afterCachedName, Is.EqualTo(2));
+        });
+    }
+
+    [Test]
+    public void ConfigurationRebuild_StartsWithEmptyCaches()
+    {
+        var filter = IncludeAllFilter();
+        var oldDefinitions = new AttributeDefinitions(filter);
+        oldDefinitions.RequestParameterAttributes.Resolve("foo");
+
+        var newDefinitions = new AttributeDefinitions(filter);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(oldDefinitions.RequestParameterAttributes.CachedNameCount, Is.EqualTo(1));
+            Assert.That(newDefinitions.RequestParameterAttributes.CachedNameCount, Is.EqualTo(0));
+            Assert.That(newDefinitions.RequestParameterAttributes.Guid, Is.Not.EqualTo(oldDefinitions.RequestParameterAttributes.Guid));
+        });
     }
 
     [Test]

@@ -59,6 +59,27 @@ public class ResolvedAttributeNameTests
         });
     }
 
+    [TestCase("foo", true, 0)]
+    [TestCase("", false, 1)]
+    [TestCase(" ", false, 1)]
+    public void IsNameValid_RepeatedReads_ReturnSameResult_AndLogAtMostOnce(string name, bool expected, int expectedLogCount)
+    {
+        using var logging = new TestUtilities.Logging();
+        var resolved = Create(name);
+
+        var first = resolved.IsNameValid;
+        var second = resolved.IsNameValid;
+        var third = resolved.IsNameValid;
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(first, Is.EqualTo(expected));
+            Assert.That(second, Is.EqualTo(expected));
+            Assert.That(third, Is.EqualTo(expected));
+            Assert.That(logging.DebugCount, Is.EqualTo(expectedLogCount));
+        });
+    }
+
     [Test]
     public void IsNameValid_EmptyName_LogsNullOrEmpty()
     {

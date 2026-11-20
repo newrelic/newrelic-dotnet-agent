@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System.Text;
+using System.Threading;
 using NewRelic.Agent.Extensions.Logging;
 
 namespace NewRelic.Agent.Core.Attributes;
@@ -11,12 +12,31 @@ namespace NewRelic.Agent.Core.Attributes;
 /// </summary>
 public sealed class ResolvedAttributeName
 {
+    private const int NotChecked = 0;
+    private const int Valid = 1;
+    private const int NotValid = 2;
+
     private readonly AttributeClassification _classification;
-    private bool? _isNameValid;
+    private int _nameValidity;
 
     public string Name { get; }
     public AttributeDestinations Destinations { get; }
-    public bool IsNameValid => _isNameValid ?? (_isNameValid = Validate()).Value;
+
+    public bool IsNameValid
+    {
+        get
+        {
+            var validity = Volatile.Read(ref _nameValidity);
+            if (validity == NotChecked)
+            {
+                // Two threads can both validate; both write the same value.
+                validity = Validate() ? Valid : NotValid;
+                Volatile.Write(ref _nameValidity, validity);
+            }
+
+            return validity == Valid;
+        }
+    }
 
     public ResolvedAttributeName(string name, AttributeClassification classification, AttributeDestinations destinations)
     {
