@@ -3,6 +3,7 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using NewRelic.Agent.Core.Attributes.Tests.Models;
 using Newtonsoft.Json;
 using NUnit.Framework;
@@ -416,5 +417,92 @@ public class AttributeFilterTests
             Assert.That(countMatchAttribValues, Is.EqualTo(expectedCount), $"{testDestination}");
 
         }
+    }
+
+    [Test]
+    public void CheckOrAddAttributeClusionCache_NewKey_IncrementsCachedClusionCount()
+    {
+        var attributeFilter = new AttributeFilter(new AttributeFilter.Settings());
+
+        attributeFilter.CheckOrAddAttributeClusionCache("alpha", AttributeDestinations.All, AttributeDestinations.TransactionEvent);
+
+        Assert.That(attributeFilter.CachedClusionCount, Is.EqualTo(1));
+    }
+
+    [Test]
+    public void CheckOrAddAttributeClusionCache_RepeatedKey_DoesNotIncrementCount()
+    {
+        var attributeFilter = new AttributeFilter(new AttributeFilter.Settings());
+
+        attributeFilter.CheckOrAddAttributeClusionCache("alpha", AttributeDestinations.All, AttributeDestinations.TransactionEvent);
+        attributeFilter.CheckOrAddAttributeClusionCache("alpha", AttributeDestinations.All, AttributeDestinations.TransactionEvent);
+
+        Assert.That(attributeFilter.CachedClusionCount, Is.EqualTo(1));
+    }
+
+    [Test]
+    public void CheckOrAddAttributeClusionCache_SameNameDifferentDestination_CountsTwo()
+    {
+        var attributeFilter = new AttributeFilter(new AttributeFilter.Settings());
+
+        attributeFilter.CheckOrAddAttributeClusionCache("alpha", AttributeDestinations.All, AttributeDestinations.TransactionEvent);
+        attributeFilter.CheckOrAddAttributeClusionCache("alpha", AttributeDestinations.All, AttributeDestinations.TransactionTrace);
+
+        Assert.That(attributeFilter.CachedClusionCount, Is.EqualTo(2));
+    }
+
+    [Test]
+    public void CheckOrAddAttributeClusionCache_StopsAddingAtCap()
+    {
+        var attributeFilter = new AttributeFilter(new AttributeFilter.Settings());
+
+        for (var i = 0; i < AttributeFilter.MaxCacheSize + 50; i++)
+        {
+            attributeFilter.CheckOrAddAttributeClusionCache($"fill_{i}_", AttributeDestinations.All, AttributeDestinations.TransactionEvent);
+        }
+
+        Assert.That(attributeFilter.CachedClusionCount, Is.EqualTo(AttributeFilter.MaxCacheSize + 1));
+    }
+
+    [Test]
+    public void CheckOrAddAttributeClusionCache_PastCap_ReturnsCorrectResult()
+    {
+        var settings = new AttributeFilter.Settings
+        {
+            Includes = new[] { "included.*" },
+            Excludes = new[] { "excluded.*" }
+        };
+        var attributeFilter = new AttributeFilter(settings);
+
+        for (var i = 0; i < AttributeFilter.MaxCacheSize + 50; i++)
+        {
+            attributeFilter.CheckOrAddAttributeClusionCache($"fill_{i}_", AttributeDestinations.All, AttributeDestinations.TransactionEvent);
+        }
+
+        Assert.Multiple(() =>
+        {
+            for (var i = 0; i < 2; i++)
+            {
+                Assert.That(attributeFilter.CheckOrAddAttributeClusionCache("excluded.name", AttributeDestinations.All, AttributeDestinations.TransactionEvent), Is.False);
+                Assert.That(attributeFilter.CheckOrAddAttributeClusionCache("included.name", AttributeDestinations.All, AttributeDestinations.TransactionEvent), Is.True);
+            }
+
+            Assert.That(attributeFilter.CachedClusionCount, Is.EqualTo(AttributeFilter.MaxCacheSize + 1));
+        });
+    }
+
+    [Test]
+    public void CheckOrAddAttributeClusionCache_Parallel_CountMatchesDistinctKeys()
+    {
+        const int distinctNames = 500;
+        const int repeats = 20;
+        var attributeFilter = new AttributeFilter(new AttributeFilter.Settings());
+
+        Parallel.For(0, distinctNames * repeats, new ParallelOptions { MaxDegreeOfParallelism = 8 }, i =>
+        {
+            attributeFilter.CheckOrAddAttributeClusionCache($"par_{i % distinctNames}_", AttributeDestinations.All, AttributeDestinations.TransactionEvent);
+        });
+
+        Assert.That(attributeFilter.CachedClusionCount, Is.EqualTo(distinctNames));
     }
 }
