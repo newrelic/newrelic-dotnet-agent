@@ -95,7 +95,8 @@ public sealed class ClockCache<TKey, TValue> where TValue : class
         }
     }
 
-    // Caller holds _lock and the cache is full. Returns the freed slot; _hand stays on it.
+    // Caller holds _lock and the cache is full. Returns the freed slot and moves _hand past it,
+    // so the new entry gets a full rotation before the hand checks it again.
     private int Evict()
     {
         // The bound matters: hits on other threads can set flags again behind the hand.
@@ -110,8 +111,10 @@ public sealed class ClockCache<TKey, TValue> where TValue : class
             _hand = (_hand + 1) % _capacity;
         }
 
-        _map.TryRemove(_slots[_hand].Key, out _);
-        return _hand;
+        var slot = _hand;
+        _map.TryRemove(_slots[slot].Key, out _);
+        _hand = (slot + 1) % _capacity;
+        return slot;
     }
 
     private sealed class Entry

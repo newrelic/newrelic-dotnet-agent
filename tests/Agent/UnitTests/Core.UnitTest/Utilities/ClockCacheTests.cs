@@ -63,29 +63,35 @@ public class ClockCacheTests
     }
 
     [Test]
-    public void Flood_DoesNotEvictHotOrColdOldKeys()
+    public void Flood_NewKeyHitOncePerRound_StaysCached()
     {
-        var cache = CreateFullCache(out var originals);
-        for (var i = 1; i <= 3; i++)
-        {
-            cache.GetOrAdd(Key(i));
-        }
+        var cache = CreateFullCache(out _);
+        var hot = cache.GetOrAdd("hot");
 
         for (var i = 0; i < 80; i++)
         {
             cache.GetOrAdd("flood" + i);
+            Assert.That(cache.GetOrAdd("hot"), Is.SameAs(hot));
         }
 
+        Assert.That(_factoryCalls, Is.EqualTo(Capacity + 1 + 80));
         Assert.That(cache.Count, Is.EqualTo(Capacity));
-        var callsBeforeChecks = _factoryCalls;
-        for (var i = 1; i < Capacity; i++)
+    }
+
+    [Test]
+    public void Flood_EvictsColdOldKeys()
+    {
+        var cache = CreateFullCache(out var originals);
+
+        for (var i = 0; i < Capacity; i++)
         {
-            Assert.That(cache.GetOrAdd(Key(i)), Is.SameAs(originals[i]));
+            cache.GetOrAdd("flood" + i);
         }
 
-        Assert.That(_factoryCalls, Is.EqualTo(callsBeforeChecks));
-        Assert.That(cache.GetOrAdd(Key(0)), Is.Not.SameAs(originals[0]));
-        Assert.That(_factoryCalls, Is.EqualTo(callsBeforeChecks + 1));
+        for (var i = 0; i < Capacity; i++)
+        {
+            Assert.That(cache.GetOrAdd(Key(i)), Is.Not.SameAs(originals[i]));
+        }
     }
 
     [Test]
@@ -104,19 +110,34 @@ public class ClockCacheTests
     }
 
     [Test]
-    public void NewKey_NoHitBeforeNextMiss_IsEvictedByIt()
+    public void NewKey_NoHit_SurvivesUntilHandReturns()
     {
         var cache = CreateFullCache(out _);
         var a = cache.GetOrAdd("A");
 
-        var b = cache.GetOrAdd("B");
+        for (var i = 1; i < Capacity; i++)
+        {
+            cache.GetOrAdd("B" + i);
+        }
+
+        var callsBeforeCheck = _factoryCalls;
+        Assert.That(cache.GetOrAdd("A"), Is.SameAs(a));
+        Assert.That(_factoryCalls, Is.EqualTo(callsBeforeCheck));
+    }
+
+    [Test]
+    public void NewKey_NoHit_IsEvictedAfterFullRotation()
+    {
+        var cache = CreateFullCache(out _);
+        var a = cache.GetOrAdd("A");
+
+        for (var i = 0; i < Capacity; i++)
+        {
+            cache.GetOrAdd("B" + i);
+        }
 
         Assert.That(cache.Count, Is.EqualTo(Capacity));
-        var callsBeforeChecks = _factoryCalls;
-        Assert.That(cache.GetOrAdd("B"), Is.SameAs(b));
-        Assert.That(_factoryCalls, Is.EqualTo(callsBeforeChecks));
         Assert.That(cache.GetOrAdd("A"), Is.Not.SameAs(a));
-        Assert.That(_factoryCalls, Is.EqualTo(callsBeforeChecks + 1));
     }
 
     [Test]
