@@ -152,7 +152,7 @@ plain `dotnet build`, but `dotnet test` against the `.csproj` silently fails
 via VSTestTask. Run against the built DLL instead:
 
 ```
-dotnet test tests/Agent/UnitTests/NewRelic.Agent.Extensions.Tests/bin/Debug/net10.0/NewRelic.Agent.Extensions.Tests.dll `
+dotnet test tests/Agent/UnitTests/NewRelic.Agent.Extensions.Tests/bin/Debug/net11.0/NewRelic.Agent.Extensions.Tests.dll `
   --filter "FullyQualifiedName~SomeTest"
 ```
 

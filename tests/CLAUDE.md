@@ -106,7 +106,7 @@ A test that no CI job selects stays green: an unlisted namespace gets no job, an
 - **Host-run and unbounded:** the exact namespace is in `integration_all` or `unbounded_all` (`.github/workflows/test_selection.yml`), and the `WindowsOnly` trait follows the rules in "Target platforms".
 - **Setup keyed on the namespace:** workflow steps key on `matrix.namespace`. A new namespace that needs IIS/HostableWebCore goes into the install list in `integration_tests.yml`. A new unbounded service gets its setup step in `unbounded_tests.yml` (see the `MsSql` and `Msmq` steps).
 - **Container:** the class's traits match an `include:` filter in `linux_container_tests.yml`. `TestArea` filters exist for `amd64` only, so a functional class needs `Architecture=amd64`. See "Container tests: Distro vs TestArea traits".
-- **Proof:** ask the built assembly, not the source. Host-run: the `-list Classes` recipe in "Target platforms" (add `-namespace <FQN>` for one namespace) must list the class. Container: `dotnet test <ContainerIntegrationTests.csproj> --framework net10.0 --no-build --list-tests --filter "<matrix filter>"` must list it.
+- **Proof:** ask the built assembly, not the source. Host-run: the `-list Classes` recipe in "Target platforms" (add `-namespace <FQN>` for one namespace) must list the class. Container: `dotnet test <ContainerIntegrationTests.csproj> --framework net11.0 --no-build --list-tests --filter "<matrix filter>"` must list it.
 
 ### Target platforms
 
