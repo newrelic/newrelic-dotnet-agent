@@ -173,7 +173,7 @@ public static class AttributeComparer
         {
             foreach(var attribVal in attribValueCollection.GetAttributeValues(classification))
             {
-                attribValues[attribVal.AttributeDefinition.Name] = attribVal.Value;
+                attribValues[attribVal.Name] = attribVal.Value;
             }
         }
 

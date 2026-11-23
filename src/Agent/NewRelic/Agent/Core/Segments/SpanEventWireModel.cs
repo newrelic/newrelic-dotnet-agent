@@ -74,19 +74,19 @@ public class SpanAttributeValueCollection : AttributeValueCollectionBase<Attribu
         return GetAttribValuesInternal(classification).Values;
     }
 
-    public override bool CollectionContainsAttribute(AttributeDefinition attrDef)
+    public override bool CollectionContainsAttribute(AttributeClassification classification, AttributeKey key, string name)
     {
-        var dic = GetAttribValuesInternal(attrDef.Classification);
+        var dic = GetAttribValuesInternal(classification);
         if (dic == null)
         {
             return false;
         }
 
-        var lockObj = _lockObjects[attrDef.Classification];
+        var lockObj = _lockObjects[classification];
         lock (lockObj)
         {
             // Grumble... Different attributes can have the same name, so this is kind of problematic...
-            return dic.ContainsKey(attrDef.Name);
+            return dic.ContainsKey(name);
         }
     }
 
@@ -100,6 +100,16 @@ public class SpanAttributeValueCollection : AttributeValueCollectionBase<Attribu
     protected override bool SetValueImpl(AttributeDefinition attribDef, object value)
     {
         var attribVal = new AttributeValue(attribDef)
+        {
+            Value = value
+        };
+
+        return SetValueInternal(attribVal);
+    }
+
+    protected override bool SetValueImpl(AttributeDefinition definition, string name, AttributeDestinations destinations, object value)
+    {
+        var attribVal = new AttributeValue(definition, name, destinations)
         {
             Value = value
         };
@@ -123,7 +133,7 @@ public class SpanAttributeValueCollection : AttributeValueCollectionBase<Attribu
         {
             var keysToRemoveForClassification = itemsToRemove
                 .Where(x => x.AttributeDefinition.Classification == lockObjKvp.Key)
-                .Select(x => x.AttributeDefinition.Name)
+                .Select(x => x.Name)
                 .ToArray();
 
             if (keysToRemoveForClassification.Length == 0)
@@ -147,7 +157,7 @@ public class SpanAttributeValueCollection : AttributeValueCollectionBase<Attribu
     private bool SetValueInternal(AttributeValue attribVal)
     {
         //These values are used to create a DisplayName on the Streamable Object
-        switch (attribVal.AttributeDefinition.Name)
+        switch (attribVal.Name)
         {
             case AttributeDefinition.KeyName_TraceId:
                 Span.TraceId = attribVal.StringValue;
@@ -169,9 +179,9 @@ public class SpanAttributeValueCollection : AttributeValueCollectionBase<Attribu
 
         lock (lockObj)
         {
-            var hasItem = dic.ContainsKey(attribVal.AttributeDefinition.Name);
+            var hasItem = dic.ContainsKey(attribVal.Name);
 
-            dic[attribVal.AttributeDefinition.Name] = attribVal;
+            dic[attribVal.Name] = attribVal;
 
             return !hasItem;
         }

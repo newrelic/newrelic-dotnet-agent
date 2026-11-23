@@ -612,8 +612,7 @@ public class Segment : IInternalSpan, ISegmentDataState, IHybridAgentSegment
         {
             foreach (var attribute in attributes)
             {
-                spanEvent.Attributes.TrySetValue(AttribDefs.GetCustomAttributeForSpan(attribute.Key),
-                    attribute.Value);
+                AttribDefs.SpanCustomAttributes.TrySetValueUnchecked(spanEvent.Attributes, attribute.Key, attribute.Value);
             }
         }
 
@@ -634,7 +633,7 @@ public class Segment : IInternalSpan, ISegmentDataState, IHybridAgentSegment
         {
             foreach (var attribute in attributes)
             {
-                spanLink.Attributes.TrySetValue(AttribDefs.GetCustomAttributeForSpan(attribute.Key), attribute.Value);
+                AttribDefs.SpanCustomAttributes.TrySetValueUnchecked(spanLink.Attributes, attribute.Key, attribute.Value);
             }
         }
         Links.Add(spanLink);
@@ -652,7 +651,7 @@ public class Segment : IInternalSpan, ISegmentDataState, IHybridAgentSegment
             customAttribValues = _attribValues ?? (_attribValues = new SpanAttributeValueCollection());
         }
 
-        AttribDefs.GetCustomAttributeForSpan(key).TrySetValue(customAttribValues, value);
+        AttribDefs.SpanCustomAttributes.TrySetValue(customAttribValues, key, value);
 
         return this;
     }

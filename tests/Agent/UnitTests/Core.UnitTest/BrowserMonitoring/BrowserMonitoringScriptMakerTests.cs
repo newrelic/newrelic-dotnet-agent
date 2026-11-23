@@ -132,7 +132,7 @@ public class BrowserMonitoringScriptMakerTests
             {
                 mockAttributes = attribVals;
                 _attribDefs.OriginalUrl.TrySetValue(attribVals, "http://www.google.com");
-                _attribDefs.GetCustomAttributeForTransaction("foo").TrySetValue(attribVals, "bar");
+                _attribDefs.TransactionCustomAttributes.TrySetValue(attribVals, "foo", "bar");
             });
 
         var transaction = BuildTestTransaction(queueTime: TimeSpan.FromSeconds(1), applicationTime: TimeSpan.FromSeconds(2));

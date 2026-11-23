@@ -67,7 +67,7 @@ public class CustomEventWireModelTests
 
             _attribDefs.Timestamp.TrySetValue(attribVals, timestampVal);
             _attribDefs.CustomEventType.TrySetValue(attribVals, typeVal);
-            _attribDefs.GetCustomAttributeForCustomEvent(userAttribKey).TrySetValue(attribVals, userAttribVal);
+            _attribDefs.CustomEventCustomAttributes.TrySetValue(attribVals, userAttribKey, userAttribVal);
 
             var customEvent = new CustomEventWireModel(.5f, attribVals);
 
@@ -126,16 +126,16 @@ public class CustomEventWireModelTests
         _attribDefs.Timestamp.TrySetValue(attribVals, timestampVal);
         _attribDefs.CustomEventType.TrySetValue(attribVals, typeVal);
 
-        _attribDefs.GetCustomAttributeForCustomEvent("boolVal").TrySetValue(attribVals, true);
-        _attribDefs.GetCustomAttributeForCustomEvent("dateTimeVal").TrySetValue(attribVals, dateTime);
-        _attribDefs.GetCustomAttributeForCustomEvent("decimalVal").TrySetValue(attribVals, 0.2M);
-        _attribDefs.GetCustomAttributeForCustomEvent("doubleVal").TrySetValue(attribVals, 0.2D);
-        _attribDefs.GetCustomAttributeForCustomEvent("enumVal").TrySetValue(attribVals, AttributeDestinations.CustomEvent);
-        _attribDefs.GetCustomAttributeForCustomEvent("floatVal").TrySetValue(attribVals, 0.2f);
-        _attribDefs.GetCustomAttributeForCustomEvent("guidVal").TrySetValue(attribVals, guid);
-        _attribDefs.GetCustomAttributeForCustomEvent("intVal").TrySetValue(attribVals, 2);
-        _attribDefs.GetCustomAttributeForCustomEvent("longVal").TrySetValue(attribVals, 2L);
-        _attribDefs.GetCustomAttributeForCustomEvent("stringVal").TrySetValue(attribVals, "string");
+        _attribDefs.CustomEventCustomAttributes.TrySetValue(attribVals, "boolVal", true);
+        _attribDefs.CustomEventCustomAttributes.TrySetValue(attribVals, "dateTimeVal", dateTime);
+        _attribDefs.CustomEventCustomAttributes.TrySetValue(attribVals, "decimalVal", 0.2M);
+        _attribDefs.CustomEventCustomAttributes.TrySetValue(attribVals, "doubleVal", 0.2D);
+        _attribDefs.CustomEventCustomAttributes.TrySetValue(attribVals, "enumVal", AttributeDestinations.CustomEvent);
+        _attribDefs.CustomEventCustomAttributes.TrySetValue(attribVals, "floatVal", 0.2f);
+        _attribDefs.CustomEventCustomAttributes.TrySetValue(attribVals, "guidVal", guid);
+        _attribDefs.CustomEventCustomAttributes.TrySetValue(attribVals, "intVal", 2);
+        _attribDefs.CustomEventCustomAttributes.TrySetValue(attribVals, "longVal", 2L);
+        _attribDefs.CustomEventCustomAttributes.TrySetValue(attribVals, "stringVal", "string");
 
         var customEvent = new CustomEventWireModel(.5f, attribVals);
 

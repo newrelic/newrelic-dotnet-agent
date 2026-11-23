@@ -47,6 +47,25 @@ public class JsonSerializerHelpersTests
     }
 
     [Test]
+    public void WriteCollection_FamilyValues_WritesValueNamesInOrder()
+    {
+        var family = new AttributeDefinition("test.family.*", AttributeClassification.UserAttributes, new Dictionary<AttributeDestinations, bool>());
+        var attribValues = new List<IAttributeValue>
+        {
+            new AttributeValue(family, "zeta", AttributeDestinations.All) { Value = "z" },
+            new AttributeValue(family, "alpha", AttributeDestinations.All) { Value = 1 },
+        };
+
+        var stringBuilder = new StringBuilder();
+        var writer = new JsonTextWriter(new StringWriter(stringBuilder));
+
+        JsonSerializerHelpers.WriteCollection(writer, attribValues);
+        writer.Flush();
+
+        Assert.That(stringBuilder.ToString(), Is.EqualTo("{\"alpha\":1,\"zeta\":\"z\"}"));
+    }
+
+    [Test]
     public void WriteCollection_WritesEmptyJson_WhenAttribValuesIsNull()
     {
         // Arrange

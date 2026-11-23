@@ -274,7 +274,7 @@ public class ErrorTraceWireModelTests
         {
             // ARRANGE
             var attribValues = new AttributeValueCollection(AttributeDestinations.ErrorTrace);
-            _attribDefs.GetCustomAttributeForError("Foo").TrySetValue(attribValues, "Bar");
+            _attribDefs.ErrorCustomAttributes.TrySetValue(attribValues, "Foo", "Bar");
 
             // ACT
             var attributes = new ErrorTraceWireModel.ErrorTraceAttributesWireModel(attribValues, _stackTrace);

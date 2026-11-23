@@ -1789,14 +1789,14 @@ public class TransactionAttributeMakerTests
             .Union(attributes.GetAttributeValues(AttributeClassification.UserAttributes));
 
 
-        return attribValues.Any(x => x.AttributeDefinition.Name == attribName);
+        return attribValues.Any(x => x.Name == attribName);
     }
 
     private bool DoAttributesContain(IAttributeValueCollection attributes, string attribName, AttributeClassification classification)
     {
         var attribValues = attributes.GetAttributeValues(classification);
 
-        return attribValues.Any(x => x.AttributeDefinition.Name == attribName);
+        return attribValues.Any(x => x.Name == attribName);
     }
 
     private bool DoAttributesContain(IAttributeValueCollection attributes, string attribName, AttributeDestinations destinations)
@@ -1807,8 +1807,8 @@ public class TransactionAttributeMakerTests
 
 
         return attribValues
-            .Where(x => x.AttributeDefinition.IsAvailableForAny(destinations))
-            .Any(x => x.AttributeDefinition.Name == attribName);
+            .Where(x => (x.AttributeDestinations & destinations) != AttributeDestinations.None)
+            .Any(x => x.Name == attribName);
     }
 
     private bool DoAttributesContain(IAttributeValueCollection attributes, string attribName, AttributeDestinations destinations, AttributeClassification classification)
@@ -1816,8 +1816,8 @@ public class TransactionAttributeMakerTests
         var attribValues = attributes.GetAttributeValues(classification);
 
         return attribValues
-            .Where(x => x.AttributeDefinition.IsAvailableForAny(destinations))
-            .Any(x => x.AttributeDefinition.Name == attribName);
+            .Where(x => (x.AttributeDestinations & destinations) != AttributeDestinations.None)
+            .Any(x => x.Name == attribName);
     }
 
     private object GetCount(IAttributeValueCollection attributes)
@@ -1837,8 +1837,8 @@ public class TransactionAttributeMakerTests
             .Union(attributes.GetAttributeValues(AttributeClassification.UserAttributes));
 
         return attribValues
-            .Where(x => destinations == null || x.AttributeDefinition.IsAvailableForAny(destinations.Value))
-            .Where(x => x.AttributeDefinition.Name == attribName)
+            .Where(x => destinations == null || (x.AttributeDestinations & destinations.Value) != AttributeDestinations.None)
+            .Where(x => x.Name == attribName)
             .Select(x => x.Value)
             .FirstOrDefault();
     }
@@ -1848,8 +1848,8 @@ public class TransactionAttributeMakerTests
         var attribValues = attributes.GetAttributeValues(classification);
                
         return attribValues
-            .Where(x => destinations == null || x.AttributeDefinition.IsAvailableForAny(destinations.Value))
-            .Where(x => x.AttributeDefinition.Name == attribName)
+            .Where(x => destinations == null || (x.AttributeDestinations & destinations.Value) != AttributeDestinations.None)
+            .Where(x => x.Name == attribName)
             .Select(x => x.Value)
             .FirstOrDefault();
     }

@@ -205,7 +205,7 @@ public class TransactionAttributeMaker : ITransactionAttributeMaker
         {
             foreach(var errAttrib in metadata.ReadOnlyTransactionErrorState.ErrorData.CustomAttributes)
             {
-                _attribDefs.GetCustomAttributeForError(errAttrib.Key).TrySetValue(attribValues, errAttrib.Value);
+                _attribDefs.ErrorCustomAttributes.TrySetValue(attribValues, errAttrib.Key, errAttrib.Value);
 
             }
         }

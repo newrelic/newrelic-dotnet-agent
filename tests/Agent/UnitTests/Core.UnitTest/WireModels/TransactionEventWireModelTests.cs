@@ -66,8 +66,8 @@ public class TransactionEventWireModelTests
                 {"identity.product", "product"},
             };
 
-            _attribDefs.GetCustomAttributeForTransaction("identity.user").TrySetValue(attribValues, "user");
-            _attribDefs.GetCustomAttributeForTransaction("identity.product").TrySetValue(attribValues, "product");
+            _attribDefs.TransactionCustomAttributes.TrySetValue(attribValues, "identity.user", "user");
+            _attribDefs.TransactionCustomAttributes.TrySetValue(attribValues, "identity.product", "product");
 
             var agentAttributes = new Dictionary<string, object>
             {

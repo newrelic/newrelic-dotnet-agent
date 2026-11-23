@@ -74,7 +74,7 @@ public class CustomEventTransformer : ICustomEventTransformer
         {
             foreach(var customAttrib in attributes)
             {
-                _attribDefs.GetCustomAttributeForCustomEvent(customAttrib.Key).TrySetValue(attribValues, customAttrib.Value);
+                _attribDefs.CustomEventCustomAttributes.TrySetValue(attribValues, customAttrib.Key, customAttrib.Value);
             }
         }
 
