@@ -22,12 +22,12 @@ Debug is default -- never pass `-c Release`. It's slow; run in background or tee
   ```bash
   # bash (Git Bash)
   SLN="$(cygpath -w "$PWD")\\"
-  dotnet build tests/Agent/UnitTests/Core.UnitTest/Core.UnitTest.csproj -f net10.0 -p:SolutionDir="$SLN"
+  dotnet build tests/Agent/UnitTests/Core.UnitTest/Core.UnitTest.csproj -f net11.0 -p:SolutionDir="$SLN"
   ```
   ```powershell
   # PowerShell
   $sln = "$((Resolve-Path .).Path)\"
-  dotnet build tests/Agent/UnitTests/Core.UnitTest/Core.UnitTest.csproj -f net10.0 -p:SolutionDir="$sln"
+  dotnet build tests/Agent/UnitTests/Core.UnitTest/Core.UnitTest.csproj -f net11.0 -p:SolutionDir="$sln"
   ```
 - **`NewRelic.Agent.Extensions.Tests`:** `dotnet test` on the csproj silently no-ops via VSTestTask -- test the built DLL instead (path in root CLAUDE.md).
 - **Profiler** (`Profiler.sln`, `src/Agent/NewRelic/Profiler/`, only when changing the profiler): build with `build.ps1`, never raw MSBuild; Debug; Linux build needs Docker Desktop.

@@ -38,12 +38,12 @@ Host-run answers most things. Secrets auto (user secrets on `Shared.csproj`, alr
 
 xUnit v3 projects (OutputType `Exe`, Microsoft.Testing.Platform).
 
-**Host-run / Unbounded: run the built exe** `<testproj>/bin/Debug/net10.0/NewRelic.Agent.<layer>.exe` (as CI/VS do). **Not `dotnet test`** -- the VSTest bridge is ~3x slower (measured 7 ASB classes: ~5.7 min exe vs ~17 min `dotnet test`). Filters (native xUnit v3; cross-type AND; `*` at start/end): `-namespace "<FQN>"`, `-class "*Suffix"`/`"FQCN"`, `-method "FQN.Method"`. Dry-run `-list classes` (`/json` to parse) before a slow run. One invocation spans everything in one assembly. Default `-parallel collections`, but effective concurrency ~2 -- fixtures serialize per-app publish/tool-install behind a lock (`DotnetTool`/`RemoteApplication`); don't force wider.
+**Host-run / Unbounded: run the built exe** `<testproj>/bin/Debug/net11.0/NewRelic.Agent.<layer>.exe` (as CI/VS do). **Not `dotnet test`** -- the VSTest bridge is ~3x slower (measured 7 ASB classes: ~5.7 min exe vs ~17 min `dotnet test`). Filters (native xUnit v3; cross-type AND; `*` at start/end): `-namespace "<FQN>"`, `-class "*Suffix"`/`"FQCN"`, `-method "FQN.Method"`. Dry-run `-list classes` (`/json` to parse) before a slow run. One invocation spans everything in one assembly. Default `-parallel collections`, but effective concurrency ~2 -- fixtures serialize per-app publish/tool-install behind a lock (`DotnetTool`/`RemoteApplication`); don't force wider.
 
 Run in a sub-agent (**Sonnet**; **Haiku** for one test) returning only: `TEST EXECUTION SUMMARY` (Total/Failed/Skipped), failing names + asserts, `NR-ERROR`/`NR-FATAL`. Never raw read/tail/wide-grep the agent log -- counts, capped width, `/tmp` distill.
 
 ```bash
-cd tests/Agent/IntegrationTests/UnboundedIntegrationTests/bin/Debug/net10.0
+cd tests/Agent/IntegrationTests/UnboundedIntegrationTests/bin/Debug/net11.0
 EXE=./NewRelic.Agent.UnboundedIntegrationTests.exe
 "$EXE" -namespace "NewRelic.Agent.UnboundedIntegrationTests.AzureServiceBus" -class "*CoreLatest" \
        -trx "C:/IntegrationTestWorkingDirectory/TestResults/asb.trx" > /tmp/asb.log 2>&1
@@ -51,11 +51,11 @@ EXE=./NewRelic.Agent.UnboundedIntegrationTests.exe
 
 Exe prints `=== TEST EXECUTION SUMMARY ===` (Total/Errors/Failed/Skipped/Time); `-trx` writes a TRX; the agent-log temp path is printed in output.
 
-**Container: use `dotnet test`** (runner is noise -- docker build + harvest waits dominate; ~2m16s `dotnet test` vs ~2m46s exe, same test). Multi-targets net10.0/net11.0 so pass `--framework`; filter by `[Trait]` like `linux_container_tests.yml`. Needs Docker Desktop + Linux home `src/Agent/newrelichome_x64_coreclr_linux` (`libNewRelicProfiler.so`); x64 needs no emulation, arm64 needs QEMU.
+**Container: use `dotnet test`** (runner is noise -- docker build + harvest waits dominate; ~2m16s `dotnet test` vs ~2m46s exe, same test). Targets net11.0; filter by `[Trait]` like `linux_container_tests.yml`. Needs Docker Desktop + Linux home `src/Agent/newrelichome_x64_coreclr_linux` (`libNewRelicProfiler.so`); x64 needs no emulation, arm64 needs QEMU.
 
 ```bash
 dotnet test tests/Agent/IntegrationTests/ContainerIntegrationTests/ContainerIntegrationTests.csproj \
-  --framework net10.0 --no-build --filter "Architecture=amd64&Distro=Ubuntu"
+  --framework net11.0 --no-build --filter "Architecture=amd64&Distro=Ubuntu"
 #   ... --filter "FullyQualifiedName~UbuntuX64ContainerTest"   # one class
 ```
 
