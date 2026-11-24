@@ -406,6 +406,7 @@ public class ConnectModelTests
                                                     "application_logging.forwarding.context_data.enabled": true,
                                                     "application_logging.forwarding.context_data.include": ["attr1", "attr2"],
                                                     "application_logging.forwarding.context_data.exclude": ["attr1", "attr2"],
+                                                    "application_logging.forwarding.prefix_context_attrs": true,
                                                     "application_logging.forwarding.labels.enabled": true,
                                                     "application_logging.forwarding.labels.exclude": ["label1", "label2"],
                                                     "metrics.harvest_cycle": "00:01:00",

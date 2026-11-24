@@ -95,8 +95,8 @@ public abstract class StructuredLogArgContextDataTestsBase<TFixture> : NewRelicI
     {
         var expectedAttributes = new Dictionary<string, string>
                 {
-                    { "context.Name", _expectedName },
-                    { "context.Id", _expectedId },
+                    { "Name", _expectedName },
+                    { "Id", _expectedId },
                 };
 
         if (_includeContext) {

@@ -509,6 +509,21 @@ public class LogEventAggregatorTests
         });
     }
 
+    [TestCase(true)]
+    [TestCase(false)]
+    public void Harvest_PassesConfiguredContextDataPrefixSetting(bool prefixEnabled)
+    {
+        Mock.Arrange(() => _configurationAutoResponder.Configuration.ContextDataPrefixEnabled).Returns(prefixEnabled);
+        var sentEvents = null as LogEventWireModelCollection;
+        Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<LogEventWireModelCollection>(), Arg.IsAny<string>()))
+            .DoInstead<LogEventWireModelCollection>(events => sentEvents = events);
+
+        _logEventAggregator.Collect(new LogEventWireModel(1, "message1", "info", "spanid", "traceid", _contextData));
+        _harvestAction();
+
+        Assert.That(sentEvents.PrefixContextData, Is.EqualTo(prefixEnabled));
+    }
+
     #region Helpers
 
     private static IConfiguration GetDefaultConfiguration(int? versionNumber = null)

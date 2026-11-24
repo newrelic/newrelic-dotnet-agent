@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using NewRelic.Agent.Core.Labels;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.TestUtilities;
@@ -90,7 +91,8 @@ public class LogEventWireModelCollectionJsonConverterTests
                 new LogEventWireModel(1, "TestMessage2", "TestLevel", "TestSpanId2", "TestTraceId2", null),
                 new LogEventWireModel(1, "TestMessage3", "TestLevel", "TestSpanId3", "TestTraceId3", new Dictionary<string, object>()),
                 new LogEventWireModel(1, "TestMessage4", "TestLevel", new string[] {"foo", "bar" }, "errorMessage", "errorClass", "TestSpanId4", "TestTracedId4", _contextData)
-            });
+            },
+            true);
 
         var serialized = JsonConvert.SerializeObject(sourceObject, Formatting.None);
         Assert.That(serialized, Is.EqualTo(expected.Condense()));
@@ -146,7 +148,8 @@ public class LogEventWireModelCollectionJsonConverterTests
             new List<LogEventWireModel>
             {
                 new LogEventWireModel(1, "TestMessage", "TestLevel", "TestSpanId", "TestTraceId", contextData)
-            });
+            },
+            true);
 
         var serialized = JsonConvert.SerializeObject(sourceObject, Formatting.None);
 
@@ -174,7 +177,8 @@ public class LogEventWireModelCollectionJsonConverterTests
             new List<LogEventWireModel>
             {
                 new LogEventWireModel(1, "TestMessage", "TestLevel", "TestSpanId", "TestTraceId", contextData)
-            });
+            },
+            true);
 
         var serialized = JsonConvert.SerializeObject(sourceObject, Formatting.None);
 
@@ -186,5 +190,100 @@ public class LogEventWireModelCollectionJsonConverterTests
             Assert.That(attribute.Type, Is.EqualTo(JTokenType.String), "value must be a quoted JSON string");
             Assert.That(attribute.Value<string>(), Is.EqualTo(typeof(ToStringThrowsContextValue).ToString()));
         });
+    }
+
+    private static JObject SerializeOne(Dictionary<string, object> contextData, bool prefixContextData)
+    {
+        var sourceObject = new LogEventWireModelCollection(
+            "myApplicationName",
+            "guid",
+            "hostname",
+            new List<Label>(),
+            new List<LogEventWireModel>
+            {
+                new LogEventWireModel(1, "TestMessage", "TestLevel", "TestSpanId", "TestTraceId", contextData)
+            },
+            prefixContextData);
+
+        return JObject.Parse(JsonConvert.SerializeObject(sourceObject, Formatting.None));
+    }
+
+    [Test]
+    public void PrefixOn_ContextKeyNamedLikeStandardAttribute_IsKeptWithPrefix()
+    {
+        var log = SerializeOne(new Dictionary<string, object> { { "message", "fromContext" } }, prefixContextData: true)["logs"][0];
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(log["message"].Value<string>(), Is.EqualTo("TestMessage"));
+            Assert.That(log["attributes"]["context.message"].Value<string>(), Is.EqualTo("fromContext"));
+        });
+    }
+
+    [Test]
+    public void PrefixOff_ContextKeysAreWrittenWithoutPrefix()
+    {
+        var attributes = (JObject)SerializeOne(new Dictionary<string, object> { { "key1", "value1" }, { "key2", 1 } }, prefixContextData: false)["logs"][0]["attributes"];
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(attributes["key1"].Value<string>(), Is.EqualTo("value1"));
+            Assert.That(attributes["key2"].Value<int>(), Is.EqualTo(1));
+            Assert.That(attributes.Properties().Select(p => p.Name), Has.None.StartsWith("context."));
+        });
+    }
+
+    [TestCase("message")]
+    [TestCase("level")]
+    [TestCase("timestamp")]
+    [TestCase("trace.id")]
+    [TestCase("span.id")]
+    [TestCase("entity.guid")]
+    [TestCase("entity.name")]
+    [TestCase("hostname")]
+    [TestCase("error.stack")]
+    [TestCase("error.message")]
+    [TestCase("error.class")]
+    [TestCase("host.displayName")]
+    [TestCase("thread.name")]
+    [TestCase("thread.id")]
+    [TestCase("logger.name")]
+    [TestCase("logger.fqcn")]
+    public void PrefixOff_ContextKeyMatchingStandardAttribute_IsDropped(string reservedName)
+    {
+        var contextData = new Dictionary<string, object> { { reservedName, "fromContext" }, { "kept", "yes" } };
+        var attributes = (JObject)SerializeOne(contextData, prefixContextData: false)["logs"][0]["attributes"];
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(attributes.ContainsKey(reservedName), Is.False);
+            Assert.That(attributes["kept"].Value<string>(), Is.EqualTo("yes"));
+        });
+    }
+
+    [TestCase("Message")]
+    [TestCase("messages")]
+    [TestCase("context.message")]
+    public void PrefixOff_NearMissNames_AreKept(string name)
+    {
+        var attributes = (JObject)SerializeOne(new Dictionary<string, object> { { name, "v" } }, prefixContextData: false)["logs"][0]["attributes"];
+
+        Assert.That(attributes[name].Value<string>(), Is.EqualTo("v"));
+    }
+
+    [Test]
+    public void PrefixOff_AllContextEntriesDropped_WritesNoAttributesObject()
+    {
+        var log = (JObject)SerializeOne(new Dictionary<string, object> { { "message", "x" }, { "level", "y" } }, prefixContextData: false)["logs"][0];
+
+        Assert.That(log.ContainsKey("attributes"), Is.False);
+    }
+
+    [Test]
+    public void PrefixOff_NonSerializableContextValue_IsWrittenAsQuotedString()
+    {
+        var attribute = SerializeOne(new Dictionary<string, object> { { "endpoint", new NonSerializableContextValue() } }, prefixContextData: false)["logs"][0]["attributes"]["endpoint"];
+
+        Assert.That(attribute.Value<string>(), Is.EqualTo(NonSerializableContextValue.ToStringValue));
     }
 }

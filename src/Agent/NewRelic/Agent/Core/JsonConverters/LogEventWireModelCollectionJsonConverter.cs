@@ -3,6 +3,7 @@
 
 
 using System;
+using System.Collections.Generic;
 using NewRelic.Agent.Core.WireModels;
 using Newtonsoft.Json;
 
@@ -26,6 +27,14 @@ public class LogEventWireModelCollectionJsonConverter : JsonConverter<LogEventWi
     private const string ErrorClass = "error.class";
     private const string Context = "context";
     private const string LabelPrefix = "tags.";
+
+    // Context data keys that collide with these standard log attributes are dropped when the prefix is off.
+    private static readonly HashSet<string> ReservedAttributeNames = new(StringComparer.Ordinal)
+    {
+        Message, Level, TimeStamp, TraceId, SpanId, EntityGuid, EntityName, Hostname,
+        ErrorStack, ErrorMessage, ErrorClass,
+        "host.displayName", "thread.name", "thread.id", "logger.name", "logger.fqcn"
+    };
 
     public override LogEventWireModelCollection ReadJson(JsonReader reader, Type objectType, LogEventWireModelCollection existingValue, bool hasExistingValue, JsonSerializer serializer)
     {
@@ -66,6 +75,7 @@ public class LogEventWireModelCollectionJsonConverter : JsonConverter<LogEventWi
 
         jsonWriter.WritePropertyName(Logs);
         jsonWriter.WriteStartArray();
+        var prefixContextData = value.PrefixContextData;
         for (int i = 0; i < value.LoggingEvents.Count; i++)
         {
             var logEvent = value.LoggingEvents[i];
@@ -114,12 +124,23 @@ public class LogEventWireModelCollectionJsonConverter : JsonConverter<LogEventWi
 
             if (logEvent.ContextData?.Count > 0)
             {
-                jsonWriter.WritePropertyName(Attributes);
-                jsonWriter.WriteStartObject();
+                var attributesStarted = false;
 
                 foreach (var item in logEvent.ContextData)
                 {
-                    jsonWriter.WritePropertyName(Context + "." + item.Key);
+                    if (!prefixContextData && ReservedAttributeNames.Contains(item.Key))
+                    {
+                        continue;
+                    }
+
+                    if (!attributesStarted)
+                    {
+                        jsonWriter.WritePropertyName(Attributes);
+                        jsonWriter.WriteStartObject();
+                        attributesStarted = true;
+                    }
+
+                    jsonWriter.WritePropertyName(prefixContextData ? Context + "." + item.Key : item.Key);
                     try
                     {
                         // SerializeObject returns valid JSON text (a quoted/escaped string
@@ -149,7 +170,10 @@ public class LogEventWireModelCollectionJsonConverter : JsonConverter<LogEventWi
                     }
                 }
 
-                jsonWriter.WriteEndObject();
+                if (attributesStarted)
+                {
+                    jsonWriter.WriteEndObject();
+                }
             }
 
             jsonWriter.WriteEndObject();

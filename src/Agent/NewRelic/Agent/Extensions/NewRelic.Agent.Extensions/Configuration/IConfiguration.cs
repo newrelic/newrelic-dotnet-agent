@@ -220,6 +220,7 @@ public interface IConfiguration
     bool LogDecoratorEnabled { get; }
     HashSet<string> LogLevelDenyList { get; }
     bool ContextDataEnabled { get; }
+    bool ContextDataPrefixEnabled { get; }
     bool LabelsEnabled { get; }
     IEnumerable<string> ContextDataInclude { get; }
     IEnumerable<string> ContextDataExclude { get; }

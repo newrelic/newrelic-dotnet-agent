@@ -31,11 +31,12 @@ public class LogEventWireModelCollectionTests
             new LogEventWireModel(1, "TestMessage", "TestLevel", "TestSpanId", "TestTraceId", testContextData)
         };
 
-        var objectUnderTest = new LogEventWireModelCollection(entityName, entityGuid, hostname, labels, loggingEvents);
+        var objectUnderTest = new LogEventWireModelCollection(entityName, entityGuid, hostname, labels, loggingEvents, false);
 
         Assert.That(objectUnderTest, Is.Not.Null);
         Assert.Multiple(() =>
         {
+            Assert.That(objectUnderTest.PrefixContextData, Is.False);
             Assert.That(objectUnderTest.EntityGuid, Is.EqualTo(entityGuid));
             Assert.That(objectUnderTest.EntityName, Is.EqualTo(entityName));
             Assert.That(objectUnderTest.Hostname, Is.EqualTo(hostname));

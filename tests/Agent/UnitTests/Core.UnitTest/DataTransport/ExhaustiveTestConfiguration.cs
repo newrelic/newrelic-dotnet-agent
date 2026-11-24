@@ -471,6 +471,8 @@ public class ExhaustiveTestConfiguration : IConfiguration
 
     public IEnumerable<string> ContextDataExclude => new[] { "attr1", "attr2" };
 
+    public bool ContextDataPrefixEnabled => true;
+
     public IEnumerable<IDictionary<string, string>> IgnoredInstrumentation => new[] {
         new Dictionary<string, string> { { "assemblyName", "AssemblyToIgnore1" } },
         new Dictionary<string, string> { { "assemblyName", "AssemblyToIgnore2" }, { "className", "ClassNameToIgnore" } }

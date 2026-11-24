@@ -3489,6 +3489,31 @@ public class DefaultConfigurationTests
 
         return _defaultConfig.ContextDataExclude;
     }
+
+    [Test]
+    public void ApplicationLogging_ContextDataPrefixEnabled_IsTrueByDefault()
+    {
+        Assert.That(_defaultConfig.ContextDataPrefixEnabled, Is.True);
+    }
+
+    [TestCase(null, null, ExpectedResult = true)]
+    [TestCase(false, null, ExpectedResult = false)]
+    [TestCase(true, "false", ExpectedResult = false)]
+    [TestCase(false, "true", ExpectedResult = true)]
+    public bool ApplicationLogging_ContextDataPrefixEnabled_IsOverriddenByEnvironmentVariable(bool? local, string environment)
+    {
+        if (local.HasValue)
+        {
+            _localConfig.applicationLogging.forwarding.prefixContextAttrs = local.Value;
+        }
+
+        if (environment != null)
+        {
+            Mock.Arrange(() => _environment.GetEnvironmentVariableFromList("NEW_RELIC_APPLICATION_LOGGING_FORWARDING_PREFIX_CONTEXT_ATTRS")).Returns(environment);
+        }
+
+        return _defaultConfig.ContextDataPrefixEnabled;
+    }
     #endregion
 
 

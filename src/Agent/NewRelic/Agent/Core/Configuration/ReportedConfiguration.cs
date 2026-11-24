@@ -689,6 +689,9 @@ public class ReportedConfiguration : IConfiguration
     [JsonProperty("application_logging.forwarding.context_data.exclude")]
     public IEnumerable<string> ContextDataExclude => _configuration.ContextDataExclude;
 
+    [JsonProperty("application_logging.forwarding.prefix_context_attrs")]
+    public bool ContextDataPrefixEnabled => _configuration.ContextDataPrefixEnabled;
+
     [JsonProperty("application_logging.forwarding.labels.enabled")]
     public bool LabelsEnabled => _configuration.LabelsEnabled;
 
