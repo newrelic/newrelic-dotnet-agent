@@ -12,6 +12,7 @@ namespace NewRelic.Agent.Extensions.Parsing.ConnectionString;
 public class OracleConnectionStringParser : IConnectionStringParser
 {
     private const char QuoteChar = '"';
+    private const char SingleQuoteChar = '\'';
 
     private static readonly string[] _protocolPrefixes = { "//", "tcp://", "tcps://" };
     private static readonly char[] _addressEndChars = { StringSeparators.QuestionMarkChar, StringSeparators.PathSeparatorChar };
@@ -79,8 +80,8 @@ public class OracleConnectionStringParser : IConnectionStringParser
         }
     }
 
-    // The first '@' outside double quotes, or -1 if an unquoted '?' (the start of Easy Connect
-    // parameters) or the end comes first.
+    // The first '@' outside double quotes, or -1 if Easy Connect parameters or the end come first.
+    // An unquoted '?' starts parameters only when an '=' follows it before the next '@'.
     private static int FindCredentialsSeparator(string value)
     {
         var inQuotes = false;
@@ -95,7 +96,7 @@ public class OracleConnectionStringParser : IConnectionStringParser
             {
                 return i;
             }
-            else if (!inQuotes && c == StringSeparators.QuestionMarkChar)
+            else if (!inQuotes && c == StringSeparators.QuestionMarkChar && StartsParameters(value, i))
             {
                 return -1;
             }
@@ -104,13 +105,20 @@ public class OracleConnectionStringParser : IConnectionStringParser
         return -1;
     }
 
+    private static bool StartsParameters(string value, int questionMarkIndex)
+    {
+        var equalIndex = value.IndexOf(StringSeparators.EqualSignChar, questionMarkIndex);
+        var atIndex = value.IndexOf(StringSeparators.AtSignChar, questionMarkIndex);
+        return equalIndex >= 0 && (atIndex < 0 || equalIndex < atIndex);
+    }
+
     // HOST and PORT come from the same ADDRESS, in either order
     private static void ParseDescriptor(string descriptor, out string host, out string portString)
     {
         host = null;
         portString = null;
 
-        foreach (var section in descriptor.Split(StringSeparators.OpenParen))
+        foreach (var section in SplitOutsideQuotes(descriptor))
         {
             var equalIndex = section.IndexOf(StringSeparators.EqualSignChar);
             if (equalIndex < 0) continue;
@@ -131,6 +139,33 @@ public class OracleConnectionStringParser : IConnectionStringParser
                 portString = ReadUntil(section, equalIndex + 1, StringSeparators.CloseParen);
             }
         }
+    }
+
+    // Splits on '(' outside single or double quotes, so a quoted value such as
+    // SSL_SERVER_CERT_DN="CN=x(HOST=y)" stays in one section
+    private static IEnumerable<string> SplitOutsideQuotes(string descriptor)
+    {
+        var quote = '\0';
+        var start = 0;
+        for (var i = 0; i < descriptor.Length; i++)
+        {
+            var c = descriptor[i];
+            if (quote != '\0')
+            {
+                if (c == quote) quote = '\0';
+            }
+            else if (c == QuoteChar || c == SingleQuoteChar)
+            {
+                quote = c;
+            }
+            else if (c == StringSeparators.OpenParenChar)
+            {
+                yield return descriptor.Substring(start, i - start);
+                start = i + 1;
+            }
+        }
+
+        yield return descriptor.Substring(start);
     }
 
     // host[:port][/service][?parameters], where host may be a bracketed IPv6 address
