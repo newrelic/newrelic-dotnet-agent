@@ -45,6 +45,55 @@ public class ConnectionStringParserTests
     [TestCase(DatastoreVendor.Oracle, "myserver", "unknown", "unknown", null, @"Data Source=username/password@myserver:/myservice;Uid=user;Pwd=pw;")]             // empty port -> unknown
     [TestCase(DatastoreVendor.Oracle, "myserver", "unknown", "unknown", null, @"Data Source=username/password@//myserver:xyz/my.service.com;Uid=user;Pwd=pw;")]   // //host:nonNumeric
     [TestCase(DatastoreVendor.Oracle, "myserver", "unknown", "unknown", null, @"Data Source=username/password@//myserver:/my.service.com;Uid=user;Pwd=pw;")]      // //host: (empty)
+    // Quoted passwords: '@', '(', '?' and other characters inside double quotes are not separators
+    [TestCase(DatastoreVendor.Oracle, "myserver", "1234", "unknown", null, @"Data Source=username/""p@s@s""@//myserver:1234/my.service.com;")]
+    [TestCase(DatastoreVendor.Oracle, "myserver", "1521", "unknown", null, @"Data Source=user/""p(ss@word""@myserver:1521/svc;")]
+    [TestCase(DatastoreVendor.Oracle, "realhost", "1521", "unknown", null, @"Data Source=user/""pa(host=evil""@realhost:1521/svc;")]
+    [TestCase(DatastoreVendor.Oracle, "myserver", "1521", "unknown", null, @"Data Source=user/""p)s=s:w/o?rd""@myserver:1521/svc;")]
+    [TestCase(DatastoreVendor.Oracle, "myserver", "default", "unknown", null, @"Data Source=user/""p ss""@myserver/svc;")]
+    [TestCase(DatastoreVendor.Oracle, "myserver", "1521", "unknown", null, @"Data Source=user/""p'ss""@myserver:1521/svc;")]
+    // '@' in an Easy Connect parameter value is not the separator
+    [TestCase(DatastoreVendor.Oracle, "myserver", "1234", "unknown", null, @"Data Source='username/password@myserver:1234/myservice?ssl_server_cert_dn=""EMAILADDRESS=a@b.com""';")]
+    [TestCase(DatastoreVendor.Oracle, "myserver", "1234", "unknown", null, @"Data Source='myserver:1234/myservice?ssl_server_cert_dn=""EMAILADDRESS=a@b.com""';")]
+    [TestCase(DatastoreVendor.Oracle, "myserver", "default", "unknown", null, @"Data Source=username/password@myserver/myservice?dn=a@b;")]
+    [TestCase(DatastoreVendor.Oracle, "myserver", "1521", "unknown", null, @"Data Source=myserver:1521/svc?ssl_server_cert_dn=EMAILADDRESS=a@b.com;")]
+    // An unquoted '?' in a password is not the start of parameters
+    [TestCase(DatastoreVendor.Oracle, "dbhost", "1521", "unknown", null, @"Data Source=scott/pa?ss@dbhost:1521/svc;")]
+    [TestCase(DatastoreVendor.Oracle, "dbhost", "1521", "unknown", null, @"Data Source=scott/pa?ss@dbhost:1521/svc?transport_connect_timeout=10;")]
+    // Connect descriptors
+    [TestCase(DatastoreVendor.Oracle, "dbhost", "1522", "unknown", null, @"Data Source=user/""p(HOST=evil)""@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=dbhost)(PORT=1522))(CONNECT_DATA=(SERVICE_NAME=s)));")]
+    [TestCase(DatastoreVendor.Oracle, "dbhost", "1521", "unknown", null, @"Data Source=user/pw@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=dbhost)(PORT=1521))(SECURITY=(SSL_SERVER_CERT_DN='CN=a@b.com')));")]
+    [TestCase(DatastoreVendor.Oracle, "dbhost", "1521", "unknown", null, @"Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=dbhost)(PORT=1521))(SECURITY=(SSL_SERVER_CERT_DN='CN=a@b.com')));")]
+    [TestCase(DatastoreVendor.Oracle, "dbhost", "1521", "unknown", null, @"Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=dbhost)(PORT=1521))(SECURITY=(SSL_SERVER_CERT_DN=""CN=a@b.com""))(CONNECT_DATA=(SERVICE_NAME=s)));")]
+    [TestCase(DatastoreVendor.Oracle, "dbhost", "1521", "unknown", null, @"Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=dbhost)(PORT=1521))(SECURITY=(SSL_SERVER_CERT_DN=""CN=x(HOST=evil)"")));")]
+    [TestCase(DatastoreVendor.Oracle, "dbhost", "1521", "unknown", null, @"Data Source=(DESCRIPTION=(SECURITY=(SSL_SERVER_CERT_DN='CN=x(HOST=evil)'))(ADDRESS=(PROTOCOL=TCP)(HOST=dbhost)(PORT=1521)));")]
+    [TestCase(DatastoreVendor.Oracle, "2001:db8::1", "1521", "unknown", null, @"Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=2001:db8::1)(PORT=1521)));")]
+    [TestCase(DatastoreVendor.Oracle, "dbhost", "1521", "unknown", null, @"Data Source=(DESCRIPTION = (ADDRESS = (PROTOCOL = TCP)(HOST = dbhost)(PORT = 1521)));")]
+    [TestCase(DatastoreVendor.Oracle, "dbhost", "2484", "unknown", null, @"Data Source=(DESCRIPTION=(ADDRESS=(HTTPS_PROXY=proxyhost)(HTTPS_PROXY_PORT=8080)(PROTOCOL=TCPS)(HOST=dbhost)(PORT=2484)));")]
+    [TestCase(DatastoreVendor.Oracle, "h1", "1521", "unknown", null, @"Data Source=(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=h1)(PORT=1521))(ADDRESS=(PROTOCOL=TCP)(HOST=h2)(PORT=1522))));")]
+    [TestCase(DatastoreVendor.Oracle, "adb.example.com", "1522", "unknown", null, @"Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCPS)(PORT=1522)(HOST=adb.example.com))(CONNECT_DATA=(SERVICE_NAME=s)));")]
+    [TestCase(DatastoreVendor.Oracle, "unknown", "default", "unknown", null, @"Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=IPC)(KEY=EXTPROC1))(CONNECT_DATA=(SID=orcl)));")]
+    // Quoted HOST and PORT values
+    [TestCase(DatastoreVendor.Oracle, "dbhost", "1521", "unknown", null, @"Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST='dbhost')(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=s)));")]
+    [TestCase(DatastoreVendor.Oracle, "dbhost", "1521", "unknown", null, @"Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=dbhost)(PORT=""1521""))(CONNECT_DATA=(SERVICE_NAME=s)));")]
+    [TestCase(DatastoreVendor.Oracle, "dbhost", "1521", "unknown", null, @"Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=""dbhost"")(PORT=""1521""))(CONNECT_DATA=(SERVICE_NAME=s)));")]
+    [TestCase(DatastoreVendor.Oracle, "dbhost", "1521", "unknown", null, @"Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=""dbhost"")(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=s)));")]
+    // Easy Connect forms: protocol prefix, bracketed IPv6 hosts, multiple hosts, 23ai ';' address lists
+    [TestCase(DatastoreVendor.Oracle, "myserver", "1521", "unknown", null, @"Data Source=//myserver:1521/svc;")]
+    [TestCase(DatastoreVendor.Oracle, "myserver", "1521", "unknown", null, @"Data Source=myserver:1521?transport_connect_timeout=10;")]
+    [TestCase(DatastoreVendor.Oracle, "myserver", "2484", "unknown", null, @"Data Source=tcps://myserver:2484/svc;")]
+    [TestCase(DatastoreVendor.Oracle, "myserver", "1521", "unknown", null, @"Data Source=user/pw@tcp://myserver:1521/svc;")]
+    [TestCase(DatastoreVendor.Oracle, "2001:db8::1", "1521", "unknown", null, @"Data Source=[2001:db8::1]:1521/svc;")]
+    [TestCase(DatastoreVendor.Oracle, "2001:db8::1", "default", "unknown", null, @"Data Source=user/pw@//[2001:db8::1]/svc;")]
+    [TestCase(DatastoreVendor.Oracle, "salesdb", "1521", "unknown", null, @"Data Source=[salesdb]:1521/svc;")]
+    [TestCase(DatastoreVendor.Oracle, "2001:db8::1", "1521", "unknown", null, @"Data Source='[2001:db8::1],[2001:db8::2]:1521/svc';")]
+    [TestCase(DatastoreVendor.Oracle, "myserver1", "1521", "unknown", null, @"Data Source=myserver1,myserver2:1521/svc;")]
+    [TestCase(DatastoreVendor.Oracle, "myserver1", "1521", "unknown", null, @"Data Source=myserver1:1521,myserver2:1522/svc;")]
+    [TestCase(DatastoreVendor.Oracle, "salesserver1", "1521", "unknown", null, @"Data Source='salesserver1:1521;salesserver2,salesserver3:1522/sales.us.example.com';")]
+    [TestCase(DatastoreVendor.Oracle, "salesserver1", "default", "unknown", null, @"Data Source='salesserver1;salesserver2:1522/sales';")]
+    // Failure path: an unclosed IPv6 bracket makes the parse throw, which reports an unknown host and port
+    [TestCase(DatastoreVendor.Oracle, "unknown", "unknown", "unknown", null, @"Data Source=[2001:db8::1:1521/svc;")]
+    [TestCase(DatastoreVendor.Oracle, "unknown", "default", "unknown", null, @"User Id=x;Password=y;")]                                            // no data source keyword
 
     [TestCase(DatastoreVendor.MySQL, "myServerAddress", "default", "myDataBase", null, @"Server=myServerAddress;Database=myDataBase;")]
     [TestCase(DatastoreVendor.MySQL, "myServerAddress", "1234", "myDataBase", null, @"Data Source=myServerAddress;Port=1234;Database=myDataBase;")]

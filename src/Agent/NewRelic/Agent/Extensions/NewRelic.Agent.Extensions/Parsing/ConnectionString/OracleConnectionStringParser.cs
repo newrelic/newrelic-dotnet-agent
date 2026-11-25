@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.Data.Common;
-using System.Linq;
 using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Agent.Helpers;
 
@@ -12,8 +11,14 @@ namespace NewRelic.Agent.Extensions.Parsing.ConnectionString;
 
 public class OracleConnectionStringParser : IConnectionStringParser
 {
-    private static readonly string _closeParen = new string(StringSeparators.CloseParen);
-    private static readonly char[] _stopChars = { StringSeparators.ColonChar, StringSeparators.PathSeparatorChar };
+    private const char QuoteChar = '"';
+    private const char SingleQuoteChar = '\'';
+
+    private static readonly string[] _protocolPrefixes = { "//", "tcp://", "tcps://" };
+    private static readonly char[] _addressEndChars = { StringSeparators.QuestionMarkChar, StringSeparators.PathSeparatorChar };
+    private static readonly char[] _hostEndChars = { StringSeparators.CommaChar, StringSeparators.ColonChar, StringSeparators.SemiColonChar };
+    private static readonly char[] _portEndChars = { StringSeparators.CommaChar, StringSeparators.SemiColonChar };
+    private static readonly char[] _quoteChars = { QuoteChar, SingleQuoteChar };
 
     private static readonly List<string> _hostKeys = new List<string> { "server", "data source", "host", "dbq" };
 
@@ -26,152 +31,194 @@ public class OracleConnectionStringParser : IConnectionStringParser
 
     public ConnectionInfo GetConnectionInfo(string utilizationHostName)
     {
-        var host = ParseHost();
-        var portStr = ParsePortString();
+        var dataSource = ConnectionStringParserHelper.GetKeyValuePair(_connectionStringBuilder, _hostKeys)?.Value;
+        if (dataSource == null)
+        {
+            return new ConnectionInfo(null, "default", null);
+        }
 
-        // If we could not extract any port token, treat as "default"
-        if (string.IsNullOrEmpty(portStr))
+        string host;
+        string portString;
+        try
+        {
+            ParseDataSource(dataSource, out host, out portString);
+        }
+        catch (Exception e)
+        {
+            Log.Debug(e, "Unhandled exception in OracleConnectionStringParser.GetConnectionInfo");
+            return new ConnectionInfo(null, -1, null);
+        }
+
+        // No port token means the default port; a port token that is not a number is unknown
+        if (portString == null)
         {
             return new ConnectionInfo(host, "default", null);
         }
 
-        if (!int.TryParse(portStr, out var port))
-        {
-            // Non‑numeric port -> unknown
-            port = -1;
-        }
-
-        return new ConnectionInfo(host, port, null);
+        return new ConnectionInfo(host, int.TryParse(portString, out var port) ? port : -1, null);
     }
 
-    private string ParseHost()
+    // Patterns handled:
+    //   [username/password@][[tcp:|tcps:]//]host[:port][{,|;}host[:port]...][/service][?parameters]
+    //   [username/password@]([descriptor])
+    private static void ParseDataSource(string value, out string host, out string portString)
     {
-        try
+        var connectIdentifier = value.Trim();
+
+        // A user name cannot start with '(', so a leading '(' is a descriptor with no credentials
+        if (!connectIdentifier.StartsWith("(", StringComparison.Ordinal))
         {
-            var host = ConnectionStringParserHelper.GetKeyValuePair(_connectionStringBuilder, _hostKeys)?.Value;
-            if (host == null) return null;
-
-            // Example patterns we must handle:
-            // (DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=MyHost)(PORT=MyPort)))(CONNECT_DATA=(SERVICE_NAME=MyOracleSID)))
-            // username/password@myserver:1521/myservice
-            // username/password@//myserver:1521/my.service.com;
-            // username/password@myserver/myservice
-            // 111.21.31.99:1521/XE
-            // serverName
-
-            if (host.Contains(StringSeparators.OpenParenChar))
-            {
-                var sections = host.Split(StringSeparators.OpenParen);
-                foreach (var section in sections)
-                {
-                    if (!section.ToLowerInvariant().Contains("host=")) continue;
-                    var startOfValue = section.IndexOf(StringSeparators.EqualSignChar) + 1;
-                    if (startOfValue <= 0 || startOfValue >= section.Length) continue;
-                    return section.Substring(startOfValue).Replace(_closeParen, string.Empty);
-                }
-                return null;
-            }
-
-            if (host.Contains(StringSeparators.AtSignChar))
-            {
-                // Take everything after the first '@'
-                var atIndex = host.IndexOf(StringSeparators.AtSignChar);
-                if (atIndex == -1 || atIndex + 1 >= host.Length) return null;
-
-                var remainder = host.Substring(atIndex + 1);
-
-                // Optional // prefix
-                if (remainder.StartsWith("//"))
-                    remainder = remainder.Substring(2);
-
-                // Host[:port] is up to the first '/' (if any)
-                var slashIndex = remainder.IndexOf(StringSeparators.PathSeparatorChar);
-                var hostPortSegment = slashIndex == -1 ? remainder : remainder.Substring(0, slashIndex);
-                if (string.IsNullOrWhiteSpace(hostPortSegment)) return null;
-
-                var colonIndex = hostPortSegment.IndexOf(StringSeparators.ColonChar);
-                return colonIndex == -1 ? hostPortSegment : hostPortSegment.Substring(0, colonIndex);
-            }
-
-            // Simple host[:port][/service]
-            var endOfHostname = host.IndexOfAny(_stopChars);
-            return endOfHostname == -1 ? host : host.Substring(0, endOfHostname);
+            connectIdentifier = connectIdentifier.Substring(FindCredentialsSeparator(connectIdentifier) + 1).Trim();
         }
-        catch (Exception e)
+
+        if (connectIdentifier.StartsWith("(", StringComparison.Ordinal))
         {
-            Log.Debug(e, "Unhandled exception in OracleConnectionStringParser.ParseHost");
-            return null;
+            ParseDescriptor(connectIdentifier, out host, out portString);
+        }
+        else
+        {
+            ParseEasyConnect(connectIdentifier, out host, out portString);
         }
     }
 
-    private string ParsePortString()
+    // The first '@' outside double quotes, or -1 if Easy Connect parameters or the end come first.
+    // An unquoted '?' starts parameters only when an '=' follows it before the next '@'.
+    private static int FindCredentialsSeparator(string value)
     {
-        try
+        var inQuotes = false;
+        for (var i = 0; i < value.Length; i++)
         {
-            var host = ConnectionStringParserHelper.GetKeyValuePair(_connectionStringBuilder, _hostKeys)?.Value;
-            if (host == null) return null;
-
-            if (host.Contains(StringSeparators.OpenParenChar))
+            var c = value[i];
+            if (c == QuoteChar)
             {
-                // (DESCRIPTION=...) style
-                var sections = host.Split(StringSeparators.OpenParen);
-                foreach (var section in sections)
-                {
-                    if (!section.ToLowerInvariant().Contains("port=")) continue;
-                    var startOfValue1 = section.IndexOf(StringSeparators.EqualSignChar) + 1;
-                    if (startOfValue1 <= 0 || startOfValue1 >= section.Length) continue;
-                    var portToken = section.Substring(startOfValue1).Replace(_closeParen, string.Empty);
-                    return string.IsNullOrWhiteSpace(portToken) ? null : portToken;
-                }
+                inQuotes = !inQuotes;
+            }
+            else if (!inQuotes && c == StringSeparators.AtSignChar)
+            {
+                return i;
+            }
+            else if (!inQuotes && c == StringSeparators.QuestionMarkChar && StartsParameters(value, i))
+            {
+                return -1;
+            }
+        }
+
+        return -1;
+    }
+
+    private static bool StartsParameters(string value, int questionMarkIndex)
+    {
+        var equalIndex = value.IndexOf(StringSeparators.EqualSignChar, questionMarkIndex);
+        var atIndex = value.IndexOf(StringSeparators.AtSignChar, questionMarkIndex);
+        return equalIndex >= 0 && (atIndex < 0 || equalIndex < atIndex);
+    }
+
+    // HOST and PORT come from the same ADDRESS, in either order. Surrounding quotes are removed, such as HOST="db"
+    private static void ParseDescriptor(string descriptor, out string host, out string portString)
+    {
+        host = null;
+        portString = null;
+
+        foreach (var section in SplitOutsideQuotes(descriptor))
+        {
+            var equalIndex = section.IndexOf(StringSeparators.EqualSignChar);
+            if (equalIndex < 0) continue;
+
+            var key = section.Substring(0, equalIndex).Trim();
+            if (key.Equals("ADDRESS", StringComparison.OrdinalIgnoreCase))
+            {
+                if (host != null) break;
+            }
+            else if (key.Equals("HOST", StringComparison.OrdinalIgnoreCase))
+            {
+                host = ReadUntil(section, equalIndex + 1, StringSeparators.CloseParen).Trim(_quoteChars);
+            }
+            else if (key.Equals("PORT", StringComparison.OrdinalIgnoreCase))
+            {
+                portString = ReadUntil(section, equalIndex + 1, StringSeparators.CloseParen).Trim(_quoteChars);
+            }
+        }
+    }
+
+    // Splits on '(' outside single or double quotes, so a quoted value such as
+    // SSL_SERVER_CERT_DN="CN=x(HOST=y)" stays in one section
+    private static IEnumerable<string> SplitOutsideQuotes(string descriptor)
+    {
+        var quote = '\0';
+        var start = 0;
+        for (var i = 0; i < descriptor.Length; i++)
+        {
+            var c = descriptor[i];
+            if (quote != '\0')
+            {
+                if (c == quote) quote = '\0';
+            }
+            else if (c == QuoteChar || c == SingleQuoteChar)
+            {
+                quote = c;
+            }
+            else if (c == StringSeparators.OpenParenChar)
+            {
+                yield return descriptor.Substring(start, i - start);
+                start = i + 1;
+            }
+        }
+
+        yield return descriptor.Substring(start);
+    }
+
+    // host[:port][/service][?parameters], where host may be a bracketed IPv6 address
+    private static void ParseEasyConnect(string connectIdentifier, out string host, out string portString)
+    {
+        foreach (var prefix in _protocolPrefixes)
+        {
+            if (connectIdentifier.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            {
+                connectIdentifier = connectIdentifier.Substring(prefix.Length);
+                break;
+            }
+        }
+
+        var addressEnd = connectIdentifier.IndexOfAny(_addressEndChars);
+        var addresses = addressEnd < 0 ? connectIdentifier : connectIdentifier.Substring(0, addressEnd);
+
+        host = addresses.StartsWith("[", StringComparison.Ordinal)
+            ? addresses.Substring(1, addresses.IndexOf(']') - 1)
+            : ReadUntil(addresses, 0, _hostEndChars);
+        portString = FindPort(addresses);
+    }
+
+    // The text after the first ':' outside brackets; null if a ';' (the next address) comes first
+    private static string FindPort(string addresses)
+    {
+        var inBrackets = false;
+        for (var i = 0; i < addresses.Length; i++)
+        {
+            var c = addresses[i];
+            if (c == '[')
+            {
+                inBrackets = true;
+            }
+            else if (c == ']')
+            {
+                inBrackets = false;
+            }
+            else if (!inBrackets && c == StringSeparators.SemiColonChar)
+            {
                 return null;
             }
-
-            if (host.Contains(StringSeparators.AtSignChar))
+            else if (!inBrackets && c == StringSeparators.ColonChar)
             {
-                // username/password@host[:port]/service (with optional leading //)
-                var atIndex = host.IndexOf(StringSeparators.AtSignChar);
-                if (atIndex == -1 || atIndex + 1 >= host.Length) return null;
-
-                var remainder = host.Substring(atIndex + 1);
-                if (remainder.StartsWith("//"))
-                    remainder = remainder.Substring(2);
-
-                var slashIndex = remainder.IndexOf(StringSeparators.PathSeparatorChar);
-                var hostPortSegment = slashIndex == -1 ? remainder : remainder.Substring(0, slashIndex);
-                if (string.IsNullOrEmpty(hostPortSegment)) return null;
-
-                var colonIndex = hostPortSegment.IndexOf(StringSeparators.ColonChar);
-                if (colonIndex == -1) return null; // no explicit port -> default
-
-                if (colonIndex + 1 >= hostPortSegment.Length)
-                {
-                    // Colon present but empty port portion -> treat as invalid (unknown)
-                    return "invalid_port";
-                }
-
-                var portCandidate = hostPortSegment.Substring(colonIndex + 1);
-                return string.IsNullOrWhiteSpace(portCandidate) ? "invalid_port" : portCandidate;
+                return ReadUntil(addresses, i + 1, _portEndChars);
             }
-
-            // Simple host:port/service or host:port
-            var colonSimple = host.IndexOf(StringSeparators.ColonChar);
-            if (colonSimple == -1) return null;
-
-            var startOfValue = colonSimple + 1;
-            if (startOfValue >= host.Length) return "invalid_port";
-
-            var endOfValue = host.IndexOf(StringSeparators.PathSeparatorChar, startOfValue);
-            if (endOfValue == -1) endOfValue = host.Length;
-
-            if (endOfValue <= startOfValue) return "invalid_port";
-
-            var simplePort = host.Substring(startOfValue, endOfValue - startOfValue);
-            return string.IsNullOrWhiteSpace(simplePort) ? "invalid_port" : simplePort;
         }
-        catch (Exception e)
-        {
-            Log.Debug(e, "Unhandled exception in OracleConnectionStringParser.ParsePortString");
-            return null;
-        }
+
+        return null;
+    }
+
+    private static string ReadUntil(string text, int start, char[] stopChars)
+    {
+        var end = text.IndexOfAny(stopChars, start);
+        return (end < 0 ? text.Substring(start) : text.Substring(start, end - start)).Trim();
     }
 }
