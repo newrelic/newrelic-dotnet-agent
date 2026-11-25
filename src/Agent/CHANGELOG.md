@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.58.1](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.58.0...v10.58.1) (2026-11-25)
+
+
+### Fixes
+
+* Oracle connection string parsing improvements ([#3983](https://github.com/newrelic/newrelic-dotnet-agent/issues/3983)) ([a32f016](https://github.com/newrelic/newrelic-dotnet-agent/commit/a32f01696554171b7c16e30ba0cbfca34ce3acca))
+* Share one attribute definition per dynamic attribute family (NR-651452) ([#3982](https://github.com/newrelic/newrelic-dotnet-agent/issues/3982)) ([64245b8](https://github.com/newrelic/newrelic-dotnet-agent/commit/64245b88ea89a9e637b783354147cfdbd43551d7))
+
 ## [10.58.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.57.0...v10.58.0) (2026-11-18)
 
 
