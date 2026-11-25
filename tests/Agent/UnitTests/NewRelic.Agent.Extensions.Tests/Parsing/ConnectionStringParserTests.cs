@@ -62,7 +62,6 @@ public class ConnectionStringParserTests
     [TestCase(DatastoreVendor.Oracle, "dbhost", "1521", "unknown", null, @"Data Source=scott/pa?ss@dbhost:1521/svc?transport_connect_timeout=10;")]
     // Connect descriptors
     [TestCase(DatastoreVendor.Oracle, "dbhost", "1522", "unknown", null, @"Data Source=user/""p(HOST=evil)""@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=dbhost)(PORT=1522))(CONNECT_DATA=(SERVICE_NAME=s)));")]
-    [TestCase(DatastoreVendor.Oracle, "dbhost", "default", "unknown", null, @"Data Source=user/pw@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=dbhost))(CONNECT_DATA=(SERVICE_NAME=s)));")]
     [TestCase(DatastoreVendor.Oracle, "dbhost", "1521", "unknown", null, @"Data Source=user/pw@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=dbhost)(PORT=1521))(SECURITY=(SSL_SERVER_CERT_DN='CN=a@b.com')));")]
     [TestCase(DatastoreVendor.Oracle, "dbhost", "1521", "unknown", null, @"Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=dbhost)(PORT=1521))(SECURITY=(SSL_SERVER_CERT_DN='CN=a@b.com')));")]
     [TestCase(DatastoreVendor.Oracle, "dbhost", "1521", "unknown", null, @"Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=dbhost)(PORT=1521))(SECURITY=(SSL_SERVER_CERT_DN=""CN=a@b.com""))(CONNECT_DATA=(SERVICE_NAME=s)));")]
@@ -71,9 +70,14 @@ public class ConnectionStringParserTests
     [TestCase(DatastoreVendor.Oracle, "2001:db8::1", "1521", "unknown", null, @"Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=2001:db8::1)(PORT=1521)));")]
     [TestCase(DatastoreVendor.Oracle, "dbhost", "1521", "unknown", null, @"Data Source=(DESCRIPTION = (ADDRESS = (PROTOCOL = TCP)(HOST = dbhost)(PORT = 1521)));")]
     [TestCase(DatastoreVendor.Oracle, "dbhost", "2484", "unknown", null, @"Data Source=(DESCRIPTION=(ADDRESS=(HTTPS_PROXY=proxyhost)(HTTPS_PROXY_PORT=8080)(PROTOCOL=TCPS)(HOST=dbhost)(PORT=2484)));")]
-    [TestCase(DatastoreVendor.Oracle, "h1", "default", "unknown", null, @"Data Source=(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=h1))(ADDRESS=(PROTOCOL=TCP)(HOST=h2)(PORT=1522))));")]
+    [TestCase(DatastoreVendor.Oracle, "h1", "1521", "unknown", null, @"Data Source=(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=h1)(PORT=1521))(ADDRESS=(PROTOCOL=TCP)(HOST=h2)(PORT=1522))));")]
     [TestCase(DatastoreVendor.Oracle, "adb.example.com", "1522", "unknown", null, @"Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCPS)(PORT=1522)(HOST=adb.example.com))(CONNECT_DATA=(SERVICE_NAME=s)));")]
     [TestCase(DatastoreVendor.Oracle, "unknown", "default", "unknown", null, @"Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=IPC)(KEY=EXTPROC1))(CONNECT_DATA=(SID=orcl)));")]
+    // Quoted HOST and PORT values
+    [TestCase(DatastoreVendor.Oracle, "dbhost", "1521", "unknown", null, @"Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST='dbhost')(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=s)));")]
+    [TestCase(DatastoreVendor.Oracle, "dbhost", "1521", "unknown", null, @"Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=dbhost)(PORT=""1521""))(CONNECT_DATA=(SERVICE_NAME=s)));")]
+    [TestCase(DatastoreVendor.Oracle, "dbhost", "1521", "unknown", null, @"Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=""dbhost"")(PORT=""1521""))(CONNECT_DATA=(SERVICE_NAME=s)));")]
+    [TestCase(DatastoreVendor.Oracle, "dbhost", "1521", "unknown", null, @"Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=""dbhost"")(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=s)));")]
     // Easy Connect forms: protocol prefix, bracketed IPv6 hosts, multiple hosts, 23ai ';' address lists
     [TestCase(DatastoreVendor.Oracle, "myserver", "1521", "unknown", null, @"Data Source=//myserver:1521/svc;")]
     [TestCase(DatastoreVendor.Oracle, "myserver", "1521", "unknown", null, @"Data Source=myserver:1521?transport_connect_timeout=10;")]

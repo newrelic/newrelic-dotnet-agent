@@ -18,6 +18,7 @@ public class OracleConnectionStringParser : IConnectionStringParser
     private static readonly char[] _addressEndChars = { StringSeparators.QuestionMarkChar, StringSeparators.PathSeparatorChar };
     private static readonly char[] _hostEndChars = { StringSeparators.CommaChar, StringSeparators.ColonChar, StringSeparators.SemiColonChar };
     private static readonly char[] _portEndChars = { StringSeparators.CommaChar, StringSeparators.SemiColonChar };
+    private static readonly char[] _quoteChars = { QuoteChar, SingleQuoteChar };
 
     private static readonly List<string> _hostKeys = new List<string> { "server", "data source", "host", "dbq" };
 
@@ -112,7 +113,7 @@ public class OracleConnectionStringParser : IConnectionStringParser
         return equalIndex >= 0 && (atIndex < 0 || equalIndex < atIndex);
     }
 
-    // HOST and PORT come from the same ADDRESS, in either order
+    // HOST and PORT come from the same ADDRESS, in either order. Surrounding quotes are removed, such as HOST="db"
     private static void ParseDescriptor(string descriptor, out string host, out string portString)
     {
         host = null;
@@ -127,16 +128,14 @@ public class OracleConnectionStringParser : IConnectionStringParser
             if (key.Equals("ADDRESS", StringComparison.OrdinalIgnoreCase))
             {
                 if (host != null) break;
-
-                portString = null;
             }
             else if (key.Equals("HOST", StringComparison.OrdinalIgnoreCase))
             {
-                host = ReadUntil(section, equalIndex + 1, StringSeparators.CloseParen);
+                host = ReadUntil(section, equalIndex + 1, StringSeparators.CloseParen).Trim(_quoteChars);
             }
             else if (key.Equals("PORT", StringComparison.OrdinalIgnoreCase))
             {
-                portString = ReadUntil(section, equalIndex + 1, StringSeparators.CloseParen);
+                portString = ReadUntil(section, equalIndex + 1, StringSeparators.CloseParen).Trim(_quoteChars);
             }
         }
     }
