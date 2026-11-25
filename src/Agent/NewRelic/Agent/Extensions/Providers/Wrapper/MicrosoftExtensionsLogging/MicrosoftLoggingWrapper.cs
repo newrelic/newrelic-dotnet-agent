@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
-using System.Collections.Generic;
-using System.Reflection;
+using System.Collections.Concurrent;
+using System.Collections.Generic;using System.Reflection;
 using Microsoft.Extensions.Logging;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Api.Experimental;
@@ -16,11 +16,13 @@ namespace NewRelic.Providers.Wrapper.MicrosoftExtensionsLogging;
 
 public class MicrosoftLoggingWrapper : IWrapper
 {
-    // Cached accessor functions
-    private static Func<object, dynamic> _getLoggersArray;
-    private static PropertyInfo _scopeProviderPropertyInfo;
+    // Cached accessors, keyed by logger type: Logger and Microsoft.Extensions.Telemetry's ExtendedLogger
+    // can both appear in one process, and each has its own ScopeLoggers / ScopeLogger types
+    private static readonly ConcurrentDictionary<Type, Func<object, dynamic>> _getLoggersArrayByType = new();
+    private static readonly ConcurrentDictionary<Type, PropertyInfo> _scopeProviderPropertyInfoByType = new();
 
-    private static bool _contextDataNotSupported = false;
+    // Logger types for which a failure to read scope data has already been logged
+    private static readonly ConcurrentDictionary<Type, bool> _contextDataNotSupportedByType = new();
 
     public bool IsTransactionRequired => false;
 
@@ -74,7 +76,9 @@ public class MicrosoftLoggingWrapper : IWrapper
 
     private static Dictionary<string, object> GetContextData(MEL.ILogger logger, IAgent agent, object state = null)
     {
-        if (_contextDataNotSupported) // short circuit if we previously got an exception trying to access context data
+        var loggerType = logger.GetType();
+
+        if (_contextDataNotSupportedByType.ContainsKey(loggerType)) // short circuit if we previously got an exception trying to access context data
         {
             return null;
         }
@@ -84,7 +88,7 @@ public class MicrosoftLoggingWrapper : IWrapper
             // MEL keeps an array of scope handlers. We can ask one of them for the current scope data.
 
             // Get the array of ScopeLoggers (logger.ScopeLoggers[])
-            var getLoggersArrayFunc = _getLoggersArray ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<dynamic>(logger.GetType(), "ScopeLoggers");
+            var getLoggersArrayFunc = _getLoggersArrayByType.GetOrAdd(loggerType, t => VisibilityBypasser.Instance.GeneratePropertyAccessor<dynamic>(t, "ScopeLoggers"));
             var loggers = getLoggersArrayFunc(logger);
 
             // Get the last ScopeLogger in the array (logger.ScopeLoggers[loggers.Length-1])
@@ -92,7 +96,7 @@ public class MicrosoftLoggingWrapper : IWrapper
             object lastLogger = loggers.GetValue(loggers.Length - 1);
 
             // Get the scope provider from that logger (logger.ScopeLoggers[loggers.Length-1].ExternalScopeProvider)
-            var scopeProviderPI = _scopeProviderPropertyInfo ??= lastLogger.GetType().GetProperty("ExternalScopeProvider");
+            var scopeProviderPI = _scopeProviderPropertyInfoByType.GetOrAdd(lastLogger.GetType(), t => t.GetProperty("ExternalScopeProvider"));
             var scopeProvider = scopeProviderPI.GetValue(lastLogger) as IExternalScopeProvider;
 
             // Get the context data
@@ -146,8 +150,8 @@ public class MicrosoftLoggingWrapper : IWrapper
         }
         catch (Exception e)
         {
-            agent.Logger.Log(Level.Warn, e, $"Unexpected exception while attempting to get context data. Context data is not supported for this logging framework.");
-            _contextDataNotSupported = true;
+            agent.Logger.Log(Level.Warn, e, $"Unexpected exception while attempting to get context data. Context data is not supported for logger type {loggerType.FullName}.");
+            _contextDataNotSupportedByType[loggerType] = true;
             return null;
         }
     }

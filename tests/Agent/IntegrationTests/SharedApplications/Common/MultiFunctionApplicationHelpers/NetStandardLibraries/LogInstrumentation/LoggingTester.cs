@@ -54,9 +54,12 @@ public class LoggingTester
             case "SERILOGEL":
                 logger = new SerilogExtensionsLoggingAdapter();
                 break;
-#if MFALATEST // NLog.Extensions.Logging is only included in the MFALatestPackages project
+#if MFALATEST // NLog.Extensions.Logging and Microsoft.Extensions.Telemetry are only included in the MFALatestPackages project
             case "NLOGEL":
                 logger = new NLogExtensionsLoggingAdapter();
+                break;
+            case "EXTENDEDLOGGER":
+                logger = new ExtendedLoggerAdapter();
                 break;
 #endif
 #endif

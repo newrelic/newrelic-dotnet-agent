@@ -13,7 +13,8 @@ public enum LoggingFramework
     DummyMEL,
     Sitecore,
     SerilogEL,
-    NLogEL
+    NLogEL,
+    ExtendedLogger
 }
 
 public class LogUtils
@@ -25,6 +26,7 @@ public class LogUtils
             case LoggingFramework.Log4net:
                 return "log4net";
             case LoggingFramework.MicrosoftLogging:
+            case LoggingFramework.ExtendedLogger:
                 return "MicrosoftLogging";
             case LoggingFramework.SerilogWeb:
             case LoggingFramework.Serilog:
@@ -57,6 +59,7 @@ public class LogUtils
                 }
             case LoggingFramework.MicrosoftLogging:
             case LoggingFramework.DummyMEL:
+            case LoggingFramework.ExtendedLogger:
                 switch (level)
                 {
                     case "DEBUG":

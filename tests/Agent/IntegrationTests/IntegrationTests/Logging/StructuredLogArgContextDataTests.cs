@@ -164,6 +164,46 @@ public class MELStructuredLogArgContextDataNoContextNetCoreOldestTests : Structu
 
 #endregion
 
+#region ExtendedLogger
+
+// Microsoft.Extensions.Telemetry's ExtendedLogger implements ILogger directly rather than deriving from MEL's Logger,
+// so it needs its own instrumentation match. Only the latest packages include Microsoft.Extensions.Telemetry.
+[Trait("Platform", "WindowsOnly")]
+public class ExtendedLoggerStructuredLogArgContextDataWithContextFWLatestTests : StructuredLogArgContextDataTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+{
+    public ExtendedLoggerStructuredLogArgContextDataWithContextFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+        : base(fixture, output, LoggingFramework.ExtendedLogger, true)
+    {
+    }
+}
+
+[Trait("Platform", "WindowsOnly")]
+public class ExtendedLoggerStructuredLogArgContextDataNoContextFWLatestTests : StructuredLogArgContextDataTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+{
+    public ExtendedLoggerStructuredLogArgContextDataNoContextFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+        : base(fixture, output, LoggingFramework.ExtendedLogger, false)
+    {
+    }
+}
+
+public class ExtendedLoggerStructuredLogArgContextDataWithContextNetCoreLatestTests : StructuredLogArgContextDataTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+{
+    public ExtendedLoggerStructuredLogArgContextDataWithContextNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output, LoggingFramework.ExtendedLogger, true)
+    {
+    }
+}
+
+public class ExtendedLoggerStructuredLogArgContextDataNoContextNetCoreLatestTests : StructuredLogArgContextDataTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+{
+    public ExtendedLoggerStructuredLogArgContextDataNoContextNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+        : base(fixture, output, LoggingFramework.ExtendedLogger, false)
+    {
+    }
+}
+
+#endregion
+
 #region Serilog
 
 [Trait("Platform", "WindowsOnly")]
