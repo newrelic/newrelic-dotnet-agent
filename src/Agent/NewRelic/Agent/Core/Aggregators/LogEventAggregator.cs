@@ -101,7 +101,8 @@ public class LogEventAggregator : AbstractAggregator<LogEventWireModel>, ILogEve
                 _configuration.EntityGuid,
                 hostname,
                 _configuration.LabelsEnabled ? _labelsService.GetFilteredLabels(_configuration.LabelsExclude) : [],
-                aggregatedEvents);
+                aggregatedEvents,
+                _configuration.ContextDataPrefixEnabled);
 
             var responseStatus = DataTransportService.Send(modelsCollection, transactionId);
 

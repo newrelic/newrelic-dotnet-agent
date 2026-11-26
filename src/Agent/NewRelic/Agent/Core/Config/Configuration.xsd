@@ -2064,6 +2064,14 @@ e, so remove that element to use this mapping.
                                             </xs:documentation>
                                         </xs:annotation>
                                     </xs:attribute>
+                                    <xs:attribute name="prefixContextAttrs" type="xs:boolean" default="true">
+                                        <xs:annotation>
+                                            <xs:documentation>
+                                                When true, the agent adds the "context." prefix to the names of log context data attributes.
+                                                When false, the agent sends the names without the prefix and drops a context data attribute whose name matches a standard log attribute.
+                                            </xs:documentation>
+                                        </xs:annotation>
+                                    </xs:attribute>
 
                                     <xs:attribute name="logLevelDenyList" type="xs:string" use="optional">
                                         <xs:annotation>

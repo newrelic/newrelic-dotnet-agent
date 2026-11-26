@@ -437,6 +437,14 @@ public class NewRelicConfigModifier
         return this;
     }
 
+    public NewRelicConfigModifier EnableContextDataPrefix(bool enable = true)
+    {
+        // Attribute only: setting the forwarding node's value would erase its child elements (contextData).
+        CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "applicationLogging", "forwarding" }, "prefixContextAttrs", enable.ToString().ToLower());
+
+        return this;
+    }
+
     public NewRelicConfigModifier SetSendDataOnExit(bool enabled = true)
     {
         CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "service" }, "sendDataOnExit", enabled.ToString().ToLower());

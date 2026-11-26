@@ -591,7 +591,7 @@ public static class Assertions
 
     public static void LogLinesExist(IEnumerable<ExpectedLogLine> expectedLogLines, IEnumerable<LogLine> actualLogLines) => LogLinesExist(expectedLogLines, actualLogLines, false);
 
-    public static void LogLinesExist(IEnumerable<ExpectedLogLine> expectedLogLines, IEnumerable<LogLine> actualLogLines, bool ignoreAttributeCount)
+    public static void LogLinesExist(IEnumerable<ExpectedLogLine> expectedLogLines, IEnumerable<LogLine> actualLogLines, bool ignoreAttributeCount, string contextAttributePrefix = "context.")
     {
         actualLogLines = actualLogLines.ToList();
 
@@ -607,7 +607,7 @@ public static class Assertions
         {
             foreach (var expectedLogLine in expectedLogLines)
             {
-                var matchedLogLine = TryFindLogLine(expectedLogLine, actualLogLines, ignoreAttributeCount);
+                var matchedLogLine = TryFindLogLine(expectedLogLine, actualLogLines, ignoreAttributeCount, contextAttributePrefix);
                 if (matchedLogLine == null)
                 {
                     builder.Append($"LogLine `{expectedLogLine}` was not found in the Log payload.");
@@ -649,9 +649,9 @@ public static class Assertions
         Assert.True(succeeded, builder.ToString());
     }
 
-    private static LogLine TryFindLogLine(ExpectedLogLine expectedLogLine, IEnumerable<LogLine> actualLogLines) => TryFindLogLine(expectedLogLine, actualLogLines, false);
+    private static LogLine TryFindLogLine(ExpectedLogLine expectedLogLine, IEnumerable<LogLine> actualLogLines) => TryFindLogLine(expectedLogLine, actualLogLines, false, "context.");
 
-    private static LogLine TryFindLogLine(ExpectedLogLine expectedLogLine, IEnumerable<LogLine> actualLogLines, bool ignoreAttributeCount)
+    private static LogLine TryFindLogLine(ExpectedLogLine expectedLogLine, IEnumerable<LogLine> actualLogLines, bool ignoreAttributeCount, string contextAttributePrefix)
     {
         foreach (var actualLogLine in actualLogLines)
         {
@@ -704,18 +704,20 @@ public static class Assertions
                     continue;
                 }
 
-                foreach(var expectedAttribute in expectedLogLine.Attributes)
+                var allAttributesMatch = true;
+                foreach (var expectedAttribute in expectedLogLine.Attributes)
                 {
-                    var key = "context." + expectedAttribute.Key;
-                    if (!actualLogLine.Attributes.ContainsKey(key))
+                    var key = contextAttributePrefix + expectedAttribute.Key;
+                    if (!actualLogLine.Attributes.TryGetValue(key, out var actualValue) || expectedAttribute.Value != actualValue)
                     {
-                        continue;
+                        allAttributesMatch = false;
+                        break;
                     }
+                }
 
-                    if(expectedAttribute.Value.Equals(actualLogLine.Attributes[key]))
-                    {
-                        continue;
-                    }
+                if (!allAttributesMatch)
+                {
+                    continue;
                 }
             }
 

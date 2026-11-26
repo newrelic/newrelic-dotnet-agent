@@ -17,10 +17,12 @@ public class LogEventWireModelCollection
     public IEnumerable<Label> Labels { get; }
 
     public IList<LogEventWireModel> LoggingEvents { get; }
+    public bool PrefixContextData { get; }
 
     public LogEventWireModelCollection(string entityName, string entityGuid, string hostname,
-        IEnumerable<Label> labels, IList<LogEventWireModel> loggingEvents)
+        IEnumerable<Label> labels, IList<LogEventWireModel> loggingEvents, bool prefixContextData)
     {
+        PrefixContextData = prefixContextData;
         EntityName = entityName;
         EntityGuid = entityGuid;
         Hostname = hostname;

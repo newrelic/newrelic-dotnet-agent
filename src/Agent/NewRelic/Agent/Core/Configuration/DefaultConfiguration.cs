@@ -1853,6 +1853,9 @@ public class DefaultConfiguration : IConfiguration
         LogEventCollectorEnabled &&
         EnvironmentOverrides(_localConfiguration.applicationLogging.forwarding.contextData.enabled, "NEW_RELIC_APPLICATION_LOGGING_FORWARDING_CONTEXT_DATA_ENABLED");
 
+    public bool ContextDataPrefixEnabled =>
+        EnvironmentOverrides(_localConfiguration.applicationLogging.forwarding.prefixContextAttrs, "NEW_RELIC_APPLICATION_LOGGING_FORWARDING_PREFIX_CONTEXT_ATTRS");
+
     public IEnumerable<string> ContextDataInclude =>
         EnvironmentOverrides(_localConfiguration.applicationLogging.forwarding.contextData.include,
                 "NEW_RELIC_APPLICATION_LOGGING_FORWARDING_CONTEXT_DATA_INCLUDE")
