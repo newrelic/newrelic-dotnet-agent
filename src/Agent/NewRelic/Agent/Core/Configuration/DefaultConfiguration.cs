@@ -1888,7 +1888,7 @@ public class DefaultConfiguration : IConfiguration
                     ..EnvironmentOverrides(_localConfiguration.applicationLogging.forwarding.logLevelDenyList,
                               "NEW_RELIC_APPLICATION_LOGGING_FORWARDING_LOG_LEVEL_DENYLIST")
                           ?.Split([StringSeparators.CommaChar, ' '], StringSplitOptions.RemoveEmptyEntries)
-                          .Select(s => s.ToUpper())
+                          .Select(s => s.ToUpperInvariant())
                       ?? []
                 ];
 

@@ -1580,6 +1580,21 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             });
         }
 
+        [TestCase("Information", "INFORMATION")]
+        [TestCase("Warning", "WARNING")]
+        [SetCulture("tr-TR")]
+        public void RecordLogMessage_NormalizesLevelUsingInvariantCulture(string level, string expectedLevel)
+        {
+            Mock.Arrange(() => _configurationService.Configuration.LogEventCollectorEnabled).Returns(true);
+            SetupTransaction();
+
+            var xapi = (IAgentExperimental)_agent;
+            xapi.RecordLogMessage("testFramework", new object(), _ => DateTime.UtcNow, _ => level,
+                _ => "message", _ => null, _ => null, "spanId", "traceId");
+
+            Assert.That(_transaction.HarvestLogEvents().Single().Level, Is.EqualTo(expectedLevel));
+        }
+
         [Test]
         public void RecordLogMessage_WithTransaction_Success()
         {

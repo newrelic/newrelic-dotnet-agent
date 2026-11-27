@@ -3419,13 +3419,14 @@ public class DefaultConfigurationTests
     }
 
     [Test]
+    [SetCulture("tr-TR")]
     public void ApplicationLogging_ForwardingLogLevelDeniedList_HasCorrectValue()
     {
-        _localConfig.applicationLogging.forwarding.logLevelDenyList = " SomeValue, SomeOtherValue  ";
+        _localConfig.applicationLogging.forwarding.logLevelDenyList = " information, Warning  ";
 
         Assert.That(_defaultConfig.LogLevelDenyList, Has.Count.EqualTo(2));
-        Assert.That(_defaultConfig.LogLevelDenyList, Does.Contain("SOMEVALUE"));
-        Assert.That(_defaultConfig.LogLevelDenyList, Does.Contain("SOMEOTHERVALUE"));
+        Assert.That(_defaultConfig.LogLevelDenyList, Does.Contain("INFORMATION"));
+        Assert.That(_defaultConfig.LogLevelDenyList, Does.Contain("WARNING"));
     }
 
     [Test]
