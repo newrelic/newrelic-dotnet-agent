@@ -535,7 +535,7 @@ public class Agent : IAgent // any changes to api, update the interface in exten
             _configurationService.Configuration.LogEventCollectorEnabled)
         {
             var level = getLevel(logEvent).ToString();
-            normalizedLevel = string.IsNullOrWhiteSpace(level) ? "UNKNOWN" : level.ToUpper();
+            normalizedLevel = string.IsNullOrWhiteSpace(level) ? "UNKNOWN" : level.ToUpperInvariant();
 
             // LogLevelDenyList is already uppercase, so don't need case-insensitive lookup
             if (_configurationService.Configuration.LogLevelDenyList.Contains(normalizedLevel))
